@@ -1,0 +1,411 @@
+---
+title: "4. Simulación y MCMC: Metropolis-Hastings y Gibbs"
+slug: "04-simulacion-mcmc"
+objective: "Dominar los algoritmos de simulación de distribuciones difíciles: aceptación-rechazo como base, Metropolis-Hastings con sus diagnósticos de mezcla, y muestreo de Gibbs para densidades conjuntas con soportes mixtos. El módulo prepara punto por punto el Trabajo 1."
+order: 4
+datasets: []
+duration: 90
+prerequisites: ["Módulo 2: Cadenas de Markov en tiempo discreto", "Módulo 3: Estacionariedad"]
+---
+
+import { Callout } from '@/components/Callout'
+import { CodeBlock } from '@/components/CodeBlock'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { ProcessSteps } from '@/components/ProcessSteps'
+
+## 1. Cuando la distribución no se deja muestrear
+
+Simular una normal, una exponencial o una Poisson es trivial en R: vienen de
+fábrica. Pero en el trabajo real la distribución objetivo $\pi$ suele llegar
+de una forma poco cooperativa: densidades conocidas **solo hasta una
+constante** (posterior bayesiana sin evidencia computable), soportes mixtos
+con partes continuas y discretas, o estructuras de alta dimensión. Ahí no
+existe `rpi()` que valga.
+
+La idea que resuelve todo el problema es profunda y sencilla a la vez: **si
+puedo construir una cadena de Markov cuya estacionaria sea $\pi$, entonces
+simular la cadena es simular de $\pi$**. Los módulos 2 y 3 pagaron la teoría
+(estacionariedad, ergodicidad, convergencia); este módulo la cobra en forma
+de algoritmos.
+
+<Callout type="note" title="El puente conceptual">
+
+Metropolis-Hastings no es una técnica numérica suelta: es la aplicación
+más influyente de las cadenas de Markov jamás construida. La pregunta "¿qué
+distribución deja esta matriz como estacionaria?" del módulo 3 se invierte
+aquí: "¿qué matriz deja mi distribución como estacionaria?". Del análisis a
+la síntesis.
+
+</Callout>
+
+## 2. Aceptación-rechazo: el antepasado
+
+Antes de MCMC, el método clásico. Para muestrear una densidad $f$ difícil,
+se busca una densidad $g$ fácil de simular y una constante $M$ con
+$f(x) \leq M g(x)$ para todo $x$:
+
+1. Simular $X \sim g$ y $U \sim U(0,1)$ independientes.
+2. Aceptar si $U \leq f(X)/(M g(X))$; si no, volver a 1.
+
+El aceptado sigue $f$. El precio es la eficiencia: la probabilidad de
+aceptar es $1/M$, y cuando la envolvente es holgada el algoritmo se pasa la
+vida rechazando.
+
+<RCell
+  id="04/rechazo-mixtura"
+  title="Aceptación-rechazo sobre una mezcla de normales"
+  code={`set.seed(10)
+# Objetivo: mezcla 50/50 de N(1, 0.6) y N(4, 0.6), en (0, 5)
+d_objetivo <- function(x) {
+  0.5 * dnorm(x, 1, 0.6) + 0.5 * dnorm(x, 4, 0.6)
+}
+
+# Envolvente: normal(2.5, 1.5) escalada
+g <- function(x) dnorm(x, 2.5, 1.5)
+M <- 2.2   # cota suficiente en el rango de interes
+
+n <- 20000
+x <- rnorm(n, 2.5, 1.5)
+u <- runif(n)
+aceptados <- x[u <= d_objetivo(x) / (M * g(x))]
+
+curve(d_objetivo, 0, 5, lwd = 2, col = "#5b21b6",
+      ylab = "densidad", main = "Aceptacion-rechazo contra el objetivo")
+hist(aceptados, breaks = 60, add = TRUE, freq = FALSE, col = "#c4b5fd", border = NA)
+curve(d_objetivo, 0, 5, lwd = 2, col = "#5b21b6", add = TRUE)
+cat("Aceptados:", length(aceptados), "de", n,
+    sprintf("(%.1f%%, teorico %.1f%%)\\n",
+            100 * length(aceptados) / n, 100 / M))`}
+/>
+
+La mezcla bimodal ya muestra la debilidad del método: la envolvente tiene
+que cubrir ambos modos, y en el valle central desperdicia casi todos los
+intentos. Además exige la densidad **normalizada** — justamente lo que
+muchas veces no se tiene.
+
+## 3. Metropolis-Hastings: aceptar, rechazar, pero moverse
+
+La genialidad de Metropolis-Hastings es reutilizar el rechazo sin botarlo
+del todo: la propuesta rechazada deja la cadena **quieta un paso más**, y
+esa paciencia acumulada produce exactamente la estacionaria deseada.
+
+Dada la objetivo $\pi$ (solo proporcional a ella basta) y una densidad de
+propuesta $g(\cdot \mid x)$, la cadena evoliona así:
+
+1. Desde el estado $x$, proponer $x' \sim g(\cdot \mid x)$.
+2. Aceptar la propuesta con probabilidad
+$$\alpha(x, x') = \min\left\{ 1, \frac{\pi(x')\, g(x \mid x')}{\pi(x)\, g(x' \mid x)} \right\}$$
+3. Si se acepta, mover a $x'$; si no, quedarse en $x$ (y contar ese paso).
+
+<ProcessSteps
+  title="Por qué la estacionaria es π"
+  steps={[
+    {
+      title: "Reversibilidad",
+      description: "La probabilidad de mover de x a x' es g(x'|x)·α(x,x'); la de volver, g(x|x')·α(x',x). Por construcción de α, ambas coinciden (balance detallado)."
+    },
+    {
+      title: "Balance detallado",
+      description: "π(x)·P(x→x') = π(x')·P(x'→x): el flujo de probabilidad se cancela en cada par de estados."
+    },
+    {
+      title: "Conclusión del módulo 3",
+      description: "Si π satisface balance detallado, es estacionaria (fue el punto teórico del Quiz 1). Bajo condiciones leves (irreducible, apérica), la cadena converge a π desde cualquier inicio."
+    }
+  ]}
+/>
+
+Con propuesta simétrica ($g(x' \mid x) = g(x \mid x')$, p. ej. una caminata
+normal), la razón de propuestas se cancela y queda el algoritmo original de
+Metropolis: aceptar con probabilidad $\min\{1, \pi(x')/\pi(x)\}$.
+
+<RCell
+  id="04/mh-densidad-trabajo1"
+  title="Metropolis-Hastings sobre la densidad del Trabajo 1"
+  code={`set.seed(2026)
+# Trabajo 1: f(x) proporcional a exp(-(x-1)^2/2) + exp(-(x-4)^2/2), 0 < x < 5
+log_pi <- function(x) {
+  if (x <= 0 || x >= 5) return(-Inf)
+  log(exp(-(x - 1)^2 / 2) + exp(-(x - 4)^2 / 2))
+}
+
+metropolis <- function(n, x0, sigma = 1) {
+  x <- numeric(n); x[1] <- x0
+  acept <- 0
+  for (t in 2:n) {
+    prop <- x[t - 1] + rnorm(1, 0, sigma)
+    if (runif(1) < exp(log_pi(prop) - log_pi(x[t - 1]))) {
+      x[t] <- prop; acept <- acept + 1
+    } else x[t] <- x[t - 1]
+  }
+  attr(x, "tasa_aceptacion") <- acept / (n - 1)
+  x
+}
+
+cadena <- metropolis(30000, 2, sigma = 1.2)
+cat("Tasa de aceptacion:", sprintf("%.1f%%\\n",
+    100 * attr(cadena, "tasa_aceptacion")))
+
+par(mfrow = c(1, 2))
+hist(cadena, breaks = 80, freq = FALSE, col = "#c4b5fd", border = NA,
+     main = "Muestra MCMC vs objetivo", xlab = "x", ylab = "densidad")
+curve(0.5 * dnorm(x, 1, 1) + 0.5 * dnorm(x, 4, 1), 0, 5,
+      add = TRUE, lwd = 2, col = "#5b21b6")
+plot(cadena[1:2000], type = "l", col = "#a78bfa",
+     xlab = "iteracion", ylab = "x",
+     main = "Primeras 2000 iteraciones (traza)")
+par(mfrow = c(1, 1))
+
+# Media y varianza por Monte Carlo (respuesta del Trabajo 1, punto 1b)
+cat("Media estimada:", sprintf("%.4f\\n", mean(cadena)))
+cat("Varianza estimada:", sprintf("%.4f\\n", var(cadena)))`}
+/>
+
+Fíjate en el detalle: cada componente de la mezcla es
+$N(\text{centro}, 1)$ — la densidad del enunciado es suma de exponenciales
+cuadráticas sin el $1/2$ dentro, que corresponde exactamente a normales con
+desviación 1. La muestra MCMC reproduce la mezcla 50/50 sin conocer la
+constante de normalización, que es la gracia del método.
+
+## 4. Diagnóstico: la cadena es Markov, la muestra no es iid
+
+La salida de MCMC está **correlacionada por construcción** (cada punto
+nació cerca del anterior). Toda estimación debe reportar esa
+correlación, y los tres diagnósticos mínimos son:
+
+- **Tasa de aceptación**: con propuestas normales, la regla práctica
+  busca 20–50%. Tasas altísimas significan pasos demasiado tímidos (la
+  cadena explora despacio); bajísimas, pasos temerarios.
+- **Traza**: debe moverse libremente por el soporte, sin pegarse a un valor
+  ni tardar cientos de iteraciones en cruzar de un modo al otro.
+- **Correlograma de la cadena**: la autocorrelación decae; si se mantiene
+  alta por cientos de rezagos, el tamaño efectivo de la muestra es
+  pequeño y el error de Monte Carlo es mayor que $1/\sqrt{n}$.
+
+<RCell
+  id="04/mh-diagnostico"
+  title="Tres pasos de propuesta, tres destinos"
+  code={`set.seed(7)
+op <- par(mfrow = c(3, 2))
+for (sigma in c(0.05, 0.8, 10)) {
+  cad <- metropolis(5000, 2, sigma = sigma)
+  tasa <- sprintf("%.0f%%", 100 * attr(cad, "tasa_aceptacion"))
+  plot(cad[1:1000], type = "l", col = "#a78bfa", ylim = c(0, 5),
+       main = paste0("sigma = ", sigma, " — acepta ", tasa),
+       xlab = "", ylab = "x")
+  acf(cad, main = "", lag.max = 40)
+}
+par(op)
+
+# Tamano efectivo de muestra: 1 / (1 + 2*sum rho_k)
+tamano_efectivo <- function(cad) {
+  rho <- acf(cad, lag.max = 100, plot = FALSE)$acf[-1]
+  n <- length(cad)
+  round(n / (1 + 2 * sum(rho)))
+}
+cat("sigma 0.05: ESS", tamano_efectivo(metropolis(5000, 2, 0.05)), "de 5000\\n")
+cat("sigma 0.80: ESS", tamano_efectivo(metropolis(5000, 2, 0.8)), "de 5000\\n")`}
+/>
+
+Con $\sigma = 0.05$ la cadena acepta casi todo pero se arrastra: la
+autocorrelación es enorme y el tamaño efectivo cae en picada. Con $\sigma$
+grande salta lejos y rechaza casi siempre. El punto dulce intermedio es el
+que produce la mejor muestra por iteración — la misma disyuntiva que
+calibra todo MCMC moderno.
+
+## 5. Gibbs: muestrear por partes
+
+Cuando la distribución conjunta es intratable pero las **condicionales**
+a cada variable son tractables, el muestreador de Gibbs las alterna:
+
+1. Dado $x$, simular $y$ de su condicional $\pi(y \mid x)$.
+2. Dado ese $y$, simular $x$ de $\pi(x \mid y)$.
+3. Repetir. La pareja resultante recorre la conjunta.
+
+Es Metropolis-Hastings con aceptación 100%: cada paso simula de la
+condicional exacta, así que nunca se rechaza. El precio es saber derivar
+las condicionales.
+
+El Trabajo 1 trae el caso ilustrativo perfecto: una conjunta con
+**soporte mixto** — $N$ discreto en $\{0, 1, 2, \dots\}$ y $X$ continua y
+positiva:
+
+$$f(x, n) \propto e^{-3x}\, \frac{x^{n}}{n!}$$
+
+Reconocer la forma es todo: condicional a $x$, la parte en $n$ es una
+Poisson$(x)$; condicional a $n$, la parte en $x$ es una
+Gamma$(n+1, 3)$ (forma $n+1$, tasa $3$). Gibbs las alterna directamente.
+
+<RCell
+  id="04/gibbs-mixta-trabajo1"
+  title="Gibbs sobre la conjunta mixta del Trabajo 1"
+  code={`set.seed(41)
+# f(x, n) proporcional a exp(-3x) x^n / n!,  x > 0,  n = 0, 1, 2, ...
+# Condicionales exactas:
+#   n | x  ~  Poisson(x)
+#   x | n  ~  Gamma(n + 1, rate = 3)
+gibbs <- function(iter, x0 = 1) {
+  x <- numeric(iter); n <- numeric(iter)
+  xi <- x0
+  for (t in 1:iter) {
+    ni <- rpois(1, xi)
+    xi <- rgamma(1, ni + 1, rate = 3)
+    x[t] <- xi; n[t] <- ni
+  }
+  data.frame(x = x, n = n)
+}
+
+muestra <- gibbs(40000, x0 = 1)
+cat("Media de x:", sprintf("%.4f\\n", mean(muestra\$x)))
+cat("Media de n:", sprintf("%.4f\\n", mean(muestra\$n)))
+
+# Puntos 2a y 2b del Trabajo 1
+plot(muestra\$x[1:8000], muestra\$n[1:8000], pch = 16, cex = 0.5,
+     col = "#7c3aed", xlab = "x", ylab = "n",
+     main = "Diagrama de dispersion de la conjunta (Gibbs)")
+cat("P(X^2 < N):", sprintf("%.4f\\n", mean(muestra\$x^2 < muestra\$n)))
+cat("E(X^N):", sprintf("%.4f\\n", mean(muestra\$x^muestra\$n)))`}
+/>
+
+La dispersión muestra la dependencia positiva estructural: valores
+grandes de $x$ alimentan valores grandes de $n$ (la condicional de $n$ es
+Poisson con media $x$). Ningún método de simulación directa clásica
+hubiera dado esta conjunta mixta con cuatro líneas.
+
+<Callout type="warning" title="El sesgo del arranque y el burn-in">
+
+Gibbs y Metropolis arrancan donde el usuario decide, y las primeras
+iteraciones aún recuerdan ese punto. La práctica estándar: descartar las
+primeras $B$ iteraciones (**burn-in**) y reportar estimaciones con la
+cadena restante, verificando que las conclusiones no dependan de $B$ ni
+del punto de partida. La teoría del módulo 3 garantiza que la cadena olvida
+su origen; el burn-in es la cortesía práctica de acelerar ese olvido.
+
+</Callout>
+
+## 6. Cierre
+
+<Quiz
+  question="En Metropolis-Hastings con propuesta simétrica, la cadena rechaza una propuesta y permanece en el estado actual. ¿Qué se pierde y qué se gana con ese paso?"
+  options={[
+    "Se pierde una iteración; se gana nada: los pasos de quietud no aportan información",
+    "Nada se pierde: contar el estado repetido es esencial para que la estacionaria sea π (la diagonal de P crece y el balance se preserva)",
+    "El algoritmo debe reiniciarse desde un nuevo valor inicial",
+    "La cadena deja de ser de Markov porque repite estado"
+  ]}
+  correctIndex={1}
+  explanation="La magia del rechazo 'paciente': la probabilidad de quedarse es $1 - \alpha$, y esa diagonal exacta es la que hace que $\pi$ cumpla balance detallado. Si en vez de quedarse se repitiera la propuesta o se descartara la iteración, la fracción de tiempo por estado ya no convergería a $\pi$. Quedarse quieto ES explorar: le da a cada estado el peso exacto que la estacionaria exige."
+/>
+
+<Flashcard
+  items={[
+    {
+      front: "Aceptación de Metropolis-Hastings",
+      back: "$\\alpha(x,x') = \\min\\{1, \\pi(x')g(x|x') / (\\pi(x)g(x'|x))\\}$. Con propuesta simétrica queda $\\min\\{1, \\pi(x')/\\pi(x)\\}$."
+    },
+    {
+      front: "Por qué la estacionaria es π",
+      back: "La construcción de α garantiza balance detallado π(x)P(x→x') = π(x')P(x'→x); por el resultado del módulo 3, π es estacionaria y única bajo ergodicidad."
+    },
+    {
+      front: "Regla de tasa de aceptación",
+      back: "Con propuestas tipo caminata, se busca 20–50%: muy alta = pasos tímidos y exploración lenta; muy baja = saltos temerarios casi siempre rechazados."
+    },
+    {
+      front: "Muestreador de Gibbs",
+      back: "Alternar simulaciones de las condicionales exactas π(x|y) y π(y|x). Es Metropolis con aceptación 100%; requiere condicionales tractables y basta conocer la conjunta hasta constante."
+    }
+  ]}
+/>
+
+### ¿Qué modelarías tú?
+
+Piensa en una posterior bayesiana de tu área: un parámetro con verosimilitud
+compleja y una previa informativa, o la distribución de una pérdida agregada
+condicionada a datos. Escribe la densidad a la que llegarías y decide:
+¿condicionales tractables para Gibbs, o solo la forma proporcional para
+Metropolis? El Trabajo 1 te pide exactamente esa decisión.
+
+<LabExercise
+  id="lab-04-mcmc-completo"
+  title="MCMC completo: del rechazo clásico a Gibbs"
+  tasks={[
+    "Calibra el Metropolis-Hastings del código: prueba sigma en {0.1, 0.5, 1, 2, 4} con 10000 iteraciones y burn-in de 1000. ¿Qué sigma minimiza el error absoluto de la media estimada contra 2.5 (media exacta de la mezcla 50/50 simétrica)?",
+    "Con el sigma óptimo, estima P(X < 2) por Monte Carlo con su error estándar (módulo de la correlación con el tamaño efectivo de muestra). ¿El intervalo al 95% cubre el valor exacto 0.5?",
+    "En el Gibbs de la conjunta mixta, arranca desde x0 = 0.05 y desde x0 = 20 en cadenas separadas de 20000 iteraciones. Compara las medias de x con y sin burn-in de 500: ¿qué tan rápido olvida el arranque esta cadena?",
+    "Implementa el punto 3 del Trabajo 1: inventario (s,S) con la distribución de demanda del cuadro (d <- 0:10; p <- c(0.01,...)). Simula 10000 periodos de la cadena de inventario (pedido hasta S=10 si x<5, sino queda igual), estimando la fracción de periodos con quiebre de stock (x=0 al inicio del periodo) y el nivel medio."
+  ]}
+  hint="Para el punto 2, la ESS es n/(1+2Σrho) y el error estándar del promedio es sd/sqrt(ESS). Para el punto 4: el estado es el inventario al inicio del periodo; si x<5 se pide S-x unidades, luego llega la demanda D y el próximo estado es max(x + pedido - D, 0)."
+  solution={"1) El mínimo de error suele estar en sigma ≈ 1: mezcla de tasa de aceptación ~35-50% con saltos que cruzan el valle entre modos en pocas iteraciones. Valores muy chicos sesgan la exploración hacia el modo de arranque.\n2) Con ESS ≈ 1000-2000 de 9000, el ee de la media es sd/sqrt(ESS) ≈ 1.7/sqrt(ESS); el IC al 95% cubre 0.5 si la cadena mezcla bien (el objetivo es simétrico y la P exacta es 0.5 por simetría de la mezcla).\n3) Gibbs olvida el arranque muy rápido: las condicionales exactas rompen la dependencia del punto inicial en decenas de iteraciones; con burn-in 500 ambas cadenas dan la misma media a menos de un error estándar.\n4) La fracción de quiebres de stock ronda 1-2%: el pedido hasta S=10 protege bien contra demandas con media ≈ 5. El nivel medio oscila cerca de S - E[D] = 5 (con caída por el recorte en 0)."}
+  code={`
+set.seed(2026)
+
+# ---- 1-2. Calibracion de Metropolis y estimacion con error ----
+log_pi <- function(x) {
+  if (x <= 0 || x >= 5) return(-Inf)
+  log(exp(-(x - 1)^2 / 2) + exp(-(x - 4)^2 / 2))
+}
+metropolis <- function(n, x0, sigma) {
+  x <- numeric(n); x[1] <- x0
+  for (t in 2:n) {
+    prop <- x[t - 1] + rnorm(1, 0, sigma)
+    if (runif(1) < exp(log_pi(prop) - log_pi(x[t - 1]))) x[t] <- prop
+    else x[t] <- x[t - 1]
+  }
+  x
+}
+
+tamano_efectivo <- function(cad) {
+  rho <- acf(cad, lag.max = 100, plot = FALSE)\$acf[-1]
+  round(length(cad) / (1 + 2 * sum(rho)))
+}
+
+for (sigma in c(0.1, 0.5, 1, 2, 4)) {
+  cad <- metropolis(10000, 2, sigma)[-(1:1000)]
+  ess <- tamano_efectivo(cad)
+  p_menor2 <- mean(cad < 2)
+  ee <- sd(cad < 2) / sqrt(ess)
+  cat(sprintf("sigma %.1f: media %.3f  P(X<2)=%.4f (ee %.4f)  ESS %d\\n",
+              sigma, mean(cad), p_menor2, ee, ess))
+}
+
+# ---- 3. Gibbs: velocidad de olvido del arranque ----
+gibbs <- function(iter, x0) {
+  x <- numeric(iter); xi <- x0
+  for (t in 1:iter) {
+    ni <- rpois(1, xi)
+    xi <- rgamma(1, ni + 1, rate = 3)
+    x[t] <- xi
+  }
+  x
+}
+for (x0 in c(0.05, 20)) {
+  g1 <- gibbs(20000, x0)
+  cat(sprintf("x0=%5.2f: media sin burn-in %.4f | con burn-in %.4f\\n",
+              x0, mean(g1), mean(g1[-(1:500)])))
+}
+
+# ---- 4. Inventario (s,S): punto 3 del Trabajo 1 ----
+d <- 0:10
+p <- c(0.01, 0.05, 0.11, 0.17, 0.19, 0.17, 0.13, 0.08, 0.05, 0.02, 0.01)
+s <- 5; S <- 10
+T <- 10000
+inv <- numeric(T); inv[1] <- S
+for (t in 2:T) {
+  pedido <- if (inv[t - 1] < s) S - inv[t - 1] else 0
+  D <- sample(d, 1, prob = p)
+  inv[t] <- max(inv[t - 1] + pedido - D, 0)
+}
+cat("Fraccion de periodos con quiebre:", sprintf("%.4f\\n", mean(inv == 0)))
+cat("Nivel medio del inventario:", sprintf("%.4f\\n", mean(inv)))
+`}
+>
+El laboratorio recorre el camino completo del Trabajo 1: calibración
+de Metropolis-Hastings sobre la densidad bimodal, estimación Monte Carlo
+con tamaño efectivo de muestra, robustez del arranque en Gibbs, y la
+aplicación de inventario (s,S) como cadena de Markov. Las cuatro piezas,
+resueltas, son el trabajo entregable.
+</LabExercise>

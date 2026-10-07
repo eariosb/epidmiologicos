@@ -1,0 +1,342 @@
+---
+title: "2. Cadenas de Markov en tiempo discreto"
+slug: "02-cadenas-markov-discretas"
+objective: "Dominar la propiedad de Markov y la matriz de transición, simular trayectorias de una cadena en R, y calcular distribuciones en n pasos con la ecuación de Chapman-Kolmogorov."
+order: 2
+datasets: []
+duration: 85
+prerequisites: ["Módulo 1: Procesos estocásticos"]
+---
+
+import { Callout } from '@/components/Callout'
+import { CodeBlock } from '@/components/CodeBlock'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { DataTable } from '@/components/DataTable'
+
+## 1. La memoria más corta posible
+
+La caminata aleatoria del módulo pasado tenía una propiedad notable pero que
+pasamos por alto: para saber dónde puede estar el capital del apostador en la
+ronda siguiente, **solo hace falta saber dónde está ahora**. Cómo llegó
+hasta ahí, con qué historia de ganancias y pérdidas, es irrelevante.
+
+Esa observación define la familia más importante de procesos discretos: las
+cadenas de Markov. Formalmente, $\{X_t\}_{t \geq 0}$ con espacio de estados
+discreto $E$ es una **cadena de Markov** si para todo $n$ y todo estado $j$:
+
+$$P(X_{n+1} = j \mid X_n = i, X_{n-1} = i_{n-1}, \dots, X_0 = i_0) = P(X_{n+1} = j \mid X_n = i)$$
+
+El futuro, condicionado al presente, es **independiente del pasado**. La
+historia entera del proceso se comprime en su valor actual.
+
+<Callout type="tip" title="Markov no es olvido total">
+
+La propiedad de Markov no dice que el pasado no importe; dice que el pasado
+**ya quedó resumido** en el presente. Si un sistema necesita más memoria,
+siempre se puede ampliar el espacio de estados: el proceso $(X_t, X_{t-1})$ es
+de Markov aunque $X_t$ solo no lo sea. Esta amplificación de estado es una
+herramienta estándar que reaparecerá en las EDE del bloque III.
+
+</Callout>
+
+## 2. La matriz de transición: todo el ADN de la cadena
+
+Si el espacio de estados es finito, $E = \{1, \dots, k\}$, la cadena queda
+completamente determinada por:
+
+- la **distribución inicial** $\lambda_0 = (P(X_0 = 1), \dots, P(X_0 = k))$, y
+- la **matriz de transición** $P = (p_{ij})$ con $p_{ij} = P(X_{n+1} = j \mid X_n = i)$.
+
+Cada fila de $P$ es una distribución de probabilidad: $p_{ij} \geq 0$ y
+$\sum_j p_{ij} = 1$ (matriz **estocástica**). Leer $P$ es leer el
+comportamiento de la cadena en un paso, y de ahí, por Chapman-Kolmogorov, en
+cualquier número de pasos.
+
+El ejemplo de cabecera del curso será el clima de Medellín en un modelo de
+juguete: soleado, nublado o lluvioso. Lo importante no es el realismo
+meteorológico sino la mecánica que se practica con él.
+
+<DataTable
+  title="Matriz de transición del clima (modelo de juguete)"
+  description="Filas: estado hoy. Columnas: estado mañana. Cada fila suma 1."
+  variables={[
+    { name: "S (soleado)", type: "fila 1", description: "S→S 0.5, S→N 0.4, S→L 0.1: los días buenos se resisten a morir" },
+    { name: "N (nublado)", type: "fila 2", description: "N→S 0.3, N→N 0.4, N→L 0.3: el nublado es indeciso" },
+    { name: "L (lluvioso)", type: "fila 3", description: "L→S 0.2, L→N 0.5, L→L 0.3: la lluvia rara vez se encadena" }
+  ]}
+  source="Ross (1996), cap. 2 (ejemplo adaptado)"
+  license="Uso académico"
+/>
+
+## 3. Chapman-Kolmogorov: el pasado en potencia de la matriz
+
+¿Y en dos días? La regla de la probabilidad total en cadena da:
+
+$$P(X_{n+2} = j \mid X_n = i) = \sum_{k} p_{ik}\, p_{kj} = (P^2)_{ij}$$
+
+Y en general, la matriz de transición en $n$ pasos es la potencia $P^n$. La
+ecuación de **Chapman-Kolmogorov**,
+$P^{m+n} = P^m \cdot P^n$, parece trivial escrita con matrices, pero es la
+razón profunda por la que el álgebra lineal tomará el control del resto del
+curso: potencias, valores propios, límites de potencias. La distribución en
+el tiempo $n$ también evoluciona linealmente:
+
+$$\lambda_n = \lambda_0 \, P^n$$
+
+<RCell
+  id="02/clima-trayectoria"
+  title="La cadena del clima: trayectoria y conteo"
+  code={`set.seed(2026)
+estados <- c("S", "N", "L")
+P <- matrix(c(
+  0.5, 0.4, 0.1,
+  0.3, 0.4, 0.3,
+  0.2, 0.5, 0.3
+), nrow = 3, byrow = TRUE,
+   dimnames = list(estados, estados))
+
+# Un paso desde nublado: la fila 2 es la receta
+print(P["N", ])
+
+# Simular 90 dias de clima partiendo de soleado
+simular_cadena <- function(P, x0, n) {
+  k <- nrow(P)
+  x <- numeric(n + 1); x[1] <- x0
+  for (t in 1:n) {
+    x[t + 1] <- sample(k, 1, prob = P[x[t], ])
+  }
+  x
+}
+x <- simular_cadena(P, 1, 90)
+plot(x - 1, type = "s", col = "#5b21b6", yaxt = "n",
+     xlab = "día", ylab = "", main = "90 días simulados de la cadena del clima")
+axis(2, at = 0:2, estados)
+table(factor(estados[x], levels = estados))`}
+/>
+
+La simulación produce una película; el álgebra produce la ley completa.
+Comparemos las dos vistas: la frecuencia empírica de estados en una
+trayectoria larga contra la distribución exacta $\lambda_n = \lambda_0 P^n$.
+
+<RCell
+  id="02/clima-distribucion-exacta"
+  title="Frecuencia simulada contra distribución exacta"
+  code={`library(expm)   # operador de potencia de matrices %^%
+
+set.seed(99)
+lambda0 <- c(1, 0, 0)          # arranca soleado
+lambda_n <- lambda0
+for (n in c(1, 3, 10)) {
+  lambda_n <- lambda0 %*% (P %^% n)
+  cat(sprintf("lambda(%2d) = (%.3f, %.3f, %.3f)\\n", n,
+              lambda_n[1], lambda_n[2], lambda_n[3]))
+}
+
+# Trayectoria larga: frecuencias empiricas
+simular_cadena <- function(P, x0, n) {
+  k <- nrow(P)
+  x <- numeric(n + 1); x[1] <- x0
+  for (t in 1:n) x[t + 1] <- sample(k, 1, prob = P[x[t], ])
+  x
+}
+x <- simular_cadena(P, 1, 5000)
+freq <- table(factor(estados[x], levels = estados)) / length(x)
+cat("\\nFrecuencia empirica en 5000 dias:",
+    sprintf("(%.3f, %.3f, %.3f)\\n", freq[1], freq[2], freq[3]))`}
+/>
+
+Tres observaciones que valen un módulo entero:
+
+1. La distribución exacta se estabiliza muy rápido: en $n = 10$ pasos ya dejó
+   de moverse apreciablemente.
+2. La frecuencia empírica de una trayectoria larga coincide con ese límite,
+   aunque la trayectoria individual sigue saltando día a día.
+3. El límite no recuerda $\lambda_0$: partiendo de nublado se llega al mismo
+   lugar. Ese olvido del arranque es la **distribución estacionaria**, el
+   tema del módulo 3.
+
+<Callout type="warning" title="Ojo con la aritmética de matrices en R">
+
+El operador `%*%` es el producto matricial; `*` multiplica elemento a
+elemento. Y para potencias, `%^%` viene del paquete `expm`, que se instala
+solo la primera vez que la celda lo llama. En el fondo hay algo más serio:
+`expm` usa la **exponencial de matriz** vía valores propios, la misma
+maquinaria que en el bloque III resolverá cadenas en tiempo continuo.
+
+</Callout>
+
+## 4. Cadenas de dos estados: el laboratorio mínimo completo
+
+Antes de escalar, conviene dominar la cadena más pequeña posible: dos
+estados, transiciones $\alpha$ (de 1 a 2) y $\beta$ (de 2 a 1). Es el modelo
+de un dispositivo que alterna entre funcionar y fallar, o un gen entre
+encendido y apagado. Aquí toda la teoría se puede verificar a mano:
+
+$$P = \begin{pmatrix} 1-\alpha & \alpha \\ \beta & 1-\beta \end{pmatrix}
+\qquad \Rightarrow \qquad
+\pi = \left( \frac{\beta}{\alpha+\beta},\; \frac{\alpha}{\alpha+\beta} \right)$$
+
+<RCell
+  id="02/dos-estados"
+  title="La cadena de dos estados, completa y verificable"
+  code={`library(expm)
+set.seed(5)
+alfa <- 0.2; beta <- 0.3
+P2 <- matrix(c(1 - alfa, alfa, beta, 1 - beta), nrow = 2, byrow = TRUE)
+
+# Pi exacta por formula
+pi_exacto <- c(beta, alfa) / (alfa + beta)
+
+# Y por simulacion larga
+x <- simular_cadena(P2, 1, 20000)
+cat("pi exacto      :", sprintf("(%.4f, %.4f)\\n", pi_exacto[1], pi_exacto[2]))
+cat("pi simulado    :", sprintf("(%.4f, %.4f)\\n", mean(x == 1), mean(x == 2)))
+
+# Convergencia: lambda_n contra pi, en escala log
+l <- c(1, 0)
+convergencia <- t(sapply(0:8, function(n) as.numeric(l %*% (P2 %^% n))))
+matplot(0:8, convergencia, type = "l", lty = 1, lwd = 2,
+        col = c("#5b21b6", "#a78bfa"),
+        xlab = "paso n", ylab = "P(X_n = i)",
+        main = "Convergencia geometrica a la estacionaria")
+abline(h = pi_exacto, col = c("#5b21b6", "#a78bfa"), lty = 3)
+legend("topright", c("P(estado 1)", "P(estado 2)"),
+       col = c("#5b21b6", "#a78bfa"), lwd = 2, bty = "n")`}
+/>
+
+La convergencia es **geométrica**: cada paso multiplica el desvío respecto
+de $\pi$ por el factor $(1-\alpha-\beta)$, el segundo valor propio de $P$.
+Esa velocidad de olvido, controlada por el espectro de la matriz, reaparece
+en tiempo continuo como $e^{\lambda_2 t}$ en el módulo 9.
+
+## 5. Del clima al mundo real: sistemas de bonificación
+
+¿Para qué sirve todo esto fuera del aula? La aplicación actuarial más
+directa de las cadenas de Markov discretas es el **sistema de
+bonificación-malus (NCD)** de los seguros de autos: el estado es la clase de
+descuento del conductor (0%, 10%, 20%, ...), que sube un nivel por cada año
+sin siniestros y cae varios por cada accidente. La matriz de transición la
+definen las reglas comerciales; su estacionaria determina la composición de
+la cartera a largo plazo y, con ella, la prima media que la tarificación
+debe sostener. En el laboratorio construyes la matriz del sistema de cuatro
+clases del Quiz 1 y estimas su $\pi$ por simulación.
+
+## 6. Cierre
+
+<Quiz
+  question="Una cadena tiene matriz P con p_12 = 0.4. Si hoy (paso 0) está en el estado 1, ¿cuál es la probabilidad de estar en el estado 2 en el paso 2 exacto, pasando obligatoriamente por el estado 1 en el paso 1?"
+  options={[
+    "0.4, porque la probabilidad en dos pasos es la misma que en uno",
+    "0.4 · p_11 + p_11 · 0.4, sumando los caminos que regresan",
+    "p_11 · 0.4, el único camino 1→1→2",
+    "No se puede saber sin la distribución inicial"
+  ]}
+  correctIndex={2}
+  explanation="El evento $X_2 = 2$ con $X_0 = 1$ y $X_1 = 1$ forzado solo puede ocurrir por el camino $1 \to 1 \to 2$: probabilidad $p_{11} \cdot p_{12}$. En general, sin condicionar el paso intermedio, $P(X_2 = 2 \mid X_0 = 1) = (P^2)_{12}$ suma todos los caminos intermedios — condicionar el paso 1 cambia el problema de ley del proceso a probabilidad de trayectoria."
+/>
+
+<Flashcard
+  items={[
+    {
+      front: "Propiedad de Markov",
+      back: "$P(X_{n+1}=j \\mid X_n=i, \\text{historia}) = P(X_{n+1}=j \\mid X_n=i)$. El futuro, dado el presente, es independiente del pasado."
+    },
+    {
+      front: "Matriz estocástica",
+      back: "Matriz con $p_{ij} \\geq 0$ y filas que suman 1. Cada fila es la distribución del estado siguiente condicionada a esa fila."
+    },
+    {
+      front: "Ecuación de Chapman-Kolmogorov",
+      back: "$(P^{m+n})_{ij} = \\sum_k (P^m)_{ik}(P^n)_{kj}$: transitar en $m+n$ pasos equivale a pasar por cualquier estado intermedio $k$. En forma matricial, $P^{m+n} = P^m P^n$."
+    },
+    {
+      front: "Distribución en el paso n",
+      back: "$\\lambda_n = \\lambda_0 P^n$ con $\\lambda_0$ como vector fila. La ley evoluciona multiplicando por la derecha."
+    }
+  ]}
+/>
+
+### ¿Qué modelarías tú?
+
+Una cadena de Markov discreta ronda cualquier sistema que evolucione por
+estados: el estado de ánimo de un cliente (satisfecho, neutral, insatisfecho),
+el nivel de riesgo de un deudor, el uso de un servidor. Elige uno, escribe
+su matriz de transición a mano (justifica las probabilidades) y trae la
+matriz a clase: en el módulo 3 calcularemos su estacionaria y discutiremos
+su comportamiento a largo plazo.
+
+<LabExercise
+  id="lab-02-bonus-malus"
+  title="El sistema de bonificación como cadena"
+  tasks={[
+    "La matriz del código define el NCD de 4 clases {0,1,2,3} del Quiz 1: sin reclamaciones sube una clase (en la 3 permanece); con una o más, las clases 0-2 caen a 0 y la 3 cae a 1. Verifica las filas de P contra esas reglas.",
+    "Estima π por una trayectoría de 20000 años y compárala con λ_0 P^40 (álgebra exacta). ¿Qué tan cerca están y por qué?",
+    "Con los descuentos 0%, 20%, 30% y 40% sobre la prima base b: ¿qué fracción de b es la prima media de la cartera a largo plazo?",
+    "Un asegurado nuevo entra en clase 0. Estima por simulación el número esperado de años hasta alcanzar por primera vez la clase 3, y compáralo con la respuesta exacta (sistema lineal de tiempos esperados de primera visita)."
+  ]}
+  hint="p = P(cero reclamaciones en el año) = e^{-0.2} ≈ 0.8187. Para el tiempo esperado de llegada a la clase 3, resuelve el sistema k_i = 1 + Σ_j p_ij k_j con k_3 = 0 (tiempos de primera visita)."
+  solution={"1) Fila 0: (p, 1-p, 0, 0); fila 1: (1-p, 0, p, 0); fila 2: (1-p, 0, 0, p); fila 3: (0, 1-p, 0, p).\n2) Coinciden a ~3 decimales: ergodicidad en acción, el error restante es Monte Carlo O(1/sqrt(T)).\n3) π ≈ (0.130, 0.106, 0.087, 0.677): dos tercios de la cartera termina en la clase del 40% de descuento; la prima media de largo plazo ≈ 0.13·1 + 0.106·0.8 + 0.087·0.7 + 0.677·0.6 ≈ 0.70·b.\n4) El sistema lineal da k_0 ≈ 14.6 años; la simulación con 5000 réplicas replica ese valor con error estándar de ~0.06. Fíjate: aunque π concentra masa en la clase 3, llegarle por primera vez toma en promedio casi 15 años — equilibrio y primer paso son preguntas distintas."}
+  code={`
+library(expm)
+set.seed(31)
+
+# NCD de 4 clases (Quiz 1): Poisson(lambda=0.2) de reclamaciones anuales
+# p = probabilidad de cero reclamaciones
+lam <- 0.2
+p <- exp(-lam)            # = e^{-0.2} ≈ 0.8187
+k <- 4
+P <- matrix(c(
+  p,     1 - p, 0,     0,
+  1 - p, 0,     p,     0,
+  1 - p, 0,     0,     p,
+  0,     1 - p, 0,     p
+), nrow = k, byrow = TRUE)
+print(round(P, 4))
+
+simular_cadena <- function(P, x0, n) {
+  k <- nrow(P)
+  x <- numeric(n + 1); x[1] <- x0
+  for (t in 1:n) x[t + 1] <- sample(k, 1, prob = P[x[t], ])
+  x
+}
+
+# ---- 2. pi: trayectoria larga vs algebra exacta ----
+x <- simular_cadena(P, 1, 20000)
+pi_sim <- tabulate(x, k) / length(x)
+lambda <- as.numeric(c(1, 0, 0, 0) %*% (P %^% 40))
+cat("pi simulado :", sprintf("%.4f", pi_sim), "\\n")
+cat("pi exacto   :", sprintf("%.4f", lambda), "\\n")
+
+# ---- 3. Prima media de largo plazo ----
+descuentos <- c(0.0, 0.2, 0.3, 0.4)
+prima_media <- sum(lambda * (1 - descuentos))
+cat("Prima media de la cartera:", sprintf("%.4f · b\\n", prima_media))
+
+# ---- 4. Anios hasta la clase 3 por primera vez ----
+# Sistema exacto: k_i = 1 + sum_j p_ij k_j con k_3 = 0
+A <- diag(k) - P          # k_i - sum_j p_ij k_j = 1
+A[3, ] <- 0; A[3, 3] <- 1 # fila de la meta reemplazada por k_3 = 0
+b <- rep(1, k); b[3] <- 0
+k_exacto <- solve(A, b)[1]
+cat("Anios exactos desde clase 0:", sprintf("%.3f\\n", k_exacto))
+
+# Simulacion del tiempo de primera visita a la clase 3
+primera_visita <- function(x0) {
+  x <- x0; t <- 0
+  while (x != 3) { x <- sample(k, 1, prob = P[x, ]); t <- t + 1 }
+  t
+}
+T_visitas <- replicate(5000, primera_visita(1))
+cat("Anios simulados desde clase 0:", sprintf("%.3f (ee %.3f)\\n",
+    mean(T_visitas), sd(T_visitas) / sqrt(5000)))
+`}
+>
+Construimos la matriz del sistema bonus-malus de 4 clases del Quiz 1,
+estimamos su distribución estacionaria por simulación y por álgebra, calculamos
+la prima media de largo plazo de la cartera y el tiempo esperado para que un
+asegurado nuevo alcance la clase máxima. Este laboratorio prepara
+punto por punto el problema aplicado del Quiz 1.
+</LabExercise>

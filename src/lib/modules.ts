@@ -33,10 +33,10 @@ export interface ModuleEntry {
 
 /** Bloques temáticos del curso (agrupan los módulos en el sidebar). */
 export const COURSE_BLOCKS = [
-  { id: 'I', title: 'Fundamentos y cadenas de Markov', from: 1, to: 4 },
-  { id: 'II', title: 'Procesos gaussianos y EDO aleatorias', from: 5, to: 8 },
-  { id: 'III', title: 'Ruido Wiener e Itô', from: 9, to: 12 },
-  { id: 'IV', title: 'Poisson, saltos y síntesis', from: 13, to: 16 },
+  { id: 'I', title: 'Fundamentos, Markov y simulación', from: 1, to: 4 },
+  { id: 'II', title: 'Estacionariedad, martingalas y gaussianos', from: 5, to: 8 },
+  { id: 'III', title: 'Ruido Wiener, Itô y EDE', from: 9, to: 12 },
+  { id: 'IV', title: 'Poisson, riesgo y síntesis', from: 13, to: 16 },
 ] as const;
 
 export function blockForOrder(order: number) {

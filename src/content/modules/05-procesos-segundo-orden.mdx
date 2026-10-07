@@ -1,0 +1,345 @@
+---
+title: "5. Procesos de segundo orden y estacionariedad"
+slug: "05-procesos-segundo-orden"
+objective: "Trabajar con procesos en términos de sus dos primeros momentos: media, covarianza y función de autocovarianza; distinguir estacionariedad estricta de débil; reconocer ruido blanco y entender la representación de Wold como la anatomía de todo proceso estacionario."
+order: 5
+datasets: []
+duration: 85
+prerequisites: ["Módulo 1: Procesos estocásticos", "Módulo 3: Estacionariedad de cadenas"]
+---
+
+import { Callout } from '@/components/Callout'
+import { CodeBlock } from '@/components/CodeBlock'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+
+## 1. Bajar la exigencia, ganar manejabilidad
+
+Preguntarse por la ley completa de un proceso (todas las distribuciones
+finito-dimensionales y sus dependencias) es honesto pero casi nunca
+práctico. El texto guía introduce entonces la gran simplificación del
+capítulo: conformarse con **los dos primeros momentos**. Es el mismo pacto
+que hizo la estadística clásica al resumir una variable en media y varianza,
+ahora extendido al tiempo.
+
+Un proceso $\{X_t\}$ es **de segundo orden** si $E[X_t^2] < \infty$ para todo
+$t$. Para esos procesos, toda la descripción de primer nivel son dos
+funciones:
+
+$$\mu(t) = E[X_t] \qquad \text{y} \qquad \gamma(s, t) = \mathrm{Cov}(X_s, X_t)$$
+
+La segunda es la **función de autocovarianza**: la covarianza del proceso
+consigo mismo, a distancia $|t - s|$ de sí. Es la firma temporal del proceso:
+codifica persistencia, memoria y ritmo.
+
+<Callout type="note" title="Por qué la covarianza y no otra cosa">
+
+Con solo media y autocovarianza se puede: predecir linealmente (proyección
+en mínimos cuadrados), filtrar ruido y construir toda la teoría de series de
+tiempo. Es la cantidad mínima que hay que estimar de datos para hacer
+cualquier cosa útil con un proceso. La contrapartida es seria: dos procesos
+muy distintos pueden compartir media y covarianza, y todo lo que hagamos con
+este enfoque será ciego a esa diferencia.
+
+</Callout>
+
+## 2. Estacionariedad: dos niveles de la misma promesa
+
+**Estricta**: la ley del proceso es invariante bajo desplazamientos del
+tiempo; para todo $k$ y todo $h$:
+$$(X_{t_1}, \dots, X_{t_k}) \stackrel{d}{=} (X_{t_1 + h}, \dots, X_{t_k + h})$$
+
+**Débil (de segundo orden)**: basta con que media y autocovarianza lo sean:
+
+1. $\mu(t) = \mu$ constante,
+2. $\gamma(s, t)$ depende solo de la distancia $h = t - s$: se escribe
+   $\gamma(h)$,
+3. $\mathrm{Var}(X_t) = \gamma(0)$ finita.
+
+La débil es la que usamos en la práctica: se estima con datos y basta para
+toda la metodología lineal. La estricta es más fuerte (la implica) pero
+invérificable desde momentos; en procesos gaussianos, sin embargo, ambas
+coinciden: un proceso gaussiano queda determinado por media y covarianza,
+tema del módulo 6.
+
+De la estacionariedad débil salen dos consecuencias inmediatas y dos
+fuentes inagotables de confusión estudiantil:
+
+- La autocovarianza es **par**: $\gamma(-h) = \gamma(h)$, porque la covarianza
+  no sabe quién va primero.
+- $|\gamma(h)| \leq \gamma(0)$: nadie correlaciona más consigo mismo que
+  consigo mismo (Cauchy-Schwarz).
+
+## 3. El ladrillo mínimo: ruido blanco
+
+El proceso más simple con estacionariedad plena es el **ruido blanco**
+$\{\varepsilon_t\}$: centrado, varianza constante $\sigma^2$ y **sin
+correlación** ($\gamma(h) = 0$ para $h \neq 0$). Es el ladrillo atómico de la
+teoría: sin memoria, sin estructura, solo variación pura.
+
+<RCell
+  id="04/ruido-blanco-fac"
+  title="Ruido blanco: trayectoria y su firma"
+  code={`set.seed(8)
+n <- 500
+eps <- rnorm(n, 0, 1)
+
+op <- par(mfrow = c(1, 2))
+plot(eps, type = "l", col = "#a78bfa",
+     xlab = "t", ylab = expression(epsilon[t]),
+     main = "Ruido blanco: 500 realizaciones")
+acf(eps, main = "", lag.max = 40)
+title("FAC: solo el lag 0 sobresale", line = -1)
+par(op)
+
+# Banda teorica +/- 2/sqrt(n): el 95% de los lags deben caer dentro
+cat("Banda de significancia: +/-", sprintf("%.3f", 2 / sqrt(n)), "\\n")`}
+/>
+
+Dos detalles finos que el gráfico enseña: (i) la FAC **no** es cero en los
+lags $h \neq 0$, es cero **en esperanza** — cada barra realizada es una
+estimación con ruido propio; (ii) la banda $\pm 2/\sqrt{n}$ de Bartlett es la
+regla de lectura: si más del 5% de los lags se escapan, el proceso tiene
+memoria que el ruido blanco no permite.
+
+<Callout type="warning" title="Ruido blanco no es independiente, y menos gaussiano">
+
+La definición pide **incorrelación**, no independencia. Existen ruidos
+blancos con dependencia no lineal seria (varianza condicional dependiente del
+pasado: la familia GARCH, base de la finanzas). Cuando además el ruido
+blanco es gaussiano, incorrelación sí equivale a independencia: es el único
+caso donde las dos nociones colapsan en una. Este matiz separa el bloque I
+del II: los procesos gaussianos del módulo 6 lo tienen todo a favor.
+
+</Callout>
+
+## 4. Procesos lineales: sumas de ladrillos con pesos
+
+El gran salto conceptual del capítulo: construir procesos con memoria
+**filtrando** ruido blanco. Un proceso lineal es
+
+$$X_t = \sum_{j=-\infty}^{\infty} \psi_j\, \varepsilon_{t-j}, \qquad \sum_j \psi_j^2 < \infty$$
+
+El presente es una combinación (posiblemente infinita) de innovaciones
+pasadas. Los pesos $\psi_j$ son la **respuesta al impulso**: cuánto pesa el
+golpe de hace $j$ periodos en el nivel de hoy. Dos casos canónicos:
+
+- **Media móvil MA(1)**: $X_t = \varepsilon_t + \theta\, \varepsilon_{t-1}$,
+  memoria de exactamente un paso: $\gamma(1) = \theta\sigma^2$,
+  $\gamma(h) = 0$ para $h \geq 2$.
+- **Autorregresivo AR(1)**: $X_t = \phi X_{t-1} + \varepsilon_t$,
+  $|\phi| < 1$; la memoria decae geométricamente:
+  $\gamma(h) = \sigma^2 \phi^{|h|} / (1 - \phi^2)$.
+
+<RCell
+  id="04/ma1-ar1"
+  title="MA(1) contra AR(1): la misma varianza, memorias distintas"
+  code={`set.seed(21)
+n <- 1000
+eps <- rnorm(n)
+
+# MA(1) y AR(1) calibrados para la misma varianza total
+theta <- 0.8
+X_ma <- numeric(n)
+for (t in 2:n) X_ma[t] <- eps[t] + theta * eps[t - 1]
+
+phi <- 0.8
+X_ar <- numeric(n)
+for (t in 2:n) X_ar[t] <- phi * X_ar[t - 1] + eps[t]
+
+op <- par(mfrow = c(2, 2))
+plot(X_ma[1:200], type = "l", col = "#5b21b6", ylab = "MA(1)",
+     main = "MA(1): memoria de un paso")
+acf(X_ma, main = "", lag.max = 25)
+plot(X_ar[1:200], type = "l", col = "#5b21b6", ylab = "AR(1)",
+     main = "AR(1): memoria geometrica")
+acf(X_ar, main = "", lag.max = 25)
+par(op)
+
+# Teoria contra estimacion para el AR(1)
+cat("rho(1) estimado MA(1):", cor(X_ma[-1], X_ma[-n]), " teorico:", theta / (1 + theta^2), "\\n")
+cat("rho(1) estimado AR(1):", cor(X_ar[-1], X_ar[-n]), " teorico:", phi, "\\n")`}
+/>
+
+Mira las dos FAC: la MA(1) se apaga de golpe después del lag 1; la AR(1)
+decae como una exponencial suave. **La forma de la FAC es la huella
+dactilar de la memoria**, y leerla es la competencia central del análisis de
+series de tiempo que este curso deja instalada.
+
+## 5. El teorema de Wold: toda la anatomía disponible
+
+¿Y los procesos estacionarios que no son lineales? El teorema de **Wold**
+responde con una descomposición que es el mapa anatómico completo de todo
+proceso estacionario (no determinista) de segundo orden:
+
+$$X_t = \underbrace{\sum_{j=0}^{\infty} \psi_j\, \varepsilon_{t-j}}_{\text{parte lineal pura}} + \underbrace{V_t}_{\text{parte determinista}}$$
+
+donde $\{\varepsilon_t\}$ es ruido blanco (la **innovación**: el error de
+predicción lineal óptima de cada periodo) y $V_t$ es un proceso determinista
+predecible linealmente desde su pasado.
+
+<Callout type="curiosity" title="Wold es una promesa y una claudicación a la vez">
+
+Promesa: todo proceso estacionario tiene una representación lineal con
+ruido blanco, y esa representación es **única**. Claudicación: el ruido
+blanco de Wold puede ser dependiente en sentido no lineal (la parte lineal
+no explica todo). Para procesos gaussianos no hay diferencia; para los
+demás, la parte no lineal es territorio de la volatilidad, los saltos y los
+procesos de Lévy del bloque IV. El texto guía dedica su capítulo 2 a
+construir con calma esta descomposición: es la bisagra entre lo que sabemos
+hacer (lineal) y lo que el mundo manda (no lineal).
+
+</Callout>
+
+## 6. Estacionariedad bajo la lupa de los datos
+
+Con la teoría lista, el músculo práctico: diagnosticar estacionariedad desde
+una serie observada. El libro del profesor usa los **casos diarios de
+Covid-19 en Colombia** como el ejemplo de un proceso que **no** es
+estacionario (crece, cambia de régimen, explota en olas); contraste
+perfecto con las series simuladas de este módulo.
+
+<RCell
+  id="04/covid-vs-estacionario"
+  title="Una serie no estacionaria sintética y su rescate"
+  code={`set.seed(300)
+n <- 300
+# Emulamos la forma de una curva epidemica: crecimiento y decaimiento lento
+t <- 1:n
+semanal <- exp(0.02 * t - 0.00006 * t^2) + 2
+serie <- sapply(semanal, function(m) rpois(1, m))
+
+op <- par(mfrow = c(1, 2))
+plot(serie, type = "l", col = "#5b21b6",
+     xlab = "semana", ylab = "casos",
+     main = "Curva epidemica simulada: no estacionaria")
+acf(serie, main = "", lag.max = 40)
+par(op)
+
+# El rescate clasico: primera diferencia suaviza el nivel
+d <- diff(serie)
+op <- par(mfrow = c(1, 2))
+plot(d, type = "l", col = "#5b21b6",
+     xlab = "semana", ylab = "incremento",
+     main = "Casos incrementales")
+acf(d, main = "", lag.max = 40)
+par(op)
+
+# Prueba de rachas sobre la media: detecta no aleatoriedad en el nivel
+library(tseries)
+cat("Runs test sobre incrementos: p-valor =", runs.test(as.factor(d > mean(d)))\$p.value, "\\n")`}
+/>
+
+La FAC de la serie epidémica decae lentamente y las barras siguen
+significativas por docenas de lags: la firma clásica de raíz de nivel no
+estacionaria (una **raíz unitaria** en el lenguaje AR). Diferenciar una vez
+la estabiliza razonablemente: es la misma operación que convierte un precio
+en retorno, un camino browniano en ruido blanco, y un proceso con deriva en
+proceso estacionario. El bloque III hará de esta idea su columna vertebral:
+el browniano es la **integral acumulada** del ruido blanco.
+
+## 7. Cierre
+
+<Quiz
+  question="Un proceso tiene media constante y autocovarianza γ(h) = 1/(1+h²). ¿Qué se puede afirmar?"
+  options={[
+    "No es estacionario en sentido débil porque la covarianza decae",
+    "Es estacionario débil: la covarianza depende solo de la distancia h y decae hacia 0",
+    "Es necesariamente gaussiano porque tiene covarianza bien definida",
+    "Es ruido blanco porque γ(h) tiende a cero"
+  ]}
+  correctIndex={1}
+  explanation="Estacionariedad débil pide exactamente: media constante, varianza finita y $\gamma(s,t)$ función solo de $h=t-s$. Que decaiga hacia cero es lo típico (memoria que se extingue), no una violación. Ruido blanco sería el caso extremo $\gamma(h)=0$ para todo $h \neq 0$; y nada obliga al proceso a ser gaussiano: muchos procesos comparten esa covarianza sin serlo."
+/>
+
+<Flashcard
+  items={[
+    {
+      front: "Estacionariedad débil",
+      back: "Media constante, $\gamma(s,t)$ función solo de $|t-s|$, varianza finita. Basta para toda la metodología lineal; la estricta (ley invariante) la implica en reversa solo para gaussianos."
+    },
+    {
+      front: "Ruido blanco",
+      back: "$E[\varepsilon_t]=0$, $\mathrm{Var}=\sigma^2$ constante, $\gamma(h)=0$ para $h\neq 0$. Incorrelación, no independencia: la diferencia importa salvo en el caso gaussiano."
+    },
+    {
+      front: "FAC del AR(1)",
+      back: "Decaimiento geométrico: $\rho(h) = \phi^{|h|}$. La caída exponencial en la FAC estimada es la firma de un autorregresivo de orden 1."
+    },
+    {
+      front: "Teorema de Wold",
+      back: "Todo proceso estacionario (no determinista) es suma única de un proceso lineal en innovaciones (ruido blanco) más una parte determinista predecible. La anatomía lineal completa; lo no lineal queda fuera."
+    }
+  ]}
+/>
+
+### ¿Qué modelarías tú?
+
+Busca una serie real de tu área (una serie de retornos, llegadas de
+siniestros por mes, demanda semanal). Grafícala, calcula su FAC y decide:
+¿parece estacionaria en nivel? ¿En qué transformación (diferencias,
+logaritmos) se estabiliza? Anota la forma de la FAC: en el módulo 9
+compararás esa firma con la autocovarianza del ruido integrado y del
+browniano con deriva.
+
+<LabExercise
+  id="lab-04-memoria-y-fac"
+  title="La FAC como huella dactilar"
+  tasks={[
+    "Simula el AR(2) del código con raíces complejas (φ1=1.2, φ2=-0.7). Grafica la serie y su FAC: ¿qué forma tiene el decaimiento? ¿Qué frecuencias dominan la oscilación?",
+    "Estima la FAC muestral en T=200 y T=2000. ¿Cuál es el efecto de T sobre la dispersión de los lags y sobre la banda de Bartlett?",
+    "Construye un MA(2) con pesos 0.9 y -0.5. ¿En qué lag exacto se corta la FAC teórica? Verifica con la estimada.",
+    "La serie X_t = 0.5·t + ε_t tiene deriva determinista. Corre la FAC de X_t y la de diff(X_t): interpreta la diferencia entre ambas firmas y su diagnóstico de estacionariedad."
+  ]}
+  hint="Para el AR(2) con raíces complejas, la FAC es una sinusoide amortiguada: ρ(h) ∝ R^h·cos(ωh + φ) con R = sqrt(-φ2) y ω = acos(φ1/(2√(-φ2))). La FAC de un MA(q) se corta exactamente en el lag q."
+  solution={"1) La FAC del AR(2) con raíces complejas es una sinusoide amortiguada: oscila con periodo cercano a 8-10 lags mientras la envolvente decae. Las raíces complejas del polinomio caracteristico inducen pseudo-ciclos en la serie.\n2) Con T=200 los lags son ruidosos y la banda ±2/√T es ancha; con T=2000 la FAC estimada se pega a la teórica y la banda se estrecha: la precisión de la FAC crece como √T.\n3) La FAC teórica del MA(2) es cero desde el lag 3 en adelante; la estimada tiene barras pequeñas y dentro de la banda desde ese lag (las anteriores, ρ(1)≈0.34 y ρ(2)≈-0.30, sobresalen).\n4) La deriva determinista hace que la FAC de X_t se mantenga alta y decaiga muy lentamente (la serie es dominada por la recta 0.5t); diff(X_t) elimina la deriva y su FAC es la del ruido blanco: solo el lag 0. Diferenciar convierte la no estacionariedad de nivel en estacionariedad de incrementos."}
+  code={`
+set.seed(44)
+
+# ---- 1. AR(2) con raices complejas ----
+ar2 <- function(n, phi1, phi2) {
+  x <- numeric(n + 100)
+  eps <- rnorm(n + 100)
+  for (t in 3:(n + 100)) x[t] <- phi1 * x[t - 1] + phi2 * x[t - 2] + eps[t]
+  x[-(1:100)]
+}
+x <- ar2(2000, 1.2, -0.7)
+op <- par(mfrow = c(1, 2))
+plot(x[1:300], type = "l", col = "#5b21b6",
+     main = "AR(2): pseudo-ciclos", xlab = "t", ylab = "X_t")
+acf(x, main = "", lag.max = 30)
+par(op)
+cat("Modulo de las raices:", sqrt(0.7), " frecuencia dominante (radianes):",
+    acos(1.2 / (2 * sqrt(0.7))), "\\n")
+
+# ---- 2. Dispersion de la FAC con T creciente ----
+for (T in c(200, 2000)) {
+  x <- ar2(T, 1.2, -0.7)
+  r1 <- acf(x, lag.max = 5, plot = FALSE)\$acf[2]
+  cat(sprintf("T = %4d: rho(1) estimado = %.3f (teorico 0.706)\\n", T, r1))
+}
+
+# ---- 3. MA(2): corte exacto ----
+n <- 2000
+eps <- rnorm(n)
+X <- numeric(n)
+for (t in 3:n) X[t] <- eps[t] + 0.9 * eps[t - 1] - 0.5 * eps[t - 2]
+acf(X[3:n], lag.max = 8, main = "MA(2): FAC que se corta en el lag 2")
+
+# ---- 4. Deriva determinista y su tratamiento ----
+t <- 1:500
+X_drift <- 0.5 * t + rnorm(500)
+op <- par(mfrow = c(1, 2))
+acf(X_drift, lag.max = 30, main = "FAC de X_t con deriva")
+acf(diff(X_drift), lag.max = 30, main = "FAC de los incrementos")
+par(op)
+`}
+>
+El laboratorio recorre las cuatro firmas de la FAC: la sinusoide
+amortiguada del AR(2) con raíces complejas, el efecto del tamaño muestral
+sobre su estimación, el corte exacto del MA(2) y el diagnóstico de la deriva
+determinista. Con estas cuatro lecturas dominas la primera mitad del
+Taller 2: dada una serie, decidir qué proceso lineal la genera.
+</LabExercise>
