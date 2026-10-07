@@ -1,0 +1,294 @@
+---
+title: "7. Cadenas de Markov en tiempo continuo"
+slug: "07-cadenas-tiempo-continuo"
+objective: "Entender la matriz generadora como el ADN de una cadena en tiempo continuo, derivar las probabilidades de transición por exponencial matricial, resolver la estacionaria en tiempo continuo y responder las preguntas del problema del técnico del Quiz 2."
+order: 7
+datasets: []
+duration: 95
+prerequisites: ["Módulo 3: Largo plazo y estacionariedad", "Módulo 6: El proceso de Poisson"]
+---
+
+import { Callout } from '@/components/Callout'
+import { CodeBlock } from '@/components/CodeBlock'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { ProcessSteps } from '@/components/ProcessSteps'
+
+## 1. Saltos en tiempos aleatorios
+
+En el módulo 2 la cadena cambiaba de estado en instantes fijos: cada año, cada
+día, cada paso. Pero en el mundo real los cambios ocurren en **tiempos
+aleatorios de tiempo continuo**: una máquina falla cuando falla, un cliente
+se retira cuando se retira. El proceso de Poisson del módulo 6 es el ejemplo
+más simple: un "estado" que solo sube, con esperas exponenciales entre
+saltos.
+
+Una **cadena de Markov en tiempo continuo** (CTMC) generaliza la idea: un
+proceso $\{X(t)\}_{t \geq 0}$ sobre un espacio de estados discreto donde,
+estando en el estado $i$, el tiempo hasta el siguiente salto es
+$\mathrm{Exp}(q_i)$, y al saltar se elige el destino $j \neq i$ con
+probabilidad $p_{ij}$. Exponencialidad + memoria nula = propiedad de Markov
+en tiempo continuo.
+
+## 2. La matriz generadora: las tasas lo son todo
+
+Toda la información de la cadena se empaca en la **matriz generadora**
+$Q = (q_{ij})$:
+
+- $q_{ij} \geq 0$ para $i \neq j$: la **tasa** a la que la cadena salta de $i$
+  a $j$. Equivale a $q_i \cdot p_{ij}$: tasa total por probabilidad de elegir
+  ese destino.
+- $q_{ii} = -\sum_{j \neq i} q_{ij} = -q_i$: el negativo de la tasa total de
+  salida.
+
+Las filas de $Q$ suman cero (cada fila es una "tasa neta"). La generadora es
+al tiempo continuo lo que $P - I$ es al discreto: no da probabilidades
+directamente sino **velocidades** de cambio.
+
+<Callout type="tip" title="Leer una generadora">
+
+Una fila de $Q$ se lee así: en el estado $i$, la espera media hasta saltar es
+$1/|q_{ii}|$ y el reparto del salto entre los destinos es proporcional a los
+$q_{ij}$ de la fila. Si $q_{ij}$ es grande, el canal $i \to j$ es un grifo
+abierto; si es cero, ese salto no existe.
+
+</Callout>
+
+## 3. Del generador a las probabilidades: la exponencial matricial
+
+La pregunta del Quiz 2 es siempre esta forma: "¿probabilidad de estar en el
+estado $j$ dentro de $t$ unidades, partiendo de $i$?" La respuesta vive en la
+**matriz de transición en tiempo $t$**, $P(t) = (p_{ij}(t))$, que satisface
+las ecuaciones de Kolmogorov:
+
+$$P'(t) = P(t)\, Q = Q\, P(t), \qquad P(0) = I$$
+
+cuya solución es la exponencial de matriz:
+
+$$P(t) = e^{tQ} = \sum_{k=0}^{\infty} \frac{(tQ)^k}{k!}$$
+
+En R la calcula `expm::expm(t * Q)`. No hay versión cerrada en general, y no
+hace falta: la matriz exponencial **es** la respuesta exacta.
+
+<RCell
+  id="07/ctmc-expm"
+  title="El problema del técnico del Quiz 2"
+  code={`library(expm)
+set.seed(3)
+
+# Dos maquinas, un tecnico. Fallas Exp(lambda), reparaciones Exp(mu).
+# Estados: 0 = ambas funcionan, 1 = una fallada, 2 = ambas falladas.
+lam <- 1; mu <- 2
+Q <- matrix(c(
+  -2 * lam,  2 * lam,    0,       # de 0: cualquiera de las dos falla
+  mu,       -(mu + lam), lam,     # de 1: se repara o falla la otra
+  0,         mu,        -mu       # de 2: solo se repara (una a la vez)
+), nrow = 3, byrow = TRUE)
+print(Q)
+
+# P(t): probabilidad de ambas falladas en t horas, desde ambas sanas
+for (t in c(0.5, 1, 2, 5)) {
+  Pt <- expm(t * Q)
+  cat("t =", t, "| P(X(t)=2 | X(0)=0) =", sprintf("%.4f", Pt[1, 3]), "\\n")
+}
+
+# La estacionaria: pi Q = 0, sum(pi) = 1
+A <- t(Q); A[3, ] <- 1; b <- c(0, 0, 1)
+pi <- solve(A, b)
+cat("Estacionaria:", sprintf("%.4f", pi), "\\n")
+cat("Fraccion del tiempo con ambas falladas:", sprintf("%.2f%%\\n", 100 * pi[3]))`}
+/>
+
+Con $\lambda = 1$ y $\mu = 2$, el técnico mantiene las dos máquinas caídas
+solo una fracción pequeña del tiempo, pero esa fracción no es cero: es
+exactamente la $\pi_2$ del sistema, y en el Quiz 2 es una de las respuestas
+pedidas.
+
+## 4. La cadena subyacente y los tiempos de espera
+
+Una CTMC tiene dos almas:
+
+<ProcessSteps
+  title="Descomponer una trayectoria CTMC"
+  steps={[
+    {
+      title: "Cadena subyacente (embedded)",
+      description: "La sucesión de estados visitados, ignorando los tiempos, es una cadena de Markov discreta con matriz p_ij = q_ij / q_i. Todo lo aprendido en los módulos 2-3 aplica a ella."
+    },
+    {
+      title: "Esperas exponenciales",
+      description: "En cada visita al estado i, la cadena espera Exp(q_i) antes de saltar. Las esperas son independientes entre sí y de la cadena subyacente."
+    },
+    {
+      title: "Simulación directa (Gillespie)",
+      description: "Alternar los dos pasos produce trayectorias exactas: el algoritmo de Gillespie, que el Trabajo 2 usa para simular reacciones y migraciones crediticias."
+    }
+  ]}
+/>
+
+Esta descomposición también responde la pregunta de tiempo esperado: el
+tiempo medio hasta que ambas máquinas fallen, desde ambas sanas, se calcula
+sumando esperas esperadas a lo largo del único camino posible
+$0 \to 1 \to 2$: $1/(2\lambda) + 1/(\mu + \lambda)$ condicionado a que el
+salto desde 1 sea hacia 2 y no de regreso a 0. El laboratorio lo trabaja con
+detalle.
+
+## 5. Estacionariedad en tiempo continuo
+
+La distribución estacionaria $\pi$ se define igual que en discreto, pero la
+ecuación de equilibrio cambia de forma: en vez de $\pi P = \pi$ (flujos por
+paso) es
+
+$$\pi Q = 0, \qquad \sum_i \pi_i = 1$$
+
+Los componentes de $\pi Q = 0$ se leen como **balance de flujos**: para cada
+estado $j$, la tasa neta a la que la masa entra ($\sum_{i \neq j} \pi_i
+q_{ij}$) iguala la tasa a la que sale ($\pi_j q_j$). Es la ley de Kirchhoff
+aplicada a la probabilidad.
+
+Las cadenas de **nacimiento y muerte**, donde solo se permiten saltos a
+estados vecinos ($i \to i+1$ con tasa $\lambda_i$, $i \to i-1$ con tasa
+$\mu_i$), tienen estacionaria en forma cerrada por balance detallado:
+
+$$\pi_i = \pi_0 \prod_{k=0}^{i-1} \frac{\lambda_k}{\mu_{k+1}}$$
+
+El problema del técnico es una nacimiento-muerte de 3 estados: sus $\pi$ por
+la fórmula y por `solve` coinciden, y en el laboratorio lo comprobarás.
+
+## 6. Tiempos de ocupación
+
+Última pieza del Taller 2 en este tema: la **fracción de tiempo** que una
+CTMC pasa en cada estado es en sí misma una variable aleatoria, y a largo
+plazo converge a $\pi_i$. Para una cadena de dos estados (funciona/falla,
+ocupado/libre) la cuenta es directa: si las tasas son $\alpha$ (salida de 0)
+y $\beta$ (salida de 1), la fracción estacionaria en el estado 1 es
+$\alpha/(\alpha + \beta)$. La simulación del lab lo verifica acumulando el
+tiempo real en cada estado.
+
+## 7. Cierre
+
+<Quiz
+  question="En el problema del técnico (dos máquinas, λ = 1, μ = 2), estando en el estado 1 (una fallada), ¿cuál es la probabilidad de que el próximo salto lleve a ambas máquinas falladas en vez de reparar la actual?"
+  options={[
+    "1/3: compiten Exp(λ) contra Exp(μ) y gana la de menor tasa relativa",
+    "1/2: dos destinos posibles, equiprobables",
+    "μ/(λ+μ) = 2/3: la reparación es más rápida así que domina",
+    "Depende de cuánto tiempo lleve en el estado 1"
+  ]}
+  correctIndex={0}
+  explanation="En el estado 1 compiten una falla Exp(1) y una reparación Exp(2). El mínimo de exponenciales independientes es Exp(λ + μ) = Exp(3) y gana la falla con probabilidad λ/(λ+μ) = 1/3. La memoria nula hace que el tiempo ya pasado en el estado no importe."
+/>
+
+<Flashcard
+  items={[
+    {
+      front: "Matriz generadora Q",
+      back: "$q_{ij} \\geq 0$ es la tasa $i \\to j$; $q_{ii} = -\\sum_{j \\neq i} q_{ij}$. Filas suman cero. Son velocidades, no probabilidades."
+    },
+    {
+      front: "Estructura de la trayectoria",
+      back: "En el estado $i$ se espera $\\mathrm{Exp}(q_i)$ y luego se salta a $j$ con probabilidad $q_{ij}/q_i$."
+    },
+    {
+      front: "Ecuaciones de Kolmogorov",
+      back: "$P'(t) = P(t)Q = QP(t)$ con $P(0) = I$; solución $P(t) = e^{tQ}$ (expm en R)."
+    },
+    {
+      front: "Estacionaria CTMC",
+      back: "$\\pi Q = 0$ con $\\sum \\pi_i = 1$: balance de flujos entrantes y salientes en cada estado."
+    },
+    {
+      front: "Nacimiento-muerte",
+      back: "Saltos solo a vecinos con tasas $\\lambda_i, \\mu_i$; estacionaria por balance detallado: $\\pi_i = \\pi_0 \\prod \\lambda_k/\\mu_{k+1}$."
+    },
+    {
+      front: "Gillespie",
+      back: "Simulación exacta: alternar espera $\\mathrm{Exp}(q_i)$ y salto proporcional a las tasas. Base de las simulaciones del Trabajo 2."
+    }
+  ]}
+/>
+
+<LabExercise
+  id="lab-07-ctmc"
+  title="El técnico del Quiz 2, completo"
+  tasks={[
+    "Con λ = 1 y μ = 2, calcula P(X(1) = 2 | X(0) = 0) por exponencial matricial y verifícala simulando 5000 trayectorias Gillespie.",
+    "Deriva la estacionaria por solve y por la fórmula de nacimiento-muerte (π_i = π_0 · prod λ_k/μ_{k+1}). ¿Coinciden?",
+    "Estima el tiempo esperado hasta que ambas máquinas estén falladas, partiendo de ambas sanas: suma las esperas esperadas del camino 0→1→2 con la probabilidad de tomar el ramal correcto en el estado 1, y verifica por simulación.",
+    "Estima la fracción del tiempo con ambas máquinas caídas en un horizonte largo por tiempo de ocupación simulado, y compara con π_2."
+  ]}
+  hint="Para el tiempo hasta ambas caídas: en 0 esperas Exp(2λ) y saltas a 1 seguro; en 1 esperas Exp(λ + μ) y con probabilidad λ/(λ+μ) vas a 2, si no regresas a 0 y reinicias. Eso da una ecuación para T_0 del tipo T_0 = 1/(2λ) + 1/(λ+μ) + (μ/(λ+μ))·T_0."
+  solution={"1) P ≈ 0.156 por expm; la simulación Gillespie da un valor dentro de ±0.01 de error Monte Carlo.\n2) Con λ=1, μ=2 los pesos de nacimiento-muerte son (1, 2λ/μ, 2λ·λ/μ²) = (1, 1, 0.5), normalizados: π = (0.4, 0.4, 0.2); solve da lo mismo.\n3) T_0 = 1/2 + 1/3 + (2/3)·T_0 → T_0 = 2.5 h; la simulación lo confirma dentro del error estándar.\n4) Ocupación simulada ≈ 0.20 = π_2."}
+  code={`library(expm)
+set.seed(42)
+lam <- 1; mu <- 2
+Q <- matrix(c(-2*lam, 2*lam, 0,
+              mu, -(mu+lam), lam,
+              0, mu, -mu), 3, byrow = TRUE)
+
+# ---- 1. P(X(1) = 2 | X(0) = 0): expm vs Gillespie ----
+p_teorica <- expm(1 * Q)[1, 3]
+gillespie <- function(t_max) {
+  x <- 1; t <- 0                      # estado 1 en indice R = estado 0 real
+  qs <- c(2*lam, mu + lam, mu)
+  dest <- list(c(2), c(1, 3), c(2))
+  pr  <- list(c(1), c(mu/(mu+lam), lam/(mu+lam)), c(1))
+  while (TRUE) {
+    t <- t + rexp(1, qs[x])
+    if (t > t_max) return(x)
+    x <- dest[[x]][sample.int(length(dest[[x]]), 1, prob = pr[[x]])]
+  }
+}
+p_sim <- mean(replicate(5000, gillespie(1)) == 3)
+cat("P(X(1)=2): expm =", sprintf("%.4f", p_teorica),
+    "| simulada =", sprintf("%.4f", p_sim), "\\n")
+
+# ---- 2. Estacionaria: solve vs nacimiento-muerte ----
+A <- t(Q); A[3, ] <- 1
+pi_solve <- solve(A, c(0, 0, 1))
+w <- c(1, 2*lam/mu, (2*lam/mu)*(lam/mu))
+pi_nm <- w / sum(w)
+cat("pi solve:", sprintf("%.4f", pi_solve), "\\n")
+cat("pi N-M  :", sprintf("%.4f", pi_nm), "\\n")
+
+# ---- 3. Tiempo esperado hasta ambas falladas ----
+# T0 = 1/(2lam) + 1/(lam+mu) + (mu/(lam+mu))*T0  ->  T0 = ?
+T0 <- (1/(2*lam) + 1/(lam + mu)) / (1 - mu/(lam + mu))
+cat("T0 exacto:", sprintf("%.3f", T0), "\\n")
+tiempo_a_dos <- function() {
+  x <- 1; t <- 0
+  qs <- c(2*lam, mu + lam, mu)
+  while (x != 3) {
+    t <- t + rexp(1, qs[x])
+    if (x == 1) x <- 2
+    else if (x == 2) x <- if (runif(1) < lam/(lam+mu)) 3 else 1
+  }
+  t
+}
+T_sim <- mean(replicate(5000, tiempo_a_dos()))
+cat("T0 simulado:", sprintf("%.3f\\n", T_sim))
+
+# ---- 4. Ocupacion en ambas falladas ----
+horizonte <- 2000
+x <- 1; t <- 0; ocup <- 0
+qs <- c(2*lam, mu + lam, mu)
+while (TRUE) {
+  dt <- rexp(1, qs[x])
+  if (t + dt > horizonte) { if (x == 3) ocup <- ocup + (horizonte - t); break }
+  if (x == 3) ocup <- ocup + dt
+  t <- t + dt
+  if (x == 1) x <- 2
+  else if (x == 2) x <- if (runif(1) < lam/(lam+mu)) 3 else 1
+  else x <- 2
+}
+cat("Fraccion en estado 2:", sprintf("%.4f", ocup/horizonte),
+    "| pi_2 =", sprintf("%.4f", pi_solve[3]), "\\n")`}
+>
+El laboratorio resuelve punto por punto el problema del técnico del Quiz 2:
+probabilidad transitoria por exponencial matricial validada con Gillespie,
+estacionaria por dos caminos, tiempo esperado de doble falla y fracción de
+tiempo caído por ocupación. La misma mecánica reaparecerá en el Trabajo 2
+con la matriz de migración crediticia.
+</LabExercise>

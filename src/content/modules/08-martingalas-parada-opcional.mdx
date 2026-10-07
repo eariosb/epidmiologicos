@@ -1,0 +1,234 @@
+---
+title: "8. Martingalas y parada opcional"
+slug: "08-martingalas-parada-opcional"
+objective: "Definir y reconocer martingalas en procesos discretos y continuos, aplicar el teorema de parada opcional de Doob con criterio sobre cuándo es válido, y resolver por martingalas los problemas del Taller 2: ruina del apostador, urna de Pólya y extinción de Galton-Watson."
+order: 8
+datasets: []
+duration: 90
+prerequisites: ["Módulo 2: Cadenas de Markov en tiempo discreto", "Módulo 5: Procesos de segundo orden"]
+---
+
+import { Callout } from '@/components/Callout'
+import { CodeBlock } from '@/components/CodeBlock'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+
+## 1. Juegos justos
+
+Un proceso $\{M_n\}$ es una **martingala** respecto de $\{X_n\}$ (o de su
+propia historia $\mathcal{F}_n$) si
+
+$$E[M_{n+1} \mid \mathcal{F}_n] = M_n$$
+
+con $E|M_n| < \infty$. La traducción es la del juego justo: **conocido el
+pasado, el valor esperado de mañana es el valor de hoy**. El azar mueve la
+trayectoria, pero no su promedio condicional.
+
+La caminata aleatoria simétrica del módulo 1 es martingala: cada paso suma
+$\pm 1$ con media cero, así que $E[S_{n+1} \mid \mathcal{F}_n] = S_n$. La
+versión con deriva no lo es, pero sus correcciones sí — y ahí empieza la
+magia de este tema: **casi todo proceso razonable se convierte en martingala
+después de quitarle su tendencia**.
+
+## 2. Tres familias que aparecen en el Taller 2
+
+**La suma.** Si los incrementos tienen media $\mu$, entonces $S_n - n\mu$ es
+martingala. Es la corrección universal de procesos aditivos: la misma idea
+que quitará la deriva del browniano en el bloque III.
+
+**El producto y el cociente.** Si $X_1, X_2, \dots$ son independientes con
+$E[X_i] = 1$, el producto $M_n = X_1 X_2 \cdots X_n$ es martingala. Variante
+clave: en una caminata asimétrica con $P(+1) = p \neq 1/2$, el proceso
+$(q/p)^{S_n}$ es martingala porque $E[(q/p)^{X}] = p(q/p) + q(p/q) = 1$.
+
+**La urna de Pólya.** Una urna empieza con $r$ bolas rojas y $b$ negras; en
+cada paso se extrae una bola y se devuelve con otra del mismo color. Si
+$M_n$ es la fracción de rojas, un cálculo directo muestra
+$E[M_{n+1} \mid \mathcal{F}_n] = M_n$: la fracción es martingala, converge a
+un límite aleatorio con ley Beta, y esa convergencia es exactamente lo que
+verificaremos por simulación.
+
+<Callout type="tip" title="Martingalas vs Markov">
+
+Son propiedades ortogonales: hay martingalas que no son de Markov (la urna de
+Pólya depende de toda la composición acumulada) y cadenas de Markov que no
+son martingalas (cualquier cadena con deriva). Los procesos más útiles del
+curso suelen ser las dos cosas a la vez.
+
+</Callout>
+
+## 3. El teorema de parada opcional
+
+Un **tiempo de parada** $\tau$ es un instante aleatorio cuya decisión solo
+usa información disponible: "para cuando el capital llegue a 0 o a $N$",
+"para la primera vez que salga cara". Lo que no es tiempo de parada: "para
+un paso antes de la racha ganadora" — requeriría ver el futuro.
+
+El teorema de **parada opcional** (Doob) dice que si $\tau$ es tiempo de
+parada y se cumple una condición de regularidad (martingala acotada, o
+$\tau$ acotado, o $E[\tau] < \infty$ con diferencias acotadas), entonces:
+
+$$E[M_\tau] = E[M_0]$$
+
+La intuición del casino: ninguna estrategia legítima de "salir a tiempo"
+convierte un juego justo en ganador. Lo que sí puede hacer la estrategia es
+redistribuir la probabilidad entre ganar poco y perder mucho.
+
+<Callout type="warning" title="La regularidad no es burocracia">
+
+Sin la condición de regularidad el teorema falla en serio: en una caminata
+simétrica, para cuando $S_n = 1$ por primera vez. Ese $\tau$ es finito casi
+seguramente, pero $E[S_\tau] = 1 \neq 0 = S_0$. El tiempo de primera llegada
+tiene esperanza infinita, y eso rompe las hipótesis. En el Trabajo 2 se pide
+justamente identificar cuándo la parada opcional aplica y cuándo no.
+
+</Callout>
+
+## 4. La ruina del apostador, por martingalas
+
+El problema clásico del Taller 2 se resuelve en dos líneas con Doob. El
+apostador empieza con $i$, gana o pierde 1 por ronda con probabilidad $p$
+($q = 1 - p$), y para al quebrar ($0$) o al llegar a $N$. Sea $\tau$ el
+tiempo de parada.
+
+**Caso simétrico** ($p = 1/2$): $S_n$ es martingala. Por Doob,
+$i = E[S_\tau] = 0 \cdot P(\text{ruina}) + N \cdot P(\text{éxito})$, y la
+probabilidad de llegar a $N$ antes de quebrar es $i/N$.
+
+**Caso asimétrico**: se usa la martingala $(q/p)^{S_n}$:
+$(q/p)^i = 1 \cdot P(\text{ruina}) + (q/p)^N \cdot P(\text{éxito})$, que
+despeja la probabilidad de éxito:
+
+$$P(\text{éxito}) = \frac{(q/p)^i - 1}{(q/p)^N - 1}$$
+
+**Tiempo esperado**: en el caso simétrico, $S_n^2 - n$ también es martingala
+(la corrección cuadrática), y Doob da $E[\tau] = i(N - i)$.
+
+## 5. Extinción en Galton-Watson
+
+Las martingalas también resuelven la pregunta del módulo 1: sea $Z_n$ el
+tamaño de la generación $n$, con descendencia media $\mu$. Entonces
+$W_n = Z_n / \mu^n$ es martingala ($E[W_{n+1} \mid \mathcal{F}_n] = W_n$ por
+linealidad de la descendencia), y otra martingala útil es $s^{Z_n}$ donde
+$s$ es la raíz en $(0,1)$ de $s = G(s)$, la función generadora de la
+descendencia. Por Doob sobre la absorción en 0 se obtiene que la
+probabilidad de extinción es $s$: la raíz más pequeña de $s = G(s)$, que es
+1 si y solo si $\mu \leq 1$. El umbral de extinción del módulo 1 era este
+resultado en versión simulada.
+
+## 6. Cierre
+
+<Quiz
+  question="En la ruina del apostador simétrica con i = 40 y N = 100, ¿cuál es la probabilidad de llegar a 100 antes de quebrar, y el tiempo esperado del juego?"
+  options={[
+    "0.40 y 2400 rondas: proporciones directas del cociente i/N y el producto i(N−i)",
+    "0.40 y un tiempo que depende de la varianza de cada ronda, no calculable",
+    "0.50 porque el juego es simétrico",
+    "0.40 y 60 rondas, porque en promedio se mueve ±1 por ronda"
+  ]}
+  correctIndex={0}
+  explanation="Por parada opcional sobre la martingala S_n: P(éxito) = i/N = 0.4. Sobre la martingala S_n² − n: E[τ] = i(N − i) = 40·60 = 2400. La simetría no da 0.5 porque los capitales inicial y meta no son simétricos."
+/>
+
+<Flashcard
+  items={[
+    {
+      front: "Martingala",
+      back: "$E[M_{n+1} \\mid \\mathcal{F}_n] = M_n$ con $E|M_n| < \\infty$: el mejor pronóstico de mañana es hoy."
+    },
+    {
+      front: "Tiempo de parada",
+      back: "Instante aleatorio $\\tau$ tal que $\\{\\tau \\leq n\\}$ se decide solo con información hasta $n$. Ver el futuro no vale."
+    },
+    {
+      front: "Parada opcional (Doob)",
+      back: "Si $\\tau$ es tiempo de parada y hay regularidad (acotación o $E\\tau$ finito), $E[M_\\tau] = E[M_0]$."
+    },
+    {
+      front: "Ruina simétrica",
+      back: "P(llegar a $N$ antes de 0 | inicio $i$) $= i/N$; $E[\\tau] = i(N-i)$."
+    },
+    {
+      front: "Ruina asimétrica",
+      back: "Con la martingala $(q/p)^{S_n}$: P(éxito) $= ((q/p)^i - 1)/((q/p)^N - 1)$."
+    },
+    {
+      front: "Extinción Galton-Watson",
+      back: "Probabilidad de extinción = raíz $s \\in (0,1)$ de $s = G(s)$; $s = 1$ si $\\mu \\leq 1$. Las martingalas $Z_n/\\mu^n$ y $s^{Z_n}$ lo prueban."
+    }
+  ]}
+/>
+
+<LabExercise
+  id="lab-08-martingalas"
+  title="Parar a tiempo no cambia la media"
+  tasks={[
+    "Ruina simétrica con i = 40, N = 100: simula 3000 juegos y estima P(éxito) y E[τ]. Compara con i/N y i(N−i) del desarrollo de Doob.",
+    "Repite con p = 0.49 (levemente injusto): estima P(éxito) y compara con la fórmula (q/p)^i. ¿Cuánto castiga una desventaja de solo 2 puntos?",
+    "Urna de Pólya: simula 500 pasos con r = b = 5 iniciales y grafica varias trayectorias de la fracción de rojas. ¿A qué converge? Verifica que la media de los límites ≈ 0.5 y compara su varianza con la de una Beta(5, 5).",
+    "Galton-Watson con descendencia Poisson(μ): verifica que la probabilidad de extinción simulada coincide con la raíz de s = e^{μ(s−1)} para μ = 0.9 y μ = 1.1."
+  ]}
+  hint="En la urna, la fracción converge a Beta(r, b): compara mean/var de los límites simulados con r/(r+b) y rb/((r+b)²(r+b+1)). Para Galton-Watson, la raíz de s = G(s) con Poisson se encuentra por bisección sobre G(s) - s."
+  solution={"1) P ≈ 0.40, E[τ] ≈ 2400, dentro del error Monte Carlo.\n2) Con p = 0.49: q/p = 1.0408; P(éxito) = (1.0408^40 − 1)/(1.0408^100 − 1) ≈ 0.30. Dos puntos de desventaja reducen la probabilidad un cuarto.\n3) Los límites se reparten por todo (0,1) con media ≈ 0.5 y varianza ≈ 0.0227 = 5·5/(10²·11); las trayectorias individuales se congelan en valores distintos.\n4) μ = 0.9: extinción ≈ 1 (subcrítico); μ = 1.1: s ≈ 0.824; la simulación coincide."}
+  code={`set.seed(5)
+
+# ---- 1-2. Ruina del apostador ----
+juego <- function(i, N, p) {
+  s <- i; t <- 0
+  while (s > 0 && s < N) { s <- s + sample(c(-1, 1), 1, prob = c(1 - p, p)); t <- t + 1 }
+  c(exito = as.numeric(s == N), tiempo = t)
+}
+res <- t(replicate(3000, juego(40, 100, 0.5)))
+cat("P(exito) sim:", sprintf("%.3f", mean(res[, 1])),
+    "| i/N =", 40/100, "\\n")
+cat("E[tau] sim:", sprintf("%.0f", mean(res[, 2])),
+    "| i(N-i) =", 40 * 60, "\\n")
+
+p <- 0.49; q <- 1 - p
+res2 <- mean(replicate(3000, juego(40, 100, p))[1, ])
+p_teo <- ((q/p)^40 - 1) / ((q/p)^100 - 1)
+cat("p = 0.49 -> P(exito) sim:", sprintf("%.3f", res2),
+    "| teorica:", sprintf("%.3f", p_teo), "\\n")
+
+# ---- 3. Urna de Polya: la fraccion es martingala y converge ----
+urna <- function(r, b, n) {
+  rojas <- r; frac <- numeric(n)
+  for (k in 1:n) {
+    if (runif(1) < rojas / (r + b + k - 1)) rojas <- rojas + 1
+    frac[k] <- rojas / (r + b + k)
+  }
+  frac
+}
+matplot(replicate(8, urna(5, 5, 500)), type = "l", lty = 1,
+        col = "#8b5cf6", lwd = 1,
+        main = "Urna de Polya: cada trayectoria fija su propio limite",
+        xlab = "extracciones", ylab = "fraccion de rojas")
+finales <- replicate(2000, tail(urna(5, 5, 500), 1))
+cat("media de limites:", sprintf("%.3f", mean(finales)),
+    "| Beta(5,5):", 0.5, "\\n")
+cat("var de limites:", sprintf("%.4f", var(finales)),
+    "| Beta(5,5):", sprintf("%.4f", 25/(100 * 11)), "\\n")
+
+# ---- 4. Extincion Galton-Watson Poisson(mu) ----
+extincion <- function(mu, gen_max = 40) {
+  z <- 1
+  for (g in 1:gen_max) { z <- rpois(1, z * mu); if (z == 0) return(1) }
+  0
+}
+raiz_s <- function(mu) uniroot(function(s) exp(mu * (s - 1)) - s,
+                               c(0, 0.999))$root
+for (mu in c(0.9, 1.1)) {
+  sim <- mean(replicate(3000, extincion(mu)))
+  s_teo <- if (mu <= 1) 1 else raiz_s(mu)
+  cat("mu =", mu, "| extincion sim:", sprintf("%.3f", sim),
+      "| raiz s:", sprintf("%.3f", s_teo), "\\n")
+}`}
+>
+El laboratorio verifica las cuatro aplicaciones del Taller 2: las fórmulas
+de la ruina en casos justo e injusto, la convergencia aleatoria de la urna
+de Pólya hacia una Beta, y el umbral de extinción de Galton-Watson como raíz
+de $s = G(s)$. Cada pieza es un uso concreto de la parada opcional o de la
+martingala adecuada.
+</LabExercise>
