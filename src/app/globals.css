@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import 'katex/dist/katex.min.css';
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #fafafa;
+  color: #212529;
+}
+
+/* Flashcard: efecto de volteo 3D */
+.flashcard-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.5s;
+}
+.flashcard-flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+.flashcard-face {
+  backface-visibility: hidden;
+}
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+/* KaTeX display: scroll horizontal en pantallas pequeñas */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Pizarra digital (réplica del curso MLM)                             */
+/* ------------------------------------------------------------------ */
+
+/* CodeMirror dentro de RCell / editores del panel */
+.cm-editor {
+  outline: none !important;
+}
+.cm-editor.cm-focused {
+  outline: 2px solid #6795c2 !important;
+  outline-offset: -1px;
+}
+
+/* Pizarra acoplada: el panel abierto empuja el contenido del curso en
+   lugar de superponerse. El acople lo gestiona MainColumn (React +
+   Tailwind) — ver src/components/MainColumn.tsx. */
+
+/* Los contenedores prose/max-w anidados siguen limitando el texto a
+   ~65ch; los dejamos respirar hasta el wrapper exterior mientras la
+   pizarra está acoplada. */
+@media (min-width: 768px) {
+  .board-docked #bb-main .prose,
+  .board-docked #bb-main .max-w-prose,
+  .board-docked #bb-main .max-w-xl,
+  .board-docked #bb-main .max-w-2xl,
+  .board-docked #bb-main .max-w-3xl,
+  .board-docked #bb-main .max-w-4xl {
+    max-width: 100% !important;
+  }
+}
+
+/* Chrome de Excalidraw minimizado: libera todo el canvas. Oculta la
+   barra superior, el panel izquierdo de propiedades (trazo/relleno,
+   grosor, opacidad) y el menú inferior. Los atajos (1..0, 7 lápiz)
+   siguen funcionando. */
+.bb-min-tools .excalidraw .App-top-bar,
+.bb-min-tools .excalidraw .App-menu__left,
+.bb-min-tools .excalidraw .App-menu_bottom {
+  display: none;
+}
+
+/* Colapsa solo el panel izquierdo de propiedades manteniendo el resto
+   del chrome de Excalidraw visible. */
+.bb-min-props .excalidraw .App-menu__left {
+  display: none;
+}
+
+/* Botones del chrome del canvas (toggles de minimizar) con el estilo de
+   los botones "island" de Excalidraw para leerse como UI nativa. */
+.bb-chrome-btn {
+  background: #ffffff;
+  color: #232329;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: background-color 0.15s ease;
+}
+.bb-chrome-btn:hover {
+  background: #f1f0ff;
+}
+.bb-chrome-btn:active {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+.dark .bb-chrome-btn {
+  background: hsl(240, 8%, 15%);
+  color: #e3e3e8;
+  box-shadow: 0 0 0 1px hsl(0, 0%, 7%);
+}
+.dark .bb-chrome-btn:hover {
+  background: hsl(245, 10%, 21%);
+  color: #ffffff;
+}
+
+/* Modo puntero (tablero táctil / lápiz IR That_Board): agranda todos los
+   objetivos interactivos del panel a ~48-64 px y sube el tamaño de iconos. */
+.bb-pointer #blackboard-panel button,
+.bb-pointer #blackboard-panel select,
+.bb-pointer #blackboard-panel input {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+.bb-pointer #blackboard-panel nav button {
+  font-size: 1.125rem;
+  padding: 0.5rem;
+}
+.bb-pointer #blackboard-panel input[type='text'],
+.bb-pointer #blackboard-panel input[type='password'] {
+  min-width: 0;
+}
+
+/* Con la pizarra acoplada los FABs flotantes se apilan sobre la esquina
+   del panel: la captura ya vive en el riel de iconos y el cierre se hace
+   con el ✕ interno — se ocultan ambos FABs. */
+.board-docked .capture-fab,
+.board-docked .bb-trigger-fab {
+  display: none;
+}
+
+/* Con la pizarra acoplada la columna de contenido se angosta a ~40vw:
+   el TOC lateral robaría demasiado espacio al artículo, así que se oculta. */
+.board-docked #bb-toc {
+  display: none;
+}

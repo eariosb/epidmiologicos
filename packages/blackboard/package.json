@@ -1,0 +1,53 @@
+{
+  "name": "@cursos/blackboard",
+  "version": "0.1.0",
+  "description": "Pizarra plegable integrada para cursos interactivos: canvas Excalidraw, asistente IA y puente WebR.",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./persistence": {
+      "types": "./src/lib/persistence/index.ts",
+      "default": "./src/lib/persistence/index.ts"
+    },
+    "./rag": {
+      "types": "./src/lib/rag/index.ts",
+      "default": "./src/lib/rag/index.ts"
+    },
+    "./assistant": {
+      "types": "./src/lib/assistant/index.ts",
+      "default": "./src/lib/assistant/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "peerDependencies": {
+    "@excalidraw/excalidraw": "^0.17 || ^0.18",
+    "next": "^14 || ^15",
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
+  },
+  "dependencies": {
+    "idb-keyval": "^6.3.0",
+    "lucide-react": "^1.52.0"
+  },
+  "devDependencies": {
+    "@excalidraw/excalidraw": "^0.18.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
+  }
+}
