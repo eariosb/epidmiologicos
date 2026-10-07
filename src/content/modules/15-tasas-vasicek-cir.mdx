@@ -1,0 +1,221 @@
+---
+title: "15. Tasas de interés: Vasicek contra CIR"
+slug: "15-tasas-vasicek-cir"
+objective: "Comparar los modelos de tasa corta Vasicek y CIR en sus distribuciones transicionales y condición de Feller, estimarlos por discretización exacta y cuasi-verosimilitud, y valorar bonos cero-cupón por fórmula y Monte Carlo como pide el Trabajo 3."
+order: 15
+datasets: []
+duration: 95
+prerequisites: ["Módulo 11: Ecuaciones diferenciales estocásticas", "Módulo 10: El cálculo de Itô"]
+---
+
+import { Callout } from '@/components/Callout'
+import { CodeBlock } from '@/components/CodeBlock'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+
+## 1. Modelar la tasa, no el precio
+
+Los bonos del Trabajo 3 necesitan la dinámica de la **tasa corta** $r_t$:
+la tasa instantánea a la que se descuenta el futuro. Una EDE de reversión
+a la media es la respuesta estándar — las tasas no pasean libremente como
+el browniano: regresan hacia un nivel $\theta$ que el mercado "cobra". Los
+dos modelos de cabecera son:
+
+$$\text{Vasicek: } dr_t = \kappa(\theta - r_t)dt + \sigma\,dW_t
+\qquad
+\text{CIR: } dr_t = \kappa(\theta - r_t)dt + \sigma\sqrt{r_t}\,dW_t$$
+
+Misma deriva; cambia la difusión. Vasicek pone ruido constante — tratable
+y gaussiano pero permite tasas negativas. CIR hace el ruido proporcional a
+$\sqrt{r}$: se apaga acercándose a cero y mantiene las tasas no negativas
+bajo la **condición de Feller** $2\kappa\theta \geq \sigma^2$ que
+verificamos en el módulo 11.
+
+## 2. Distribuciones transicionales
+
+Vasicek tiene transición gaussiana exacta (es OU): del módulo 11,
+
+$$r_t \mid r_s \sim \mathrm{N}\!\left(r_s e^{-\kappa(t-s)} + \theta(1 - e^{-\kappa(t-s)}),\; \frac{\sigma^2}{2\kappa}\left(1 - e^{-2\kappa(t-s)}\right)\right)$$
+
+CIR es más trabajoso pero igual de exacto: $r_t$ condicionada es una
+**chi-cuadrado no central** reescalada. No hay forma cerrada elemental, y
+por eso el Trabajo 3 estima CIR por **cuasi-verosimilitud**: aproximar la
+transición por una normal con la media y varianza condicionales correctas
+(que sí se conocen en forma cerrada) — la aproximación estándar del
+profesorado para CIR.
+
+## 3. El precio del cero-cupón
+
+El bono cero-cupón $P(t, T)$ paga 1 al vencimiento. Bajo ausencia de
+arbitraje, su precio es la esperanza descontada bajo la medida de
+valoración:
+
+$$P(t, T) = E^Q\left[e^{-\int_t^T r_s\, ds}\right]$$
+
+En Vasicek la integral de una gaussiana es gaussiana, y la cuenta cierra en
+forma afín: $P(t,T) = e^{A(t,T) - B(t,T) r_t}$ con
+
+$$B(\tau) = \frac{1 - e^{-\kappa\tau}}{\kappa}, \qquad
+A(\tau) = \left(\theta - \frac{\sigma^2}{2\kappa^2}\right)\left(B(\tau) - \tau\right) - \frac{\sigma^2 B(\tau)^2}{4\kappa}$$
+
+La **estructura de tasas** sale de derivar el rendimiento $y(\tau) =
+-\log P / \tau$ por horizonte. En CIR la fórmula afín también existe (con
+raíces cuadradas, más fea pero igual de exacta) — la clase afín existe
+precisamente porque la deriva y la varianza son afines en $r$.
+
+<Callout type="tip" title="Medida Q vs medida P">
+
+La $E^Q$ usa el browniano **bajo la medida de valoración**: los parámetros
+en la fórmula del bono son los de precio de riesgo incorporado, no
+necesariamente los físicos estimados sobre la serie de tasas. El Trabajo 3
+maneja la distinción: estimar bajo P para proyectar, valorar bajo Q para
+precios — o asumir que coinciden, simplificación común en el ejercicio.
+
+</Callout>
+
+## 4. Fan charts: el pronóstico como abanico
+
+El pronóstico de la tasa no es una línea sino una nube: cada horizonte
+agrega incertidumbre. El **fan chart** grafica las bandas de confianza del
+pronóstico a distintos cuantiles, simulando miles de trayectorias y
+tomando los percentiles por horizonte. Es el gráfico de entrega del
+Trabajo 3, y su forma — el abanico que se abre y luego converge hacia la
+banda estacionaria — resume visualmente la reversión a la media.
+
+<RCell
+  id="15/vasicek-cir"
+  title="Vasicek exacto, CIR y la estructura de tasas"
+  code={`library(expm)
+set.seed(63)
+kap <- 0.6; th <- 0.055; sig <- 0.02; r0 <- 0.075; T <- 5
+
+# ---- Discretizacion exacta de Vasicek (gaussiana transicional) ----
+vasicek_paso <- function(r, dt) {
+  m <- r * exp(-kap*dt) + th * (1 - exp(-kap*dt))
+  s <- sig * sqrt((1 - exp(-2*kap*dt)) / (2*kap))
+  rnorm(1, m, s)
+}
+# ---- CIR por Euler-Maruyama con piso en 0 ----
+cir_paso <- function(r, dt) {
+  r + kap*(th - r)*dt + sig*sqrt(max(r, 0))*sqrt(dt)*rnorm(1)
+}
+
+# Fan chart Vasicek: percentiles por horizonte
+dt <- 0.05; horiz <- seq(dt, T, by = dt)
+sims <- replicate(2000, {
+  r <- r0; out <- numeric(length(horiz))
+  for (i in seq_along(horiz)) { r <- vasicek_paso(r, dt); out[i] <- r }
+  out
+})
+qs <- apply(sims, 1, quantile, c(0.05, 0.25, 0.5, 0.75, 0.95))
+matplot(horiz, t(qs), type = "l", lty = c(2,1,1,1,2), lwd = c(1,1,2,1,1),
+        col = c("#c4b5fd", "#8b5cf6", "#5b21b6", "#8b5cf6", "#c4b5fd"),
+        main = "Fan chart de la tasa corta (Vasicek)",
+        xlab = "horizonte", ylab = "r")
+
+# ---- Bono cero-cupon Vasicek: formula vs Monte Carlo ----
+tau <- 3
+B <- (1 - exp(-kap*tau)) / kap
+A <- (th - sig^2/(2*kap^2)) * (B - tau) - sig^2 * B^2 / (4*kap)
+p_formula <- exp(A - B * r0)
+p_mc <- mean(exp(-apply(sims[1:round(tau/dt), ] * dt, 2, sum)))
+cat("P(0,3): formula =", sprintf("%.4f", p_formula),
+    "| MC =", sprintf("%.4f", p_mc), "\\n")`}
+/>
+
+## 5. Cierre
+
+<Quiz
+  question="¿Qué diferencia estructural separa a CIR de Vasicek y por qué importa en la práctica?"
+  options={[
+    "CIR tiene reversión más rápida: κ efectivo mayor",
+    "La difusión de CIR es σ√r: el ruido se apaga en cero y las tasas no cruzan bajo Feller, a diferencia del Vasicek gaussiano",
+    "CIR no tiene distribución transicional conocida en absoluto",
+    "Vasicek usa saltos de Poisson y CIR solo difusión"
+  ]}
+  correctIndex={1}
+  explanation="El término σ√r_t de CIR hace que la volatilidad desaparezca al acercarse a cero — con 2κθ ≥ σ² (Feller) las tasas no negativas. Vasicek mantiene ruido constante: su estacionaria normal da probabilidad positiva a tasas negativas, aceptable en ciertos regímenes pero estructuralmente distinto."
+/>
+
+<Flashcard
+  items={[
+    {
+      front: "Vasicek",
+      back: "$dr = \\kappa(\\theta - r)dt + \\sigma dW$: gaussiano, transición exacta, admite $r < 0$."
+    },
+    {
+      front: "CIR",
+      back: "$dr = \\kappa(\\theta - r)dt + \\sigma\\sqrt{r}dW$: no negativo si $2\\kappa\\theta \\geq \\sigma^2$ (Feller)."
+    },
+    {
+      front: "Cuasi-verosimilitud CIR",
+      back: "Aproximar la transición por normal con media y varianza condicionales exactas — método del Trabajo 3."
+    },
+    {
+      front: "Bono cero-cupón",
+      back: "$P(t,T) = E^Q[e^{-\\int r}] = e^{A - Br_t}$ en modelos afines; $B(\\tau) = (1-e^{-\\kappa\\tau})/\\kappa$ en Vasicek."
+    },
+    {
+      front: "Estructura de tasas",
+      back: "$y(\\tau) = -\\log P/\\tau$: el rendimiento por horizonte que la fórmula afín entrega."
+    },
+    {
+      front: "Fan chart",
+      back: "Percentiles del pronóstico por horizonte: el abanico se abre y converge a la banda estacionaria — reversión visual."
+    }
+  ]}
+/>
+
+<LabExercise
+  id="lab-15-tasas"
+  title="Tasas colombianas: Vasicek vs CIR en acción"
+  tasks={[
+    "Con κ = 0.6, θ = 5.5%, σ = 2%, r₀ = 7.5%: simula la discretización exacta de Vasicek y el EM de CIR a 5 años. ¿Cuántas trayectorias Vasicek cruzan cero? ¿Y CIR?",
+    "Precia el cero-cupón a 3 años por la fórmula afín de Vasicek y por Monte Carlo de la integral de la tasa: ¿cuánto difieren?",
+    "Extrae la estructura de tasas y(τ) = −log P(0,τ)/τ para τ = 1..10 con la fórmula, y grafícala: ¿converge a un nivel de largo plazo? ¿A cuál?",
+    "Del Trabajo 3: estima el error de discretización comparando CIR con dt = 0.05 vs dt = 0.01 en la media de r_2 — ¿el sesgo de Euler es visible?"
+  ]}
+  hint="Para la estructura larga: cuando τ → ∞, y(τ) → θ − σ²/(2κ²) en Vasicek — el nivel de largo plazo incluye la corrección de Jensen (la volatilidad resta al rendimiento largo)."
+  solution={"1) Vasicek: una fracción pequeña pero positiva de trayectorias cruza cero (ruido constante); CIR: ninguna bajo Feller con estos parámetros (2·0.6·0.055 = 0.066 ≥ 0.0004).\n2) P(0,3) ≈ 0.84 por ambos métodos; el MC difiere < 0.005 con 2000 trayectorias.\n3) y(τ) decrece desde r₀ = 7.5% hacia θ − σ²/2κ² ≈ 5.5% − 0.06%: curva invertida hacia el nivel estructural.\n4) Sesgo de Euler pequeño en la media (< 5 pb con estos dt), visible en la cola — el Trabajo 3 lo cuantifica."}
+  code={`library(expm)
+set.seed(70)
+kap <- 0.6; th <- 0.055; sig <- 0.02; r0 <- 0.075
+
+# ---- 1. Cruce por cero: Vasicek vs CIR ----
+dt <- 0.02; T <- 5; n_pasos <- round(T/dt)
+cir_min <- function() {
+  r <- r0; rmin <- r
+  for (i in 1:n_pasos) {
+    r <- r + kap*(th - r)*dt + sig*sqrt(max(r,0))*sqrt(dt)*rnorm(1)
+    if (r < rmin) rmin <- r
+  }
+  rmin
+}
+cat("P(r<0) Vasicek:", sprintf("%.4f", mean(replicate(2000, {
+  r <- r0
+  for (i in 1:n_pasos) r <- r*exp(-kap*dt) + th*(1-exp(-kap*dt)) +
+                          sig*sqrt((1-exp(-2*kap*dt))/(2*kap))*rnorm(1)
+  r < 0 }))), "\\n")
+cat("min CIR medio:", sprintf("%.4f", mean(replicate(500, cir_min()))), "\\n")
+
+# ---- 2 y 3. Bono y estructura de tasas ----
+precio_vas <- function(tau) {
+  B <- (1 - exp(-kap*tau)) / kap
+  A <- (th - sig^2/(2*kap^2)) * (B - tau) - sig^2*B^2/(4*kap)
+  exp(A - B*r0)
+}
+taus <- 1:10
+y <- -log(sapply(taus, precio_vas)) / taus
+plot(taus, 100*y, type = "b", col = "#5b21b6", pch = 16,
+     main = "Estructura de tasas Vasicek", xlab = "vencimiento",
+     ylab = "y (%)")
+abline(h = 100*(th - sig^2/(2*kap^2)), lty = 2, col = "#c4b5fd")
+cat("y(inf) teorico:", sprintf("%.3f%%", 100*(th - sig^2/(2*kap^2))), "\\n")`}
+>
+El laboratorio ensaya el flujo del Trabajo 3 con parámetros del estilo
+IBR/TIB: el contraste Vasicek-CIR sobre tasas negativas, el bono cero-cupón
+por fórmula afín validado en Monte Carlo, y la estructura de tasas
+convergiendo al nivel de largo plazo con su corrección por volatilidad.
+</LabExercise>

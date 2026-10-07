@@ -1,0 +1,238 @@
+---
+title: "16. Síntesis: un generador de escenarios estocásticos"
+slug: "16-sintesis-proyecto"
+objective: "Integrar en un solo motor los cuatro pilares del curso — Poisson compuesto, CTMC, difusión de Itô y martingalas — para construir un generador de escenarios económicos que combine tasa, crédito y reclamaciones, con reporte de incertidumbre Monte Carlo."
+order: 16
+datasets: []
+duration: 100
+prerequisites: ["Todos los módulos anteriores"]
+---
+
+import { Callout } from '@/components/Callout'
+import { CodeBlock } from '@/components/CodeBlock'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+
+## 1. Los cuatro pilares, una sola máquina
+
+Cada bloque del curso dejó un objeto generativo: la cadena de Markov
+discreta (regímenes), el proceso de Poisson (eventos), la CTMC (estados en
+tiempo continuo) y la difusión de Itô (movimiento continuo). Un generador
+de escenarios económicos real los compone: la tasa corta que descuenta,
+la calificación que migra, las reclamaciones que saltan, el activo que
+difunde — todo corriendo en el mismo reloj.
+
+El ejercicio de síntesis del curso construye exactamente eso: un pequeño
+motor donde cada componente es un proceso ya estudiado y el producto es una
+distribución del resultado agregado — pérdida neta de una aseguradora
+crediticia en un año, por ejemplo — con su incertidumbre de simulación
+reportada.
+
+## 2. La arquitectura del motor
+
+La simulación corre en un solo lazo temporal con tres fuentes de azar:
+
+1. **Difusión**: la tasa corta evoluciona por Vasicek o CIR en pasos
+   discretos $dt$.
+2. **Saltos de conteo**: las reclamaciones llegan por Poisson compuesto con
+   severidad lognormal, como en el módulo 13.
+3. **Saltos de estado**: la calificación migra por la CTMC crediticia del
+   módulo 14.
+
+La lista de eventos se ordena en el tiempo y el capital se actualiza en
+cada uno: $U(t) = u + \int c\,ds - \sum Y_k + \text{flujo crediticio}$. La
+estructura del lazo es la del Trabajo 2, solo que aquí las dos fuentes de
+salto comparten el reloj con la difusión — la integración real de los
+módulos.
+
+<Callout type="tip" title="Lo que NO hay que simular">
+
+Todo lo que tiene forma cerrada se calcula, no se simula: la PD de Merton
+por $\Phi(d_-)$, la estacionaria de la CTMC por $\pi Q = 0$, el precio del
+bono por la fórmula afín. La simulación se reserva para el funcional
+combinado que ninguna fórmula cubre: la distribución de la pérdida
+agregada. El Trabajo 3 pide justamente esa disciplina: Monte Carlo donde
+hace falta, cerrado donde se puede.
+
+</Callout>
+
+## 3. Reporte honesto: error Monte Carlo
+
+La entrega profesional de cualquier simulación incluye su precisión. Con
+$p$ réplicas independientes, el estimador de una media $\hat\mu$ tiene
+error estándar $s/\sqrt{p}$, y el de una probabilidad $\hat\psi$ tiene
+$\sqrt{\hat\psi(1-\hat\psi)/p}$. El informe del Trabajo 3 exige
+intervalos del 95% en cada estimación, y la regla práctica del curso:
+**cuadruplicar las réplicas mitiga el error a la mitad** — la
+convergencia $1/\sqrt{p}$ es lo que hace al Monte Carlo honesto pero
+caro.
+
+<RCell
+  id="16/generador"
+  title="El generador de escenarios en un lazo"
+  code={`set.seed(88)
+# Parametros del mini-escenario: aseguradora crediticia a 1 año
+u0 <- 100            # capital inicial
+c <- 45              # primas por año
+lam <- 10            # reclamaciones por año
+sig2 <- log(5); mu_ln <- -sig2/2   # severidad lognormal, media 1
+escala <- 5          # severidad media ~ 5 unidades
+
+# Tasa corta Vasicek para descontar
+kap <- 0.6; th <- 0.05; sv <- 0.02; r0 <- 0.06
+
+escenario <- function() {
+  t <- 0; cap <- u0; r <- r0
+  repeat {
+    dtc <- rexp(1, lam)
+    if (t + dtc > 1) {           # año completo: primas y descuento final
+      cap <- cap * exp(r * (1 - t)) + c * (1 - t)
+      break
+    }
+    t <- t + dtc
+    # la tasa evoluciona por Vasicek exacto y el capital se invierte a r
+    r <- r*exp(-kap*dtc) + th*(1-exp(-kap*dtc)) +
+         sv*sqrt((1-exp(-2*kap*dtc))/(2*kap))*rnorm(1)
+    cap <- cap * exp(r * dtc) + c * dtc
+    sev <- escala * rlnorm(1, mu_ln, sqrt(sig2))
+    cap <- cap - sev
+    if (cap < 0) return(list(cap = cap, t = t))
+  }
+  list(cap = cap, t = 1)
+}
+
+reps <- 3000
+res <- sapply(1:reps, function(i) escenario()$cap)
+cat("Capital final medio:", sprintf("%.2f", mean(res)), "\\n")
+cat("P(ruina):", sprintf("%.4f", mean(res < 0)),
+    "±", sprintf("%.4f", 1.96*sd((res<0)*1)/sqrt(reps)), "\\n")
+hist(res, breaks = 40, col = "#c4b5fd", border = "white",
+     main = "Distribucion del capital final a 1 año",
+     xlab = "capital")
+abline(v = 0, col = "#5b21b6", lwd = 2)`}
+/>
+
+## 4. El mapa completo
+
+El curso cerró el arco: del conteo discreto a la difusión continua, pasando
+por la martingala que los une. Las conexiones que valen la pena conservar:
+
+- La caminata aleatoria es el embrión de todo: su límite es el Wiener, sus
+  incrementos el Poisson.
+- La martingala es el concepto transversal: corrección de deriva en la
+  caminata, en el surplus de Cramér-Lundberg, en las integrales de Itô,
+  en el cambio de medida de valoración.
+- La estacionaria aparece en los tres tiempos: discreta ($\pi P = \pi$),
+  continua ($\pi Q = 0$) y como distribución límite de OU/Vasicek.
+- La primera llegada — ruina, default, absorción — es el mismo problema
+  con distinto atuendo: Doob con martingala exponencial, reflexión con
+  browniano, sistema lineal con Markov.
+
+## 5. Cierre del curso
+
+<Quiz
+  question="En el generador de escenarios, ¿cuál combinación NO es una forma legítima de acoplar las fuentes de azar?"
+  options={[
+    "Compartir el mismo reloj: la tasa evoluciona entre eventos de reclamación",
+    "Hacer la intensidad de reclamaciones dependiente del estado crediticio (λ sube en BB)",
+    "Usar el mismo browniano para la tasa y para la severidad de la reclamación sin justificación estructural",
+    "Descontar las pérdidas con la integral de la tasa simulada"
+  ]}
+  correctIndex={2}
+  explanation="Acoplar tasa y reclamación en un mismo browniano impone correlación perfecta sin mecanismo económico que la justifique — es acoplamiento arbitrario. Las otras opciones son mecanismos estándar: compartir reloj es correcto, intensidad dependiente del estado crediticio es un modelo markov-modulado legítimo, y descontar con la trayectoria de tasa es la definición misma del valor."
+/>
+
+<Flashcard
+  items={[
+    {
+      front: "Generador de escenarios",
+      back: "Un lazo temporal que alterna difusión (tasa), saltos de conteo (reclamaciones) y saltos de estado (crédito)."
+    },
+    {
+      front: "Regla de oro",
+      back: "Forma cerrada donde existe, Monte Carlo solo para el funcional combinado que ninguna fórmula cubre."
+    },
+    {
+      front: "Error Monte Carlo",
+      back: "ee = s/√p para medias; √(p̂(1−p̂)/p) para probabilidades. Cuadruplicar réplicas → mitad del error."
+    },
+    {
+      front: "Conexión martingalas",
+      back: "Corrección de deriva en caminata, surplus y EDE: el concepto transversal del curso."
+    },
+    {
+      front: "Conexión estacionaria",
+      back: "πP = π (discreto), πQ = 0 (CTMC), N(0, σ²/2α) (difusión): mismo equilibrio, tres tiempos."
+    },
+    {
+      front: "Conexión primer paso",
+      back: "Ruina, default y absorción son el mismo problema: primer cruce de una barrera."
+    }
+  ]}
+/>
+
+<LabExercise
+  id="lab-16-sintesis"
+  title="El proyecto integrador del curso"
+  tasks={[
+    "Extiende el generador del código añadiendo la migración crediticia de la contraparte: la severidad de la reclamación se duplica cuando el estado cae a BB o D (recuperación menor). ¿Cuánto sube la probabilidad de ruina?",
+    "Modula la intensidad de reclamaciones por el estado de la calificación (λ_A = 8, λ_BBB = 10, λ_BB = 14): el proceso se vuelve markov-modulado. Estima la pérdida esperada y su IC.",
+    "Descuenta el capital final con la integral de la tasa simulada en cada trayectoria (no con una tasa fija): ¿cuánto cambia el valor presente esperado?",
+    "Reporte final: tabla de tres escenarios (base, severidad crediticia, markov-modulado) con media, VaR95 y probabilidad de ruina, cada uno con su error Monte Carlo."
+  ]}
+  hint="Para la markov-modulada, corre la CTMC de la calificación en paralelo con los eventos: la tasa de llegada de reclamaciones es la del estado vigente en ese instante. Para el VaR95 usa quantile(res, 0.05) sobre el vector de capitales finales."
+  solution={"1) Duplicar severidad en BB/D sube la ruina del ~3% base al ~4-5%: el canal crediticio domina porque empeora la cola justo cuando más llegan los reclamos.\n2) El modelo markov-modulado aumenta la pérdida esperada ~10-15% y ensancha la cola: la correlación implícita estado-reclamación es realista.\n3) El descuento estocástico cambia poco la media (la tasa fluctúa alrededor de 6%) pero añade dispersión: la correlación tasa-pérdida es débil aquí.\n4) La tabla muestra la escalera de riesgo: cada capa de realismo añade ruina y cola — la lección cuantitativa del curso."}
+  code={`set.seed(99)
+library(expm)
+
+# CTMC crediticia del modulo 14 (3 grados + D)
+Q <- matrix(c(-0.06, 0.05, 0.008, 0.002,
+              0.02, -0.075, 0.04, 0.015,
+              0.008, 0.06, -0.10, 0.032,
+              0, 0, 0, 0), 4, byrow = TRUE)
+
+u0 <- 100; c <- 45; escala <- 5
+sig2 <- log(5); mu_ln <- -sig2/2
+lams <- c(A = 8, BBB = 10, BB = 14, D = 0)
+sev_mult <- c(A = 1, BBB = 1, BB = 2, D = 0)
+nombres <- c("A", "BBB", "BB", "D")
+
+escenario <- function() {
+  t <- 0; cap <- u0; estado <- 2          # arranca en BBB
+  repeat {
+    lam <- lams[estado]
+    if (lam == 0) { cap <- cap + c*(1 - t); break }  # default: sin reclamos
+    q_t <- -Q[estado, estado]
+    dt_salto <- rexp(1, q_t)              # salto de calificacion
+    dt_rec  <- rexp(1, lam)               # reclamacion
+    dt <- min(dt_salto, dt_rec)
+    if (t + dt > 1) { cap <- cap + c*(1 - t); break }
+    t <- t + dt; cap <- cap + c*dt
+    if (dt_rec < dt_salto) {              # llego reclamacion
+      cap <- cap - escala * sev_mult[estado] * rlnorm(1, mu_ln, sqrt(sig2))
+      if (cap < 0) return(cap)
+    } else {                              # migro la calificacion
+      dest <- setdiff(1:4, estado)
+      estado <- dest[sample.int(3, 1, prob = Q[estado, dest])]
+    }
+  }
+  cap
+}
+
+reps <- 3000
+caps <- sapply(1:reps, function(i) escenario())
+cat("Media capital:", sprintf("%.2f", mean(caps)),
+    "| ee:", sprintf("%.3f", sd(caps)/sqrt(reps)), "\\n")
+cat("VaR95:", sprintf("%.2f", quantile(caps, 0.05)), "\\n")
+cat("P(ruina):", sprintf("%.4f ± %.4f", mean(caps < 0),
+    1.96*sqrt(mean(caps<0)*(1-mean(caps<0))/reps)), "\\n")`}
+>
+El laboratorio final integra las cuatro familias en un solo motor: la
+calificación migra por la CTMC, la intensidad y severidad de las
+reclamaciones dependen del estado vigente, y el capital se actualiza en
+cada evento. La tabla de escenarios con errores Monte Carlo es el
+esqueleto del entregable del Trabajo 3 — reproducible, honesto y con la
+incertidumbre reportada.
+</LabExercise>
