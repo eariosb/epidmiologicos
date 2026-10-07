@@ -1,0 +1,224 @@
+---
+title: "10. El cálculo de Itô"
+slug: "10-calculo-ito"
+objective: "Construir la integral estocástica de Itô y su isometría, aplicar el lema de Itô con el término de corrección ½f''dt, verificar la martingala W³ − 3tW y las integrales gaussianas del Quiz 3 y el Taller 2."
+order: 10
+datasets: []
+duration: 95
+prerequisites: ["Módulo 9: El proceso de Wiener", "Módulo 8: Martingalas"]
+---
+
+import { Callout } from '@/components/Callout'
+import { CodeBlock } from '@/components/CodeBlock'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { ProcessSteps } from '@/components/ProcessSteps'
+
+## 1. Integrar contra una trayectoria sin tangente
+
+La variación cuadrática del módulo pasado deja una consecuencia práctica
+inmediata: $\int_0^t f(s)\, dW_s$ **no puede** definirse al estilo
+Riemann-Stieltjes, porque $W$ no es de variación finita. La definición que
+funciona es la de Itô: la integral como límite en media cuadrática de sumas
+evaluadas en el **extremo izquierdo**:
+
+$$\int_0^t f(s)\, dW_s = \lim \sum_k f(t_k)\,(W_{t_{k+1}} - W_{t_k})$$
+
+Evaluar a la izquierda no es un detalle técnico: es lo que hace que el
+integrando nunca vea el futuro. Con esa elección la integral hereda la
+propiedad más valiosa del curso:
+
+<ProcessSteps
+  title="Las dos propiedades que se usan siempre"
+  steps={[
+    {
+      title: "Martingala",
+      description: "Con integrando adaptado y de cuadrado integrable, I_t = ∫f dW es martingala: E[I_t] = 0 siempre. Las integrales de Itô son la máquina universal de martingalas."
+    },
+    {
+      title: "Isometría de Itô",
+      description: "E[(∫_0^t f dW)²] = E[∫_0^t f² ds]. La varianza de la integral es la integral de la varianza; convierte cálculos estocásticos en cuentas de Riemann ordinarias."
+    },
+    {
+      title: "Normalidad",
+      description: "Si f es determinística, ∫_0^t f(s) dW_s es gaussiana de media 0 y varianza ∫f²: la respuesta a la integral gaussiana del Quiz 3."
+    }
+  ]}
+/>
+
+La evaluación a la izquierda tiene un precio: la integral ya no se comporta
+como la regla de la cadena clásica. Esa diferencia es el lema de Itô.
+
+## 2. El lema de Itô: la regla de la cadena corregida
+
+Para una función $f$ dos veces derivable, el desarrollo de Taylor de
+$f(W_{t+dt}) - f(W_t)$ tiene un término que en el cálculo clásico se
+descartaría: como $(dW_t)^2 = dt$ (variación cuadrática, módulo 9), el
+segundo orden no se evapora sino que aporta $dt$. Resultado:
+
+$$df(W_t) = f'(W_t)\, dW_t + \tfrac{1}{2} f''(W_t)\, dt$$
+
+La **corrección de Itô** $\frac{1}{2}f'' dt$ es el precio de la rugosidad.
+Ejemplos que piden el Quiz 3 y el Taller 2:
+
+- $f(x) = x^2$: $d(W_t^2) = 2W_t\, dW_t + dt$, es decir
+  $W_t^2 = 2\int W_s\, dW_s + t$. Reordenando: $\int_0^t W_s\, dW_s =
+  \frac{1}{2}(W_t^2 - t)$ — la integral explícita del Taller 2, con su
+  corrección $-t$ frente al $\frac{1}{2}W_t^2$ clásico.
+- $f(x) = x^3$: $d(W_t^3) = 3W_t^2\, dW_t + 3W_t\, dt$, y reordenando,
+  $W_t^3 - 3tW_t = \int (3W_s^2 - 3s)\, dW_s$: la **martingala cúbica** que
+  el Quiz 3 pide verificar.
+- $f(x) = e^{\theta x}$: $d(e^{\theta W_t}) = \theta e^{\theta W_t} dW_t +
+  \frac{\theta^2}{2} e^{\theta W_t} dt$, de donde $e^{\theta W_t -
+  \theta^2 t/2}$ es martingala (la exponencial del módulo 9).
+
+Para un proceso general $X_t$ con $dX_t = b_t\, dt + \sigma_t\, dW_t$, el
+lema completo agrega el término de deriva:
+
+$$df(X_t) = \left(f' b_t + \tfrac{1}{2} f'' \sigma_t^2\right) dt + f' \sigma_t\, dW_t$$
+
+<RCell
+  id="10/ito-lema"
+  title="La corrección de Itô en números"
+  code={`set.seed(41)
+n <- 2000; grid <- seq(0, 1, length.out = n)
+dW <- c(0, rnorm(n - 1)) / sqrt(n)
+W <- cumsum(dW)
+
+# Int W dW por sumas de Itô (extremo izquierdo)
+ito <- sum(W[-n] * dW[-1])
+cat("Int W dW (sumas):", sprintf("%.4f", ito), "\\n")
+cat("(W(1)^2 - 1)/2  :", sprintf("%.4f", (tail(W,1)^2 - 1)/2), "\\n")
+cat("W(1)^2 / 2 (clásico):", sprintf("%.4f", tail(W,1)^2/2),
+    " <- difiere por la corrección -t/2\\n")
+
+# La cúbica: W^3 - 3tW debe ser martingala -> media cero en todo t
+reps <- 2000
+M <- replicate(reps, {
+  w <- c(0, cumsum(rnorm(999)) / sqrt(999))
+  w[500]^3 - 3 * (500/999) * w[500]     # t = 0.5
+})
+cat("E[W(0.5)^3 - 3·0.5·W(0.5)]:", sprintf("%.4f", mean(M)),
+    "| ee:", sprintf("%.4f", sd(M)/sqrt(reps)), "\\n")
+
+# Integral gaussiana: Int_0^1 s dW(s) debe ser N(0, 1/3)
+I_gauss <- sum(grid[-n] * dW[-1])
+cat("Var teórica:", sprintf("%.4f", sum(grid[-n]^2)/n),
+    "≈ 1/3 | valor simulado:", sprintf("%.4f", I_gauss), "\\n")`}
+/>
+
+## 3. Por qué la cúbica es martingala
+
+La verificación del Quiz 3 pide mostrar que $M_t = W_t^3 - 3tW_t$ es
+martingala. Con el lema: $dM = 3(W_t^2 - t)\, dW_t$ — el término $dt$ se
+cancela exactamente porque se construyó para eso. Como $M$ es una integral
+de Itô pura (sin deriva), es martingala. Es el mismo patrón de las
+martingalas del módulo 9: cada corrección ($-t$, $-3tW$, $-\theta^2 t/2$)
+existe para aniquilar el término de deriva que el lema produce.
+
+<Callout type="tip" title="Itô vs Stratonovich">
+
+Evaluar el integrando en el punto medio en vez del extremo da la integral de
+**Stratonovich**, que obedece la regla de la cadena clásica pero pierde la
+propiedad de martingala y de anticipación nula. En finanzas y en este curso
+se usa Itô: el integrando no puede ver el futuro. La diferencia entre ambas
+es otra vez el término de corrección de segundo orden.
+
+</Callout>
+
+## 4. Cierre
+
+<Quiz
+  question="¿Cuál es el valor de ∫_0^t W_s dW_s según el cálculo de Itô, y por qué difiere del resultado clásico?"
+  options={[
+    "W_t²/2, como en el cálculo ordinario",
+    "(W_t² − t)/2: el lema de Itô aporta la corrección −t/2 por la variación cuadrática",
+    "W_t²/2 + t/2: la corrección suma en vez de restar",
+    "No tiene forma cerrada, solo se aproxima numéricamente"
+  ]}
+  correctIndex={1}
+  explanation="Por Itô, d(W²) = 2W dW + dt, así que ∫W dW = (W_t² − t)/2. La corrección −t/2 viene de (dW)² = dt, la variación cuadrática que el cálculo clásico ignora. La opción 1 es la respuesta de Stratonovich."
+/>
+
+<Flashcard
+  items={[
+    {
+      front: "Integral de Itô",
+      back: "Límite $L^2$ de $\\sum f(t_k)\\Delta W$ con $f$ evaluada a la izquierda: el integrando nunca ve el futuro."
+    },
+    {
+      front: "Isometría de Itô",
+      back: "$E[(\\int_0^t f\\, dW)^2] = \\int_0^t E[f^2]\\, ds$. La varianza de la integral es integral de cuadrados."
+    },
+    {
+      front: "Integral gaussiana",
+      back: "$f$ determinística: $\\int_0^t f\\, dW \\sim N(0, \\int_0^t f^2\\, ds)$."
+    },
+    {
+      front: "Lema de Itô",
+      back: "$df(W) = f' dW + \\tfrac{1}{2} f'' dt$; en general $df(X) = (f'b + \\tfrac{1}{2}f''\\sigma^2)dt + f'\\sigma\\, dW$."
+    },
+    {
+      front: "La corrección",
+      back: "El término $\\tfrac{1}{2}f''\\sigma^2 dt$ viene de $(dW)^2 = dt$: separa Itô de la regla de la cadena clásica."
+    },
+    {
+      front: "Martingalas por Itô",
+      back: "Si el término $dt$ se cancela, queda una integral pura: martingala. Así se construyen $W^2-t$, $W^3-3tW$, $e^{\\theta W - \\theta^2 t/2}$."
+    }
+  ]}
+/>
+
+<LabExercise
+  id="lab-10-ito"
+  title="Itô contra el cálculo clásico"
+  tasks={[
+    "Con n = 2000 pasos, aproxima ∫_0^1 W dW por sumas de extremo izquierdo y verifica que coincide con (W_1² − 1)/2, no con W_1²/2. ¿Dónde se ve la corrección?",
+    "Repite con 3000 trayectorias: verifica que W_t² − t y W_t³ − 3tW_t tienen media ~0 en t = 0.5 (martingalas) y que W_t³ solo NO la tiene.",
+    "La integral gaussiana del Quiz 3: ∫_0^1 s dW_s debe ser N(0, 1/3). Estima su varianza por Monte Carlo y por la isometría (∫s² ds = 1/3), y verifica normalidad con un qq-plot.",
+    "Extra del Taller 2: la integral de Stratonovich evalúa en el punto medio (W_k + W_{k+1})/2. Calcula ∫W ∘dW y verifica que da W_1²/2 — sin corrección."
+  ]}
+  hint="Para el punto medio: usa el promedio de W en extremos consecutivos como integrando. Para el qq-plot, qqnorm() + qqline() sobre 2000 valores de ∫s dW."
+  solution={"1) La suma de Itô ≈ (W_1²−1)/2; la diferencia con W_1²/2 es exactamente −0.5 = −t/2, la corrección del lema.\n2) W²−t y W³−3tW tienen medias ~0 ± ee; W³ sola tiene E[W³] = 0 pero no es martingala (E[W_t³|F_s] ≠ W_s³). Comprobable por medias condicionales.\n3) Varianza ≈ 0.333; el qq-plot queda recto: la integral es exactamente normal.\n4) El punto medio da ≈ W_1²/2 — la regla clásica, a costa de perder martingala."}
+  code={`set.seed(52)
+n <- 2001; grid <- seq(0, 1, length.out = n)
+dW <- c(0, rnorm(n - 1)) / sqrt(n)
+W <- cumsum(dW)
+
+# ---- 1 y 4. Izquierda (Itô) vs punto medio (Stratonovich) ----
+ito <- sum(W[-n] * dW[-1])
+strat <- sum((W[-n] + W[-1]) / 2 * dW[-1])
+cat("Itô        :", sprintf("%.4f", ito), "vs (W1^2-1)/2 =",
+    sprintf("%.4f", (tail(W,1)^2 - 1)/2), "\\n")
+cat("Stratonovich:", sprintf("%.4f", strat), "vs W1^2/2 =",
+    sprintf("%.4f", tail(W,1)^2 / 2), "\\n")
+
+# ---- 2. Verificacion de martingalas en t = 0.5 ----
+reps <- 3000
+w5 <- replicate(reps, sum(rnorm(500)) / sqrt(999))
+cat("E[W^2 - t] :", sprintf("%.4f", mean(w5^2 - 0.5)), "\\n")
+cat("E[W^3 - 3tW]:", sprintf("%.4f", mean(w5^3 - 1.5 * w5)), "\\n")
+# W^3 sola no es martingala: E[W_t^3 | W_s] != W_s^3 en general.
+# Chequeo con el incremento: E[(W_s + dW)^3 | W_s] = W_s^3 + 3 W_s (dt)
+cat("Sesgo de W^3 sola: E[W^3|W_s] - W_s^3 = 3·W_s·dt -> no martingala\\n")
+
+# ---- 3. Integral gaussiana N(0, 1/3) ----
+I <- replicate(reps, {
+  dw <- rnorm(1000) / sqrt(1000)
+  g <- (0:999) / 1000
+  sum(g * dw)
+})
+cat("Var empirica:", sprintf("%.4f", var(I)),
+    "| isometria:", sprintf("%.4f", 1/3), "\\n")
+qqnorm(I, col = "#8b5cf6", pch = ".",
+       main = "Integral s dW ~ N(0, 1/3)")
+qqline(I, col = "#5b21b6", lwd = 2)`}
+>
+El laboratorio mide la corrección de Itô con las manos: la integral a la
+izquierda replica la fórmula con −t/2, el punto medio replica la clásica,
+las martingalas del Quiz 3 se verifican por medias, y la integral gaussiana
+confirma su varianza por isometría. Es el punto donde el cálculo estocástico
+deja de ser abstracto.
+</LabExercise>
