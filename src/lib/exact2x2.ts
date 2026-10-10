@@ -699,15 +699,17 @@ export function coverageLogOr(
  * cap. 8 / Fleiss form. Returns n per group for two-sided alpha and
  * target power at (p1, p2).
  */
-export function nForPower(p1: number, p2: number, alpha = 0.05, power = 0.8): number {
+export function nForPowerRaw(p1: number, p2: number, alpha = 0.05, power = 0.8): number {
   const za = normQuantile(1 - alpha / 2);
   const zb = normQuantile(power);
   const pb = (p1 + p2) / 2;
   const d = Math.abs(p1 - p2);
   if (d === 0) return Infinity;
-  return Math.ceil(
-    Math.pow(za * Math.sqrt(2 * pb * (1 - pb)) + zb * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)), 2) / (d * d)
-  );
+  return Math.pow(za * Math.sqrt(2 * pb * (1 - pb)) + zb * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)), 2) / (d * d);
+}
+
+export function nForPower(p1: number, p2: number, alpha = 0.05, power = 0.8): number {
+  return Math.ceil(nForPowerRaw(p1, p2, alpha, power));
 }
 
 /** n per group so that a two-sided 95% CI for a single proportion has half-width delta. */

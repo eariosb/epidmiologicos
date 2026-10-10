@@ -516,7 +516,7 @@ export function PvalueVsEffect({ title }: { title?: ReactNode }) {
         Con OR = 1 el histograma es uniforme: el 5% cae bajo la línea por azar
         (error tipo I). Con OR = 3 y n = 40 solo ~60% de las réplicas detecta el
         efecto aunque sea grande: efecto real sin "significancia" por falta de
-        datos. Con OR ≈ 1.3 y n = 1500 ~80% de las réplicas sale "significativa"
+        datos. Con OR ≈ 1.25 y n = 1500 ~72% de las réplicas sale "significativa"
         con un efecto clínicamente trivial: el valor
         p mezcla tamaño del efecto y tamaño muestral; por eso Woodward exige
         reportar el IC antes que el p.
