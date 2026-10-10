@@ -1,0 +1,17 @@
+Mantel-Haenszel chi-squared test without continuity correction
+
+data:  arr
+Mantel-Haenszel X-squared = 66.389, df = 1, p-value = 3.702e-16
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval:
+ 1.702142 2.395828
+sample estimates:
+common odds ratio
+         2.019416
+
+
+OR_E ajustado (glm) = 2.025  <- compara con OR_MH
+                 2.5 %     97.5 %
+(Intercept) -2.1587218 -1.8284686
+E            0.5345859  0.8767564
+sexo         1.0475718  1.4050163

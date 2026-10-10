@@ -1,0 +1,4 @@
+Fabricacion:
+  estratos: 1 y 1  -> agrupado: 18.16
+Enmascaramiento:
+  estratos: 2.93 y 32.85  -> agrupado: 1

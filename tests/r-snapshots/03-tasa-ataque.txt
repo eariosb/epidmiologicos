@@ -1,0 +1,3 @@
+tasa de ataque si comio   = 79.6%
+tasa de ataque no comio   = 4.6%
+razon de tasas de ataque  = 17.3

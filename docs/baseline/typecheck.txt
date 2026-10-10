@@ -1,0 +1,5 @@
+
+> curso-epidemiologia@0.1.0 typecheck C:\www\UNAL\Modelos Mixtos\Curso Epidemiologicos\curso-epidemiologia
+> tsc --noEmit
+
+TYPECHECK: 0

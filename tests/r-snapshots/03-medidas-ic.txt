@@ -1,0 +1,27 @@
+Exact binomial test
+
+data:  x and n
+number of successes = 45, number of trials = 400, p-value < 2.2e-16
+alternative hypothesis: true probability of success is not equal to 0.5
+95 percent confidence interval:
+ 0.08325153 0.14762749
+sample estimates:
+probability of success
+                0.1125
+
+
+	Exact Poisson test
+
+data:  casos time base: pt
+number of events = 12, time base = 8500, p-value < 2.2e-16
+alternative hypothesis: true event rate is not equal to 1
+95 percent confidence interval:
+ 0.0007294794 0.0024660688
+sample estimates:
+ event rate
+0.001411765
+
+tasa = 1.41 por 1000 p-a, IC95% (0.73, 2.47)
+
+Regla del curso: toda medida se reporta con su IC;
+un estimador sin intervalo es un numero incompleto.

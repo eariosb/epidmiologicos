@@ -1,0 +1,32 @@
+caso control
+1    1       0
+2    1       0
+3    1       0
+4    0       0
+5    0       1
+6    0       0
+
+     0  1
+  0 20  7
+  1 20  3
+discordantes: b = 20, c = 7  ->  OR = b/c = 2.857
+
+	McNemar's Chi-squared test
+
+data:  tab
+McNemar's chi-squared = 6.2593, df = 1, p-value = 0.01235
+
+
+	Mantel-Haenszel chi-squared test without continuity correction
+
+data:  arr
+Mantel-Haenszel X-squared = 6.2593, df = 1, p-value = 0.01235
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.1479989 0.8277086
+sample estimates:
+common odds ratio
+             0.35
+
+
+Chi2 McNemar = Chi2 CMH: la equivalencia de la clase 22.

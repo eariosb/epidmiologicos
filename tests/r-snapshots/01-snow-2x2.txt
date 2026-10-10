@@ -1,0 +1,11 @@
+Desenlace
+Agua        Muerto   Vivo
+  Southwark   1263 166391
+  Lambeth       98  17250
+
+Riesgo Southwark: 7.53 por 1000
+Riesgo Lambeth:   5.65 por 1000
+
+RR = 1.33,  IC95% [1.09, 1.64]
+La mortalidad acumulada en clientes de Southwark fue ~33% mayor.
+El factor 14 vive en la comparacion por casas, no en esta tabla.

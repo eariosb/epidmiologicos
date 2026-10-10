@@ -1,0 +1,13 @@
+Call:
+survdiff(formula = Surv(tiempo, status) ~ grupo, data = leu)
+
+         N Observed Expected (O-E)^2/E (O-E)^2/V
+grupo=0 21       21     10.7      9.77      16.8
+grupo=1 21        9     19.3      5.46      16.8
+
+ Chisq= 16.8  on 1 degrees of freedom, p= 4e-05
+Call: survfit(formula = Surv(tiempo, status) ~ grupo, data = leu)
+
+         n events median 0.95LCL 0.95UCL
+grupo=0 21     21      8       4      12
+grupo=1 21      9     23      16      NA

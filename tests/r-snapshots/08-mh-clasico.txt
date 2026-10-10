@@ -1,0 +1,18 @@
+Mantel-Haenszel chi-squared test without continuity correction
+
+data:  arr3
+Mantel-Haenszel X-squared = 43.944, df = 1, p-value = 3.38e-11
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval:
+ 2.894691 7.662669
+sample estimates:
+common odds ratio
+         4.709677
+
+
+IC95% del OR_MH: (2.89, 7.66)
+
+OR crudo    = 3.536
+OR jovenes  = 6
+OR mayores  = 3.333
+-> Si crudo != MH, la edad confundia la asociacion.

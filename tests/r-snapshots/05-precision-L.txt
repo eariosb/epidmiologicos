@@ -1,0 +1,4 @@
+E[L] = 0.1665    P(L <= 0.12) = 0.034
+Fraccion de estudios cuyo IC supera la longitud esperada:
+  P(L > E[L]) = 0.569  (no es 0.5: la distribucion es discreta y asimetrica)
+n clasico = 97    n con garantia 90% = 126

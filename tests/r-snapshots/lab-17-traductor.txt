@@ -1,0 +1,8 @@
+RR = 1.39  IC95% [1.03, 1.88]
+OR = 1.45  IC95% [1.04, 2.02]
+RD = 0.0349
+
+	Pearson's Chi-squared test
+
+data:  tab
+X-squared = 4.8015, df = 1, p-value = 0.02844

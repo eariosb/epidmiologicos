@@ -1,0 +1,37 @@
+[1] "Therapy"   "Cell"      "SurvTime"  "Kps"       "DiagTime"  "Age"
+[7] "Prior"     "Treatment" "censor"
+   Therapy     Cell SurvTime Kps DiagTime Age Prior Treatment censor
+1 standard squamous       72  60        7  69     0         0      0
+2 standard squamous      411  70        5  64    10         0      0
+3 standard squamous      228  60        3  38     0         0      0
+4 standard squamous      126  60        9  63    10         0      0
+5 standard squamous      118  70       11  65    10         0      0
+6 standard squamous       10  20        5  49     0         0      0
+
+  0   1
+128   9
+  0   1
+ 62 100
+Call: survfit(formula = Surv(SurvTime, dead) ~ Therapy, data = va)
+
+                  n events median 0.95LCL 0.95UCL
+Therapy=standard 69     64  103.0      59     132
+Therapy=test     68     64   52.5      44      95
+Call:
+survdiff(formula = Surv(SurvTime, dead) ~ Therapy, data = va)
+
+                  N Observed Expected (O-E)^2/E (O-E)^2/V
+Therapy=standard 69       64     64.5   0.00388   0.00823
+Therapy=test     68       64     63.5   0.00394   0.00823
+
+ Chisq= 0  on 1 degrees of freedom, p= 0.9
+Call:
+survdiff(formula = Surv(SurvTime, dead) ~ Cell, data = va)
+
+               N Observed Expected (O-E)^2/E (O-E)^2/V
+Cell=adeno    27       26     15.7      6.77      8.19
+Cell=large    27       26     34.5      2.12      3.02
+Cell=small    48       45     30.1      7.37     10.20
+Cell=squamous 35       31     47.7      5.82     10.53
+
+ Chisq= 25.4  on 3 degrees of freedom, p= 1e-05

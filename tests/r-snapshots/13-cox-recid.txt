@@ -1,0 +1,47 @@
+[1] "week"   "arrest" "fin"    "age"    "race"   "wexp"   "mar"    "paro"
+ [9] "prio"   "educ"
+
+  0   1
+318 114
+Call:
+coxph(formula = Surv(week, arrest) ~ fin + age + race + wexp +
+    mar + paro + prio, data = r)
+
+  n= 432, number of events= 114
+
+         coef exp(coef) se(coef)      z Pr(>|z|)
+fin  -0.37942   0.68426  0.19138 -1.983  0.04742 *
+age  -0.05744   0.94418  0.02200 -2.611  0.00903 **
+race  0.31390   1.36875  0.30799  1.019  0.30812
+wexp -0.14980   0.86088  0.21222 -0.706  0.48029
+mar  -0.43370   0.64810  0.38187 -1.136  0.25606
+paro -0.08487   0.91863  0.19576 -0.434  0.66461
+prio  0.09150   1.09581  0.02865  3.194  0.00140 **
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+     exp(coef) exp(-coef) lower .95 upper .95
+fin     0.6843     1.4614    0.4702    0.9957
+age     0.9442     1.0591    0.9043    0.9858
+race    1.3688     0.7306    0.7484    2.5032
+wexp    0.8609     1.1616    0.5679    1.3049
+mar     0.6481     1.5430    0.3066    1.3699
+paro    0.9186     1.0886    0.6259    1.3482
+prio    1.0958     0.9126    1.0360    1.1591
+
+Concordance= 0.64  (se = 0.027 )
+Likelihood ratio test= 33.27  on 7 df,   p=2e-05
+Wald test            = 32.11  on 7 df,   p=4e-05
+Score (logrank) test = 33.53  on 7 df,   p=2e-05
+
+  fin   age  race  wexp   mar  paro  prio
+0.684 0.944 1.369 0.861 0.648 0.919 1.096
+         chisq df     p
+fin     0.0624  1 0.803
+age     5.9740  1 0.015
+race    2.0683  1 0.150
+wexp    4.2246  1 0.040
+mar     1.0110  1 0.315
+paro    0.0184  1 0.892
+prio    0.5206  1 0.471
+GLOBAL 17.6944  7 0.013

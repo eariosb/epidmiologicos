@@ -1,0 +1,20 @@
+depresion
+deporte si no
+     si 38  9
+     no 31 22
+riesgo expuestos   = 0.809
+riesgo no expuest. = 0.585
+RR  = 1.382  IC95% (1.059, 1.804)
+OR  = 2.996  IC95% (1.207, 7.437)
+RD  = 0.224
+
+	Pearson's Chi-squared test
+
+data:  tab
+X-squared = 5.8227, df = 1, p-value = 0.01582
+
+
+	Pearson's Chi-squared test with Yates' continuity correction
+
+data:  tab
+X-squared = 4.8243, df = 1, p-value = 0.02806

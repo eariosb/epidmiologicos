@@ -1,0 +1,3 @@
+Fisher = 0.0544   mid-p = 0.0297
+z agrupada = 0.0281   Boschloo = 0.0385
+El veredicto a alpha=0.05 depende del procedimiento.

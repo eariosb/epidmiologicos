@@ -1,0 +1,41 @@
+
+> curso-epidemiologia@0.1.0 build C:\www\UNAL\Modelos Mixtos\Curso Epidemiologicos\curso-epidemiologia
+> next build
+
+   ▲ Next.js 15.5.20
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 31.2s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/26) ...
+   Generating static pages (6/26) 
+   Generating static pages (12/26) 
+   Generating static pages (19/26) 
+ ✓ Generating static pages (26/26)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                          Size  First Load JS
+┌ ○ /                                               165 B         108 kB
+├ ○ /_not-found                                      1 kB         105 kB
+├ ƒ /api/rag-corpus                                 132 B         104 kB
+├ ƒ /api/vision/[...path]                           132 B         104 kB
+├ ○ /apple-icon.png                                   0 B            0 B
+├ ● /cursos/[slug]                                 291 kB         424 kB
+├   ├ /cursos/01-epidemiologia-cuantitativa
+├   ├ /cursos/02-mapa-disenos-causalidad
+├   ├ /cursos/03-medicion-incidencia-prevalencia
+├   └ [+16 more paths]
+└ ○ /icon.png                                         0 B            0 B
++ First Load JS shared by all                      104 kB
+  ├ chunks/560-cc11d7f52582c5fb.js                45.7 kB
+  ├ chunks/a039cd8b-575463d98e48e5ff.js           54.2 kB
+  └ other shared chunks (total)                    4.4 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
+BUILD: 0
