@@ -1,0 +1,13 @@
+Two-sample comparison of proportions power calculation
+
+              n = 54.08752
+             p1 = 0.2
+             p2 = 0.03
+      sig.level = 0.05
+          power = 0.8
+    alternative = two.sided
+
+NOTE: n is number in *each* group
+
+n por grupo (Fleiss) = 55
+n ajustado (20% perdidas) = 68

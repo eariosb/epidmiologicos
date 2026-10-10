@@ -1,0 +1,13 @@
+bpeso
+fuma si  no
+  si 30  70
+  no 20 180
+r1=0.300  r0=0.100  RR=3.00  OR=3.86
+PRA  = 66.7%  (fraccion del riesgo de fumadoras debida a fumar)
+PRAP = 40.0%  (fraccion del bajo peso poblacional atribuible)
+NNH  = 5  -> cada 5 fumadoras, ~1 bajo peso de mas (exposicion danina)
+
+IC95% RD = (0.101, 0.299) -> NNH (3.3, 9.9)
+PRAP cohorte = 0.400  IC Walter (0.233, 0.594)
+PRAP (CC) = 0.444  IC95% KK (0.268, 0.637)
+PRA en CC ((OR-1)/OR) = 0.741

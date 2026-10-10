@@ -1,0 +1,8 @@
+Verdad poblacional: RR = 4.03  OR = 4.80
+
+Cohorte:       riesgos 0.210 vs 0.053 -> RR = 3.98, RD = 0.157
+Casos-control: solo OR = 4.59 (riesgo no estimable)
+Transversal:   prevalencia y OR de prevalencia = 4.80
+
+El OR difiere del RR porque la enfermedad no es tan rara (0.20):
+en la practica eso se reporta declarando el diseno, no 'corrigiendo'.

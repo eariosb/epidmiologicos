@@ -1,0 +1,33 @@
+setno cc ddimer SBP switch
+1     1  0      0 142      2
+2     1  0      1 105      2
+3     1  1      0 142      1
+4     2  0      0 131      2
+5     2  0      0 117      2
+6     2  0      0 120      2
+
+ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
+ 3  4  4  4  5  5  5  5  5  5  5  5  5  8  9  9 10 10 14 15
+Call:
+coxph(formula = Surv(rep(1, 135L), cc) ~ ddimer + SBP + strata(setno),
+    data = dd, method = "exact")
+
+  n= 135, number of events= 28
+
+          coef exp(coef) se(coef)     z Pr(>|z|)
+ddimer 0.19435   1.21452  0.45126 0.431   0.6667
+SBP    0.02186   1.02210  0.01067 2.048   0.0406 *
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+       exp(coef) exp(-coef) lower .95 upper .95
+ddimer     1.215     0.8234    0.5015     2.941
+SBP        1.022     0.9784    1.0009     1.044
+
+Concordance= 0.577  (se = 0.083 )
+Likelihood ratio test= 4.53  on 2 df,   p=0.1
+Wald test            = 4.42  on 2 df,   p=0.1
+Score (logrank) test = 4.72  on 2 df,   p=0.09
+
+
+OR(ddimer) = 1.215OR(BCG pareado) = 0.519OR ingenuo (sin parear) = 0.688

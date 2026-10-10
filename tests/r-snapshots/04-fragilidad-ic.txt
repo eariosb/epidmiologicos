@@ -1,0 +1,5 @@
+Woolf:      OR = 2.39  IC95% [0.91, 6.28]
+Fisher:     OR = 2.38  IC95% [0.85, 7.66]
+Jeffreys:   OR ~ 2.36  IC95% [0.94, 6.53]
+
+Cobertura Woolf: 96.8%  |  muestras con celda cero: 0.4%

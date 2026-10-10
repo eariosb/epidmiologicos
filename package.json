@@ -11,6 +11,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:mdx": "node scripts/check_mdx.mjs",
+    "check:r": "python scripts/run_all_r.py --check",
+    "check:r:update": "python scripts/run_all_r.py --update",
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "qa": "pnpm typecheck && pnpm build && pnpm test && pnpm check:mdx && pnpm check:r && pnpm test:visual",
     "precompute": "node scripts/run-precompute.mjs",
     "precompute:check": "python -c \"import os; pngs=[f for r,d,fs in os.walk('public/precomputed') for f in fs if f.endswith('.png')]; print(f'{len(pngs)} PNGs found'); [print(f'  {os.path.join(r,f)}') for r,d,fs in os.walk('public/precomputed') for f in fs if f.endswith('.png')]\""
   },
@@ -43,6 +49,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

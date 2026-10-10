@@ -1,0 +1,5 @@
+mal
+exp  si no
+  si 45  8
+  no 12 95
+OR = 44.53

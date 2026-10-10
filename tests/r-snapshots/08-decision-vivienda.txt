@@ -1,0 +1,27 @@
+vivienda chd fuma    n
+1 precaria  si   no   40
+2   propia  si   no   92
+3 precaria  no   no  360
+4   propia  no   no 1108
+5 precaria  si   si   96
+6   propia  si   si   52
+7 precaria  no   si  504
+8   propia  no   si  348
+OR crudo    = 1.59
+OR no-fuma  = 1.34
+OR fuma     = 1.27
+
+	Mantel-Haenszel chi-squared test without continuity correction
+
+data:  arr
+Mantel-Haenszel X-squared = 3.8034, df = 1, p-value = 0.05115
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.997781 1.700854
+sample estimates:
+common odds ratio
+          1.30272
+
+
+RD estratos: 0.023 y 0.030
+RD combinada = 0.026 [-0.001, 0.052] -> NNT ~ 39

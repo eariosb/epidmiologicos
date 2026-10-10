@@ -1,0 +1,22 @@
+id edad_ingreso     anios evento
+1  1     44.83778 10.494182      1
+2  2     39.46338 15.997262      0
+3  3     41.94661  5.201916      1
+4  4     37.15537 20.000000      0
+5  5     42.59001  8.635181      1
+6  6     34.30253 18.414784      0
+
+persona-anios = 78.7   eventos = 3   tasa = 3.81 por 100 p-a
+
+IRR = 1.20
+
+	Comparison of Poisson rates
+
+data:  c(12, 20) time base: c(800, 1600)
+count1 = 12, expected count1 = 10.667, p-value = 0.708
+alternative hypothesis: true rate ratio is not equal to 1
+95 percent confidence interval:
+ 0.5348553 2.5774713
+sample estimates:
+rate ratio
+       1.2

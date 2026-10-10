@@ -1,0 +1,6 @@
+OR crudo    = 1.747
+OR ajustado = 1.034  <- la edad confundia; el efecto verdadero es 1
+
+IRR (Poisson) = 0.508
+SMR via offset = 1.087  = 1.087  directo
+deviance/gl = 2.008  (esperado ~ 1 si Poisson basta)

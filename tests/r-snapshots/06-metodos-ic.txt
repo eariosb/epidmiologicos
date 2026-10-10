@@ -1,0 +1,5 @@
+Wald Wilson AgrestiCoull Jeffreys ClopperPearson Verosimilitud
+[1,] -0.0226 0.0185       0.0080   0.0141         0.0082        0.0114
+[2,]  0.1559 0.2132       0.2237   0.1971         0.2207        0.1920
+Wald es inadmisible si algun limite cae fuera de [0,1]
+Cobertura minima en p: Wald = 0.14   Wilson = 0.86 (nominal .95)

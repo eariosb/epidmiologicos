@@ -1,0 +1,8 @@
+esperadas = 18.4  SMR = 1.630
+IC exacto:  (1.100, 2.328)
+IC Byar:    (1.100, 2.328)
+SMR > 1 con IC que no toca 1: exceso de mortalidad real.
+
+razon de tasas ajustadas:
+  estandar joven: 1.60   estandar viejo: 1.44
+Mismo dato, dos estandares, dos respuestas: hay que declarar cual.

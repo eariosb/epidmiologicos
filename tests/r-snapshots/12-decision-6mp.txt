@@ -1,0 +1,26 @@
+Call: survfit(formula = Surv(tiempo, status) ~ grupo, data = leu)
+
+                grupo=0
+        time       n.risk      n.event     survival      std.err lower 95% CI
+          23            1           21            0          NaN           NA
+upper 95% CI
+          NA
+
+                grupo=1
+        time       n.risk      n.event     survival      std.err lower 95% CI
+      23.000        6.000        9.000        0.448        0.135        0.249
+upper 95% CI
+       0.807
+
+riesgo recaida 23sem: placebo = 1.00  6-MP = 0.55
+ARR = 0.45 [0.09, 0.81]  ->  NNT(23 sem) = 2.2
+Call:
+survdiff(formula = Surv(tiempo, status) ~ grupo, data = leu)
+
+         N Observed Expected (O-E)^2/E (O-E)^2/V
+grupo=0 21       21     10.7      9.77      16.8
+grupo=1 21        9     19.3      5.46      16.8
+
+ Chisq= 16.8  on 1 degrees of freedom, p= 4e-05
+
+El NNT horizonte-fijo usa S(t): es el puente KM -> decision.
