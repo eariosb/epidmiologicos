@@ -1,0 +1,267 @@
+---
+title: "Estratificación y Mantel–Haenszel"
+slug: "08-estratificacion-mantel-haenszel"
+objective: "Corregir la confusión por estratificación, calcular e interpretar el estimador de Mantel–Haenszel, y reconocer la paradoja de Simpson como su forma extrema."
+order: 8
+datasets: []
+duration: 90
+prerequisites: ["Módulo 7: Confusión"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { ConfusionExplorer } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+import { DecisionPanel } from '@/components/DecisionPanel'
+import { DecisionCard } from '@/components/DecisionCard'
+
+<Callout type="tip" title="Estratificar deja ver lo que el agregado oculta">
+La estratificación separa la tabla en subtablas $2\times2$ por niveles del
+confusor. Dentro de cada estrato, $C$ es constante y no puede confundir.
+El resumen ponderado de los <Term k="OR">OR</Term> por estrato, el
+<Term k="MH">Mantel–Haenszel</Term>, recupera la asociación real que el
+crudo deformó.
+</Callout>
+
+## El estimador de Mantel–Haenszel
+
+$$
+\widehat{OR}_{MH} =
+\frac{\sum_k a_k d_k / n_k}{\sum_k b_k c_k / n_k}
+$$
+
+Pondera cada estrato por su información (inverso aproximado de la
+varianza): los estratos grandes mandan. Si $\widehat{OR}_{MH}$ difiere del
+OR crudo, el crudo estaba confundido; el estimador ajustado **recupera**
+la asociación real. Si coinciden, no había confusión neta.
+
+<Callout type="warning" title="Criterio operativo">
+Compara siempre el estimador crudo con el ajustado: una diferencia
+material (regla práctica: &gt;10% en la escala del OR) declara confusión.
+El número exacto importa menos que el hábito de mirar.
+</Callout>
+
+## El ejemplo del SHHS
+
+El ejemplo 4.9 de Woodward (Sleep Heart Health Study): la asociación entre
+calidad de vivienda y enfermedad coronaria da **OR crudo = 1.45**, pero al
+estratificar el $\widehat{OR}_{MH} = 1.32$ con IC95% (0.95, 1.82). El
+crudo exageraba la asociación un 10%: confusión modesta pero real; y el
+<Term k="IC">IC</Term> que toca 1 declara honestamente la fragilidad del hallazgo.
+
+El ejercicio siguiente reproduce la mecánica con un array 2×2×2: un OR
+crudo, un OR por estrato y el Mantel–Haenszel calculado por
+`mantelhaen.test`. La comparación crudo contra ajustado es el criterio
+operativo del módulo.
+
+<RCell
+  id="08/mh-clasico"
+  title="Mantel–Haenszel y la comparación crudo vs. ajustado"
+  code={`# Ejemplo con confusión clasica: exposicion, desenlace y edad (C).
+# Estrato jovenes (C=0) y mayores (C=1), convencion filas=E.
+joven <- matrix(c(40, 60, 20, 180), ncol = 2)   # OR estrato jovenes
+mayor <- matrix(c(50, 10, 60, 40), ncol = 2)    # OR estrato mayores
+arr3  <- array(c(joven, mayor), dim = c(2, 2, 2),
+               dimnames = list(E = c("si","no"), D = c("si","no"),
+                               edad = c("joven","mayor")))
+
+# OR crudo (ignora la edad):
+crudo <- apply(arr3, c(1, 2), sum)
+or_crudo <- crudo[1,1]*crudo[2,2] / (crudo[1,2]*crudo[2,1])
+
+# OR por estrato y Mantel-Haenszel:
+mh <- mantelhaen.test(arr3, correct = FALSE)
+print(mh)
+cat(sprintf("\\nIC95%% del OR_MH: (%.2f, %.2f)\\n",
+            mh$conf.int[1], mh$conf.int[2]))
+
+cat("\\nOR crudo    =", round(or_crudo, 3))
+cat("\\nOR jovenes  =", round(joven[1,1]*joven[2,2]/(joven[1,2]*joven[2,1]), 3))
+cat("\\nOR mayores  =", round(mayor[1,1]*mayor[2,2]/(mayor[1,2]*mayor[2,1]), 3))
+cat("\\n-> Si crudo != MH, la edad confundia la asociacion.")`}
+/>
+
+<SasBlock code={`data conf;
+  input edad $ e $ d $ n;
+  datalines;
+joven si si 40  joven si no 20  joven no si 60  joven no no 180
+mayor si si 50  mayor si no 60  mayor no si 10  mayor no no 40
+;
+proc freq data=conf order=data; weight n;
+  tables e*d / measures;         /* OR crudo */
+  tables edad*e*d / cmh measures;
+  /* CMH  -> OR ajustado de Mantel-Haenszel + homogeneidad
+     (Breslow-Day). MEASURES -> OR por estrato */
+run;`} />
+
+<Callout type="warning" title="El límite dimensional">
+La estratificación funciona mientras haya datos por estrato. Cada
+confusor nuevo multiplica las subtablas: edad en 4 niveles × sexo ×
+tabaquismo ya son 16 tablas 2×2, y la muestra se reparte hasta dejar
+celdas vacías donde el OR ni siquiera existe. La estratificación
+cruzada tiene un techo dimensional; cuando se alcanza, el relevo lo toma
+el modelo (módulo 16), que controla los mismos confusores sin
+subdividir la muestra.
+</Callout>
+
+## La paradoja de Simpson
+
+Cuando la confusión es tan fuerte que invierte el signo de la asociación,
+aparece la **paradoja de Simpson**: el tratamiento puede verse peor en el
+agregado siendo mejor en cada estrato. No es paradoja matemática; es
+confusión que alcanzó para cambiar el signo. El mismo explorador del
+módulo anterior lo reproduce moviendo los pesos de los estratos.
+
+<ConfusionExplorer title={<>Paradoja de Simpson: mueve las flechas C→E y C→D hasta invertir el OR crudo</>} />
+
+<Callout type="note" title="Simpson no es un animal raro">
+La paradoja aparece en datos reales constantemente: tasas de mortalidad
+hospitalaria (los hospitales buenos reciben los casos graves), éxito de
+tratamientos (se asignan según severidad), admisiones universitarias.
+Siempre que el confusor reparta desigual Y afecte el desenlace, el crudo
+puede mentir el signo.
+</Callout>
+
+<Quiz
+  question="Un estudio crudo da OR = 2.8. Al estratificar por edad, ambos estratos dan OR = 1.1 y el MH da 1.1. ¿Qué concluyes?"
+  options={[
+    "El efecto es real: MH lo confirma",
+    "La edad confundía la asociación: el OR crudo era espurio",
+    "Hay interacción porque los OR cambiaron",
+    "El estudio era ecológico"
+  ]}
+  correctIndex={1}
+  explanation="Crudo ≠ ajustado declara confusión: la edad generaba la asociación aparente. Interacción sería que los OR por estrato difirieran entre sí; aquí ambos valen 1.1, homogéneos. El resumen correcto es OR_MH = 1.1: sin asociación."
+/>
+
+<LabExercise
+  id="lab-07-confusion"
+  title="Laboratorio: el médico de la paradoja"
+  code={`# Paradoja de Simpson en consultorios: exposicion = tratamiento nuevo,
+# desenlace = curacion, confusor = severidad del caso.
+leve  <- matrix(c(80, 20, 70, 30), ncol = 2)   # casos leves
+grave <- matrix(c(30, 70, 20, 80), ncol = 2)   # casos graves
+arr <- array(c(leve, grave), dim = c(2,2,2))
+print(apply(arr, c(1,2), sum))                 # tabla cruda
+# Tu turno: calcula el OR crudo, los OR por estrato y el MH.
+# ¿El tratamiento nuevo funciona?`}
+  tasks={[
+    "Calcula el OR crudo y el de cada estrato.",
+    "¿Hay confusión, interacción, o ambas?",
+    "¿Qué recomendarías clínicamente?",
+  ]}
+  hint="Compara primero los OR por estrato entre sí (homogeneidad), y luego el MH contra el crudo (confusión)."
+  solution="Si ambos estratos tienen OR parecidos pero el crudo difiere → confusión pura (la severidad se repartió desigual). Si los estratos difieren entre sí → interacción: el tratamiento funciona distinto según severidad y debe reportarse por separado; anticipo del módulo 10."
+/>
+
+<SasBlock code={`data sim;
+  input sev $ t $ cura $ n;
+  datalines;
+leve  nuevo si 80  leve  nuevo no 70  leve  viejo si 20  leve  viejo no 30
+grave nuevo si 30  grave nuevo no 20  grave viejo si 70  grave viejo no 80
+;
+proc freq data=sim order=data; weight n;
+  tables t*cura / measures;        /* OR crudo */
+  tables sev*t*cura / cmh;         /* MH ajustado + homogeneidad */
+run;`} />
+
+## Laboratorio de decisión · ¿financiar el programa de vivienda?
+
+<Callout type="note" title="Caso: el ministerio y el consultor">
+Un ministerio considera financiar un programa de mejoramiento de vivienda
+basándose en la asociación vivienda precaria–CHD del <Term k="SHHS">SHHS</Term>. El informe
+crudo da OR = 1.6. Un consultor objeta: *"es confusión por tabaquismo;
+los fumadores viven peor y enferman más"*. Su equipo debe decidir si el
+número del informe justifica la política.
+</Callout>
+
+El análisis estratifica por tabaquismo y compara el OR crudo, los OR por
+estrato y el Mantel–Haenszel, y termina traduciendo el efecto ajustado a
+una diferencia de riesgos con su <Term k="NNT">NNT</Term> aproximado.
+
+<RCell
+  id="08/decision-vivienda"
+  title="Vivienda precaria y CHD estratificado por tabaquismo"
+  code={`# shhs_vivienda.csv: reconstruccion docente consistente con la
+# direccion de la Tabla 4.6 de Woodward (crudo inflado por tabaquismo).
+viv <- read.csv("shhs_vivienda.csv")
+print(viv)
+
+# Array 2x2x2: vivienda x chd x fuma
+arr <- array(viv$n, dim = c(2,2,2),
+             dimnames = list(vivienda = c("precaria","propia"),
+                             chd = c("si","no"), fuma = c("no","si")))
+
+crudo <- apply(arr, 1:2, sum)
+cat(sprintf("OR crudo    = %.2f\\n",
+            crudo[1,1]*crudo[2,2]/(crudo[1,2]*crudo[2,1])))
+cat(sprintf("OR no-fuma  = %.2f\\n",
+            arr[1,1,1]*arr[2,2,1]/(arr[1,2,1]*arr[2,1,1])))
+cat(sprintf("OR fuma     = %.2f\\n",
+            arr[1,1,2]*arr[2,2,2]/(arr[1,2,2]*arr[2,1,2])))
+print(mantelhaen.test(arr, correct = FALSE))
+
+# Riesgos por estrato -> RD aproximada del efecto de la vivienda:
+r_e <- c(arr[1,1,1]/sum(arr[1,,1]), arr[1,1,2]/sum(arr[1,,2]))
+r_n <- c(arr[2,1,1]/sum(arr[2,,1]), arr[2,1,2]/sum(arr[2,,2]))
+cat(sprintf("\\nRD estratos: %.3f y %.3f -> NNT ~ %.0f\\n",
+            r_e[1]-r_n[1], r_e[2]-r_n[2], 1/mean(r_e-r_n)))`}
+/>
+
+<SasBlock code={`proc import datafile="shhs_vivienda.csv" out=viv
+  dbms=csv replace; getnames=yes; run;
+proc freq data=viv order=data; weight n;
+  tables vivienda*chd / measures;       /* OR crudo ~1.6 */
+  tables fuma*vivienda*chd / cmh measures;
+  /* CMH -> OR-MH ~1.3 (el crudo inflaba por tabaquismo) */
+run;`} />
+
+<DecisionPanel
+  panelId="vivienda"
+  arr={0.026}
+  arrLo={0.004}
+  arrHi={0.048}
+  eventLabel="caso de CHD evitado"
+  title={<>Programa de vivienda: NNT ≈ 38, ¿vale el costo?</>}
+  note={<>Con la <Term k="RD">RD</Term> ajustada (~2.6 pp), mejorar la vivienda de ~38 familias
+  evita un caso de CHD. Mueve el costo por familia intervenida y el valor
+  del evento: la decisión depende de cuánto valora la sociedad un CHD
+  evitado, y el IC es ancho.</>}
+/>
+
+**Crítica, antes de firmar:**
+
+- El OR crudo (1.6) y el MH (~1.3) cuentan historias distintas: ¿cuál va
+  en la carta al ministerio y por qué? (principio 3).
+- El IC del MH en el ejemplo real de Woodward toca 1 (0.95–1.82): ¿cambia
+  eso la recomendación de política, aunque el punto estimado favorezca?
+
+<DecisionCard
+  id="decision-07-vivienda"
+  panelId="vivienda"
+  title="Programa de vivienda y CHD"
+  options={[
+    'Financiar el programa con el OR crudo como base',
+    'Financiar solo con el estimador ajustado y sus límites',
+    'No financiar: el IC es demasiado ancho para justificar el gasto',
+  ]}
+/>
+
+<ToolCard task="cmh" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: análisis estratificado completo">
+Sobre una tabla 2×2×K real o del laboratorio: OR crudo, OR por estrato,
+OR-MH con IC, y una frase de decisión (¿había confusión? ¿qué número
+reportas?). El test de homogeneidad formal llega en el módulo siguiente.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), cap. 4.6**: estratificación y Mantel–Haenszel, Ejemplo 4.9 SHHS.
+- **Mantel &amp; Haenszel (1959)**: el artículo original.
+- **Notas de clase (Salazar), clase 9**: MH con datos reales, equivalencia con SAS `<Term k="CMH">CMH</Term>`.

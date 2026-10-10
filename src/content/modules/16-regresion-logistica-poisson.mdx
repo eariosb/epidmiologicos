@@ -1,0 +1,221 @@
+---
+title: "Regresión logística y Poisson multivariante"
+slug: "16-regresion-logistica-poisson"
+objective: "Ajustar confusores múltiples y continuos con regresión logística y de Poisson, interpretar OR e IRR ajustados, y evaluar la discriminación del modelo con la curva ROC."
+order: 16
+datasets: []
+duration: 90
+prerequisites: ["Módulo 8: Mantel–Haenszel", "Módulo 13: Cox"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { RocExplorer } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+<Callout type="tip" title="El modelo es una estratificación que no se agota">
+La estratificación controla un confusor categórico, pero la vida real
+tiene varios confusores y algunos son continuos. La **regresión** los
+absorbe todos a la vez, a costa de asumir una forma funcional. El OR
+ajustado de una logística es el heredero directo del
+$\widehat{OR}_{MH}$: ambos estiman la asociación *dentro* de niveles del
+confusor; la diferencia es que el modelo los estima de una vez.
+</Callout>
+
+## El triángulo de modelos
+
+| Modelo | Desenlace | Medida que produce | Generaliza a |
+|---|---|---|---|
+| Logística | binario | <Term k="OR">OR</Term> ajustado | tablas 2×2 y <Term k="MH">MH</Term> |
+| Poisson | conteos / persona-tiempo | <Term k="IRR">IRR</Term> | <Term k="SMR">SMR</Term>, tasas |
+| <Term k="Cox">Cox</Term> | tiempo al evento | hazard ratio | <Term k="log-rank">log-rank</Term> |
+
+## Logística y Poisson en acción
+
+<RCell
+  id="16/logistica-poisson"
+  title="Del estrato al coeficiente con glm"
+  code={`# Datos sinteticos con la estructura de clase: E, confusor edad, D.
+set.seed(7)
+n <- 2000
+edad <- rbinom(n, 1, 0.5)
+E    <- rbinom(n, 1, plogis(-0.8 + 1.4*edad))   # C -> E (confusion)
+D    <- rbinom(n, 1, plogis(-2.2 + 0.0*E + 1.6*edad))  # E no causa D!
+dat  <- data.frame(E, D, edad)
+
+# Ingenuo vs. ajustado: el coeficiente de E es el log-OR.
+crudo    <- glm(D ~ E,       data = dat, family = binomial)
+ajustado <- glm(D ~ E + edad, data = dat, family = binomial)
+cat("OR crudo    =", round(exp(coef(crudo)["E"]), 3))
+cat("\\nOR ajustado =", round(exp(coef(ajustado)["E"]), 3),
+    " <- la edad confundia; el efecto verdadero es 1\\n")
+
+# Poisson sobre persona-tiempo: offset log(persona-anos).
+ev <- c(30, 22); pt <- c(1800, 2600); grupo <- factor(c("exp","no"))
+m <- glm(ev ~ grupo + offset(log(pt)), family = poisson)
+cat("\\nIRR (Poisson) =", round(exp(coef(m)["grupono"]), 3))
+
+# El offset tambien formaliza el SMR: si el offset es log(esperados)
+# bajo tasas de referencia, exp(intercepto) ES el SMR.
+obs <- 30; esp <- c(12, 8, 7.6)   # esperados por estrato (modulo 9)
+smr_glm <- glm(obs ~ 1, offset = log(sum(esp)), family = poisson)
+cat("\\nSMR via offset =", round(exp(coef(smr_glm)), 3),
+    " =", round(obs/sum(esp), 3), " directo\\n")
+
+# Diagnostico de sobredispersion: deviance/gl ~ 1 en Poisson puro;
+# si >> 1, la varianza excede la media (usar quasipoisson o nbinom).
+set.seed(11)
+ev6  <- rpois(6, 25); pt6 <- runif(6, 1500, 3000)
+m6   <- glm(ev6 ~ 1 + offset(log(pt6)), family = poisson)
+cat("deviance/gl =", round(deviance(m6)/df.residual(m6), 3),
+    " (esperado ~ 1 si Poisson basta)\\n")`}
+/>
+
+<SasBlock code={`data dat;
+  call streaminit(7);
+  do i = 1 to 2000;
+    edad = rand('bernoulli', 0.5);
+    E = rand('bernoulli', logistic(-0.8 + 1.4*edad));
+    D = rand('bernoulli', logistic(-2.2 + 0*E + 1.6*edad));
+    output;
+  end;
+run;
+/* TRAMPA: SAS modela P(D=0) por defecto -> DESCENDING fija P(D=1) */
+proc logistic data=dat descending;
+  model D = E;                      /* OR crudo */
+run;
+proc logistic data=dat descending;
+  model D = E edad / lackfit;       /* OR ajustado + Hosmer-Lemeshow */
+run;
+/* glm Poisson + offset -> GENMOD */
+data tasas; input grupo $ ev pt; lpt = log(pt); datalines;
+exp 30 1800   noexp 22 2600 ;
+proc genmod data=tasas;
+  class grupo(ref='exp');
+  model ev = grupo / dist=poisson link=log offset=lpt;
+  lsmeans grupo / diff exp cl;      /* IRR noexp vs exp + IC */
+run;`} />
+
+<Callout type="note" title="El ejemplo de Kaufman (1983)">
+Tabaquismo e infarto del miocardio ajustado por confusores: pasar del OR
+crudo al OR ajustado por multivariables, y compararlo con el estimador
+de Mantel–Haenszel del módulo 8, completa el puente del curso: misma
+pregunta, instrumento más general.
+</Callout>
+
+<Callout type="warning" title="La sobredispersión no se perdona">
+Poisson asume varianza = media. Si los conteos varían más (deviance/gl
+≫ 1), los <Term k="IC">IC</Term> del IRR quedan artificialmente estrechos: el modelo miente
+en precisión, no en el punto estimado. La salida estándar es
+<code>quasipoisson</code> (reescala los errores estándar) o una binomial
+negativa si la sobredispersión es estructural. En SAS:
+<code>scale=pearson</code> en GENMOD. Y la formalización del offset con
+esperados convierte a Poisson en SMR multivariado: estratos, ajuste y
+modelo son la misma idea en tres instrumentos.
+</Callout>
+
+## La curva ROC
+
+Un modelo logístico no solo estima OR; también asigna probabilidades.
+La <Term k="ROC">curva ROC</Term> evalúa su poder de discriminación:
+cada punto de la curva es un umbral de decisión con su sensibilidad y
+especificidad, y el <Term k="AUC">AUC</Term> resume el área como la
+probabilidad de que un caso reciba mayor score que un control.
+
+<RocExplorer title={<>El umbral mueve el punto operativo: Se y Sp son un trade-off</>} />
+
+<Callout type="warning" title="AUC ≠ calibración">
+Un AUC alto dice que el modelo *ordena* bien a casos y controles; no dice
+que las probabilidades sean *correctas* (calibración, evaluada con
+Hosmer–Lemeshow). Un modelo puede discriminar perfectamente con
+probabilidades mal calibradas. Ambas propiedades se reportan.
+</Callout>
+
+<Quiz
+  question="Un glm da OR ajustado de E = 1.9 (IC 1.3–2.8) controlando edad, sexo e IMC. El OR crudo era 3.4. ¿Qué describe mejor el resultado?"
+  options={[
+    "El efecto real es 3.4; el ajuste lo redujo por error",
+    "El efecto crudo estaba inflado por confusión de edad/sexo/IMC; el estimador honesto es 1.9 con su IC",
+    "La regresión siempre reduce el OR",
+    "El modelo está mal especificado"
+  ]}
+  correctIndex={1}
+  explanation="El crudo recoge también el efecto de los confusores que viajan con E. Ajustar mueve el estimador hacia la asociación atribuible a E sola: aquí 1.9, con IC que no toca 1. Es la confusión de los módulos 8–9 corregida con modelo en vez de estratos."
+/>
+
+<Flashcard
+  title="Modelos en cuatro tarjetas"
+  items={[
+    { front: "Logística", back: "OR ajustado = e^β. Generaliza MH a confusores continuos y múltiples." },
+    { front: "Poisson", back: "IRR sobre persona-tiempo con offset log(pt). Generaliza el SMR." },
+    { front: "ROC/AUC", back: "Discriminación del modelo: AUC = P(score caso > score control). El umbral es una decisión, no parte del modelo." },
+    { front: "Crudo vs ajustado", back: "Si difieren materialmente hay confusión. El ajustado es el reporte; el crudo se muestra para transparencia." },
+  ]}
+/>
+
+<LabExercise
+  id="lab-15-logistica"
+  title="Laboratorio: del estrato al coeficiente"
+  code={`# Verifica que glm y MH responden lo mismo.
+set.seed(3)
+n <- 3000
+sexo <- rbinom(n, 1, 0.5)
+E    <- rbinom(n, 1, plogis(-0.5 + 0.9*sexo))
+D    <- rbinom(n, 1, plogis(-2 + 0.8*E + 1.2*sexo))
+dat  <- data.frame(E, D, sexo)
+
+# Via 1: estratificacion
+arr <- table(dat$E, dat$D, dat$sexo)
+print(mantelhaen.test(arr, correct = FALSE))
+
+# Via 2: modelo
+fit <- glm(D ~ E + sexo, data = dat, family = binomial)
+cat("\\nOR_E ajustado (glm) =", round(exp(coef(fit)["E"]), 3),
+    " <- compara con OR_MH\\n")
+print(confint.default(fit))`}
+  tasks={[
+    "Compara OR_MH con exp(β_E) del glm: ¿coinciden? ¿por qué deberían?",
+    "Cambia el efecto verdadero de E a 0 (quita 0.8*E) y repite: ¿qué muestra el ajustado que el crudo no?",
+    "Reporta OR + IC (confint) en lugar de p, siguiendo el orden de Woodward.",
+  ]}
+  hint="mantelhaen.test$estimate y exp(coef(fit)['E']) estiman el mismo OR común bajo homogeneidad."
+  solution="Coinciden porque ambos ponderan los OR por estrato; el glm lo hace con el modelo logit. Con efecto nulo, el ajustado da OR ≈ 1 mientras el crudo muestra asociación espuria."
+/>
+
+<SasBlock code={`data dat;
+  call streaminit(3);
+  do i = 1 to 3000;
+    sexo = rand('bernoulli', 0.5);
+    E = rand('bernoulli', logistic(-0.5 + 0.9*sexo));
+    D = rand('bernoulli', logistic(-2 + 0.8*E + 1.2*sexo));
+    output;
+  end;
+run;
+/* Via 1: estratificacion -> CMH */
+proc freq data=dat;
+  tables sexo*E*D / cmh;
+run;
+/* Via 2: modelo -> OR ajustado de E (DESCENDING!) */
+proc logistic data=dat descending;
+  model D = E sexo;
+run;`} />
+
+<ToolCard task="glm" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: modelo multivariante con diagnóstico">
+Un glm (logístico o Poisson) sobre datos del curso o propios: tabla de
+coeficientes con OR/IRR + IC, comparación crudo vs ajustado, diagnóstico
+(AUC o bondad de ajuste) e interpretación escrita en el orden de Woodward.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), caps. 10–11**: regresión logística y Poisson en <Term k="SHHS">SHHS</Term>.
+- **Kaufman (1983)**: tabaco e infarto del miocardio con ajuste multivariante.
+- **Notas de clase (Salazar), clases 19–20**: glm en R y SAS.

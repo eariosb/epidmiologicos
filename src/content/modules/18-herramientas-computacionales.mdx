@@ -1,0 +1,339 @@
+---
+title: "Herramientas computacionales: R, SAS y Python para epidemiología"
+slug: "18-herramientas-computacionales"
+objective: "Traducir un análisis epidemiológico entre R, SAS y Python preservando el estimando, reconocer las trampas de convención de cada lenguaje y estructurar un proyecto reproducible."
+order: 18
+datasets: []
+duration: 120
+prerequisites: ["Cualquier módulo 1–17"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { LangTabs } from '@/components/LangTabs'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ProcessSteps } from '@/components/ProcessSteps'
+
+
+<Callout type="tip" title="El código es un argumento reproducible">
+El principio 2 de Woodward dice que el diseño determina lo estimable. Su
+versión computacional: **la herramienta determina lo verificable**. Un
+análisis que no se puede re-ejecutar en otro lenguaje es un análisis que
+no se puede auditar. Este módulo no enseña sintaxis: enseña a
+traducir *estimandos* entre tres ecosistemas y a dejar el proyecto en
+estado reproducible.
+</Callout>
+
+Este módulo es transversal: conecta las prácticas de los módulos 1–17.
+Puede dictarse como orientación inicial o como síntesis final, y cada
+tarjeta de herramientas puede revisitarse desde el módulo
+correspondiente.
+
+## ¿Por qué tres lenguajes?
+
+| Lenguaje | Rol en epidemiología | Fortaleza | Cuándo usarlo |
+| --- | --- | --- | --- |
+| **R** | Estándar académico y de investigación | `tidyverse`, `survival`, `metafor`, `epiR`; WebR permite ejecutarlo en este curso | Análisis, gráficos, docencia, reproducibilidad |
+| **SAS** | Estándar de la industria farmacéutica y entregas regulatorias | `PROC` documentados y validados, ODS, trazabilidad | Estudios clínicos, farmacovigilancia, reportes regulatorios |
+| **Python** | Puente con <Term k="ML">ML</Term>, datos grandes y <Term k="UQ">UQ</Term> moderna | `pandas`, `statsmodels`, `lifelines`, `dowhy`, `pymc` | ML epidemiológico, inferencia causal moderna, pipelines de datos |
+
+<Callout type="note" title="Empleabilidad">
+R + SAS + Python es el perfil que buscan CRO, EPS, el INS, el DANE y las
+revistas que piden re-análisis. SAS es software comercial, pero
+**SAS OnDemand for Academics** ofrece SAS Studio gratis en la nube para
+estudiantes y docentes; basta un SAS Profile para registrarse.
+</Callout>
+
+## El puente R ↔ SAS ↔ Python
+
+Las tablas de equivalencia son el corazón del módulo. Léelas con
+precaución: **equivalente ≠ idéntico**. Cada trampa documentada abajo
+produce respuestas numéricamente distintas si se ignora.
+
+### Importar datos
+
+| Tarea | R | SAS | Python |
+| --- | --- | --- | --- |
+| CSV | `readr::read_csv()` | `PROC IMPORT` | `pandas.read_csv()` |
+| Excel | `readxl::read_excel()` | `PROC IMPORT` | `pandas.read_excel()` |
+| Archivo SAS | `haven::read_sas()` | — (nativo) | `pandas.read_sas()` |
+| SQL | `DBI::dbGetQuery()` | `PROC SQL` | `pandas.read_sql()` |
+
+### Tabla 2×2 y medidas de asociación
+
+<LangTabs
+  title="La misma tabla en tres interfaces"
+  task="Datos del módulo 4 (Pool esquemático): fumadores 166/50 casos de EIC vs. no fumadores 1176/513. Fila 1 = expuestos, columna 1 = casos."
+  rCode={`# epiR exige: exposicion en FILAS, desenlace en COLUMNAS,
+# y el nivel + primero. table() ordena alfabetico -> invertir.
+library(epiR)
+tab <- matrix(c(166, 1176, 50, 513), nrow = 2,
+              dimnames = list(Fuma = c("Si", "No"),
+                              EIC  = c("Si", "No")))
+epi.2by2(tab, method = "cohort.count")
+# -> cohort.count da RR, OR, RD, PRA con IC95%`}
+  sasCode={`data pool;
+  input Fuma $ EIC $ n;   /* orden=data preserva categorias */
+  datalines;
+Si Si 166   Si No 1176
+No Si 50    No No 513 ;
+proc freq data=pool order=data;
+  weight n;
+  tables Fuma*EIC / relrisk measures chisq;
+  /* RELRISK: OR + "Cohort (Col1 Risk)" = RR de la col. 1 */
+run;`}
+  pyCode={`import pandas as pd
+from statsmodels.stats.contingency_tables import Table2x2
+
+# crosstab ordena alfabetico: forzar el orden con categorias
+tab = pd.DataFrame([[166, 1176], [50, 513]],
+                   index=["Si", "No"], columns=["Si", "No"])
+t = Table2x2(tab.values, shift_zeros=False)
+print("OR =", t.oddsratio, t.oddsratio_confint())
+print("RR =", t.riskratio, t.riskratio_confint())
+# Para medidas epi dedicadas: zepid (RiskRatio, OddsRatio, NNT)`}
+  trap={
+    <>En R, <code>epi.2by2</code> exige exposición en filas y el desenlace
+    positivo en la <em>primera</em> columna; con <code>table()</code> casi
+    siempre toca <code>tab[2:1, 2:1]</code>. En SAS, RELRISK reporta el riesgo
+    de la <em>columna 1</em> entre fila 1 y fila 2: cambiar el orden cambia
+    qué riesgo se reporta (Col1 vs Col2). En pandas, <code>crosstab</code>{' '}
+    reordena alfabéticamente y puede voltear la referencia sin aviso.</>
+  }
+  guide="Ejecuta la pestaña R en una RCell y compara el RR con el reporte 'Cohort (Col1 Risk)' del lado SAS: deben coincidir si las convenciones de tabla coinciden."
+/>
+
+### Supervivencia
+
+<LangTabs
+  title="Kaplan–Meier, log-rank y Cox en los tres lenguajes"
+  task="Curvas de supervivencia por grupo y riesgo proporcional (datos de leucemia, módulo 12)."
+  rCode={`library(survival)
+s <- Surv(time = t, event = status)
+fit <- survfit(s ~ grupo)        # curvas KM
+survdiff(s ~ grupo)              # log-rank
+coxph(s ~ grupo)                 # Cox: HR + IC`}
+  sasCode={`proc lifetest data=leucemia plots=survival;
+  time t * status(0);            /* 0 = censurado */
+  strata grupo;                  /* curvas + log-rank */
+run;
+proc phreg data=leucemia;
+  model t * status(0) = grupo;   /* Cox */
+run;`}
+  pyCode={`from lifelines import KaplanMeierFitter, CoxPHFitter
+from lifelines.statistics import logrank_test
+
+kmf = KaplanMeierFitter().fit(t, status, label="KM")
+logrank_test(t[grupo==1], t[grupo==0],
+             status[grupo==1], status[grupo==0])
+CoxPHFitter().fit(df, "t", "status").summary  # HR`}
+  trap={
+    <>La codificación de censura difiere: <code>Surv(t, status)</code> usa
+    1 = evento; <code>PHREG</code>/<code>LIFETEST</code> listan los valores
+    <em>censurados</em> en <code>model t * status(0)</code> o{' '}
+    <code>time t * status(0)</code>; <code>lifelines</code> usa 1 = evento
+    como R. Invertir la codificación produce curvas <em>especulares</em> y
+    HR recíprocos: el error más caro de esta traducción.</>
+  }
+/>
+
+### Regresión logística y Poisson
+
+| Tarea | R | SAS | Python |
+| --- | --- | --- | --- |
+| Logística | `glm(y ~ x, family = binomial)` | `PROC LOGISTIC` | `statsmodels.Logit` |
+| <Term k="OR">OR</Term> ajustado | `exp(coef(m))` | salida `OddsRatio` por defecto | `np.exp(res.params)` |
+| Hosmer–Lemeshow | `ResourceSelection::hoslem.test()` | `MODEL ... / LACKFIT` | manual / `statsmodels` |
+| Poisson / tasas | `glm(y ~ x, family = poisson)` | `PROC GENMOD dist=poisson` | `statsmodels.GLM(family=Poisson())` |
+| Logística condicional (matching) | `survival::clogit()` | `PROC LOGISTIC` + `STRATA` | no directo (vía `CoxPHFitter` con estratos) |
+| GEE | `geepack::geeglm()` | `PROC GEE` / `PROC GENMOD ... REPEATED` | `statsmodels.GEE` |
+
+<Callout type="warning" title="PROC LOGISTIC modela el logit del nivel que tú no esperas">
+Por defecto <code>PROC LOGISTIC</code> modela la probabilidad del nivel
+con orden <em>ascendente</em> más bajo: si el desenlace es 0/1, modela
+P(Y = 0). Se corrige con <code>MODEL y(event='1') = x</code> o
+<code>descending</code>. Un OR invertido (1/OR) es el síntoma clásico.
+En R y statsmodels se modela P(Y = 1) por defecto con codificación 0/1.
+</Callout>
+
+### Meta-análisis
+
+| Tarea | R | SAS | Python |
+| --- | --- | --- | --- |
+| Fijo / aleatorios | `metafor::rma()` | `PROC MIXED` con `PARMS` (macro) | `statsmodels` + manual |
+| Forest plot | `forest(metafor)` | `ODS GRAPHICS` | `matplotlib` |
+| Heterogeneidad | salida de `rma` (Q, I², τ²) | manual | `statsmodels.stats.meta_analysis` |
+
+<Callout type="note" title="La lección de Normand se repite en el software">
+Normand (1999) estimó su meta-análisis de efectos aleatorios con REML en
+SAS (<code>PROC MIXED</code>); hoy <code>metafor::rma()</code> usa la
+fórmula exacta de REML y es la referencia pedagógica. El estimando es el
+mismo; lo que cambia es el estimador de τ².
+</Callout>
+
+## Paquetes esenciales por tarea (verificados)
+
+| Tarea | R | SAS | Python |
+| --- | --- | --- | --- |
+| Datos y lectura | `tidyverse` · `data.table` · `janitor` · `haven` · `readxl` · `lubridate` | `DATA step` · `PROC IMPORT/EXPORT/SORT/SQL` | `pandas` · `polars` · `numpy` · `pyarrow` |
+| Tablas y descriptivos | `gtsummary` · `table1` · `finalfit` | `PROC FREQ` (CHISQ, MEASURES, RELRISK, TREND) · `PROC MEANS/UNIVARIATE` | `scipy.stats` · `statsmodels` · `pingouin` |
+| Epidemiología (2×2, OR/<Term k="RR">RR</Term>) | `epiR` · `epitools` · `Epi` · `epiDisplay` | `PROC FREQ` + `PROC LOGISTIC` (+`STRATA`, +`LACKFIT`) | **`zepid`** (Py ≤ 3.10) · `Table2x2` de statsmodels |
+| Regresión | `glm` · `survival::clogit` · `marginaleffects` | `PROC LOGISTIC` · `PROC GENMOD` · `PROC GEE` · `PROC MIXED` | `statsmodels` |
+| Supervivencia | `survival` · `survminer` · `flexsurv` | `PROC LIFETEST` · `PROC PHREG` · `PROC LIFEREG` | `lifelines` · `scikit-survival` |
+| Meta-análisis | `metafor` · `meta` | `PROC MIXED` (REML) | — |
+| Inferencia causal | `dagitty` · `ggdag` · `MatchIt` · `WeightIt` · `cobalt` | — | `dowhy` · `econml` · `causalml` |
+| Bayes | `brms` · `rstanarm` | `PROC MCMC` | `pymc` · `arviz` · `numpyro` |
+| Machine learning | `ranger` · `tidymodels` | `PROC HP...` (Viya) | `scikit-learn` · `xgboost` · `lightgbm` · `shap` |
+| UQ | `conformalInference` (GitHub `ryantibs/conformal`) · `FlexCoDE` (GitHub `rizbicki/FlexCoDE`) | — | `mapie` · `uncertainty-toolbox` |
+| Gráficos | `ggplot2` | `ODS GRAPHICS` | `matplotlib` · `seaborn` · `plotly` |
+| Reproducibilidad | `here` · `renv` · `targets` · `tarchetypes` · `quarto` | macros `%macro/%let` · reportes `ODS RTF/PDF` | `jupyter` · `papermill` · `quarto` · `uv` |
+
+Los `—` marcan vacíos reales del ecosistema (meta-análisis dedicado en
+Python, causal en SAS); ahí toca traducir el estimando a otro lenguaje o
+implementarlo a mano.
+
+<Callout type="warning" title="El 'epitools' de Python no existe">
+En PyPI, <code>epitools</code> es un plugin de napari para análisis de
+imagen de tejidos epiteliales; <strong>no</strong> es epidemiología.
+<code>epipy</code> (cmrivers) sí tiene tablas 2×2, OR/RR y epicurvas,
+pero lleva años sin mantenimiento. Para medidas de asociación en Python
+usa <code>statsmodels.stats.contingency_tables.Table2x2</code> o{' '}
+<code>zepid</code>.
+</Callout>
+
+## Atajos esenciales (Windows)
+
+| Entorno | Acción | Atajo |
+| --- | --- | --- |
+| RStudio | Ejecutar línea/selección | `Ctrl+Enter` |
+| RStudio | Insertar `<-` / `%>%` | `Alt+-` / `Ctrl+Shift+M` |
+| RStudio | Ir a función/archivo | `F2` / `Ctrl+.` |
+| RStudio | Zoom paneles 1–4 | `Ctrl+Shift+1/2/3/4` |
+| SAS Studio | Ejecutar programa/selección | `F3` |
+| SAS Studio | Guardar programa | `Ctrl+S` |
+| SAS (Display Manager) | Submit | `F8` (solo en el editor clásico, no en Studio) |
+| Jupyter | Ejecutar y avanzar / quedarse | `Shift+Enter` / `Ctrl+Enter` |
+| Jupyter | Celda arriba/abajo (modo Esc) | `Esc`+`A` / `Esc`+`B` |
+| Jupyter | Depurar post-mortem | `%debug` |
+
+## Depuración por lenguaje
+
+| Lenguaje | Error típico | Diagnóstico |
+| --- | --- | --- |
+| R | `object not found` | `ls()`, `traceback()`, ¿falta `library()`? |
+| R | `non-numeric argument` | `str()`, `class()`: ¿el factor llegó como character? |
+| SAS | `ERROR: Variable X not found` | `PROC CONTENTS`: ¿nombre/tipo tras el IMPORT? |
+| SAS | macro no expande | `options mprint mlogic symbolgen;` |
+| SAS | no ves el objeto de salida | `ODS TRACE ON;` lista los objetos ODS |
+| Python | `KeyError` | `df.columns`, `df.head()`: ¿espacios en nombres? |
+| Python | `SettingWithCopyWarning` | indexación encadenada; usa `.loc`/`.copy()` |
+
+<ProcessSteps
+  steps={[
+    { title: 'Reproduce', description: 'aísla la línea mínima que falla.' },
+    { title: 'Inspecciona', description: 'str() / PROC CONTENTS / df.dtypes: ¿los tipos coinciden con lo que la función espera?' },
+    { title: 'Revisa convenciones', description: 'orientación de la tabla, nivel de referencia, codificación de censura, EVENT=.' },
+    { title: 'Valida cruzado', description: 'ejecuta la traducción en otro lenguaje: si el estimando difiere, encontraste la trampa.' },
+  ]}
+/>
+
+## Reproducibilidad y estructura de proyecto
+
+```text
+proyecto/
+├── data/raw/ + data/processed/   # crudos nunca se editan
+├── R/  sas/  python/             # un script por tarea
+├── output/  docs/                # tablas, figuras, reporte Quarto
+├── renv.lock  requirements.txt   # entornos fijados
+└── README.md                     # la narrativa del análisis
+```
+
+Los principios **FAIR** (Wilkinson et al. 2016, *Sci Data* 3:160018)
+aplican al curso: *Findable* (nombres y README claros), *Accessible*
+(repo público), *Interoperable* (CSV/Parquet, no .rds/.sas7bdat como
+único formato), *Reusable* (licencia + metadatos + `sessionInfo()`).
+Tukey ya lo decía en 1962 (*Ann Math Statist* 33:1–67): el análisis de
+datos es una ciencia con métodos propios, no un apéndice del teorema.
+
+## Quiz
+
+<Quiz
+  question="PROC FREQ reporta 'Cohort (Col1 Risk) = 1.50' pero epi.2by2 reporta RR = 0.67 para la misma tabla. ¿Qué pasó?"
+  options={[
+    "Uno de los dos paquetes está mal programado",
+    "El orden de filas/columnas difiere: PROC FREQ toma el riesgo de la columna 1 entre fila 1/fila 2, epiR exige exposición en filas con el + primero; la convención cambió la referencia",
+    "Son estimadores distintos y siempre dan distinto",
+    "El IC de SAS es exacto y el de R asintótico"
+  ]}
+  correctIndex={1}
+  explanation="1.50 ≈ 1/0.67: son el mismo estimando con la referencia volteada. La traducción correcta fija quién es la fila 1 y cuál es la columna de evento."
+/>
+
+<LabExercise
+  id="lab-17-traductor"
+  title="Laboratorio: traducir preservando el estimando"
+  code={`# Tabla canonica del curso (módulo 4): Pool, fumar x EIC
+tab <- matrix(c(166, 50, 1176, 513), nrow = 2,
+              dimnames = list(Fuma = c("Si", "No"),
+                              EIC  = c("Si", "No")))
+# Convencion Woodward: filas exposicion, cols desenlace, + primero.
+# En R local: epiR::epi.2by2(tab, method = "cohort.count") lo hace todo.
+# epiR no esta en el repo wasm de WebR -> equivalente en base R:
+a <- tab[1,1]; b <- tab[1,2]; c2 <- tab[2,1]; d <- tab[2,2]
+r1 <- a/(a+b); r0 <- c2/(c2+d)
+RR <- r1/r0; OR <- a*d/(b*c2); RD <- r1 - r0
+se_or <- sqrt(1/a + 1/b + 1/c2 + 1/d)
+se_rr <- sqrt(1/a - 1/(a+b) + 1/c2 - 1/(c2+d))
+cat(sprintf("RR = %.2f  IC95%% [%.2f, %.2f]\\n",
+            RR, exp(log(RR)-1.96*se_rr), exp(log(RR)+1.96*se_rr)))
+cat(sprintf("OR = %.2f  IC95%% [%.2f, %.2f]\\n",
+            OR, exp(log(OR)-1.96*se_or), exp(log(OR)+1.96*se_or)))
+cat(sprintf("RD = %.4f\\n", RD))
+# mantelhaen.test exige >= 2 estratos; con una tabla el test es Pearson:
+chisq.test(tab, correct = FALSE)
+# Tu turno: traduce a SAS (PROC FREQ) y Python (Table2x2)
+# en papel o SAS OnDemand, y compara los tres OR.`}
+  tasks={[
+    "Ejecuta el código y registra RR, OR y sus IC95%.",
+    "Traduce a PROC FREQ (RELRISK MEASURES) y a Table2x2 de statsmodels; escribe qué opción preserva la referencia.",
+    "Reporta en 3 líneas: ¿coinciden los tres? Si no, ¿qué convención difiere?",
+  ]}
+  hint="En statsmodels, Table2x2(tab) asume filas=exposición como epiR, pero pandas.crosstab puede reordenar. En SAS, ORDER=DATA fija la referencia."
+  solution="Los tres reportan OR ≈ 1.45 e IC solapados; las diferencias de decimales vienen del método de IC (Woolf vs exacto). El ejercicio demuestra que 'traducir' es preservar el estimando + la referencia, no copiar sintaxis."
+/>
+
+<SasBlock code={`/* Intenta TU traduccion antes de abrir: este es el modelo */
+data pool;
+  input fuma $ eic $ n;
+  datalines;
+Si Si 166  Si No 1176
+No Si 50   No No 513 ;
+proc freq data=pool order=data; weight n;
+  tables fuma*eic / relrisk measures chisq;
+  /* RELRISK: OR ~2.88 + 'Cohort (Col1 Risk)' = RR;
+     ORDER=DATA fija la referencia como en epiR */
+run;`} />
+
+## Producto del módulo
+
+**Un `README.md` de proyecto reproducible** que incluya: (1) la
+estructura de carpetas de arriba, (2) la tabla de equivalencias de la
+tarea epidemiológica de tu proyecto final, (3) una traducción verificada
+(R ejecutado vs. traducción SAS/Python con diferencias documentadas), y
+(4) `renv`/`requirements.txt` inicializados.
+
+Rúbrica sugerida: traducción correcta del estimando 40%, depuración de
+un código con errores plantados 30%, proyecto reproducible 30%.
+
+## Lecturas
+
+- **Tukey (1962)**, *The Future of Data Analysis*, Ann Math Statist 33:1–67.
+- **Wilkinson et al. (2016)**, *The FAIR Guiding Principles*, Sci Data 3:160018.
+- Documentación oficial: <code>epi.2by2</code> (vignette epiR), SAS/STAT
+  PROC FREQ/LOGISTIC/LIFETEST/PHREG/GEE, statsmodels
+  `contingency_tables`, lifelines, zepid.
+- Guías de atajos: Posit (RStudio IDE) y SAS Studio keyboard shortcuts
+  (PDF oficial).

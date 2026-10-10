@@ -229,7 +229,7 @@ export function CourseBlackboard({
           <div className="border-b border-ink-200 bg-white px-2 py-1 dark:bg-ink-900 dark:border-ink-700">
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-medium text-ink-700 dark:text-ink-200">
-                Presentando — → revelar, ← retroceder, Esc salir
+                Presentando: → revelar, ← retroceder, Esc salir
               </span>
               <div className="flex shrink-0 items-center gap-2">
                 <PresentationControls canvasRef={canvasRef} />
@@ -348,7 +348,7 @@ export function CourseBlackboard({
               <button
                 type="button"
                 onClick={() => (mode === 'teacher' ? setStudentMode() : setTeacherMode())}
-                title={mode === 'teacher' ? 'Modo docente — clic para estudiante' : 'Modo estudiante — clic para docente'}
+                title={mode === 'teacher' ? 'Modo docente; clic para estudiante' : 'Modo estudiante; clic para docente'}
                 aria-label="Cambiar modo docente/estudiante"
                 aria-pressed={mode === 'teacher'}
                 className={`rounded p-1.5 text-sm transition-colors ${

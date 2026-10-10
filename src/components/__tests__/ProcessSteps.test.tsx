@@ -7,9 +7,9 @@ describe('ProcessSteps', () => {
     render(
       <ProcessSteps
         steps={[
-          { title: 'Step A', content: 'Content A' },
-          { title: 'Step B', content: 'Content B' },
-          { title: 'Step C', content: 'Content C' },
+          { title: 'Step A', description: 'Content A' },
+          { title: 'Step B', description: 'Content B' },
+          { title: 'Step C', description: 'Content C' },
         ]}
       />
     )
@@ -26,9 +26,19 @@ describe('ProcessSteps', () => {
 
   it('renders an ordered list', () => {
     const { container } = render(
-      <ProcessSteps steps={[{ title: 'Only step', content: 'Only content' }]} />
+      <ProcessSteps steps={[{ title: 'Only step', description: 'Only content' }]} />
     )
     expect(container.querySelector('ol')).toBeInTheDocument()
+  })
+
+  it('renders the optional title', () => {
+    render(
+      <ProcessSteps
+        title="Paso a paso"
+        steps={[{ title: 'S', description: 'D' }]}
+      />
+    )
+    expect(screen.getByText('Paso a paso')).toBeInTheDocument()
   })
 
   it('renders empty list with no errors', () => {

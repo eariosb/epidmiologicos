@@ -18,7 +18,7 @@ export const moduleMetaSchema = z.object({
   title: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/),
   objective: z.string().min(1),
-  order: z.number().int().min(1).max(16),
+  order: z.number().int().min(1).max(19),
   datasets: z.array(z.string()).default([]),
   duration: z.number().int().positive().optional(),
   prerequisites: z.array(z.string()).default([]),
@@ -33,10 +33,12 @@ export interface ModuleEntry {
 
 /** Bloques temáticos del curso (agrupan los módulos en el sidebar). */
 export const COURSE_BLOCKS = [
-  { id: 'I', title: 'Fundamentos, Markov y simulación', from: 1, to: 4 },
-  { id: 'II', title: 'Segundo orden, Poisson y martingalas', from: 5, to: 8 },
-  { id: 'III', title: 'Ruido Wiener, Itô y EDE', from: 9, to: 12 },
-  { id: 'IV', title: 'Riesgo, crédito y síntesis', from: 13, to: 16 },
+  { id: 'I', title: 'Diseño, medidas e inferencia en la tabla 2×2', from: 1, to: 6 },
+  { id: 'II', title: 'Confusión e interacción', from: 7, to: 10 },
+  { id: 'III', title: 'Cohortes y supervivencia', from: 11, to: 13 },
+  { id: 'IV', title: 'Casos y controles', from: 14, to: 15 },
+  { id: 'V', title: 'Modelación y síntesis', from: 16, to: 17 },
+  { id: 'VI', title: 'Herramientas y fronteras (transversal)', from: 18, to: 19 },
 ] as const;
 
 export function blockForOrder(order: number) {
@@ -61,7 +63,8 @@ function readModuleFile(fileName: string): ModuleEntry {
 
 /** Todos los módulos, ordenados por `order`. */
 export function getAllModules(): ModuleEntry[] {
-  if (cachedEntries) return cachedEntries;
+  // En dev no se cachea: el frontmatter puede cambiar sin reiniciar el server.
+  if (cachedEntries && process.env.NODE_ENV === 'production') return cachedEntries;
   const files = readdirSync(MODULES_DIR).filter((f) => f.endsWith('.mdx'));
   const entries = files.map(readModuleFile);
   entries.sort((a, b) => a.meta.order - b.meta.order);

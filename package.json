@@ -1,8 +1,8 @@
 {
-  "name": "curso-procesos-estocasticos",
+  "name": "curso-epidemiologia",
   "version": "0.1.0",
   "private": true,
-  "description": "Curso interactivo de procesos estocásticos con introducción a las EDE, con R. Universidad Nacional de Colombia, sede Medellín.",
+  "description": "Análisis Estadístico de Datos Epidemiológicos: curso interactivo con R en el navegador (webR), basado en Woodward y el material del profesor Juan Carlos Salazar Uribe. Universidad Nacional de Colombia, sede Medellín.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

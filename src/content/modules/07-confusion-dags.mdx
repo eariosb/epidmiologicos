@@ -1,0 +1,197 @@
+---
+title: "Confusión: definición, criterios y DAGs"
+slug: "07-confusion-dags"
+objective: "Reconocer la confusión como la amenaza central a la validez, verificar sus tres condiciones, y representarla en un DAG que distinga confusor, mediador y colisionador."
+order: 7
+datasets: []
+duration: 75
+prerequisites: ["Módulo 4: Medidas de asociación"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { ConfusionExplorer } from '@/components/EpiSims'
+import { LabExercise } from '@/components/LabExercise'
+import { RCell } from '@/components/RCell'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+import { EpiTable } from '@/components/CourseBlocks'
+
+
+<Callout type="tip" title="Toda asociación es sospechosa hasta descartar confusión">
+El principio 3 de Woodward: **la confusión es el problema central del
+análisis epidemiológico**. Una variable $C$ confunde la asociación
+$E \to D$ cuando satisface simultáneamente:
+
+1. $C$ está asociada con la exposición $E$ (sin ser consecuencia de ella).
+2. $C$ es factor de riesgo del desenlace $D$ (independientemente de $E$).
+3. $C$ **no** está en el camino causal $E \to C \to D$ (si lo está, es mediadora, no confusora).
+</Callout>
+
+La edad es el confusor arquetípico: los mayores se exponen distinto y
+enferman más. Si solo una de las dos flechas existe, no hay confusión;
+el explorador siguiente permite verificarlo sobre una población sintética.
+
+<ConfusionExplorer title={<>La confusión necesita dos flechas</>} />
+
+## Dibujar el DAG antes de ajustar
+
+El <Term k="DAG">DAG</Term> (grafo acíclico dirigido) hace explícita la
+estructura causal que produce los datos. Tres roles que hay que distinguir
+antes de decidir qué ajustar:
+
+- **Confusor**: $C \to E$ y $C \to D$. Abre un camino de "puerta trasera"
+  $E \leftarrow C \to D$; ajustarlo cierra el camino espurio.
+- **Mediador**: $E \to M \to D$. Está en el camino causal; ajustarlo
+  *destruye* el efecto que se quiere medir.
+- **Colisionador**: $E \to X \leftarrow D$. Ajustarlo *abre* un camino
+  espurio que no existía. El sesgo de Berkson del módulo 14 es un
+  colisionador: hospitalización ← exposición y ← enfermedad.
+
+<Callout type="warning" title="La regla que cuesta aprender">
+No todo lo medido debe entrar al modelo. Ajustar un mediador o un
+colisionador empeora la estimación: el DAG decide qué ajustar, no la
+disponibilidad de la variable ni un p-valor de "asociación con E".
+</Callout>
+
+## Confusión que fabrica y confusión que enmascara
+
+Los dos regímenes extremos no son simétricos en consecuencia: uno
+**inventa** una asociación inexistente; el otro **esconde** una real.
+Las tablas de la clase 8 los muestran con números — y en ambos casos la
+señal del problema es idéntica: el OR agrupado no se parece a ningún OR
+de estrato.
+
+<EpiTable
+  title="Fabricación: los estratos no tienen asociación"
+  rows={['Estrato 1', 'Estrato 2', 'Agrupada']}
+  cols={['a', 'b', 'c', 'd', 'OR']}
+  data={[
+    [1,   9,   20, 180, '1.00'],
+    [80,  20,  8,   2,  '1.00'],
+    [81,  29,  28, 182, '18.16'],
+  ]}
+  caption="El OR agrupado (18.2) no existe en ningún estrato (1.0): la
+  asociación la creó el confusor, no los datos."
+/>
+
+<EpiTable
+  title="Enmascaramiento: el agrupado esconde el efecto"
+  rows={['Estrato 1', 'Estrato 2', 'Agrupada']}
+  cols={['a', 'b', 'c', 'd', 'OR']}
+  data={[
+    [135, 415,   5,  45, '2.93'],
+    [105,   5, 195, 305, '32.85'],
+    [240, 420, 200, 350, '1.00'],
+  ]}
+  caption="Dos estratos con asociación fuerte (2.9 y 32.8) colapsan a
+  OR = 1.00: el confusor no solo mueve el estimador, puede anularlo."
+/>
+
+<RCell
+  id="07/confusion-dos-caras"
+  title="Verificación: OR agrupado vs. OR por estrato"
+  code={`# Tablas de la clase 8 (Ejemplo_clase8_page8.R).
+# Convencion: matrix(c(a,c,b,d), ncol=2) -> filas exposicion.
+fab <- array(c(1,20,9,180, 80,8,20,2), dim = c(2,2,2))
+enc <- array(c(135,5,415,45, 105,195,5,305), dim = c(2,2,2))
+
+OR <- function(t) t[1,1]*t[2,2]/(t[1,2]*t[2,1])
+
+cat("Fabricacion:\\n")
+cat("  estratos:", round(OR(fab[,,1]),2), "y", round(OR(fab[,,2]),2),
+    " -> agrupado:", round(OR(apply(fab,1:2,sum)),2), "\\n")
+cat("Enmascaramiento:\\n")
+cat("  estratos:", round(OR(enc[,,1]),2), "y", round(OR(enc[,,2]),2),
+    " -> agrupado:", round(OR(apply(enc,1:2,sum)),2), "\\n")
+
+# Senal de alarma: el OR agrupado esta FUERA del rango de los estratos.`}
+/>
+
+### El procedimiento de decisión
+
+Ante una asociación cruda, la secuencia correcta es:
+
+1. **Dibujar el DAG** y listar los candidatos a confusor antes de tocar
+   datos.
+2. **Estratificar** por el confusor candidato: si el <Term k="OR">OR</Term> por estrato
+   difiere del crudo en la dirección que predice el DAG, hay confusión.
+3. Si la muestra no alcanza para estratificar, la **regla del cambio en
+   el estimador** (~10% al ajustar) es la heurística de última
+   instancia: útil en la práctica, pero no reemplaza al DAG, porque un
+   mediador también cambia el estimador y ajustarlo es un error.
+
+<Callout type="warning" title="El OR no es colapsable">
+Un matiz que distingue confusión de mera aritmética: el OR agrupado
+puede diferir del OR por estrato **incluso sin confusión**, porque el
+odds ratio no es colapsable sobre estratos con riesgos basales
+distintos. La diferencia por colapsabilidad suele ser modesta; cuando el
+cambio es grande (o invierte el signo), hay estructura causal detrás.
+</Callout>
+
+<LabExercise
+  id="lab-06-dag"
+  title="Laboratorio: el DAG de tu propio estudio"
+  code={`# Ejercicio de papel y lapiz + R para verificar:
+# E = ejercicio, D = depresion, C = edad.
+# 1) Dibuja el DAG: edad -> ejercicio, edad -> depresion, ejercicio -> depresion?
+# 2) Simula datos donde la edad confunde por completo:
+set.seed(1)
+n <- 4000
+edad <- rbinom(n, 1, 0.4)                       # 1 = mayor
+E    <- rbinom(n, 1, ifelse(edad==1, 0.2, 0.7)) # edad -> E
+D    <- rbinom(n, 1, ifelse(edad==1, 0.5, 0.1)) # edad -> D; E no causa D
+tab <- table(E, D)
+print(tab)
+cat("OR crudo =", round(tab[1,1]*tab[2,2]/(tab[1,2]*tab[2,1]), 2), "\\n")
+# Ahora estratifica por edad: ¿que pasa con el OR?`}
+  tasks={[
+    "Dibuja el DAG con las tres flechas y marca el camino de confusión.",
+    "Corre el código: ¿qué OR crudo sale? ¿Es real o espurio?",
+    "Estratifica por edad y confirma que el OR colapsa a ~1.",
+  ]}
+  hint="table(E, D, edad) te da los dos estratos; calcula el OR dentro de cada uno."
+  solution="OR crudo ≈ 1.6–2.0 (espurio); dentro de cada estrato de edad, OR ≈ 1. La edad fabricó la asociación: confusión perfecta al estilo del Ejemplo 4.1 de Woodward."
+/>
+
+<SasBlock code={`data conf;
+  call streaminit(1);
+  do i = 1 to 4000;
+    edad = rand('bernoulli', 0.4);
+    E = rand('bernoulli', ifn(edad=1, 0.2, 0.7));
+    D = rand('bernoulli', ifn(edad=1, 0.5, 0.1));
+    output;
+  end;
+run;
+proc freq data=conf order=data;
+  tables E*D / measures;        /* OR crudo ~1.6-2.0 */
+  tables edad*E*D / measures;   /* OR por estrato ~1 */
+run;`} />
+
+<Quiz
+  question="En el DAG E → M → D con C → E y C → D, ¿qué variables deben entrar en el modelo para estimar el efecto total de E sobre D?"
+  options={[
+    "C y M: hay que controlar todo lo asociado con la exposición",
+    "Solo C: ajustar M (mediador) bloquearía parte del efecto real que queremos estimar",
+    "Solo M: es el que está más cerca del desenlace",
+    "Ninguna: los modelos crudos son siempre honestos"
+  ]}
+  correctIndex={1}
+  explanation="C abre un camino de puerta trasera E ← C → D que hay que cerrar ajustando. M está en el camino causal E → M → D: ajustarlo estimaría el efecto directo, no el total, que es una pregunta distinta a la que se hizo."
+/>
+
+<ToolCard task="simular" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: DAG justificado">
+Elige una asociación de la literatura (o de tu interés), dibuja el DAG
+con todos los roles (confusores, mediadores, colisionadores) y escribe un
+párrafo justificando qué conjunto de variables ajustarías y cuáles
+deliberadamente no.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), cap. 4.1–4.3**: las condiciones de confusión y los ejemplos perfectos.
+- **Notas de clase (Salazar), clase 8**: confusión con el ejemplo deporte–depresión.

@@ -1,0 +1,314 @@
+---
+title: "Medición de la enfermedad: incidencia, prevalencia y tasas"
+slug: "03-medicion-incidencia-prevalencia"
+objective: "Distinguir prevalencia, incidencia acumulada y densidad de incidencia; aplicar la relación P = I × D y sus límites; y calcular tasas específicas con denominadores persona-tiempo."
+order: 3
+datasets: []
+duration: 75
+prerequisites: ["Módulo 2: Diseños"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { PrevalenceExplorer } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+
+<Callout type="tip" title="Medir es elegir el denominador">
+"¿Cuánta enfermedad hay?" tiene tres respuestas distintas según el
+denominador: la **prevalencia** (cuánta hay ahora), la **incidencia
+acumulada** (probabilidad de enfermar) y la **tasa** (velocidad de
+aparición por persona-tiempo). Confundirlas no es un error de redondeo:
+cambia la política pública que se deduce.
+</Callout>
+
+## Las tres medidas de frecuencia
+
+| Medida | Numerador / denominador | Naturaleza | Pregunta que responde |
+|---|---|---|---|
+| **Prevalencia** | casos existentes / población en un instante | Proporción [0,1] | ¿cuánta enfermedad hay ahora? |
+| **Incidencia acumulada (riesgo)** | casos nuevos / población libre al inicio | Probabilidad [0,1] | chance de enfermar en el periodo |
+| **Tasa (densidad) de incidencia** | casos nuevos / persona-tiempo en riesgo | Velocidad, unidades t⁻¹ | rapidez de aparición por unidad de tiempo |
+| **Odds** | casos / no casos | Razón [0,∞) | razón de apuestas, útil matemáticamente |
+
+La distinción riesgo–tasa importa: el riesgo es una probabilidad (0–1,
+sin unidades); la tasa tiene unidades de tiempo⁻¹ y usa el denominador
+**persona-tiempo**, que los diseños con seguimiento variable (cohortes)
+producen naturalmente. El <Term k="SMR">SMR</Term> y la <Term k="IRR">razón
+de tasas</Term> del módulo 13 nacen de ese denominador.
+
+### Vocabulario relevante
+
+En la práctica epidemiológica el nombre "tasa" se usa de forma laxa y
+eso confunde la interpretación. Tres medidas frecuentes que **no** son
+tasas en sentido estricto:
+
+- **Letalidad** (case-fatality): muertos / casos confirmados en el
+  periodo del brote. Es una **proporción**, no una velocidad: no tiene
+  persona-tiempo. La letalidad del 40% de la fiebre amarilla de Tolima
+  dice "de cada 10 casos, 4 mueren", no cuánto duran.
+- **Tasa de ataque**: es una **incidencia acumulada** aplicada al
+  periodo corto de un brote (casos nuevos / expuestos al inicio). La
+  *tasa de ataque secundaria* mide contagios entre contactos
+  susceptibles (domiciliarios) de un caso índice.
+- **Tasa de mortalidad específica**: muertes por causa X /
+  población-tiempo. Esta sí es una tasa verdadera.
+
+La prevalencia también tiene tres versiones que hay que declarar:
+**puntual** (en una fecha), **de periodo** (casos existentes en algún
+momento del periodo) y **de por vida** (haber tenido la enfermedad alguna
+vez, típica de encuestas como la ENDS).
+
+### Población en riesgo
+
+Dos reglas de práctica que cambian el resultado:
+
+1. **Solo cuentan los susceptibles.** La tasa de cáncer uterino en una
+   cohorte con muchas mujeres histerectomizadas se subestima si el
+   denominador incluye a quienes ya no pueden padecerla. La "población
+   en riesgo" excluye a quienes ya tienen la enfermedad y a quienes no
+   pueden contraerla.
+2. **Si no hay registro de entradas, se usa la población a mitad de
+   año** (o el promedio de la población al inicio y al final del
+   periodo) como denominador aproximado de las tasas anuales, el
+   convenio de las notas de clase para las tasas por 100 000 de
+   SIVIGILA.
+
+### Tasas brutas, específicas y estandarizadas
+
+La **tasa bruta** (casos / persona-tiempo total) es un resumen que mezcla
+el nivel de enfermedad con la estructura de la población. Las **tasas
+específicas** por edad, sexo o grupo separan esas dos cosas; la
+**estandarizada** pondera las específicas por una estructura de
+referencia común y es el contenido del módulo 9. La regla operativa:
+nunca se comparan tasas brutas de poblaciones con estructura distinta
+sin mirar las específicas antes.
+
+## Toda medida trae incertidumbre
+
+Una prevalencia de 11% sobre n = 400 y una sobre n = 40 no son el mismo
+dato: la inferencia estadística adjunta un intervalo de confianza a cada
+medida. El conteo de casos sigue una binomial (prevalencia) o una
+Poisson (tasa con persona-tiempo), y los ICs exactos vienen de esas
+distribuciones; el detalle de sus coberturas es el tema del módulo 6.
+
+<RCell
+  id="03/medidas-ic"
+  title="Prevalencia y tasa con sus intervalos de confianza"
+  code={`# Prevalencia puntual con IC95% exacto (Clopper-Pearson, binomial):
+x <- 45; n <- 400
+print(binom.test(x, n))
+# -> p ~ 0.113; el IC95% va aprox. de 0.083 a 0.147.
+# Cambia n a 40 conservando x/n y observa como el ancho explota.
+
+# Tasa de incidencia con IC95% exacto (Poisson sobre el conteo):
+casos <- 12; pt <- 8500          # persona-anos
+res <- poisson.test(casos, pt)
+print(res)
+cat(sprintf("tasa = %.2f por 1000 p-a, IC95%% (%.2f, %.2f)\\n",
+            res$estimate * 1000, res$conf.int[1] * 1000,
+            res$conf.int[2] * 1000))
+# -> ~1.41 por 1000 p-a, IC95% ~(0.73, 2.47).
+
+cat("\\nRegla del curso: toda medida se reporta con su IC;\\n")
+cat("un estimador sin intervalo es un numero incompleto.\\n")`}
+/>
+
+### La tasa de ataque identifica el vehículo
+
+El clásico análisis de Oswego (1940) muestra el procedimiento en acción:
+tras una cena comunitaria con gastroenteritis, se tabula la tasa de
+ataque entre quienes comieron y no comieron cada alimento. El alimento
+cuyo consumo separa mejor enfermos de sanos es el vehículo sospechoso.
+
+<RCell
+  id="03/tasa-ataque"
+  title="Tasa de ataque por alimento (Oswego, 1940)"
+  code={`# Oswego 1940 (ejemplo canonico): helado de vainilla.
+#    comieron: 43 enfermos / 54 ;  no comieron: 3 enfermos / 65
+ta_si <- 43/54; ta_no <- 3/65
+cat(sprintf("tasa de ataque si comio   = %.1f%%\\n", 100*ta_si))
+cat(sprintf("tasa de ataque no comio   = %.1f%%\\n", 100*ta_no))
+cat(sprintf("razon de tasas de ataque  = %.1f\\n", ta_si/ta_no))
+# Una razon alta y una diferencia grande senalan al vehiculo.
+# La practica real repite la tabla para cada alimento del menu.`}
+/>
+
+## La relación P = I × D
+
+En una población estacionaria con enfermedad rara, la prevalencia es el
+producto de la incidencia por la duración media:
+
+$$
+P \approx I \times D, \qquad\text{exacta: } P = \frac{I\,D}{1 + I\,D}
+$$
+
+La forma que revela la estructura es la del **odds de prevalencia**:
+$P/(1-P) = I\,D$ exactamente en el estado estacionario. La aproximación
+$P \approx ID$ sigue porque con enfermedad rara el denominador
+$1 + ID \approx 1$; cuando la prevalencia deja de ser rara (enfermedades
+crónicas comunes) la corrección importa.
+
+La intuición: la enfermedad es un depósito que se llena a velocidad $I$ y
+se vacía tras $D$ años. Mayor duración (tratamientos que prolongan sin
+curar) infla la prevalencia sin tocar la incidencia; por eso la
+prevalencia de una enfermedad crónica puede subir precisamente *porque* el
+tratamiento mejora.
+
+<PrevalenceExplorer title={<>P ≈ I × D en vivo: 300 personas, flujo mensual</>} />
+
+<Callout type="warning" title="Cuándo falla la aproximación">
+P = I × D exige tres condiciones: (1) población estacionaria, sin
+migración masiva ni cambios de letalidad; (2) enfermedad rara (si P es
+grande, la fórmula exacta P = ID/(1+ID) difiere de la aproximación);
+(3) duración constante, pues una D variable rompe el balance. El <Term k="VIH">VIH</Term>
+post-TARGA es el ejemplo moderno: la incidencia no cambió mucho pero la
+prevalencia se disparó porque D pasó de ~10 años a casi la esperanza de
+vida completa.
+</Callout>
+
+El cálculo siguiente contrasta los dos denominadores con una cohorte de
+1000 personas seguidas 5 años, con pérdidas en el seguimiento. El riesgo
+divide los casos entre la población inicial; la tasa divide los casos
+entre el persona-tiempo realmente aportado. La segunda parte aplica
+P = I × D a la hipertensión como enfermedad crónica.
+
+<RCell
+  id="03/medidas-frecuencia"
+  title="Incidencia, prevalencia y tasa con denominadores correctos"
+  code={`# Una cohorte de 1000 personas seguida 5 anos; 40 enfermaron.
+# Pero 120 se perdieron en seguimiento a mitad de camino.
+n <- 1000; casos <- 40; perdidos <- 120
+
+# Riesgo (incidencia acumulada): casos / poblacion al inicio
+riesgo <- casos / n
+
+# Persona-anos: los sanos completos aportan 5, los perdidos 2.5,
+# los casos aportan hasta su evento (aprox. 2.5 en promedio):
+pt <- (n - perdidos - casos) * 5 + (perdidos + casos) * 2.5
+tasa <- casos / pt
+
+cat(sprintf("riesgo 5-anos      = %.3f (probabilidad)\\n", riesgo))
+cat(sprintf("persona-anos       = %.0f\\n", pt))
+cat(sprintf("tasa de incidencia = %.2f por 1000 p-a\\n", tasa * 1000))
+cat("\\nEl riesgo usa n=1000; la tasa usa pt=%.0f.\\n", pt)
+cat("Con seguimiento variable, solo la tasa es honesta.\\n")
+
+# P = I x D: hipertension, I = 3%/ano, D = 25 anos (cronica)
+I <- 0.03; D <- 25
+cat(sprintf("\\nP aprox = %.1f%%   P exacta = %.1f%%\\n",
+            100 * I * D, 100 * (I * D) / (1 + I * D)))`}
+/>
+
+<SasBlock code={`data medidas;
+  n = 1000; casos = 40; perdidos = 120;
+  riesgo = casos / n;
+  /* persona-anos: sanos 5, perdidos y casos 2.5 */
+  pt = (n - perdidos - casos)*5 + (perdidos + casos)*2.5;
+  tasa1000 = casos / pt * 1000;
+  /* P = I x D, hipertension cronica */
+  I = 0.03; D = 25;
+  p_aprox  = 100 * I * D;
+  p_exacta = 100 * (I * D) / (1 + I * D);
+run;
+proc print data=medidas noobs; run;`} />
+
+<Quiz
+  question="Un programa nuevo de tratamiento para una enfermedad crónica triplica la supervivencia media sin curarla. ¿Qué le pasa a la prevalencia y a la incidencia?"
+  options={[
+    "Ambas se triplican",
+    "La prevalencia se triplica pero la incidencia no cambia: el éxito terapéutico infla el depósito de casos",
+    "La incidencia se triplica porque hay más enfermos",
+    "Ambas bajan porque los pacientes viven más sanos"
+  ]}
+  correctIndex={1}
+  explanation="P = I × D: triplicar D triplica P sin tocar I. La prevalencia alta aquí es una buena noticia disfrazada: más gente viviendo con la enfermedad gracias al tratamiento. Por eso la prevalencia sola nunca evalúa un programa."
+/>
+
+<Quiz
+  question="Un ministerio calcula la 'tasa de cáncer de cuello uterino por 100 000 mujeres' dividiendo los casos entre el total de mujeres del censo, incluyendo a las histerectomizadas. ¿Cuál es el defecto y su dirección?"
+  options={[
+    "Ninguno: el censo es el denominador correcto",
+    "La población en riesgo excluye a quienes ya no tienen útero; incluirlas infla el denominador y subestima la tasa real",
+    "El defecto es usar censo en vez de proyección; la dirección depende del año",
+    "La tasa debería ser una proporción, no una tasa"
+  ]}
+  correctIndex={1}
+  explanation="La población en riesgo son solo las susceptibles. Meter histerectomizadas al denominador (quizás 10–15% de las mujeres adultas) hace la tasa sistemáticamente menor que la real: el error no es de redondeo, es de definición del denominador."
+/>
+
+<Flashcard
+  title="Frecuencia en seis tarjetas"
+  items={[
+    { front: "Prevalencia", back: "Casos existentes / población en un instante. Puntual, de periodo o de por vida: hay que declarar cuál." },
+    { front: "Riesgo (incidencia acumulada)", back: "Casos nuevos / población libre al inicio. Probabilidad en [0,1], requiere seguimiento completo." },
+    { front: "Tasa de incidencia", back: "Casos nuevos / persona-tiempo. Velocidad con unidades tiempo⁻¹; admite seguimiento desigual." },
+    { front: "Letalidad", back: "Muertos / casos en el periodo del brote. Una proporción, no una tasa: no hay persona-tiempo." },
+    { front: "Tasa de ataque", back: "Incidencia acumulada de un brote (casos / expuestos). La secundaria mide contagio entre contactos." },
+    { front: "P = I × D", back: "Equilibrio del depósito de casos en población estacionaria. Exacta: P = ID/(1+ID); falla si P no es rara." },
+  ]}
+/>
+
+<LabExercise
+  id="lab-03-medicion"
+  title="Laboratorio: tasas específicas por edad"
+  code={`# Datos tipo SHHS: casos y persona-anos por estrato de edad
+# en dos regiones con distinta estructura.
+edad <- c("40-54", "55-69", "70+")
+casosA <- c(12, 45, 90);   ptA <- c(8000, 5000, 2000)
+casosB <- c(30, 60, 60);   ptB <- c(15000, 6000, 1000)
+
+tasaA <- casosA / ptA; tasaB <- casosB / ptB
+print(round(rbind(A = tasaA, B = tasaB) * 1000, 2))
+
+# Cruda vs. especifica: ¿quien esta peor?
+crudaA <- sum(casosA) / sum(ptA); crudaB <- sum(casosB) / sum(ptB)
+cat(sprintf("\\ncruda A = %.2f  cruda B = %.2f (por 1000 p-a)\\n",
+            crudaA*1000, crudaB*1000))
+cat("Las especificas cuentan otra historia... (anticipo del módulo 9)\\n")`}
+  tasks={[
+    "Calcula las tasas específicas por edad en ambas regiones.",
+    "Compara la tasa cruda con las específicas: ¿en qué difieren?",
+    "Conserva tus resultados; el módulo 9 los retoma para estandarizar.",
+  ]}
+  hint="Divide casos/persona-tiempo por estrato; la cruda es la suma ponderada por la estructura de edad propia, y esa estructura difiere entre regiones."
+  solution="Las específicas favorecen a B (más sanos por edad) pero la cruda puede favorecer a A si A es más joven. Es la confusión por estructura de edad que la estandarización del módulo 9 corrige."
+/>
+
+<SasBlock code={`data tasas;
+  input edad $ casosA ptA casosB ptB;
+  tasaA = casosA / ptA * 1000;
+  tasaB = casosB / ptB * 1000;
+  datalines;
+40-54 12 8000 30 15000
+55-69 45 5000 60 6000
+70+   90 2000 60 1000
+;
+proc print data=tasas noobs; run;
+/* Tasas crudas: la suma de casos sobre la suma de persona-anos */
+proc sql;
+  select sum(casosA)/sum(ptA)*1000 as crudaA format=8.2,
+         sum(casosB)/sum(ptB)*1000 as crudaB format=8.2
+  from tasas;
+quit;`} />
+
+<ToolCard task="medicion" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: ejercicios + nota interpretativa">
+Resuelve los cálculos del laboratorio y adjunta una nota de 200 palabras:
+¿por qué dos regiones pueden tener la misma tasa cruda y comportarse
+distinto por edad?
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), caps. 1.4.1, 2.4–2.6**: frecuencia de la enfermedad, P = I × D, tasas específicas.
+- **Rothman, Greenland & Lash (2008), cap. 3**: la formalización del persona-tiempo y de la población en riesgo.
+- **CDC, *Principles of Epidemiology***: el ejemplo de Oswego y la tasa de ataque.
+- **Notas de clase (Salazar), clases 3–4**: tasas con población a mitad de año, H. pylori.

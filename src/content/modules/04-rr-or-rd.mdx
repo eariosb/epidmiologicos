@@ -1,0 +1,386 @@
+---
+title: "Medidas de asociación I: RR, OR y RD"
+slug: "04-rr-or-rd"
+objective: "Calcular e interpretar desde una tabla 2×2 el riesgo relativo, la razón de odds y la diferencia de riesgos, con sus intervalos de confianza, y reconocer qué diseño permite cada una."
+order: 4
+datasets: []
+duration: 90
+prerequisites: ["Módulo 3: Medición"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { TwoByTwoExplorer } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+
+
+<Callout type="tip" title="Toda medida es comparativa">
+RR, OR y RD responden la misma pregunta (¿cuánta más enfermedad hay en los
+expuestos?) en tres unidades distintas: razón de riesgos, razón de odds y
+exceso absoluto. Cuál unidad corresponde lo decide el diseño (módulo 2),
+no la preferencia del analista.
+</Callout>
+
+## La tabla 2×2
+
+Toda la medición de este módulo sale de una tabla con la convención de
+Woodward: **la exposición en las filas, el desenlace en las columnas**:
+
+$$
+\begin{array}{c|cc|c}
+ & D+ & D- & \\\hline
+E+ & a & b & n_1\\
+E- & c & d & n_0\\\hline
+ & m_1 & m_0 & n
+\end{array}
+\qquad
+\widehat{RR} = \frac{a/n_1}{c/n_0},\quad
+\widehat{OR} = \frac{ad}{bc},\quad
+\widehat{RD} = \frac{a}{n_1} - \frac{c}{n_0}
+$$
+
+El <Term k="RR">RR</Term> divide riesgos: cuántas veces más probable es
+enfermar en expuestos. El <Term k="OR">OR</Term> divide odds; es la única
+medida que sobrevive al diseño de casos y controles. El <Term k="RD">RD</Term>
+resta riesgos: el exceso absoluto, base del <Term k="NNT">NNT</Term> del
+módulo siguiente.
+
+<TwoByTwoExplorer
+  title={<>Tabla 2×2 de deporte y depresión (ejemplo de clase)</>}
+/>
+
+<Callout type="tip" title="Cuándo OR ≈ RR (y cuándo engaña)">
+Bajo enfermedad rara ($r_0$ pequeño) el OR aproxima bien al RR porque
+$d/(c+d) \approx 1$. Con desenlace frecuente el OR exagera sistemáticamente
+la asociación. Ese es el dilema que el ejemplo de Molinero hace concreto:
+el OR está siempre disponible, el RR solo donde el diseño lo permite.
+</Callout>
+
+## Molinero: una asociación, tres diseños
+
+Molinero (2001) trabaja un único ejemplo bajo tres diseños (infarto ×
+control de la hipertensión en 728 pacientes), lo que permite ver con
+precisión cuándo el OR engaña. La tabla original:
+
+$$
+\begin{array}{c|cc}
+ & \text{infarto} & \text{no infarto} \\\hline
+\text{mal control} & 10 & 250\\
+\text{buen control} & 7 & 461
+\end{array}
+\quad\Rightarrow\quad
+RR = \frac{10/260}{7/468} \approx 2.6,\quad OR = \frac{10 \cdot 461}{250 \cdot 7} \approx 2.6
+$$
+
+Coinciden porque los riesgos son bajos (4% y 1.5%). Si se multiplica la
+frecuencia del desenlace por 10 manteniendo los totales, el RR se queda en
+2.6 pero el OR salta a 3.6:
+
+<TwoByTwoExplorer
+  title={<>OR = 3.6 ≠ RR = 2.6 con enfermedad frecuente</>}
+  a={100} b={160} c={70} d={398}
+  labelE="mal control de HTA"
+  labelD="infarto"
+/>
+
+El análisis de Molinero no termina en las medidas: repite la misma
+asociación bajo tres esquemas de muestreo con n = 728 y compara la χ² de
+cada uno. El ejercicio muestra que el OR es invariante al sentido del
+muestreo y que el caso-control, lejos de ser solo el diseño posible para
+enfermedades raras, es el que más potencia obtiene del mismo número de
+sujetos.
+
+<RCell
+  id="04/molinero-tres-disenos"
+  title="La misma asociación bajo tres diseños"
+  code={`# Molinero (2001): la MISMA asociacion bajo tres esquemas de muestreo,
+# todos con n = 728. Solo cambia quien fija los marginales.
+# Convencion: filas = exposicion, columnas = desenlace.
+
+# 1) Natural/transversal: nadie fija nada (tabla original)
+nat <- matrix(c(10, 250, 7, 461), ncol = 2, byrow = TRUE)
+
+# 2) Cohorte: el investigador fija 364 expuestos y 364 no expuestos
+coh <- matrix(c(14, 350, 6, 358), ncol = 2, byrow = TRUE)
+
+# 3) Caso-control: fija 364 casos y 364 controles
+cc  <- matrix(c(214, 128, 150, 236), ncol = 2, byrow = TRUE)
+
+# Todas las medidas + chi2 de Pearson (cruda y con Yates)
+medidas <- function(t, nombre) {
+  a <- t[1,1]; b <- t[1,2]; c <- t[2,1]; d <- t[2,2]
+  rr <- (a/(a+b)) / (c/(c+d))
+  or <- a*d / (b*c)
+  rd <- a/(a+b) - c/(c+d)
+  x2 <- chisq.test(t, correct = FALSE)$statistic
+  p  <- chisq.test(t, correct = FALSE)$p.value
+  cat(sprintf("%-13s RR=%.2f OR=%.2f RD=%+.4f | chi2=%.1f p=%.3f\\n",
+              nombre, rr, or, rd, x2, p))
+}
+medidas(nat, "natural"); medidas(coh, "cohorte"); medidas(cc, "caso-control")
+
+# Salida esperada: chi2 ~ 4.0, ~3.3 y ~41 con la MISMA n.
+# Pero el 'RR' del caso-control es ficticio: los marginales
+# 364/364 son cuotas de diseno, no riesgos poblacionales.`}
+/>
+
+<SasBlock code={`/* Molinero: la misma asociacion, tres muestreos */
+data nat; input e $ d $ n; datalines;
+mal si 10   mal no 250  bien si 7    bien no 461 ;
+data coh; input e $ d $ n; datalines;
+mal si 14   mal no 350  bien si 6    bien no 358 ;
+data cc;  input e $ d $ n; datalines;
+mal si 214  mal no 128  bien si 150  bien no 236 ;
+
+proc freq data=nat order=data; weight n;
+  tables e*d / chisq relrisk measures; run;
+proc freq data=coh order=data; weight n;
+  tables e*d / chisq; run;
+proc freq data=cc  order=data; weight n;
+  tables e*d / chisq measures; run;
+/* En cc PROC FREQ reporta el OR correcto (2.6) pero su
+   'Col1 risk' daria un RR espurio 1.6: los denominadores
+   364/364 son diseno, no poblacion */`} />
+
+<Callout type="warning" title="El hallazgo menos conocido de Molinero">
+Con el mismo presupuesto de 728 sujetos, la χ² de Pearson es ≈ 4.0 en el
+diseño natural (p ≈ 0.04), ≈ 3.3 en la cohorte (p ≈ 0.07) y **≈ 41 en el
+caso-control (p &lt; 0.001)**; con corrección de Yates los valores son
+≈ 3.1, 2.5 y 39.8. El caso-control no es solo el diseño posible para
+enfermedades raras: es el que *más potencia* obtiene de cada sujeto,
+porque concentra la muestra en el marginal informativo. El precio lo fija
+la nota del curso (Salazar Uribe): el "riesgo relativo" calculado sobre
+esa tabla daría 1.6 cuando el verdadero es 2.6, porque los denominadores
+364/364 son **diseño, no población**.
+</Callout>
+
+## Intervalos de confianza de Woolf
+
+Los ICs de RR y OR se construyen en la escala logarítmica:
+
+$$
+\ln \widehat{RR} \pm 1.96\sqrt{\frac{b/a}{n_1} + \frac{d/c}{n_0}},
+\qquad
+\ln \widehat{OR} \pm 1.96\sqrt{\tfrac1a + \tfrac1b + \tfrac1c + \tfrac1d}
+$$
+
+La simetría en log escala produce ICs asimétricos en la escala natural,
+siempre del lado correcto de 1 cuando la asociación existe. El Pooling
+Project (Woodward, Ej. 3.10) reporta RR = 1.39 con IC95% (1.03, 1.88):
+el intervalo apenas no toca 1, es decir, un resultado significativo pero
+frágil que pide interpretar el <Term k="IC">IC</Term> completo y no solo el p.
+
+El ejercicio de clase (deporte y depresión) reúne todo lo anterior en una
+sola tabla: riesgos por fila, RR, OR y RD con sus IC de Woolf, y la prueba
+de Pearson con y sin la corrección de continuidad de Yates.
+
+### Fragilidad de los ICs asintóticos
+
+Woolf es un IC de Wald en escala log: asintótico. La crítica de Correa
+(2001, 2003) al intervalo de Wald para una proporción aplica por analogía:
+cuando $\hat{p}$ está cerca de 0 o 1 la cobertura real cae muy por debajo
+del nominal (con $p = 0.03$ y $n = 100$, un Wald de proporciones cubre
+solo ~80% de las veces). Para el OR de Woolf el problema aparece de otra
+forma: no subcubre —en la cohorte de Molinero cubre ~97%, algo
+conservador— sino que **deja de existir**: si alguna celda es cero, el OR
+y su IC son infinitos o indeterminados, y con celdas pequeñas eso ocurre
+seguido. Con $n = 60$ por grupo y riesgos 10% vs. 3%, ~16% de las muestras
+producen una celda vacía.
+
+Tres alternativas, todas disponibles en R base:
+
+- **IC exacto condicional** (`fisher.test`): garantiza cobertura ≥ nominal
+  pero es conservador en tablas ralas.
+- **Jeffreys** (posterior con priors Beta(0.5, 0.5) en cada riesgo): existe
+  siempre, incluso con celda cero, y suele mantener cobertura cercana al
+  nominal.
+- **Haldane–Anscombe** (sumar 0.5 a cada celda): parche clásico de Woolf.
+
+<RCell
+  id="04/fragilidad-ic"
+  title="Tres intervalos para el mismo OR, y la cobertura real de Woolf"
+  code={`# La cohorte de Molinero tiene una celda de 6: tablas ralas.
+coh <- matrix(c(14, 350, 6, 358), ncol = 2, byrow = TRUE)
+a <- 14; b <- 350; c <- 6; d <- 358
+
+# 1) Woolf (log-normal)
+or_hat <- a*d/(b*c); se <- sqrt(1/a+1/b+1/c+1/d)
+cat(sprintf("Woolf:      OR = %.2f  IC95%% [%.2f, %.2f]\\n",
+    or_hat, exp(log(or_hat)-1.96*se), exp(log(or_hat)+1.96*se)))
+
+# 2) Fisher exacto (condicional, hypergeometrico)
+ft <- fisher.test(coh)
+cat(sprintf("Fisher:     OR = %.2f  IC95%% [%.2f, %.2f]\\n",
+    ft$estimate, ft$conf.int[1], ft$conf.int[2]))
+
+# 3) Jeffreys: posterior de cada riesgo con prior Beta(.5,.5)
+set.seed(7)
+r1 <- rbeta(1e5, a + .5, b + .5); r0 <- rbeta(1e5, c + .5, d + .5)
+or_j <- (r1/(1-r1)) / (r0/(1-r0))
+cat(sprintf("Jeffreys:   OR ~ %.2f  IC95%% [%.2f, %.2f]\\n",
+    median(or_j), quantile(or_j, .025), quantile(or_j, .975)))
+
+# Cobertura real de Woolf bajo el diseno de cohorte (r1=.0385, r0=.015)
+set.seed(1); B <- 4000; hit <- 0; indef <- 0
+rt <- c(.0385, .015)
+for (i in 1:B) {
+  x <- rbinom(2, 364, rt)
+  if (any(x == 0) || any(x == 364)) { indef <- indef + 1; next }
+  A <- x[1]; C <- x[2]; Bb <- 364 - A; D <- 364 - C
+  lo <- log(A*D/(Bb*C)); s <- sqrt(1/A+1/Bb+1/C+1/D)
+  lor_true <- log(rt[1]/(1-rt[1])) - log(rt[2]/(1-rt[2]))
+  if (abs(lo - lor_true) <= 1.96*s) hit <- hit + 1
+}
+cat(sprintf("\\nCobertura Woolf: %.1f%%  |  muestras con celda cero: %.1f%%\\n",
+    100*hit/(B-indef), 100*indef/B))
+# Esperado: cobertura ~97%% (conservador) y ~0.4%% de OR indefinidos.
+# Con n chico la falla no es el ancho: es que el estimador colapsa.`}
+/>
+
+<RCell
+  id="04/tabla-deporte"
+  title="Deporte y depresión en R"
+  code={`# Ejemplo de la clase 5 (Salazar): deporte vs. depresion.
+# Convencion Woodward: filas = exposicion, columnas = desenlace.
+tab <- matrix(c(38, 31, 9, 22), ncol = 2)
+dimnames(tab) <- list(deporte = c("si", "no"),
+                      depresion = c("si", "no"))
+print(tab)
+
+a <- tab[1,1]; c <- tab[2,1]; b <- tab[1,2]; d <- tab[2,2]
+n1 <- a + b; n0 <- c + d
+
+r1 <- a / n1; r0 <- c / n0
+RR <- r1 / r0; OR <- a * d / (b * c); RD <- r1 - r0
+se_rr <- sqrt(b/(a*n1) + d/(c*n0))
+se_or <- sqrt(1/a + 1/b + 1/c + 1/d)
+
+cat(sprintf("riesgo expuestos   = %.3f\\n", r1))
+cat(sprintf("riesgo no expuest. = %.3f\\n", r0))
+cat(sprintf("RR  = %.3f  IC95%% (%.3f, %.3f)\\n", RR,
+            exp(log(RR) - 1.96*se_rr), exp(log(RR) + 1.96*se_rr)))
+cat(sprintf("OR  = %.3f  IC95%% (%.3f, %.3f)\\n", OR,
+            exp(log(OR) - 1.96*se_or), exp(log(OR) + 1.96*se_or)))
+cat(sprintf("RD  = %.3f\\n", RD))
+
+# La prueba de Pearson, con y sin correccion de Yates (clase 5):
+print(chisq.test(tab, correct = FALSE))
+print(chisq.test(tab, correct = TRUE))`}
+/>
+
+<SasBlock code={`data dep;
+  input deporte $ depresion $ n;
+  datalines;
+si si 38  si no 9  no si 31  no no 22
+;
+proc freq data=dep order=data; weight n;
+  tables deporte*depresion / chisq relrisk measures;
+  exact or;   /* OR exacto opcional */
+run;
+/* CHISQ da Pearson crudo y 'Continuity Adj. Chi-Square' (Yates).
+   RELRISK da OR y 'Cohort (Col1/Col2 Risk)' = RR con IC de Woolf */`} />
+
+## El dilema de la elección de medida
+
+RR, OR y RD no son tres formas equivalentes de decir lo mismo: cada una
+responde una pregunta distinta y solo algunas sobreviven a cada diseño.
+La elección no es neutral (Woodward, cap. 3.3):
+
+| Medida | Pregunta que responde | Diseños donde es válida | Precio |
+|---|---|---|---|
+| RR | ¿Cuántas veces más probable es enfermar? | Cohorte, transversal | No existe en casos y controles |
+| OR | ¿Cuánto cambian los odds? | Todos | Exagera el RR cuando el desenlace es frecuente |
+| RD | ¿Cuántos casos extra por persona? | Cohorte, transversal | Exige conocer el riesgo basal |
+
+En el ejemplo de Molinero la decisión es concreta: en la tabla natural y
+en la cohorte se puede reportar cualquiera de las tres; en el
+caso-control solo el OR es legítimo, y reportarlo como "riesgo relativo"
+sería afirmar que los expuestos enferman 1.6 veces más cuando la verdad
+es 2.6.
+
+<Callout type="tip" title="Del RD al NNT">
+El RD de la tabla natural es $0.0385 - 0.0150 = 0.0235$: por cada 1000
+pacientes con mal control hay ~24 infartos atribuibles a la exposición.
+Invertirlo da el número necesario a tratar: $NNT = 1/RD \approx 43$. El
+RD no es solo otra medida: es la unidad en que se expresa el impacto
+clínico, y el módulo 5 lo convierte en NNT, riesgo atribuible y decisión
+sobre el valor p.
+</Callout>
+
+<Quiz
+  question="En Molinero, el OR del caso-control es ≈2.6 (correcto) pero el 'RR' calculado sobre esa tabla da 1.6. ¿Por qué el RR fracasa ahí?"
+  options={[
+    "Porque el caso-control siempre subestima",
+    "Porque los denominadores 364/364 los fijó el diseño: los 'riesgos' 58.8% y 35.2% son prevalencias de exposición en la muestra, no riesgos poblacionales",
+    "Porque falta la corrección de Yates",
+    "Porque el OR es siempre la medida correcta"
+  ]}
+  correctIndex={1}
+  explanation="El RR divide riesgos, es decir, proporciones de enfermos entre expuestos. En un caso-control los totales de casos y controles son cuotas del diseño (1:1), así que las proporciones por fila no son riesgos. Solo ad/bc es invariante al muestreo: por eso el OR sobrevive a todos los diseños."
+/>
+
+<LabExercise
+  id="lab-04-medidas"
+  title="Laboratorio: una tabla, cuatro lecturas"
+  code={`# Datos: exposicion a plaguicidas y malformacion (hipotetico)
+tab <- matrix(c(45, 12, 8, 95), ncol = 2,
+              dimnames = list(exp = c("si","no"), mal = c("si","no")))
+print(tab)
+a<-tab[1,1];b<-tab[1,2];c<-tab[2,1];d<-tab[2,2]
+cat("OR =", round(a*d/(b*c),2), "\\n")
+# 1) Calcula RR, OR, RD con sus IC95%.
+# 2) Repite suponiendo casos-controles 1:1: ¿cuales medidas sobreviven?`}
+  tasks={[
+    "Calcula RR, OR, RD y el IC95% del OR a mano en R.",
+    "Supón ahora que es un caso-control (se eligieron 150 casos y 150 controles): ¿cuál de las medidas anteriores sobrevive?",
+    "¿Qué pasa con OR vs. RR si la enfermedad es común (b, d pequeños)?",
+  ]}
+  hint="En casos y controles, los totales de fila los fija el investigador: cualquier medida que use n1 y n0 como denominadores poblacionales es ficticia; solo ad/bc es invariante al muestreo."
+  solution="RR=(45/57)/(8/103)≈10.2, OR≈44.5: la enfermedad es frecuente, así que OR≫RR (el OR engaña). En caso-control solo el OR es legítimo; RD y RR desaparecen porque los denominadores son diseño, no población."
+/>
+
+<SasBlock code={`data plag;
+  input exp $ mal $ n;
+  datalines;
+si si 45  si no 8  no si 12  no no 95
+;
+proc freq data=plag order=data; weight n;
+  tables exp*mal / chisq relrisk measures;
+run;
+/* RELRISK entrega OR (44.5) y riesgos de columna.
+   Si fuera caso-control 1:1, solo el OR es legitimo:
+   los 'riesgos' por fila serian cuotas del diseno */`} />
+
+<ToolCard task="rr-or-rd" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: tabla comparativa + nota de precisión">
+**Entregable 1 — tabla de referencia** (máx. 1 página): RR, OR y RD con
+fórmula, rango, interpretación en una frase, diseños que la permiten y el
+valor que toma en cada tabla de Molinero.
+
+**Entregable 2 — nota de precisión** (máx. 1 página), tres preguntas:
+
+1. En la cohorte de Molinero (celda de 6), ¿qué IC reportarías para el OR:
+   Woolf, Fisher o Jeffreys? Justifica con la cobertura real simulada.
+2. ¿Qué ocurre con el OR y su IC de Woolf si la celda con 6 casos hubiera
+   sido 0? ¿Qué hace cada alternativa en ese escenario?
+3. El hallazgo de potencia de Molinero (χ² del caso-control ≫ cohorte),
+   ¿se mantiene si la enfermedad es común? Argumenta con el muestreo.
+
+**Rúbrica**: tabla completa y correcta (30%), réplica de los tres diseños
+con código funcional (30%), nota de precisión con argumento de cobertura
+(20%), justificación de la medida elegida por diseño (20%).
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), cap. 3.1–3.3**: RR, OR, RD, sus ICs y la elección de medida.
+- **Molinero (2001)**: OR vs. RR bajo los tres diseños, n = 728; la comparación de potencia.
+- **Correa & Sierra (2001; 2003)**: cobertura real de los intervalos de Wald cuando p̂ está cerca del borde.
+- **Nota UNAL (Salazar Uribe)**: por qué el RR no se calcula en casos y controles.

@@ -1,0 +1,162 @@
+---
+title: "Estandarización y tasas ajustadas"
+slug: "09-estandarizacion"
+objective: "Aplicar la estandarización directa e indirecta para comparar poblaciones con estructuras de edad distintas; interpretar el SMR como estandarización indirecta."
+order: 9
+datasets: []
+duration: 75
+prerequisites: ["Módulo 8: Estratificación", "Módulo 3: Tasas"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { StandardizationExplorer } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+<Callout type="tip" title="La comparación justa exige una población estándar">
+Comparar tasas crudas entre poblaciones con estructuras de edad distintas
+mezcla dos cosas: el nivel de enfermedad y la demografía. La
+**estandarización** presta a ambas poblaciones la misma estructura de
+edad; solo entonces la comparación es válida. Es la estratificación del
+módulo 8 aplicada a tasas: mismo principio, otro instrumento.
+</Callout>
+
+## Directa e indirecta
+
+- **Directa**: aplica las tasas específicas por edad de cada población a
+  una **estructura estándar común**. Produce "tasas ajustadas"
+  comparables entre sí; requiere conocer las tasas por estrato de cada
+  población.
+- **Indirecta**: aplica las tasas de la población de referencia a la
+  estructura propia, obteniendo los casos **esperados**; el cociente
+  observados/esperados es el <Term k="SMR">SMR</Term> (standardized
+  morbidity/mortality ratio). Solo necesita el total observado, lo que lo
+  hace ideal para poblaciones pequeñas donde las tasas por estrato son
+  inestables.
+
+<StandardizationExplorer title={<>La cruda y la ajustada cuentan historias distintas (Glasgow)</>} />
+
+## El ejemplo de Glasgow
+
+El ejemplo 4.6 de Woodward: comparar la mortalidad coronaria entre zonas
+de privación socioeconómica de Glasgow por tasas crudas sugiere un orden
+que las tasas ajustadas **invierten**: la estructura de edad era más
+fuerte que la privación en la cruda. Es la paradoja de Simpson en versión
+demográfica: el confusor (edad) reparte distinto y afecta el desenlace.
+
+$$
+\text{Tasa ajustada (directa)} = \frac{\sum_k p_k^{std}\, r_k}
+{\sum_k p_k^{std}},
+\qquad
+SMR = \frac{O}{\sum_k n_k\, \lambda_k^{ref}}
+$$
+
+<RCell
+  id="09/smr-estandarizacion"
+  title="SMR y tasa ajustada (bronquitis ocupacional)"
+  code={`# SMR: trabajadores expuestos vs. tasas de referencia nacional,
+# por edad (estandarizacion indirecta).
+n_k      <- c(1000, 800, 500)      # persona-anos por estrato de edad
+lam_ref  <- c(0.002, 0.008, 0.02)  # tasa de referencia por estrato
+obs      <- 30                      # muertes observadas totales
+
+esperadas <- sum(n_k * lam_ref)
+SMR <- obs / esperadas
+# IC del SMR = IC del conteo observado / esperadas.
+# Poisson exacto (modulo 6) vs. aproximacion de Byar:
+ic_exacto <- poisson.test(obs)$conf.int / esperadas
+lo <- qchisq(0.025, 2*obs)     / 2 / esperadas
+hi <- qchisq(0.975, 2*obs + 2) / 2 / esperadas
+cat(sprintf("esperadas = %.1f  SMR = %.3f\\n", esperadas, SMR))
+cat(sprintf("IC exacto:  (%.3f, %.3f)\\n", ic_exacto[1], ic_exacto[2]))
+cat(sprintf("IC Byar:    (%.3f, %.3f)\\n", lo, hi))
+cat("SMR > 1 con IC que no toca 1: exceso de mortalidad real.\\n")
+
+# Directa: la eleccion de la poblacion estandar NO es inocente.
+lam_propia <- c(0.004, 0.012, 0.028)
+std_joven  <- c(0.7, 0.2, 0.1)   # estandar mas joven
+std_viejo  <- c(0.2, 0.3, 0.5)   # estandar mas viejo
+razon <- function(p) sum(p * lam_propia) / sum(p * lam_ref)
+cat(sprintf("\\nrazon de tasas ajustadas:\\n"))
+cat(sprintf("  estandar joven: %.2f   estandar viejo: %.2f\\n",
+            razon(std_joven), razon(std_viejo)))
+cat("Mismo dato, dos estandares, dos respuestas: hay que declarar cual.\\n")`}
+/>
+
+<SasBlock code={`/* SMR (indirecta): esperados = persona-anos * tasa de referencia */
+data smr;
+  input n_k lam_ref;
+  esperadas + n_k * lam_ref;
+  datalines;
+1000 0.002
+ 800 0.008
+ 500 0.020
+;
+proc sql;
+  select 30/sum(n_k*lam_ref) as SMR format=8.3,
+         /* IC95% aprox. Byar: percentiles chi2 / 2 / esperadas */
+         cinv(0.025, 2*30)/2/sum(n_k*lam_ref)  as lo format=8.3,
+         cinv(0.975, 2*30+2)/2/sum(n_k*lam_ref) as hi format=8.3
+  from smr;
+quit;
+/* Directa: tasas propias ponderadas por poblacion estandar */
+data dir;
+  lam_propia = sum(0.5*0.004, 0.3*0.012, 0.2*0.028);
+  lam_ref    = sum(0.5*0.002, 0.3*0.008, 0.2*0.020);
+  razon = lam_propia / lam_ref;
+run;
+proc print data=dir noobs; run;`} />
+
+<Callout type="note" title="La regla de decisión">
+**Directa** si conoces las tasas específicas de ambas poblaciones y cada
+estrato tiene denominador suficiente para que sean estables; exige más
+datos pero produce tasas ajustadas comparables entre cualquier par de
+poblaciones contra el mismo estándar. **Indirecta (SMR)** cuando los
+estratos propios son pequeños: solo necesitas el conteo total observado
+y las tasas de la referencia; el precio es que un SMR se interpreta
+contra su referencia y dos SMR de poblaciones con estructuras muy
+distintas no son estrictamente comparables entre sí. En ambos casos el
+estándar es una decisión del analista y debe declararse: como acabas de
+ver, cambiar de estándar cambia la razón ajustada.
+</Callout>
+
+<Quiz
+  question="La región A tiene tasa cruda de mortalidad mayor que B, pero en cada grupo de edad su tasa es menor. ¿Qué pasó?"
+  options={[
+    "Error de digitación: eso es imposible",
+    "Paradoja de Simpson demográfica: A tiene más población mayor, que concentra las muertes; la estandarización lo revela",
+    "La tasa cruda siempre es la correcta; las específicas mienten",
+    "B tiene peor sistema de registro"
+  ]}
+  correctIndex={1}
+  explanation="La tasa cruda es la suma ponderada de las específicas por la estructura propia. Si A es más vieja, su cruda se infla por edad aunque sea más sana en cada estrato; exactamente el escenario del explorador anterior y del ejemplo de Glasgow."
+/>
+
+<ToolCard task="std" />
+
+<Callout type="note" title="Precisión relativa en tasas">
+En tasas y prevalencias comparadas entre regiones, el error absoluto es
+menos interpretable que el relativo: ±5 casos no significa lo mismo
+sobre una tasa de 3 por 100 000 que sobre una de 300 por 100 000. Para
+prevalencia anticipada P y precisión relativa ε (el semiancho del <Term k="IC">IC</Term>
+como fracción de P), n = z²(1−P)/(ε²P): mantener el mismo ε para tasas
+diez veces menores exige casi diez veces más persona-tiempo o casos.
+Es la misma lógica del módulo 5 (la longitud del IC como variable
+aleatoria) trasladada a la escala de tasas estandarizadas.
+</Callout>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: tasas estandarizadas">
+Toma las tasas por edad del laboratorio del módulo 3 (o datos propios): calcula
+la tasa ajustada directa a una población estándar y el SMR indirecto.
+Compara críticamente: ¿qué respuesta da cada método y por qué pueden
+diferir?
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), cap. 4.5**: estandarización directa e indirecta, Ejemplos 4.6 y 4.8.
+- **Notas de clase (Salazar), clase 8**: SMR de bronquitis ocupacional.

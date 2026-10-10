@@ -65,7 +65,7 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
                   mimeType: 'image/png',
                 });
           if (!blob) return null;
-          return { label: `Página ${i + 1} — ${scene.id}`, dataUrl: await blobToDataUrl(blob) };
+          return { label: `Página ${i + 1}: ${scene.id}`, dataUrl: await blobToDataUrl(blob) };
         } catch {
           // Skip scenes that fail to rasterize (empty/corrupt) instead of
           // aborting the whole report.

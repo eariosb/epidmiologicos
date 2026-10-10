@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { RCell } from './RCell';
+import { MathText } from '@/lib/math-text';
 import type { LabExerciseProps } from '@/types/course';
 
 /**
@@ -56,7 +57,7 @@ export function LabExercise({
           </p>
           <ol className="list-decimal space-y-1.5 pl-5 text-sm text-ink-700">
             {tasks.map((task, i) => (
-              <li key={i}>{task}</li>
+              <li key={i}><MathText text={task} /></li>
             ))}
           </ol>
         </div>
@@ -70,7 +71,7 @@ export function LabExercise({
                 Ver pista
               </summary>
               <div className="prose prose-sm mt-1.5 max-w-none whitespace-pre-line text-ink-600">
-                {hint}
+                <MathText text={hint} />
               </div>
             </details>
           )}
@@ -80,7 +81,7 @@ export function LabExercise({
                 Ver respuestas guía
               </summary>
               <div className="prose prose-sm mt-1.5 max-w-none whitespace-pre-line text-ink-600">
-                {solution}
+                <MathText text={solution} />
               </div>
             </details>
           )}

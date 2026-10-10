@@ -38,7 +38,7 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
     if (editingId === 'new') {
       await createNote({
         moduleSlug,
-        title: draftTitle || `Nota — ${moduleTitle}`,
+        title: draftTitle || `Nota: ${moduleTitle}`,
         content: draftContent,
         tags: [],
       });

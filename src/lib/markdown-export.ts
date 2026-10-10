@@ -27,7 +27,7 @@ export function buildSessionMarkdown(
   if (sections.length > 0) {
     lines.push('## Secciones navegadas');
     for (const s of sections) {
-      lines.push(`- ${s.title} (\`${s.slug}\`) — ${new Date(s.timestamp).toLocaleTimeString('es-CO')}`);
+      lines.push(`- ${s.title} (\`${s.slug}\`) · ${new Date(s.timestamp).toLocaleTimeString('es-CO')}`);
     }
     lines.push('');
   }
@@ -36,7 +36,7 @@ export function buildSessionMarkdown(
     lines.push('## Capturas');
     for (const c of captures) {
       const tags = c.tags.length ? ` · etiquetas: ${c.tags.join(', ')}` : '';
-      lines.push(`- **${c.name}** (${c.type}) — ${new Date(c.timestamp).toLocaleString('es-CO')}${tags}`);
+      lines.push(`- **${c.name}** (${c.type}) · ${new Date(c.timestamp).toLocaleString('es-CO')}${tags}`);
       if (c.code) lines.push('  ```r\n' + c.code.trim() + '\n  ```');
       if (c.outputText) lines.push('  ```\n' + c.outputText.trim() + '\n  ```');
     }
@@ -47,7 +47,7 @@ export function buildSessionMarkdown(
   if (questions.length > 0) {
     lines.push('## Preguntas de estudiantes');
     for (const q of questions) {
-      lines.push(`- [${q.resolved ? 'x' : ' '}] ${q.text} — ${new Date(q.timestamp).toLocaleTimeString('es-CO')}`);
+      lines.push(`- [${q.resolved ? 'x' : ' '}] ${q.text} · ${new Date(q.timestamp).toLocaleTimeString('es-CO')}`);
     }
     lines.push('');
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, type JSX } from 'react';
-import { Play, Camera, Send, ChartColumn, FileText } from 'lucide-react';
+import { Play, Camera, Send, ChartColumn, FileText, ChevronDown, ChevronUp, Terminal } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { r as rMode } from '@codemirror/legacy-modes/mode/r';
@@ -20,8 +20,9 @@ const rLanguage = StreamLanguage.define(rMode);
  * instance (lazily booted on first run) and renders console output,
  * plots and R-level errors below the editor.
  */
-export function RCell({ id, title, code: initialCode }: Readonly<RCellProps>) {
+export function RCell({ id, title, code: initialCode, defaultOpen = false }: Readonly<RCellProps>) {
   const [code, setCode] = useState(initialCode);
+  const [open, setOpen] = useState(defaultOpen);
   const { state, result, webRStatus, webRError, run } = useRCell();
   const cellRef = useRef<HTMLDivElement>(null);
   const [capturing, setCapturing] = useState(false);
@@ -144,12 +145,33 @@ export function RCell({ id, title, code: initialCode }: Readonly<RCellProps>) {
 
   return (
     <div ref={cellRef} className="my-6 overflow-hidden rounded border border-ink-200 bg-ink-50 shadow-sm transition-shadow hover:shadow-md">
-      {title && (
-        <div className="border-b border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-700">
-          {title}
-        </div>
-      )}
+      <div className="flex items-center justify-between gap-2 border-b border-ink-200 bg-white px-4 py-2">
+        <span className="inline-flex min-w-0 items-center gap-2 text-sm font-medium text-ink-700">
+          <Terminal aria-hidden className="h-3.5 w-3.5 shrink-0 text-ink-400" />
+          <span className="truncate">{title ?? 'Código R'}</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="inline-flex shrink-0 items-center gap-1 rounded border border-ink-300 px-2.5 py-1 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+        >
+          {open ? (
+            <>
+              <ChevronUp aria-hidden className="h-3 w-3" />
+              Ocultar
+            </>
+          ) : (
+            <>
+              <ChevronDown aria-hidden className="h-3 w-3" />
+              Explorar código
+            </>
+          )}
+        </button>
+      </div>
 
+      {open && (
+        <>
       <CodeMirror
         value={code}
         height="auto"
@@ -213,10 +235,12 @@ export function RCell({ id, title, code: initialCode }: Readonly<RCellProps>) {
         )}
         {isBooting && (
           <output className="text-xs text-ink-500">
-            Iniciando entorno R (WebAssembly) — solo la primera vez puede tardar unos segundos…
+            Iniciando entorno R (WebAssembly), solo la primera vez puede tardar unos segundos…
           </output>
         )}
       </div>
+        </>
+      )}
 
       {webRStatus === 'error' && (
         <div className="px-4 py-2 text-sm text-red-700 bg-red-50 border-t border-ink-200" role="alert">

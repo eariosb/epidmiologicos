@@ -33,9 +33,9 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
           <span className="inline-flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icon.png" alt="" width={22} height={22} aria-hidden className="shrink-0 rounded-full" />
-            <span className="text-sm font-semibold tracking-tight text-ink-900">Procesos Estocásticos</span>
+            <span className="text-sm font-semibold tracking-tight text-ink-900">Datos Epidemiológicos</span>
           </span>
-          <span className="mt-1 block text-xs text-ink-600">Con una introducción a las EDE</span>
+          <span className="mt-1 block text-xs text-ink-600">Escuela de Estadística</span>
         </Link>
         <p className="mt-1 text-xs text-ink-500">UNAL · Medellín</p>
       </div>

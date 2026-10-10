@@ -1,0 +1,314 @@
+---
+title: "El mapa de los diseños y la pregunta causal"
+slug: "02-mapa-disenos-causalidad"
+objective: "Clasificar cualquier estudio epidemiológico en el árbol de diseños, anticipar qué medidas puede estimar y cuáles no, y evaluar la pregunta causal con los criterios de Bradford Hill."
+order: 2
+datasets: []
+duration: 75
+prerequisites: ["Módulo 1: Historia y ética"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { DesignTree } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+<Callout type="tip" title="El diseño decide qué se puede estimar">
+Antes de cualquier estadística, el diseño ya respondió la pregunta más
+importante: **qué comparación existe en los datos**. El estadístico no
+rescata lo que el diseño no observó. En casos y controles no hay riesgo,
+en el transversal no hay temporalidad, en el ecológico no hay exposición
+individual.
+</Callout>
+
+## El árbol de diseños
+
+Todo estudio epidemiológico cae en una rama de este árbol. Recórralo:
+la hoja a la que llega decide qué puede estimar.
+
+<DesignTree title={<>Qué permite estimar cada camino del árbol de diseños</>} />
+
+### Las tres preguntas que clasifican cualquier estudio
+
+El árbol se recorre respondiendo tres preguntas en orden. Ninguna
+requiere estadística; solo requieren leer la sección de métodos del
+paper con atención:
+
+1. **¿Quién eligió la muestra?** Si el investigador muestreó por
+   *exposición* (n expuestos, n no expuestos) es una **cohorte**; si
+   muestreó por *desenlace* (n casos, n controles) es **casos y
+   controles**; si nadie eligió por nada (una muestra de la población,
+   medida una vez) es **transversal**.
+2. **¿Quién asignó la exposición?** Si el investigador la asignó, el
+   estudio es **experimental** (ensayo); si la naturaleza o el sujeto la
+   eligieron, es **observacional**. La asignación por el investigador es
+   lo que permite aleatorizar, y la aleatorización es lo que controla la
+   confusión en el diseño (anticipo del módulo 7).
+3. **¿Cuál es la unidad de observación?** Si las medidas son por
+   individuo, todos los diseños anteriores aplican. Si la unidad es el
+   *grupo* (país, departamento, hospital), el estudio es **ecológico** y
+   la exposición individual no existe en los datos.
+
+La pregunta 1 es la que decide qué se puede estimar: porque el
+denominador que eligió el investigador determina qué proporciones son
+riesgos y cuáles son solo prevalencias dentro de la muestra.
+
+### Qué puede estimar cada diseño
+
+| Diseño | Qué estima | Qué no puede | Ejemplo canónico |
+| --- | --- | --- | --- |
+| Ensayo (ECA) | Riesgos, RR, <Term k="RD">RD</Term>, tasas; causalidad por asignación | La efectividad en la práctica real (elegibilidad controlada) | Ensayo 6-MP de Freireich (módulo 12) |
+| Cohorte prospectiva | Riesgo, RR, RD, tasas, supervivencia | Eficiencia en enfermedades raras: sigue miles para contar pocos | British Doctors (Doll & Hill, 1951) |
+| Cohorte retrospectiva | Lo mismo, reconstruyendo la exposición de registros | Calidad de la medición pasada | Registros ocupacionales |
+| Casos y controles | Solo OR (≈ RR si la enfermedad es rara) | Riesgo, incidencia, RR directo: los denominadores son ficticios | Doll & Hill 1948, cáncer de pulmón |
+| Transversal | Prevalencias, OR de prevalencia | Secuencia temporal: exposición y desenlace se miden el mismo día | ENDS, encuestas nacionales |
+| Ecológico | Correlación entre tasas y niveles promedio del grupo | La asociación individual (falacia ecológica) | CHD vs. grasa en la dieta por país |
+| Serie de casos | Descripción, generación de hipótesis | Cualquier comparación: no hay grupo de referencia | Primeros casos de <Term k="SIDA">SIDA</Term>, MMWR 1981 |
+
+La columna del medio es lo que el módulo enseña a calcular; la tercera
+es la que se usa para defender un análisis ante un revisor.
+
+## La misma población, tres diseños
+
+El punto anterior admite una demostración numérica directa: generar una
+población donde la exposición causa la enfermedad, y luego muestrearla
+tres veces con tres esquemas distintos. Lo que cambia entre diseños no
+es la biología, es **qué denominador existe en la muestra**. El ejercicio
+siguiente fija una población con riesgo 0.20 en expuestos y 0.05 en no
+expuestos (RR verdadero = 4), y extrae tres muestras:
+
+<RCell
+  id="02/tres-disenos"
+  title="Una población, tres muestreos"
+  code={`# Poblacion base: la exposicion triplica el riesgo.
+set.seed(2024)
+N <- 200000
+E <- rbinom(N, 1, 0.30)
+D <- rbinom(N, 1, ifelse(E == 1, 0.20, 0.05))
+pob <- data.frame(E, D)
+cat("Verdad poblacional: RR =",
+    mean(pob$D[pob$E==1]) / mean(pob$D[pob$E==0]), "\\n\\n")
+
+# 1) COHORTE: muestrear por exposicion (500 expuestos, 500 no).
+co <- rbind(pob[sample(which(pob$E==1), 500), ],
+            pob[sample(which(pob$E==0), 500), ])
+r1 <- mean(co$D[co$E==1]); r0 <- mean(co$D[co$E==0])
+cat(sprintf("Cohorte:       riesgos %.3f vs %.3f -> RR = %.2f, RD = %.3f\\n",
+            r1, r0, r1/r0, r1-r0))
+
+# 2) CASOS Y CONTROLES: muestrear por desenlace (200 casos, 200 controles).
+cc <- rbind(pob[sample(which(pob$D==1), 200), ],
+            pob[sample(which(pob$D==0), 200), ])
+o1 <- mean(cc$E[cc$D==1]) / (1 - mean(cc$E[cc$D==1]))
+o0 <- mean(cc$E[cc$D==0]) / (1 - mean(cc$E[cc$D==0]))
+cat(sprintf("Casos-control: solo OR = %.2f (riesgo no estimable)\\n", o1/o0))
+
+# 3) TRANSVERSAL: muestreo aleatorio, medicion unica.
+ct <- pob[sample(N, 2000), ]
+prev <- table(ct$E, ct$D)
+or_ct <- prev[1,1]*prev[2,2] / (prev[1,2]*prev[2,1])
+cat(sprintf("Transversal:   prevalencia y OR de prevalencia = %.2f\\n", or_ct))
+
+cat("\\nEl OR difiere del RR porque la enfermedad no es tan rara (0.20):\\n")
+cat("en la practica eso se reporta declarando el diseno, no 'corrigiendo'.\\n")`}
+/>
+
+Tres observaciones que el ejercicio hace concretas. Primero, en la
+cohorte la muestra preserva los denominadores de exposición: los riesgos
+son estimables y RR ≈ 4 sale directo. Segundo, en casos y controles los
+200 + 200 son una decisión del investigador, no de la naturaleza: el
+"riesgo" de 0.50 que saldría de esa tabla es un artefacto del muestreo,
+y por eso el diseño solo produce OR. Tercero, en el transversal se
+estima el OR de *prevalencia*, no de incidencia: mide la asociación en
+el estado poblacional vigente, mezclando casos nuevos con casos de curso
+largo (puente hacia el sesgo de Neyman del módulo 14).
+
+<Callout type="note" title="Por qué OR ≈ RR cuando la enfermedad es rara">
+Con riesgos pequeños el denominador del odds se acerca al del riesgo:
+si r0 = 0.005, su odds es 0.00503. El OR y el RR dejan de parecerse
+cuando el desenlace es frecuente (en el ejercicio, 0.20: RR = 4 pero
+OR ≈ 4.7). Por eso la equivalencia se declara como supuesto, no como
+propiedad universal.
+</Callout>
+
+<Callout type="warning" title="El límite que define a los casos y controles">
+En un estudio de <Term k="CCC">casos y controles</Term> los denominadores
+los eligió el investigador (cuántos controles por caso), no la naturaleza.
+Por eso **nunca** se estima el riesgo ni la incidencia, solo el
+<Term k="OR">OR</Term>, que bajo enfermedad rara aproxima al
+<Term k="RR">RR</Term>. No es una limitación técnica: es la definición
+del diseño.
+</Callout>
+
+## Doll y Hill: cohorte y casos-controles
+
+<Term k="Doll-Hill">Doll y Hill</Term> hicieron la pareja de diseños que
+todavía estructura la enseñanza. Primero un estudio de **casos y
+controles** (1948, 709 casos de cáncer de pulmón con controles pareados,
+un diseño rápido y barato) que sugirió la asociación; después la **cohorte
+de médicos británicos** (desde 1951) que la confirmó con riesgos,
+gradiente dosis–respuesta y reversibilidad al dejar de fumar. Es el
+ejemplo canónico de que el diseño decide qué medida se puede estimar: en
+casos y controles solo hay <Term k="OR">OR</Term>; en la cohorte,
+<Term k="RR">RR</Term>, tasas y sobrevida.
+
+## El diseño experimental
+
+En la rama experimental el investigador asigna la exposición, y si lo
+hace por aleatorización obtiene la única herramienta que controla los
+confusores *no medidos*: el <Term k="ECA">ensayo clínico
+aleatorizado</Term>. Tres niveles, según quién recibe la asignación:
+
+- **Ensayo clínico**: la unidad es el paciente (6-MP vs. placebo en
+  leucemia, Freireich 1963; el dataset del módulo 12).
+- **Ensayo de campo**: la unidad es una persona sana de la comunidad,
+  típicamente para medidas preventivas (los ensayos de vacunas).
+- **Ensayo comunitario**: la unidad es el grupo entero (fluoración del
+  agua, intervenciones por municipio o colegio); el número de unidades
+  aleatorizadas, no de sujetos, fija el tamaño muestral real.
+
+El precio del ECA se paga en alcance: población elegible controlada,
+seguimiento protocolizado y preguntas estrechas. Por eso la
+epidemiología vive de los diseños observacionales: la mayoría de las
+exposiciones de interés (contaminación, dieta, condiciones laborales)
+no son asignables éticamente. La regla del curso: el ensayo responde
+"¿funciona la intervención bajo condiciones ideales?"; el diseño
+observacional responde "¿cuánto daño o beneficio asocia la exposición en
+la población real?". Son preguntas distintas y los reportes las confunden
+con frecuencia.
+
+## La unidad de observación y la falacia ecológica
+
+Cuando la unidad deja de ser el individuo, las medidas cambian de
+naturaleza. En el estudio **ecológico** cada observación es un grupo:
+por ejemplo, la mortalidad coronaria y el consumo medio de grasa de cada
+país. La correlación entre esas tasas puede ser muy alta (el clásico
+análisis internacional de grasa y CHD reporta correlaciones fuertes
+entre países) y aun así decir poco sobre el individuo, porque los países
+que comen más grasa difieren también en ingreso, tabaquismo y edad
+promedio.
+
+**La falacia ecológica** es inferir la asociación individual a partir de
+la correlación grupal. Un ejemplo numérico mínimo: dos municipios, cada
+uno con 50% de expuestos; en A la tasa en expuestos es 0.30 y en no
+expuestos 0.10, en B es 0.20 y 0.05. A nivel municipal las tasas globales
+son 0.20 y 0.125 y la correlación con la fracción expuesta es
+imposible de interpretar individualmente: la tasa de cada municipio
+mezcla los dos subgrupos en proporciones que los datos agregados no
+muestran. La lección práctica: un ecológico es un generador de
+hipótesis potente (Snow era esencialmente ecológico), pero su conclusión
+necesita un diseño de nivel individual para confirmarse.
+
+## Los criterios de Bradford Hill
+
+Cuando un estudio muestra asociación, la pregunta causal no se responde
+con un test sino con evidencia acumulada. <Term k="Bradford Hill">Bradford
+Hill</Term> (1965) propuso siete principios que Woodward reformula de la
+siguiente manera. **Ninguno es necesario ni suficiente**, pero juntos
+pesan:
+
+1. **Fuerza**: un RR de 10 convence más que uno de 1.3.
+2. **Secuencia temporal**: la exposición precede al desenlace (la única condición lógicamente imprescindible).
+3. **Plausibilidad biológica**: un mecanismo coherente suma, aunque no decide.
+4. **Replicación**: estudios independientes con resultados convergentes.
+5. **Reversibilidad**: quitar la exposición reduce el riesgo (dejar de fumar).
+6. **Gradiente dosis–respuesta**: más exposición, más riesgo.
+7. **Ausencia de alternativa**: ningún confusor ni sesgo explica la asociación; es el trabajo de los módulos 7 a 10.
+
+### Tabaquismo y cáncer de pulmón
+
+La utilidad de los criterios está en cómo se *acumulan*, no en cada uno
+por separado. En el caso de Doll y Hill la cadena quedó así:
+
+| Criterio | Qué mostró la evidencia |
+| --- | --- |
+| Fuerza | Mortalidad por cáncer de pulmón en médicos fumadores pesados: ~1.66/1000/año vs. ~0.07/1000 en no fumadores (British Doctors, 1956); RR ≈ 24 |
+| Temporalidad | La cohorte registró el hábito *antes* del desenlace; la exposición precedió siempre al diagnóstico |
+| Dosis–respuesta | Gradiente continuo: 0.57 → 0.96 → 1.39 → 1.66 por 1000 según cigarrillos/día |
+| Reversibilidad | El riesgo de los exfumadores caía con los años desde el cese |
+| Replicación | Reproducido en cohortes de EE. UU., Suecia, Japón con distintos diseños |
+| Plausibilidad | El alquitrán del humo produce tumores en piel animal; el mecanismo llegó después |
+| Alternativas | Los casos y controles iniciales resistieron el escrutinio de recuerdo y selección de controles |
+
+La lectura que Woodward quiere enseñar: ninguna fila sola convence (la
+plausibilidad llegó tarde; el primer estudio era retrospectivo). Lo que
+convierte es la *arquitectura* completa: un OR de casos y controles,
+luego un RR de cohorte, luego el gradiente, luego la reversibilidad.
+La causalidad se acumula, no se demuestra; y por eso es el principio 5.
+
+<Quiz
+  question="Un estudio reporta: 'el 30% de los pacientes con enfermedad X eran fumadores, frente al 15% de los pacientes sin esa enfermedad'. ¿Qué puede estimarse legítimamente de estos datos?"
+  options={[
+    "El riesgo relativo RR = 0.30/0.15 = 2: los fumadores duplican el riesgo",
+    "La incidencia de la enfermedad en fumadores",
+    "Un OR de exposición: los casos y los no enfermos fueron muestreados por separado, así que no hay denominadores poblacionales",
+    "La prevalencia de tabaquismo en la población"
+  ]}
+  correctIndex={2}
+  explanation="Es un diseño de casos y controles: los grupos se eligieron por el desenlace (tener o no la enfermedad), no por la exposición. Los porcentajes 30% y 15% son prevalencias de exposición dentro de cada grupo muestreado; no son riesgos poblacionales, así que no existe RR. Solo el OR es estimable; con enfermedad rara aproxima al RR."
+/>
+
+<Quiz
+  question="Una tabla de 21 países muestra correlación 0.75 entre consumo promedio de grasa y tasa de CHD. ¿Qué puede afirmarse legítimamente?"
+  options={[
+    "Que quienes comen más grasa tienen más CHD: la correlación lo demuestra",
+    "Que hay una asociación a nivel de país que amerita un diseño con datos individuales; la correlación de promedios no prueba la asociación individual",
+    "Que la grasa no causa CHD porque es solo una correlación",
+    "Que el RR de consumo alto vs. bajo es 0.75"
+  ]}
+  correctIndex={1}
+  explanation="Es un estudio ecológico: la unidad es el país y la correlación mezcla dieta con ingreso, tabaquismo y edad. Sirve para generar hipótesis (de hecho, así nació la hipótesis lípidica), pero la falacia ecológica prohíbe leerla como riesgo individual."
+/>
+
+<LabExercise
+  id="lab-02-diseno"
+  title="Laboratorio: clasificar tres estudios reales"
+  code={`# Para cada estudio decide el diseno y que medida es estimable.
+# 1) Se reclutan 500 pacientes con hipertension y 500 sin ella, y se
+#    revisa su historia de consumo de sal.
+# 2) A 20000 personas se les mide colesterol y se les sigue 10 anos
+#    contando infartos.
+# 3) En una encuesta nacional se pregunta a 8000 adultos si fuman y
+#    si tienen EPOC diagnosticada, el mismo dia.
+# Escribe tus respuestas como vectores y verifica con el arbol de arriba.`}
+  tasks={[
+    "Clasifica los tres estudios en el árbol de diseños.",
+    "¿En cuál se puede estimar un RR directo? ¿En cuál solo un OR?",
+    "¿Cuál no puede establecer secuencia temporal?",
+  ]}
+  hint="La clave es quién eligió el muestreo: ¿por exposición, por desenlace, o nadie eligió nada (corte)?"
+  solution="1) casos y controles → solo OR. 2) cohorte → riesgos, RR, tasas. 3) transversal → prevalencias y OR de prevalencia, sin temporalidad."
+/>
+
+<SasBlock code={`/* El mismo ejercicio como tabla de disenos:
+   aqui no hay inferencia, solo clasificacion */
+data disenos;
+  length estudio $60 diseno $14 estima $20;
+  input diseno $ estima $ estudio & $60.;
+  datalines;
+casoscontrol OR             500 con HTA y 500 sin, historia de sal
+cohorte      RRtasas        20000 personas, colesterol, 10 anos infartos
+transversal  ORprevalencia  8000 adultos, fumar y EPOC el mismo dia
+;
+proc print data=disenos noobs; run;`} />
+
+<ToolCard task="tabla2x2" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: árbol propio + argumento causal">
+Construye tu propio árbol de decisión de diseños (una página) y redacta un
+argumento causal sobre una asociación de tu interés usando al menos cuatro
+principios de Bradford Hill, incluyendo qué evidencia *falta* para
+decidir.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), cap. 1.4–1.8**: la taxonomía de diseños y los límites de cada rama.
+- **Bradford Hill (1965)**: *The Environment and Disease: Association or Causation?*
+- **Doll & Hill (1950, 1956)**: el caso-control inicial y los primeros resultados de la cohorte de médicos británicos.
+- **Notas de clase (Salazar), clase 3**: medidas de frecuencia y diseños.

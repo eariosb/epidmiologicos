@@ -1,0 +1,192 @@
+---
+title: "Diseño de cohortes y tablas de vida"
+slug: "11-cohortes-tablas-vida"
+objective: "Diseñar y describir un estudio de cohorte con seguimiento variable: entradas escalonadas, censura administrativa, riesgo acumulado y construcción de la tabla de vida."
+order: 11
+datasets: []
+duration: 80
+prerequisites: ["Módulo 3: Medición", "Módulo 9: Tasas ajustadas"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { CohortGantt } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+
+<Callout type="tip" title="El seguimiento convierte asociación en secuencia">
+La cohorte es el único diseño observacional que ve el tiempo correr:
+exposición primero, desenlace después. Eso garantiza la secuencia
+temporal, el único criterio de Bradford Hill lógicamente imprescindible,
+y permite medir riesgo e incidencia directamente. Su precio: personas que
+entran en momentos distintos, se pierden y mueren de otras cosas. La
+<Term k="censura">censura</Term> es el costo de observar el tiempo.
+</Callout>
+
+## Anatomía de una cohorte
+
+Las cohortes canónicas que el curso referencia:
+
+- **British Doctors Study** (<Term k="Doll-Hill">Doll &amp; Hill</Term>,
+  1951–2004): ~34 000 médicos y décadas de seguimiento; el estándar de
+  referencia de la cohorte prospectiva.
+- **Framingham** (1948–): la cohorte que inventó el concepto moderno de
+  "factor de riesgo" cardiovascular.
+- **<Term k="SHHS">SHHS</Term>** (Sleep Heart Health Study): la cohorte de trabajo de los
+  ejemplos de Woodward.
+
+<Term k="censura">Censura a derecha</Term>: un paciente censurado no
+desapareció sin rastro; se sabe que sobrevivió *al menos* su tiempo de
+observación. Cuenta en el denominador hasta su último día visto y se
+retira después.
+
+### Cohorte fija vs. dinámica
+
+- **Fija (cerrada)**: todos entran en el tiempo cero del estudio y nadie
+  ingresa después — una cohorte ocupacional contratada el día 1, los
+  médicos del British Doctors Study. El denominador natural son
+  **personas**: el riesgo acumulado se puede calcular directo.
+- **Dinámica (abierta)**: los sujetos entran y salen mientras corre el
+  calendario — registros de salud, afiliados a un seguro, Framingham
+  con sus relevos generacionales. Los tiempos de exposición difieren
+  por diseño y el denominador honesto pasa a ser
+  **persona-tiempo**: el puente al módulo 13.
+
+<Callout type="warning" title="El sesgo por pérdidas no es ruido inocente">
+La censura solo es inocua si no informa. Si los que se pierden difieren
+de los que quedan — los fumadores más enfermos abandonan el estudio
+antes del evento, los expuestos migran más — las pérdidas borran
+sistemáticamente un tipo de sujeto y el estimador se sesga aunque el
+análisis sea perfecto. Disciplina mínima del diseño: reportar la tasa
+de pérdidas **por grupo de exposición**, comparar las características
+basales de perdidos vs. retenidos, y si difieren, decirlo antes que los
+resultados. Una pérdida diferencial del 10% puede invalidar lo que una
+muestra enorme ganó en precisión.
+</Callout>
+
+<CohortGantt title={<>Entradas escalonadas y censura administrativa (diagrama de Gantt)</>} />
+
+## La tabla de vida (actuarial)
+
+Con intervalos de seguimiento discretos, la tabla de vida estima la
+supervivencia acumulada corrigiendo el denominador por las censuras del
+intervalo:
+
+$$
+\hat S(t_k) = \prod_{j \le k}\left(1 - \frac{d_j}{n_j - c_j/2}\right)
+$$
+
+donde $c_j$ censurados dentro del intervalo se cuentan a medio riesgo,
+un supuesto razonable si la censura ocurre de manera uniforme en el
+intervalo.
+
+El cálculo siguiente construye la tabla completa en cinco intervalos de
+un año: personas en riesgo, eventos, censuras, riesgo efectivo corregido
+y supervivencia acumulada hasta S(5).
+
+<RCell
+  id="11/tabla-vida"
+  title="Tabla de vida a mano"
+  code={`# Tabla de vida actuarial: intervalos de 1 ano.
+# d = eventos en el intervalo, c = censuras en el intervalo,
+# n = en riesgo al inicio del intervalo.
+tv <- data.frame(
+  intervalo = c("0-1", "1-2", "2-3", "3-4", "4-5"),
+  n = c(500, 430, 380, 330, 290),
+  d = c(30, 25, 20, 15, 12),
+  c = c(40, 25, 30, 25, 30)
+)
+# En riesgo efectivo: medio intervalo para los censurados
+tv$n_eff <- tv$n - tv$c / 2
+tv$q     <- tv$d / tv$n_eff          # prob. de evento en el intervalo
+tv$S     <- cumprod(1 - tv$q)        # supervivencia acumulada
+tv[, -1] <- round(tv[, -1], 4)       # redondear solo las columnas numericas
+print(tv)
+
+cat(sprintf("\\nS(5 anos) = %.3f -> riesgo acumulado = %.1f%%\\n",
+            tail(tv$S, 1), 100 * (1 - tail(tv$S, 1))))`}
+/>
+
+<SasBlock code={`data tv;
+  input intervalo $ n d c;
+  n_eff = n - c/2;          /* censurados a medio riesgo */
+  q = d / n_eff;
+  retain S 1;
+  S = S * (1 - q);          /* supervivencia acumulada */
+  datalines;
+0-1 500 30 40
+1-2 430 25 25
+2-3 380 20 30
+3-4 330 15 25
+4-5 290 12 30
+;
+proc print data=tv noobs; run;`} />
+
+<Callout type="note" title="Tabla de vida vs. Kaplan–Meier">
+La tabla de vida agrupa el tiempo en intervalos; <Term k="KM">Kaplan–Meier</Term>
+(módulo siguiente) usa cada tiempo de evento individual: es la tabla de
+vida llevada al límite donde cada intervalo tiene un solo evento.
+</Callout>
+
+<Quiz
+  question="¿Qué NO puede hacer un estudio de cohorte retrospectiva frente a una prospectiva?"
+  options={[
+    "Estimar riesgo e incidencia",
+    "Establecer secuencia temporal",
+    "Evitar por completo el sesgo de información: la exposición se reconstruyó de registros pasados, no se midió en el momento",
+    "Calcular hazard ratios"
+  ]}
+  correctIndex={2}
+  explanation="La cohorte retrospectiva conserva la secuencia temporal y permite riesgos, tasas y HR, pero la medición de la exposición viene de registros históricos con calidad variable. El sesgo de información (medición imperfecta retrospectiva) es su punto débil característico."
+/>
+
+<LabExercise
+  id="lab-10-cohorte"
+  title="Laboratorio: construir una tabla de vida completa"
+  code={`# Datos crudos de seguimiento: 20 pacientes, tiempo y evento.
+tiempo  <- c(3,5,5,6,8,8,9,12,14,15,18,20,22,25,28,30,35,40,45,50)
+evento  <- c(1,0,1,1,0,1,1,0,1,1,0,1,1,0,0,1,0,1,0,0)
+# Agrupa en intervalos de 10 semanas y construye la tabla de vida.
+k <- cut(tiempo, breaks = seq(0, 60, by = 10), right = FALSE)
+print(table(k, evento))
+# Tu turno: n_j, d_j, c_j por intervalo -> S(t) acumulada.`}
+  tasks={[
+    "Agrupa en intervalos de 10 semanas con cut().",
+    "Calcula n_j, d_j, c_j y S(t) por intervalo (fórmula actuarial).",
+    "Reporta S(50) y el riesgo acumulado a 50 semanas con su interpretación.",
+  ]}
+  hint="n_j = pacientes que llegan al inicio del intervalo; c_j cuenta a medio riesgo: n_eff = n − c/2."
+  solution="Itera los intervalos: para cada uno S *= (1 − d/(n − c/2)); reporta el producto acumulado. El módulo 12 muestra que KM hace lo mismo sin agrupar."
+/>
+
+<SasBlock code={`data fup;
+  input tiempo evento;
+  datalines;
+3 1  5 0  5 1  6 1  8 0  8 1  9 1 12 0 14 1 15 1
+18 0 20 1 22 1 25 0 28 0 30 1 35 0 40 1 45 0 50 0
+;
+/* Tabla de vida actuarial: METHOD=LT con intervalos de 10 semanas.
+   evento=0 indica censura en TIME tiempo*evento(0) */
+proc lifetest data=fup method=lt intervals=(0 to 60 by 10);
+  time tiempo*evento(0);
+run;`} />
+
+<ToolCard task="lifetable" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: tabla de vida completa">
+Tabla de vida con <Term k="IC">IC</Term> (Greenwood simplificado) sobre los datos del
+laboratorio, más un diagrama de Gantt propio de una cohorte hipotética
+con 10 sujetos: entradas escalonadas y al menos dos censuras distintas
+(pérdida vs. cierre administrativo).
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), cap. 5.1–5.3**: diseño de cohorte y tablas de vida.
+- **Doll &amp; Hill**: la cohorte de médicos británicos.
+- **Notas de clase (Salazar), clases 13–14**: cohortes fijas y móviles.

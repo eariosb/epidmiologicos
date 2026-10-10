@@ -1,0 +1,448 @@
+---
+title: "Medidas de asociación II: NNT, riesgo atribuible, ICs y valores p"
+slug: "05-nnt-atribuible-pvalor"
+objective: "Interpretar el NNT y el riesgo atribuible como medidas de impacto poblacional, y argumentar por qué la estimación con IC precede al valor p, con los ejemplos de las tablas 3.7–3.8 de Woodward."
+order: 5
+datasets: []
+duration: 90
+prerequisites: ["Módulo 4: RR, OR y RD"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { PvalueVsEffect } from '@/components/EpiSims'
+import { PrecisionSampleSizeExplorer } from '@/components/ExactSims'
+import { RCell } from '@/components/RCell'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+import { DecisionPanel } from '@/components/DecisionPanel'
+import { DecisionCard } from '@/components/DecisionCard'
+
+
+<Callout type="tip" title="Estimar antes que contrastar">
+El principio 4 de Woodward ordena el reporte: primero el estimador
+puntual, luego su <Term k="IC">IC</Term>, y solo al final, si acaso, el
+valor p. El p mezcla dos cosas (tamaño del efecto y tamaño muestral) y
+las confunde sin remedio. El NNT y el riesgo atribuible traducen el
+efecto a consecuencias: cuántos pacientes, cuántos casos evitables.
+</Callout>
+
+## El número necesario a tratar
+
+El <Term k="NNT">NNT</Term> (number needed to treat) invierte la
+diferencia de riesgos: $NNT = 1/RD$, el número de pacientes que hay que
+tratar para evitar un evento. Es la traducción clínica directa del <Term k="RD">RD</Term>.
+
+<Callout type="tip" title="El mismo RR, dos mundos clínicos (Molinero)">
+Compara dos escenarios. En el primero, el 4% de los pacientes abandona el
+tratamiento estándar y el 3% abandona el nuevo: el <Term k="RR">RR</Term> es 4/3 = 1.33.
+En el segundo, el abandono es 20% vs. 15%: el RR también es 20/15 = 1.33.
+Los dos escenarios producen **el mismo número**.
+
+Pero el impacto clínico es opuesto. Piensa en grupos de 100 pacientes: en el
+primer escenario el nuevo tratamiento evita **1 abandono** (4 − 3), así que
+hay que tratar a 100 pacientes para evitar un solo evento
+(<Term k="NNT">NNT</Term> = 100). En el segundo evita **5 abandonos**
+(20 − 15): basta tratar a 20 pacientes (NNT = 20). Esa diferencia absoluta
+de 1% vs. 5% es el <Term k="RD">RD</Term>, y es invisible en el RR.
+
+**Lección**: el RR dice cuántas veces más frecuente es el evento, no cuánta
+gente se beneficia. Una política clínica se decide con el RD y el NNT, no
+con el RR.
+</Callout>
+
+## El riesgo atribuible
+
+El <Term k="PRA">PRA</Term> responde: *de los casos entre expuestos, ¿qué
+fracción se debe a la exposición?* El <Term k="PRAP">PRAP</Term> baja la
+pregunta a la población completa, y ahí aparece el segundo factor, la
+prevalencia de la exposición:
+
+$$
+PRA = \frac{RR - 1}{RR},
+\qquad
+PRAP = \frac{P(E)\,(RR - 1)}{1 + P(E)\,(RR - 1)}
+$$
+
+Un RR grande con exposición rara puede explicar pocos casos; un RR modesto
+con exposición común (tabaquismo, sedentarismo) explica muchos. El ejemplo
+de clase sobre tabaquismo materno y bajo peso al nacer lo ilustra. El
+script calcula riesgos, RR y OR, y deriva PRA, PRAP y NNT a partir de la
+prevalencia de exposición observada en la propia tabla — ahora con su
+incertidumbre: el principio 4 exige IC también para estas medidas. El IC
+de Kleinbaum–Kupper del script del curso usa solo las cuatro celdas, así
+que funciona igual en casos y controles (donde el PRA se estima con el OR:
+la fórmula de Levin, $(OR-1)/OR$), y el IC del NNT se obtiene invirtiendo
+el IC del RD.
+
+<RCell
+  id="05/riesgo-atribuible"
+  title="PRA y PRAP (tabaquismo materno y bajo peso)"
+  code={`# Adaptado de Riesgo_atribuible.R (Salazar): fumadora vs. bajo peso.
+tab <- matrix(c(30, 70, 20, 180), ncol = 2,
+              dimnames = list(fuma = c("si","no"), bpeso = c("si","no")))
+print(tab)
+
+a <- tab[1,1]; b <- tab[1,2]; c <- tab[2,1]; d <- tab[2,2]
+r1 <- a/(a+b); r0 <- c/(c+d); RR <- r1/r0; OR <- a*d/(b*c)
+PRA  <- (RR - 1)/RR
+Pe   <- (a+b)/sum(tab)                       # prevalencia de exposicion
+PRAP <- Pe*(RR - 1)/(1 + Pe*(RR - 1))
+NNT  <- 1/(r1 - r0)
+
+cat(sprintf("r1=%.3f  r0=%.3f  RR=%.2f  OR=%.2f\\n", r1, r0, RR, OR))
+cat(sprintf("PRA  = %.1f%%  (fraccion del riesgo de fumadoras debida a fumar)\\n", 100*PRA))
+cat(sprintf("PRAP = %.1f%%  (fraccion del bajo peso poblacional atribuible)\\n", 100*PRAP))
+cat(sprintf("NNT  = %.0f  -> cada %.0f no-fumadoras mas, ~1 bajo peso evitado\\n",
+            NNT, NNT))
+
+# IC del NNT: invertir el IC del RD. Si el IC cruza 0, el NNT pasa por
+# infinito (RD=0 -> 1/0): reportar "NNTB hasta NNTH" en ese caso.
+se_rd <- sqrt(r1*(1-r1)/(a+b) + r0*(1-r0)/(c+d))
+ic_rd <- (r1-r0) + c(-1,1)*1.96*se_rd
+cat(sprintf("\\nIC95%% RD = (%.3f, %.3f) -> NNT (%.1f, %.1f)\\n",
+            ic_rd[1], ic_rd[2], 1/ic_rd[2], 1/ic_rd[1]))
+
+# IC de Kleinbaum-Kupper para la fraccion atribuible (formula del
+# script del curso Riesgo_atribuible_casos_controles.R): solo usa
+# a,b,c,d -> valida tambien en casos y controles, donde no hay riesgos.
+theta <- ((a*d)-(b*c))/(d*(a+c))
+mu <- (1.96*d*(b+d)/(a*(b+d)-b*(a+c))) *
+      sqrt(a/(c*(a+c)) + b/(d*(b+d)))
+lo <- 1/(1 + ((1-theta)/theta)*exp( mu))
+hi <- 1/(1 + ((1-theta)/theta)*exp(-mu))
+cat(sprintf("PRAP (CC) = %.3f  IC95%% KK (%.3f, %.3f)\\n", theta, lo, hi))
+
+# PRA en casos y controles (Levin): el OR sustituye al RR.
+cat(sprintf("PRA en CC (Levin) = %.3f\\n", (OR-1)/OR))`}
+/>
+
+<SasBlock code={`data bajo;
+  input fuma $ bpeso $ n;
+  datalines;
+si si 30  si no 70  no si 20  no no 180
+;
+/* RELRISK da riesgos Col1/Col2, RR y OR con IC de Woolf.
+   SAS no entrega PRA/PRAP/NNT directos: se derivan en DATA step */
+proc freq data=bajo order=data; weight n;
+  tables fuma*bpeso / relrisk; run;
+data atr;
+  a=30; b=70; c=20; d=180;
+  r1 = a/(a+b); r0 = c/(c+d); RR = r1/r0;
+  PRA  = (RR-1)/RR;
+  Pe   = (a+b)/(a+b+c+d);       /* prevalencia de exposicion */
+  PRAP = Pe*(RR-1)/(1+Pe*(RR-1));
+  NNT  = 1/(r1-r0);
+run;
+proc print data=atr noobs; run;`} />
+
+## El valor p no es el tamaño del efecto
+
+Woodward lo demuestra con dos ejemplos concluyentes (Ch. 3.5.5), que debe
+poder reproducirse de memoria:
+
+| Ejemplo | Efecto | n | valor p |
+|---|---|---|---|
+| Tabla 3.7 | RR = 2.00 | 50 | **0.12**: "no significativo" |
+| Tabla 3.7 | RR = 2.00 | 100 | **0.03**: "significativo" |
+| Tabla 3.8 | RR = 1.03 | 20 000 | **0.04**: "significativo" con un efecto trivial |
+
+El mismo efecto cambia de veredicto solo por n; y un efecto irrelevante se
+vuelve "significativo" con n suficiente. El simulador siguiente lo muestra
+en vivo: genera tablas 2×2 bajo distintos tamaños de efecto y cuenta qué
+fracción resulta significativa.
+
+<PvalueVsEffect title={<>Potencia vs. tamaño del efecto: 600 tablas simuladas por configuración</>} />
+
+<Callout type="warning" title="La declaración de la ASA">
+Wasserstein &amp; Lazar (2016), en nombre de la American Statistical
+Association: "un valor p no mide el tamaño de un efecto ni la importancia
+de un resultado". Es la declaración institucional del principio 4;
+se retoma en el módulo 17.
+</Callout>
+
+<Quiz
+  question="Un estudio con n = 200 000 encuentra OR = 1.08, p < 0.001 para exposición a un solvente. Otro con n = 60 encuentra OR = 4.5, p = 0.07. ¿Cuál aporta más evidencia de un efecto clínicamente relevante?"
+  options={[
+    "El primero: p < 0.001 es prueba concluyente de efecto importante",
+    "El segundo: un OR de 4.5 no explicado por el azar sería un efecto enorme; el estudio simplemente fue pequeño",
+    "Ninguno: sin significancia no hay efecto",
+    "Son equivalentes: el OR y el p miden lo mismo"
+  ]}
+  correctIndex={1}
+  explanation="El valor p mezcla tamaño del efecto y tamaño muestral. OR=1.08 con p<0.001 es un efecto trivial detectado por fuerza bruta de n; OR=4.5 con p=0.07 es un efecto potencialmente grande con un estudio corto. Por eso Woodward ordena: estimador puntual → IC → y solo después, el p."
+/>
+
+<Flashcard
+  title="Impacto y contraste en cuatro tarjetas"
+  items={[
+    { front: "NNT", back: "1/RD: pacientes a tratar para evitar un evento. Mismo RR ≠ mismo NNT; depende del riesgo basal." },
+    { front: "PRA vs PRAP", back: "PRA: fracción del riesgo del expuesto debida a la exposición. PRAP: lo mismo en la población; depende de la prevalencia de exposición." },
+    { front: "Valor p", back: "Probabilidad del dato bajo H₀: mezcla efecto y n. RR=2 con n=50: p=0.12; con n=100: p=0.03 (Woodward 3.7)." },
+    { front: "Orden del reporte", back: "Estimador puntual → IC95% → (si acaso) p. El IC ya contiene la pregunta del test, más el tamaño." },
+  ]}
+/>
+
+## Del valor p al tamaño muestral
+
+El simulador anterior muestra el lado oscuro del problema: con n pequeño,
+un efecto real produce p > 0.05 la mayoría de las veces. La pregunta
+inversa es la que se hace antes de recolectar datos: ¿qué tan grande debe
+ser n para que el estudio responda lo que promete? Woodward (cap. 8)
+distingue dos preguntas que suelen confundirse:
+
+1. **Precisión**: ¿qué tan angosto quiero el IC? Para estimar una
+   proporción con semi-amplitud δ, n = z²·p(1−p)/δ². No hay hipótesis;
+   solo se declara cuánta incertidumbre es tolerable.
+2. **Potencia**: ¿con qué probabilidad detecto un efecto de tamaño dado?
+   Para comparar dos proporciones se declara el efecto mínimo clínicamente
+   relevante, α y la potencia deseada (típicamente 0.80 u 0.90).
+
+Ninguna de las dos es "el" tamaño muestral: son respuestas a preguntas
+distintas, y un estudio bien reportado declara cuál usó y con qué
+supuestos. En cohortes hay además un tercer paso: si se anticipa una
+fracción ℓ de pérdidas en seguimiento, el n efectivo es n/(1 − ℓ). Un
+estudio que planea 100 por grupo con 20% de pérdidas esperadas realmente
+analiza 80; si el cálculo de potencia no lo descuenta, la potencia
+prometida es ficticia.
+
+El simulador calcula el n por fórmula (Fleiss/Woodward) y luego lo
+**calibra por enumeración exacta**: qué potencia entregan de verdad
+Fisher, la z agrupada y Boschloo con ese n y ese par de riesgos. La
+brecha entre la curva asintótica y los números exactos es el contenido
+del módulo siguiente.
+
+<SampleSizeExplorer title={<>Fórmula de n vs. potencia exacta del test</>} />
+
+<RCell
+  id="05/tamano-muestral"
+  title="Cálculo por fórmula y por funciones de R"
+  code={`# Escenario Perondi: epinefrina en paro cardiaco pediatrico,
+# supervivencia 0.20 vs 0.03. Cuantos por grupo para 80% de potencia?
+p1 <- 0.20; p2 <- 0.03
+
+# 1) power.prop.test: la funcion estandar de R (test de dos proporciones).
+#    Usa la transformacion arcoseno (h de Cohen) y es mas optimista.
+print(power.prop.test(p1 = p1, p2 = p2, sig.level = 0.05, power = 0.80))
+#    Salida esperada: n ~ 47 por grupo.
+
+# 2) Formula explicita de Fleiss (Woodward cap. 8): la que usa el simulador.
+#    Mas conservadora porque usa la varianza combinada bajo H0.
+za <- qnorm(0.975); zb <- qnorm(0.80)
+pb <- (p1 + p2)/2
+n_fleiss <- (za*sqrt(2*pb*(1-pb)) + zb*sqrt(p1*(1-p1) + p2*(1-p2)))^2 / (p1-p2)^2
+cat(sprintf("n por grupo (Fleiss) = %d\\n", ceiling(n_fleiss)))   # -> 55
+
+# La discrepancia (47 vs 55) no es un error: son aproximaciones distintas.
+# Ninguna garantiza la potencia real del test que finalmente se use:
+# con n = 34 por grupo la potencia exacta de Fisher era ~0.43.
+
+# 3) Ajuste por perdidas: si el 20% se pierde en seguimiento
+cat(sprintf("n ajustado (20%% perdidas) = %d\\n", ceiling(n_fleiss/0.8)))  # -> 68`}
+/>
+
+<Callout type="note" title="Tres reglas prácticas de Woodward (cap. 8)">
+1. Declarar el estimando antes que el test: el n depende de qué se quiere
+   estimar (precisión) o detectar (potencia), no del procedimiento de
+   prueba.
+2. Declarar el efecto mínimo clínicamente relevante, no el esperado: un n
+   calculado sobre el efecto optimista produce estudios crónicamente
+   subpotenciados.
+3. En casos y controles, el n que importa es el número de **casos**; con
+   enfermedad rara, aumentar controles más allá de ~4 por caso agrega poca
+   información (Breslow &amp; Day). El matching cambia el cálculo: son los
+   pares discordantes los que aportan (módulo 15).
+</Callout>
+
+<Callout type="warning" title="Hacia la calibración">
+Esta sección calcula n con la aproximación normal. Cuando p₂ es pequeña
+(eventos raros) la aproximación falla en dos direcciones: el test χ² no
+cumple el α nominal y la potencia real diverge de la prometida. El
+módulo 6 muestra cómo enumerar el espacio de tablas para medir el tamaño
+real, comparar procedimientos exactos y dimensionar el estudio con el
+test que de verdad se usará.
+</Callout>
+
+## La longitud del IC también es una variable aleatoria
+
+La fórmula n = z²p(1−p)/δ² trata la semiamplitud δ como si el
+investigador la impusiera. En realidad la longitud del IC que se
+obtendrá, L = 2δ̂, **depende del dato**: es una variable aleatoria con su
+propia distribución. Un n calculado con la fórmula clásica garantiza
+solo E[L] ≈ δ en promedio; una fracción sustancial de los estudios
+(en el ejemplo de abajo, ~57%) replica un intervalo más ancho que el
+prometido.
+
+La formulación de Correa controla dos niveles de error: α (cobertura del
+IC) y β (probabilidad de que la longitud observada exceda un máximo
+tolerado L₀). La condición de diseño es P(L ≤ L₀) ≥ 1 − β, evaluable de
+forma exacta enumerando los n+1 resultados posibles de X ~ Bin(n, p):
+cada resultado produce su intervalo y su longitud, ponderados por su
+probabilidad binomial. Con una prior Beta(a, b) sobre p, los pesos son
+beta-binomiales y la garantía se convierte en assurance (la misma idea
+del módulo 6).
+
+El simulador dibuja la distribución exacta de L (sus "dientes" reflejan
+la discreción del conteo), calcula el n con garantía real y lo contrasta
+con la fórmula clásica y con la fórmula del seminario original, que
+sumaba z_β a z_α como si fuera un cálculo de potencia y confundía L con
+la semiamplitud; se muestra corregida, no como modelo a seguir.
+
+<PrecisionSampleSizeExplorer title={<>L es aleatoria: distribución exacta y n con P(L ≤ L₀) garantizada</>} />
+
+<Callout type="note" title="El impacto de exigir precisión">
+Rothman &amp; Greenland (2018), en *Epidemiology*, abogan por dimensionar
+estudios según la precisión del estimando (ancho del IC) y no solo por
+potencia; el paquete `presize` de R implementa esos cálculos. El costo
+escala con el cuadrado de la precisión: para una prevalencia del 10%,
+pasar de un IC de longitud 0.10 a uno de 0.025 multiplica el n clásico
+por ~16 (de ~139 a ~2 200 sujetos). Con tasas bajas o precisión
+relativa exigente (módulos 9 y 13) el salto puede ser de órdenes de
+magnitud. La decisión de L₀ es una decisión de política de
+investigación, no un detalle técnico.
+</Callout>
+
+<RCell
+  id="05/precision-L"
+  title="La distribución exacta de L en R base"
+  code={`# La longitud L del IC es una variable aleatoria: distribucion EXACTA
+# por enumeracion binomial (sin Monte Carlo). Codigo del modulo de
+# precision del seminario Correa (version auditada).
+x <- 0:50; n <- 50; p <- 0.10
+
+# IC de Wilson para cada x posible
+z <- qnorm(0.975)
+centro <- (x + z^2/2) / (n + z^2)
+hw <- z/(n + z^2) * sqrt(x*(n-x)/n + z^2/4)
+L <- 2*hw                                  # longitud del IC por x
+prob <- dbinom(x, n, p)                    # peso de cada x
+
+# Las cantidades de interes son sumas finitas ponderadas
+E_L <- sum(L * prob)
+L0 <- 0.12
+P_garantia <- sum(prob[L <= L0])
+
+cat(sprintf("E[L] = %.4f    P(L <= %.2f) = %.3f\\n", E_L, L0, P_garantia))
+# Salida esperada: E[L] ~ 0.167, P(L <= 0.12) ~ 0.03: con n = 50 casi
+# ningun estudio replica alcanza la longitud tolerada.
+cat("Fraccion de estudios cuyo IC supera la longitud esperada:\\n")
+cat(sprintf("  P(L > E[L]) = %.3f  (no es 0.5: la distribucion es discreta y asimetrica)\\n",
+            sum(prob[L > E_L])))   # ~0.57
+
+# n con garantia real: el menor n tal que P(L <= L0) >= 0.90 en toda la cola
+prob_L <- function(nn) {
+  xx <- 0:nn
+  ce <- (xx + z^2/2) / (nn + z^2)
+  LL <- 2 * z/(nn + z^2) * sqrt(xx*(nn-xx)/nn + z^2/4)
+  sum(dbinom(xx, nn, p)[LL <= L0])
+}
+ns <- 50:300; gs <- sapply(ns, prob_L)
+ok <- rev(cummin(rev(gs))) >= 0.90       # garantia sostenida (dientes de sierra)
+cat(sprintf("n clasico = %d    n con garantia 90%% = %d\\n",
+            ceiling(z^2*p*(1-p)/(L0/2)^2), ns[which(ok)[1]]))
+# Salida esperada: 97 vs ~126. La garantia de 90% cuesta ~30% mas que la
+# formula clasica, que en la practica equivale a una garantia ~50%.`}
+/>
+
+## Laboratorio de decisión · ¿recomendar lidocaína profiláctica?
+
+<Callout type="note" title="Caso: 1989, el comité de guía clínica">
+Durante dos décadas se administró lidocaína profiláctica a todo paciente
+con infarto agudo para prevenir arritmias fatales; era el estándar de
+cuidado. Hine et al. (1989) reunieron seis ensayos aleatorizados pequeños;
+ninguno solo fue concluyente. Su comité debe decidir si la recomendación
+se sostiene, con evidencia incompleta.
+</Callout>
+
+El cálculo siguiente combina los seis ensayos en la escala de diferencia
+de riesgos con pesos inverso-varianza: es el análisis de Normand (1999)
+paso a paso, y produce el resultado que ningún ensayo individual mostró.
+
+<RCell
+  id="05/decision-lidocaina"
+  title="El exceso de mortalidad que nadie vio por separado"
+  code={`# Hine et al. (1989), Tabla I de Normand (1999): RD por ensayo.
+a <- c(2,4,6,7,7,11);  n1 <- c(39,44,107,103,110,154)   # muertes lidocaina
+c <- c(1,4,4,5,3,4);   n2 <- c(43,44,110,100,106,146)  # muertes control
+
+rd_k <- a/n1 - c/n2                        # RD de cada ensayo
+v_k  <- a*(n1-a)/n1^3 + c*(n2-c)/n2^3      # varianza del RD
+w    <- 1/v_k                              # peso inverso-varianza
+RD   <- sum(w*rd_k)/sum(w);  se <- sqrt(1/sum(w))
+
+cat(sprintf("RD combinado = %+.2f pp  IC95%% (%.2f, %.2f) pp\\n",
+            100*RD, 100*(RD-1.96*se), 100*(RD+1.96*se)))
+cat(sprintf("La lidocaina AUMENTA mortalidad: NNH = %.0f (IC %.0f a %.0f)\\n",
+            1/RD, 1/(RD+1.96*se), 1/(RD-1.96*se)))
+cat("Ningun ensayo solo era significativo; el acumulado si.\\n")`}
+/>
+
+<SasBlock code={`data hine;
+  input a n1 c n2;
+  rd = a/n1 - c/n2;
+  v  = a*(n1-a)/n1**3 + c*(n2-c)/n2**3;
+  w  = 1/v;
+  datalines;
+ 2  39 1  43
+ 4  44 4  44
+ 6 107 4 110
+ 7 103 5 100
+ 7 110 3 106
+11 154 4 146
+;
+proc sql;
+  select sum(w*rd)/sum(w)*100 as RD_pp format=8.2,
+         1/calculated RD_pp *100 as NNH format=8.0
+  from hine;
+quit;`} />
+
+<DecisionPanel
+  panelId="lidocaina"
+  arr={-0.0294}
+  arrLo={-0.0551}
+  arrHi={-0.0038}
+  eventLabel="muerte evitada"
+  title={<>¿Recomendar lidocaína? El umbral ni siquiera entra en juego</>}
+  note={<>La reducción absoluta es <em>negativa</em> con IC completo del lado
+  del daño (NNH ≈ 34): la lidocaína mata a ~3 de cada 100 tratados. Ningún
+  ajuste de costos puede rescatar una intervención dañina; el panel lo
+  muestra.</>}
+/>
+
+**Crítica, antes de firmar:**
+
+- El beneficio *antiarrítmico* era real: la lidocaína sí previene arritmias.
+  El desenlace que manda, la mortalidad, empeoró. ¿Qué dice eso sobre
+  elegir desenlaces sustitutos?
+- ¿Qué principio de Woodward explica que seis ensayos "no significativos"
+  produzcan una respuesta concluyente al combinarse?
+
+<DecisionCard
+  id="decision-05-lidocaina"
+  panelId="lidocaina"
+  title="Lidocaína profiláctica post-IAM"
+  options={[
+    'Mantener la recomendación de lidocaína profiláctica',
+    'Retirar la recomendación (NNH ≈ 34: daño neto)',
+    'Más evidencia: un ensayo grande antes de decidir',
+  ]}
+/>
+
+<ToolCard task="nnt" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: interpretación cuádruple">
+Toma una tabla 2×2 publicada y escribe la interpretación completa en el
+orden de Woodward: tamaño del efecto (<Term k="RR">RR</Term>/<Term k="OR">OR</Term> + <Term k="RD">RD</Term>), IC, valor p y NNT.
+Cierra con una frase sobre significancia vs. importancia práctica
+conectando con Wasserstein &amp; Lazar. La tarjeta de decisión del
+laboratorio (guardada en tu portafolio) hace parte de la entrega.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), caps. 3.5, 3.7**: riesgo atribuible, NNT, tablas 3.7–3.8 del valor p.
+- **Wasserstein &amp; Lazar (2016)**: la declaración de la ASA sobre valores p.
+- **Notas de clase (Salazar), clases 5–7**: χ² con/sin Yates, riesgo atribuible.

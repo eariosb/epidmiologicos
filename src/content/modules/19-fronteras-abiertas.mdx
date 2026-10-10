@@ -1,0 +1,236 @@
+---
+title: "Fronteras abiertas: avances, repositorios y referentes"
+slug: "19-fronteras-abiertas"
+objective: "Mapear hacia dónde va la epidemiología cuantitativa: métodos recientes verificados, repositorios de datos abiertos colombianos e internacionales, referentes de la disciplina y casos de brote activos para proyectos propios."
+order: 19
+datasets: []
+duration: 120
+prerequisites: ["Módulo 17: Síntesis", "Módulo 18: Herramientas"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ProcessSteps } from '@/components/ProcessSteps'
+
+## La idea central
+
+<Callout type="tip" title="El curso termina mirando el horizonte">
+Este módulo es un **mapa de
+navegación**: hacia dónde va la disciplina, dónde están los datos
+abiertos, quiénes empujan las fronteras y qué casos siguen abiertos en
+Colombia y el mundo.
+</Callout>
+
+## Avances recientes (verificados)
+
+**Modelado generativo de multimorbilidad.** Carvajal Rico et al.
+([*IEEE J Biomed Health Inform* 29(12):7668–7681, 2025](https://ieeexplore.ieee.org/document/11029576);
+[preprint arXiv](https://arxiv.org/abs/2409.13671)) combinan un
+Graph Variational Autoencoder con una GNN regularizada por Laplaciano
+y un *contextual bandit* que elige iterativamente el grafo de
+similitud entre pacientes que mejor predice condiciones crónicas
+concurrentes (cohorte n = 1 592). Conecta con el principio 3: la
+multimorbilidad es confusión estructural en estado puro, una estructura
+de dependencia entre condiciones que no se resuelve con ajuste simple.
+
+**Aprendizaje federado sin pérdida.** [COLA-GLM](https://doi.org/10.1038/s41746-025-01781-1)
+(npj *Digital Medicine* 8:442, 2025) ajusta GLMs en datos
+observacionales descentralizados con
+una **sola ronda** de intercambio de estadísticos agregados,
+produciendo resultados idénticos al análisis de datos agrupados
+(*one-shot, lossless*); su extensión usa cifrado homomórfico. Relevancia
+directa para Colombia, donde los datos están fragmentados entre EPS,
+hospitales y secretarías. La variante que maneja heterogeneidad entre
+sitios (COLA-GLM-H) apareció en *JAMIA* (2026).
+
+**Redes neuronales informadas por dominio.** [SEANN](https://doi.org/10.1371/journal.pone.0338400)
+(Guimbaud et al., *PLoS ONE* 20(12):e0338400, 2025) incorpora los
+*pooled effect sizes*
+de los meta-análisis publicados directamente en la función de pérdida
+de la red: el conocimiento acumulado entrena al modelo. Es la respuesta
+computacional al principio 5: la causalidad acumulativa hecha función
+objetivo.
+
+**Poisson a escala nacional.** Una implementación
+*divide-and-recombine* de regresión de Poisson
+([*Scientific Reports*, 2026](https://doi.org/10.1038/s41598-026-64788-y))
+con teoría asintótica formal estimó la carga de factores
+cardiovasculares en BRFSS (n = 2 398 073, 2015–2024) reduciendo la
+memoria de trabajo hasta 98% respecto al ajuste completo.
+
+**Agenda de la bioestadística.** El análisis cienciométrico de Yardibi,
+Chen, Aladag & Kose ([*J Eval Clin Pract* 31(6):e70257, 2025](https://doi.org/10.1111/jep.70257))
+confirma
+con 4 919 publicaciones que <Term k="ML">ML</Term>/DL están reconfigurando la estadística
+médica (con ensayos clínicos, supervivencia y modelado predictivo como
+temas centrales) y que privacidad, ética y educación biostatística son
+los cuellos de botella.
+
+**Cartografía bayesiana de mortalidad.** El modelo `perla`
+(Sottosanti et al., *Biostatistics*, 2025;
+[PubMed](https://pubmed.ncbi.nlm.nih.gov/41206482/) ·
+[preprint arXiv](https://arxiv.org/abs/2407.19135)) detecta clusters
+espaciales
+de mortalidad por *múltiples* causas simultáneas con priors de
+encogimiento global-local y MCMC en forma cerrada: Snow con inferencia
+bayesiana multivariante.
+
+## Repositorios de datos y código
+
+### Colombia
+
+| Repositorio | Contenido verificado | Acceso |
+| --- | --- | --- |
+| [ColOpenData](https://epiverse-trace.github.io/ColOpenData/) | Paquete R (CRAN, Epiverse-TRACE, U. de los Andes): datos del CNPV 2018 (DANE), clima IDEAM y geoespaciales; demográficos, no de salud directa | `install.packages("ColOpenData")` · [CRAN](https://cran.r-project.org/package=ColOpenData) · [visor TRACE-LAC](https://tracelac.uniandes.edu.co/colopendata/index.html) |
+| [ENDS 2025](https://www.minsalud.gov.co/salud/publica/epidemiologia/Paginas/encuesta-nacional-de-demografia-y-salud.aspx) | Encuesta Nacional de Demografía y Salud: 42 561 hogares, mujeres 13–49 / hombres 13–59; resultados desde abril 2025 | MinSalud / DANE (microdatos en certificación) |
+| [datos.gov.co](https://www.datos.gov.co) | Conjuntos del MSPS: morbilidad, mortalidad, aseguramiento | Portal Socrata del Estado |
+| [MeData](https://medata.gov.co) / [Datos Abiertos Bogotá](https://datosabiertos.bogota.gov.co) | Salud municipal: malnutrición, conducta suicida, urgencias | medata.gov.co / datosabiertos.bogota.gov.co |
+| [BES del INS](https://www.ins.gov.co) | Boletín epidemiológico semanal: cifras SIVIGILA por evento | ins.gov.co |
+| [Proyecto Doble Hélice (INS)](https://www.minciencias.gov.co/sala_de_prensa/colombia-da-un-paso-historico-hacia-la-medicina-precision-con-el-programa-genoma) | Repositorio genómico y epigenómico para salud pública de precisión; programa Genoma INSignia (MinCiencias + MSPS + INS, dic-2024) | ins.gov.co |
+
+### Internacionales
+
+| Repositorio | Contenido verificado | Fuente |
+| --- | --- | --- |
+| SEEDNet | Estimaciones de indicadores de salud a nivel de asentamiento en 60 países (incl. Colombia) para análisis de redes | [*Sci Data* 12:975 (2025)](https://doi.org/10.1038/s41597-025-05143-0); [Borealis Dataverse](https://borealisdata.ca/dataverse/SEEDNet) · [código](https://github.com/DiegoGBassani/SEEDNet) |
+| eKG (WHO DONs) | Grafo de conocimiento extraído con LLMs de los Disease Outbreak News de la OMS, actualizado a diario | [*Sci Data* (2025)](https://doi.org/10.1038/s41597-025-05276-2), [JRC europeo](https://publications.jrc.ec.europa.eu/repository/handle/JRC139580) |
+| Human Epidemic Database | 3 300+ eventos epidémicos, 170 patógenos, 237 países (subset 2015–2020 publicado) | [*Sci Data* (2025)](https://doi.org/10.1038/s41597-025-04663-z), [Ginkgo Biosecurity](https://github.com/concentricbyginkgo/human_epidemic_database_final) |
+| [disease.sh](https://disease.sh) | API REST de vigilancia global en tiempo real | vía paquete [`infectiousR`](https://cran.r-project.org/package=infectiousR) (CRAN) |
+
+### Código y comunidad
+
+| Recurso | Qué ofrece |
+| --- | --- |
+| [`EpiNow2`](https://epiforecasts.io/EpiNow2/) (epiforecasts) | Nowcasting y Rt en tiempo real vía Stan; referencia mundial en forecast epidemiológico |
+| [`infectiousR`](https://cran.r-project.org/package=infectiousR) | Acceso a disease.sh + datasets curados de dengue, Ebola, TB |
+| [The Epidemiologist R Handbook](https://epirhandbook.com) | Manual de R para epidemiólogos aplicados (Applied Epi, Neale Batra ed.): epirhandbook.com |
+| [Epiverse-TRACE](https://epiverse-trace.github.io/) | Ecosistema de herramientas R para análisis de brotes, con desarrollo fuerte en Uniandes |
+
+## Referentes de la disciplina
+
+| Referente | Afiliación | Qué aporta |
+| --- | --- | --- |
+| [John H. Holmes](https://ibi.med.upenn.edu/people/john-holmes-ph-d/) | U. Pennsylvania (Perelman/IBI) | Informática médica + epidemiología: fenotipado electrónico, computación evolutiva, vigilancia interoperable |
+| [Mauricio Santillana](https://www.mighte.org/) | Northeastern (MIGHTE) + Harvard Chan (adjunto) | Epidemiología digital: forecasting de brotes con búsquedas web, movilidad y redes; asesor de CDC y Casa Blanca |
+| [Shweta Bansal](https://www.bansallab.com/) | Georgetown (Biología) | Network epidemiology y ecología de enfermedades; herramienta [INoDS](https://bansallab.github.io/INoDS-model/) para inferir transmisión desde redes de contacto |
+| [Jonas S. Almeida](https://dceg.cancer.gov/about/staff-directory/almeida-jonas) | NIH/NCI | Data science y computación en la nube para epidemiología del cáncer |
+| [Venkata Duvvuri](https://lmp.utoronto.ca/faculty/venkata-duvvuri) | U. Toronto + Public Health Ontario | Epidemiología genómica y filodinámica; vigilancia de patógenos emergentes con IA |
+
+## Bibliografía de frontera
+
+- **Celentano, Szklo & Farag.** [*Gordis Epidemiology*, **7ª ed.**](https://shop.elsevier.com/books/gordis-epidemiology/celentano/978-0-323-87775-6),
+  Elsevier (2024): el texto de referencia actualizado, no la 6ª edición.
+- **Poorolajal, J.** [*Illustrated Epidemiology: A Visual Guide*](https://doi.org/10.1007/978-981-96-9566-9),
+  Springer Nature Singapore (2025): 23 conceptos en formato visual.
+- **Yepes López, W.** [*Epidemiología Aplicada: Métodos, Vigilancia y
+  Análisis para la Salud Pública*](https://doi.org/10.5281/zenodo.18078247),
+  Zenodo (2025): texto abierto en
+  español con enfoque latinoamericano, autor de la U. de Antioquia.
+- [Yardibi et al. (2025)](https://doi.org/10.1111/jep.70257), *J Eval Clin Pract*: agenda de la estadística médica.
+- [Consoli et al. (2025)](https://doi.org/10.1038/s41597-025-05276-2), *Sci Data*: eKG de brotes OMS.
+- [Darooneh et al. (2025)](https://doi.org/10.1038/s41597-025-05143-0), *Sci Data*: SEEDNet.
+
+## Casos abiertos
+
+### Colombia
+
+| Caso | Estado verificado | Módulos que conecta |
+| --- | --- | --- |
+| Fiebre amarilla (Tolima) | 132 casos a 18-sep-2025 (EID); 141 casos / 57 muertes acumulados a dic-2025 (Circular 045 MinSalud); letalidad ≈ 40%; Tolima concentra ~86% ([BES del INS](https://www.ins.gov.co)) | 3, 10, 12 |
+| Oropouche (frontera Darién) | Panamá: 501 casos a SE-29/2025, Darién 265; Colombia: 26 casos ([OPS](https://www.paho.org/es/alertas-epidemiologicas)); modelo serológico multinacional predice zonas de riesgo | 2, 8, 15 |
+| Encefalitis equina venezolana | 3 casos en Tabatinga-AM (Brasil), julio 2025; primera detección en residentes de la triple frontera (Front Fever/[Fiocruz](https://portal.fiocruz.br/en)) | 1, 9 · One Health |
+| Rabia humana (Jericó, Antioquia) | Mujer de 24 años, marzo 2025; exposición a tigrillo; linaje murciélago; primer caso en Antioquia en ~29 años ([INS BES SE-39](https://www.ins.gov.co)) | 1, 13 |
+| Chagas agudo | 18 casos en 2024 ([INS](https://www.ins.gov.co)), mitad por vía vectorial, mitad oral; vigilancia SIVIGILA activa | 3, 13 |
+| Dengue | Circulación multiserotipo permanente; brotes regionales reportados en los [BES semanales](https://www.ins.gov.co) del INS | 3, 8 |
+
+### Globales
+
+| Caso | Estado verificado | Lección |
+| --- | --- | --- |
+| Marburg (Etiopía) | Declarado 14-nov-2025 en Jinka; **cerrado** 26-ene-2026: 19 casos (14 confirmados + 5 probables), 14 muertes ([WHO DON 585](https://www.who.int/emergencies/disease-outbreak-news/item/2025-DON585)) | El ciclo completo de un brote: detección → rastreo de 857 contactos → cierre tras 42 días sin casos |
+| Melioidosis (Madagascar) | Seroencuesta en 5 736 muestras, 6 regiones: exposición silenciosa a *B. pseudomallei* ([PLOS NTDs 2025](https://doi.org/10.1371/journal.pntd.0013419)) | Serovigilancia como estimador de exposición poblacional |
+| HED / eKG | Bases globales de eventos epidémicos ya publicadas ([HED](https://github.com/concentricbyginkgo/human_epidemic_database_final) · [eKG](https://doi.org/10.1038/s41597-025-05276-2)) | Los datos de vigilancia del mundo ya son analizables |
+
+
+<ProcessSteps
+  title="Uso como módulo de cierre"
+  steps={[
+    { title: 'Sesión 1: Avances', description: 'discusión de 2–3 papers: SEANN (conocimiento acumulado como prior), COLA-GLM (federado lossless), Poisson escalable.' },
+    { title: 'Sesión 2: Datos', description: 'taller: descargar un dataset de ColOpenData o la ENDS 2025 y hacer un análisis exploratorio reproducible.' },
+    { title: 'Sesión 3: Casos abiertos', description: 'cada estudiante elige un caso de la tabla y propone el diseño de estudio que lo aborda (principio 2).' },
+    { title: 'Sesión 4: Referentes', description: 'cada estudiante construye su grafo de referentes y su plan de lectura post-curso.' },
+  ]}
+/>
+
+<Quiz
+  question="COLA-GLM permite ajustar regresiones sobre datos de varios hospitales sin compartir registros individuales. ¿Qué lo hace epidemiológicamente valioso para Colombia?"
+  options={[
+    "Es más rápido que glm() en un solo computador",
+    "La salud colombiana está fragmentada entre EPS y hospitales que no pueden compartir datos individuales: un algoritmo one-shot lossless permite análisis multi-sitio preservando privacidad y sin iteraciones",
+    "Permite usar más variables que un GLM normal",
+    "Corrige la confusión automáticamente"
+  ]}
+  correctIndex={1}
+  explanation="La barrera real no es computacional sino institucional: privacidad y heterogeneidad entre sitios. COLA-GLM responde exactamente a eso, pero nótese que el estimando sigue siendo el mismo que el de un GLM agrupado: la herramienta habilita el diseño, no lo reemplaza (principio 2)."
+/>
+
+<LabExercise
+  id="lab-18-frontera"
+  title="Laboratorio: tu primer análisis con datos abiertos colombianos"
+  code={`# Con ColOpenData (https://epiverse-trace.github.io/ColOpenData/):
+# install.packages("ColOpenData")   # no disponible en WebR: local
+# library(ColOpenData)
+# poblacion <- download_demographic("DANE_CNPVV_2018_MPL")
+# head(poblacion)
+# Alternativa sin paquete: cualquier CSV de datos.gov.co
+# Describe: ¿qué estimando epidemiológico permite este dataset
+# y cuál NO permite? (principio 2 aplicado a datos abiertos)`}
+  tasks={[
+    "Elige un dataset colombiano (ColOpenData, datos.gov.co, BES del INS) y descárgalo.",
+    "Documenta: fuente, fecha de corte, cobertura, variables, qué estimando permite y cuál no.",
+    "Conecta el dataset con un caso abierto de la tabla de casos abiertos: propone la pregunta y el diseño.",
+  ]}
+  hint="La trampa típica: un dataset administrativo permite tasas ecológicas, no asociaciones individuales; anótalo explícitamente."
+  solution="Un buen entregable dice: 'con estos datos puedo estimar X (tasa por municipio), no puedo estimar Y (riesgo individual), porque la unidad de análisis es Z'. Eso es el principio 2 en su versión de datos abiertos."
+/>
+
+<SasBlock code={`/* SAS no instala paquetes: PROC HTTP trae el CSV publico
+   de datos.gov.co y PROC IMPORT lo lee */
+filename csv temp;
+proc http
+  url="https://www.datos.gov.co/resource/<dataset>.csv?$limit=5000"
+  method="GET" out=csv;
+run;
+proc import datafile=csv out=dane dbms=csv replace;
+  getnames=yes;
+run;
+proc contents data=dane; run;   /* que estimando permite? */
+proc freq data=dane; run;        /* exploracion inicial */`} />
+
+## Producto del módulo
+
+**Propuesta de estudio de frontera** (puede reemplazar al meta-análisis
+del módulo 17): elegir un caso abierto, un repositorio de datos y un método
+reciente, y producir un protocolo de una página: pregunta, diseño,
+estimando, fuente de datos, análisis propuesto, limitaciones.
+
+## Lecturas
+
+- Normand (1999) para el cierre metodológico; [Yardibi et al. (2025)](https://doi.org/10.1111/jep.70257)
+  para la agenda.
+- [Guimbaud et al. (2025)](https://doi.org/10.1371/journal.pone.0338400), SEANN;
+  [Carvajal Rico et al. (2025)](https://arxiv.org/abs/2409.13671),
+  multimorbilidad con GVAE.
+- Documentación: [`EpiNow2`](https://epiforecasts.io/EpiNow2/),
+  [`ColOpenData`](https://epiverse-trace.github.io/ColOpenData/),
+  [*The Epidemiologist R Handbook*](https://epirhandbook.com).
+- [Yepes López (2025)](https://doi.org/10.5281/zenodo.18078247), *Epidemiología Aplicada*: el texto latinoamericano
+  abierto.
+
+<Callout type="success" title="El curso completo, en una frase">
+De la bomba de Broad Street al federado lossless: la epidemiología sigue
+siendo la misma disciplina, contar, comparar, controlar la confusión y
+acumular evidencia. Las herramientas cambian; los principios, no.
+</Callout>

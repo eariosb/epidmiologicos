@@ -38,6 +38,8 @@ export interface RCellProps {
   title?: string;
   /** Initial / default R code shown in the editor. */
   code: string;
+  /** Render the editor expanded on load. Default false: theory first, code on demand. */
+  defaultOpen?: boolean;
 }
 
 /**
@@ -96,8 +98,16 @@ export interface ProcessStepsProps {
   title?: string;
 }
 
+export interface DataTableVariable {
+  name: string;
+  type: string;
+  description: string;
+}
+
 export interface DataTableProps {
-  caption?: string;
-  columns: string[];
-  rows: (string | number)[][];
+  title: string;
+  description: string;
+  variables: DataTableVariable[];
+  source: string;
+  license?: string;
 }

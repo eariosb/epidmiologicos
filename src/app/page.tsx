@@ -11,17 +11,17 @@ export default function HomePage() {
           Universidad Nacional de Colombia · Sede Medellín
         </p>
         <h1 className="mt-2 text-4xl font-bold leading-tight text-ink-900">
-          Procesos Estocásticos, con una introducción a las EDE
+          Análisis Estadístico de Datos Epidemiológicos
         </h1>
         <p className="mt-3 text-lg text-ink-600">
-          Del azar que evoluciona en el tiempo a las ecuaciones diferenciales estocásticas:
-          cadenas de Markov, procesos estacionarios y gaussianos, movimiento browniano, la
-          integral de Itô, el proceso de Poisson y las difusiones, con simulación en R en
-          cada paso.
+          Ccinco bloques: desde la tabla 2×2 al meta-análisis,
+          más un módulo transversal de herramientas (R, SAS y Python) y un breve 
+          repaso por algunos proyectos y conceptos interesantes de estudi 
+          actualmente en epidemiología.
         </p>
         <blockquote className="mt-5 border-l-4 border-accent-400 pl-4 text-ink-700 italic">
-          &ldquo;Un proceso estocástico no es una distribución: es una familia de ellas
-          indexada por el tiempo.&rdquo;
+          &ldquo;Somos propensos a sobrestimar lo que entendemos del mundo y a 
+          subestimar el papel del azar en los acontecimientos.&rdquo;  Daniel Kahneman, <em>Epidemiology</em> (2014)
         </blockquote>
       </header>
 

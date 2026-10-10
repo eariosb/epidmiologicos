@@ -1,0 +1,198 @@
+---
+title: "Diseño de casos y controles: sesgos y selección"
+slug: "14-casos-controles-sesgos"
+objective: "Diseñar un estudio de casos y controles reconociendo que solo el OR es estimable, y evaluar los sesgos propios del diseño: Berkson, Neyman y recuerdo."
+order: 14
+datasets: []
+duration: 80
+prerequisites: ["Módulo 4: Medidas de asociación", "Módulo 7: Confusión"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { BerksonExplorer } from '@/components/EpiSims'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+
+<Callout type="tip" title="Muestrear por el desenlace invierte la lógica; el precio es el riesgo">
+El estudio de <Term k="CCC">casos y controles</Term> invierte la lógica de
+la cohorte: en vez de seguir expuestos hacia la enfermedad, se eligen casos
+(enfermos) y controles (sanos) y se mira **hacia atrás** su exposición.
+Es el diseño de las enfermedades raras, pero los denominadores son
+ficticios, así que solo el <Term k="OR">OR</Term> es estimable.
+
+$$
+\widehat{OR} = \frac{a\,d}{b\,c}
+\quad \xrightarrow{\text{enfermedad rara}} \quad RR
+$$
+</Callout>
+
+## La selección de los controles
+
+La validez del diseño vive en una pregunta: **¿los controles representan a
+la población que produjo los casos?** Si los casos vienen de un hospital y
+los controles también, la exposición del control típico no es la de la
+población, sino la de alguien que *llegó al hospital*. Ahí nacen los
+sesgos propios del diseño:
+
+- **<Term k="Berkson">Berkson</Term>**: controles hospitalarios que
+  sobrerrepresentan enfermedad asociada con la exposición; el OR se
+  atenúa o se invierte. El explorador siguiente lo simula.
+- **<Term k="Neyman">Neyman</Term>** (sesgo prevalencia-incidencia): los
+  casos prevalentes son los sobrevivientes, así que mezclan la exposición
+  con lo que predice sobrevivir.
+- **<Term k="Recall">Recuerdo</Term>**: los casos reconstruyen la
+  exposición con más detalle que los controles; las madres de niños
+  enfermos recuerdan cada medicamento del embarazo.
+
+<BerksonExplorer title={<>Sesgo de Berkson: dos caminos al hospital crean una asociación fantasma</>} />
+
+## Los casos canónicos
+
+- **Legionella (Reading 1984)**: el estudio de brote clásico, con casos
+  del brote contra controles de la comunidad; la fuente de controles
+  define si el OR apunta al sistema de agua o al azar.
+- **Melanoma (Autier 1996)**: controles de vecindario; el problema de la
+  exposición "tener acceso a dermatoscopio" como confusor de detección.
+- **Hip fracture (Moritz 1997)**: controles comunitarios contra
+  hospitalarios; la Tabla 6.6 de Woodward muestra OR distintos según la
+  fuente de controles.
+- **Sackett (1979)**: el catálogo de sesgos; el ejemplo del curso con
+  n = 2784 muestra que cambiar la fuente de controles cambia la
+  conclusión.
+
+<Callout type="warning" title="La regla de oro de la selección">
+Los controles deben ser personas que, de haber enfermado, habrían sido
+elegibles como casos del estudio. Si tu caso es un paciente del Hospital
+San Vicente, tu control debe ser alguien que *iría* a San Vicente si se
+enfermara, no cualquier sano conveniente.
+</Callout>
+
+## Doll y Hill (1948): el caso-control fundacional, con datos
+
+El primer estudio de casos y controles moderno entrevistó a **709
+pacientes con cáncer de pulmón** en 20 hospitales de Londres y a un
+control por caso, pareado por sexo, grupo etario quinquenal, hospital y
+fecha. La Tabla 1.1 original es un caso-control con **gradiente de
+exposición**, así que permite dos preguntas, no una: ¿los casos fuman
+más? y ¿más consumo, más odds?
+
+<RCell
+  id="14/doll-hill-1948"
+  title="OR por nivel de consumo contra nunca fumadores (Doll & Hill 1948, hombres)"
+  code={`# Doll & Hill (1948), Tabla 1.1 — hombres.
+# Cigarrillos/dia equivalentes, casos vs controles:
+nivel  <- c("nunca", "1-4", "5-14", "15-24", "25-49", "50+")
+casos  <- c(2, 33, 250, 196, 136, 32)
+ctrl   <- c(27, 55, 293, 190, 71, 13)
+
+# OR de cada nivel contra la referencia 'nunca':
+or <- (casos * ctrl[1]) / (ctrl * casos[1])
+tab <- data.frame(nivel, casos, ctrl, OR = round(or, 1))
+print(tab)
+
+# Esperado: 8.1, 11.5, 13.9, 25.9, 33.2 — gradiente monotono.
+# Alguna vez fumo (todos los niveles) vs nunca:
+cat("\\nOR fumador vs nunca:",
+    round(sum(casos[-1]) * ctrl[1] / (sum(ctrl[-1]) * casos[0+1]), 1), "\\n")
+
+# Mujeres (misma tabla): los tramos altos tienen ceros —
+# el OR no existe sin correccion; motivo del modulo 6.
+casos_m <- c(19, 7, 19, 9, 6, 0); ctrl_m <- c(32, 12, 10, 6, 0, 0)
+cat("Celdas cero en mujeres:", sum(casos_m == 0 | ctrl_m == 0), "\\n")`}
+/>
+
+El gradiente que sale de la tabla (8 → 33 según consumo) es la primera
+demostración empírica de **dosis-respuesta** en un caso-control, el
+criterio de Bradford Hill que más pesa cuando la asociación es nueva.
+
+<Callout type="warning" title="El sesgo de Berkson que atenuó el efecto real">
+Los controles de 1948 eran pacientes hospitalizados por *otras*
+enfermedades. Retrospectivamente se sabe que varias de esas enfermedades
+también se asocian al tabaco, así que los controles estaban
+**sobreexpuestos** al factor en estudio. El efecto neto fue el opuesto
+al del sesgo típico: el OR publicado **subestimó** la asociación real.
+Lección: el sesgo de selección no tiene dirección garantizada; puede
+esconder un efecto tan bien como puede inventarlo.
+</Callout>
+
+Doll y Hill respondieron explícitamente cuatro preguntas metodológicas
+que sirven como plantilla de auditoría para cualquier caso-control:
+
+1. ¿Casos y controles son comparables salvo en la exposición?
+2. ¿Difieren en algo más que el estado de enfermedad y el hábito?
+3. ¿Los datos se recolectaron de forma estandarizada en ambos grupos?
+4. ¿La diferencia encontrada es suficientemente grande para ser real?
+
+Una variante moderna que conviene nombrar: el **caso-control anidado**
+(y el muestreo por densidad de incidencia) toma los controles de las
+personas-tiempo de la cohorte misma; con ese muestreo, el OR estima la
+*razón de tasas*, no solo los odds — cierre del círculo con el módulo
+13.
+
+<LabExercise
+  id="lab-13-cc"
+  title="Laboratorio: diseñar el estudio antes de analizarlo"
+  code={`# Escenario: asociacion entre consumo de cafe y cancer de pancreas.
+# Diseña el caso-control: define casos, fuente de controles,
+# y anticipa el sesgo principal. Luego verifica la aritmetica:
+
+# Casos: 216 con cancer de pancreas; controles: 216 del hospital
+# vs 216 de la comunidad. Exposicion = cafe alto.
+hospital  <- matrix(c(120, 96, 80, 136), ncol = 2)   # controles hosp
+comunidad <- matrix(c(120, 96, 60, 156), ncol = 2)   # controles comunidad
+or <- function(t) t[1,1]*t[2,2]/(t[1,2]*t[2,1])
+cat("OR con controles hospitalarios:", round(or(hospital), 2), "\\n")
+cat("OR con controles comunitarios :", round(or(comunidad), 2), "\\n")
+# La misma exposicion, dos OR distintos: la diferencia es el diseno.`}
+  tasks={[
+    "¿Qué fuente de controles da el OR más creíble y por qué?",
+    "¿Qué sesgo podría inflar el OR hospitalario si el café se asocia con otras enfermedades que hospitalizan?",
+    "Escribe una regla de una línea para elegir controles en tu propio estudio.",
+  ]}
+  hint="Piensa en Berkson: si la exposición también causa hospitalización por otras causas, los controles hospitalarios la sobrerrepresentan."
+  solution="El control comunitario aproxima la población que produjo los casos; el hospitalario introduce morbilidad competidora. Regla: 'el control es quien habría sido caso si enfermara'."
+/>
+
+<SasBlock code={`data hosp; input caso $ cafe $ n; datalines;
+si si 120  si no 80  no si 96  no no 136 ;
+data com;  input caso $ cafe $ n; datalines;
+si si 120  si no 60  no si 96  no no 156 ;
+proc freq data=hosp order=data; weight n;
+  tables caso*cafe / measures;  /* OR con controles de hospital */
+run;
+proc freq data=com order=data; weight n;
+  tables caso*cafe / measures;  /* OR con controles comunitarios */
+run;
+/* Misma exposicion, dos OR: la fuente de controles ES el diseno */`} />
+
+<Quiz
+  question="En un caso-control de infarto y café, los controles se toman del mismo hospital (pacientes de otras salas). El OR sale 0.7: 'el café protege'. ¿Cuál es la explicación más parsimoniosa?"
+  options={[
+    "El café realmente protege contra el infarto",
+    "Sesgo de Berkson: el café se asocia con enfermedades que hospitalizan (gastrointestinales, ansiedad), así que los controles hospitalarios beben más café que la población",
+    "Error de medición del café",
+    "El OR siempre es < 1 en casos-controles"
+  ]}
+  correctIndex={1}
+  explanation="Es el escenario del explorador: exposición y enfermedad hospitalizan por separado; entre hospitalizados quedan sobrerrepresentados los expuestos sin la enfermedad, así que el OR baja artificialmente. La selección del control es la inferencia."
+/>
+
+<ToolCard task="cc" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: guía de una página">
+"Guía de selección de controles": una página con la regla de oro, los tres
+sesgos con un ejemplo cada uno (uno puede ser el Berkson atenuante de Doll
+y Hill), y la lista de chequeo de las cuatro preguntas metodológicas para
+auditar la fuente de controles de cualquier paper.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), cap. 6.1–6.4**: diseño retrospectivo y selección de controles.
+- **Sackett (1979)**: *Bias in analytic research*, el catálogo de sesgos.
+- **Notas de clase (Salazar), clases 20–21**: Legionella, hip fracture.

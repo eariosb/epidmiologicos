@@ -1,0 +1,262 @@
+---
+title: "Síntesis: causalidad acumulativa, UQ y decisiones informadas"
+slug: "17-sintesis-metaanalisis-uq"
+objective: "Integrar el curso completo: meta-análisis como formalización de la causalidad acumulativa, cuantificación de la incertidumbre con métodos agnósticos y conforme, y el cierre con decisiones informadas."
+order: 17
+datasets: []
+duration: 95
+prerequisites: ["Módulo 16: Regresión", "Módulo 10: Interacción"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { MetaExplorer } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+
+<Callout type="tip" title="La causalidad se acumula, la incertidumbre se cuantifica, la decisión se informa">
+El principio 5 de Woodward cierra el curso: ningún estudio decide la
+causalidad por sí solo, la evidencia se acumula. El meta-análisis es esa
+acumulación hecha estadística; la <Term k="UQ">cuantificación de la
+incertidumbre</Term> es la honestidad sobre cuánto sabemos; y la decisión
+informada es para qué existe todo lo demás.
+</Callout>
+
+## Meta-análisis
+
+El <Term k="metaanalisis">meta-análisis</Term> pondera los estudios por
+su precisión. El tutorial de Normand (1999) usa los seis ensayos de
+lidocaína profiláctica post-IAM reunidos por Hine et al. (1989): ninguno
+es concluyente solo, pero combinados revelan que el beneficio
+antiarrítmico **no** se traduce en menor mortalidad: en la escala de
+riesgos, la lidocaína mata a ~3 de cada 100 tratados (<Term k="RD">RD</Term> ≈ +2.94 pp,
+IC95% 0.4–5.5; el <Term k="RR">RR</Term> combinado es ≈ 1.7).
+
+$$
+\hat\theta_{FE} = \frac{\sum_k w_k \hat\theta_k}{\sum_k w_k},
+\quad w_k = 1/v_k;
+\qquad
+I^2 = \frac{Q - (k-1)}{Q}
+$$
+
+- **Efecto fijo**: los estudios estiman un único θ común.
+- **Efectos aleatorios** (DerSimonian–Laird): cada estudio estima su
+  propio θ_k distribuido con varianza τ²; la heterogeneidad <Term k="I2">I²</Term>
+  mide qué fracción de la variación es real frente a ruido.
+
+<MetaExplorer title={<>Lidocaína post-IAM: seis estudios inconclusos, una respuesta</>} />
+
+<Callout type="note" title="El funnel plot y el sesgo de publicación">
+El meta-análisis supone que se observan todos los estudios, pero los no
+significativos tienden a no publicarse. El funnel plot (precisión frente
+a estimación) lo detecta: simetría en embudo si no hay sesgo, y un hueco
+en la esquina de los estudios pequeños negativos si hubo archivo en el
+cajón.
+</Callout>
+
+## Incertidumbre cuantificada, no escondida
+
+La literatura moderna (<Term k="izbicki-uq">Izbicki 2024</Term>) formaliza
+lo que Woodward predica: **una estimación sin su incertidumbre es medio
+dato**. Dos piezas:
+
+- **Aleatoria vs. epistémica**: la primera es el azar irreducible del
+  fenómeno; la segunda se reduce con más datos o mejor modelo. El IC95%
+  mezcla ambas; la predicción conforme las separa.
+- **<Term k="CP">Predicción conforme</Term>**: construye intervalos con
+  cobertura garantizada $1-\alpha$ **sin suponer la distribución**; basta
+  con datos intercambiables. En vigilancia epidemiológica (nowcasting de
+  dengue, <Term k="SINAN">SINAN</Term>), es la alternativa honesta al
+  score puntual.
+
+<RCell
+  id="17/conforme"
+  title="Cobertura conforme en 20 líneas"
+  code={`# Prediccion conforme (split): intervalos con cobertura garantizada.
+set.seed(11)
+n <- 400; x <- runif(n, 40, 75)             # edad
+y <- 0.02*x + rnorm(n, 0, 0.08)             # tasa basal de un evento
+tr <- 1:300; te <- 301:400
+
+fit <- lm(y ~ x, subset = tr)
+resid <- abs(y[tr] - predict(fit))          # scores de no-conformidad
+q  <- quantile(resid, 0.9)                  # cuantil 90% del error
+pred <- predict(fit, newdata = data.frame(x = x[te]))
+lo <- pred - q; hi <- pred + q
+cob <- mean(y[te] >= lo & y[te] <= hi)
+cat(sprintf("cobertura conforme empirica: %.1f%% (objetivo 90%%)\\n", 100*cob))
+
+# El intervalo clasico de lm asume normalidad; el conforme no.`}
+/>
+
+<SasBlock code={`data cp;
+  call streaminit(11);
+  do i = 1 to 400;
+    x = 40 + 35*rand('uniform');
+    y = 0.02*x + 0.08*rand('normal');
+    tr = (i <= 300);
+    output;
+  end;
+run;
+/* 1) ajuste en calibracion, |residuo| = score de no-conformidad */
+proc reg data=cp noprint;
+  where tr = 1;
+  model y = x;
+  output out=cal p=p r=r;
+run; quit;
+/* 2) cuantil 90% del error absoluto */
+data cal; set cal; absr = abs(r); run;
+proc univariate data=cal noprint;
+  var absr; output out=q p90=q90;
+run;
+/* 3) predecir test y aplicar +/- q90 (PROC SCORE con OUTEST) */
+proc reg data=cp noprint outest=est;
+  where tr = 1; model y = x;
+run; quit;
+proc score data=cp(where=(tr=0)) score=est out=pred type=parms predict;
+  var x;
+run;
+/* cobertura = mean(y dentro de pred +/- q90) */`} />
+
+## UQ en acción (el caso Izbicki)
+
+El capítulo 8 de Izbicki muestra el pipeline completo en COVID-19:
+predicción más incertidumbre, y luego la decisión. Con cuantificación
+honesta, una intervención con 60% de reducción estimada se traduce en
+**18 000 hospitalizaciones evitadas, 8 100 vidas salvadas y US$220
+millones ahorrados**: números con sus bandas, no puntos. Es el curso
+entero en un ejemplo: medir (módulo 3), comparar (4–6), descartar
+confusión (7–10), respetar el diseño (11–15), modelar (16), y reportar
+con la incertidumbre que la decisión necesita.
+
+<Callout type="tip" title="La ética de la incertidumbre">
+Reportar "el modelo predice riesgo 0.3" sin intervalo es el equivalente
+moderno de observar sin intervenir: se decide sobre personas sin decir
+qué tan seguro está el dato. El curso empezó con Tuskegee y termina con
+honestidad estadística; son el mismo principio.
+</Callout>
+
+<Quiz
+  question="En el meta-análisis de lidocaína (Hine 1989/Normand 1999), cada estudio individual es no concluyente pero el combinado muestra exceso de mortalidad (RD ≈ +2.94 pp, IC95% 0.4–5.5). ¿Qué principio del curso ejemplifica?"
+  options={[
+    "Principio 3: la confusión se acumula entre estudios",
+    "Principio 5: la causalidad es acumulativa; ningún estudio solo decide, pero la síntesis ponderada sí informa",
+    "Principio 2: el diseño determina lo estimable",
+    "Ninguno: meta-análisis es solo promediar"
+  ]}
+  correctIndex={1}
+  explanation="El meta-análisis es la formalización estadística de 'la causalidad se acumula': seis estudios débiles combinados producen evidencia que ninguno tenía. Bradford Hill en forma de forest plot."
+/>
+
+<Flashcard
+  title="Síntesis en cuatro tarjetas"
+  items={[
+    { front: "Fijo vs. aleatorio", back: "Fijo: un θ común, pesos 1/v. Aleatorio: θ_k distribuidos, pesos 1/(v+τ²), I² mide heterogeneidad real." },
+    { front: "Funnel plot", back: "Precisión vs. estimación: asimetría sugiere sesgo de publicación (los negativos chicos faltan)." },
+    { front: "UQ", back: "Aleatoria (irreducible) vs. epistémica (reductible). Conforme: cobertura 1−α garantizada sin distribución supuesta." },
+    { front: "Los 5 principios", back: "Comparar · el diseño decide · la confusión es el enemigo · estimar antes que p · la causalidad acumula." },
+  ]}
+/>
+
+<LabExercise
+  id="lab-16-meta"
+  title="Laboratorio final: tu propio meta-análisis"
+  code={`# Datos reales: Hine et al. (1989), Tabla I de Normand (1999)
+# ai/ci = muertes lido/control; n1i/n2i = pacientes lido/control
+a <- c(2,4,6,7,7,11); n1 <- c(39,44,107,103,110,154)
+c <- c(1,4,4,5,3,4);  n2 <- c(43,44,110,100,106,146)
+logrr <- log((a/n1) / (c/n2))
+se    <- sqrt(1/a - 1/n1 + 1/c - 1/n2)
+w <- 1/se^2
+theta <- sum(w * logrr) / sum(w)
+cat(sprintf("RR fijo = %.2f (%.2f-%.2f)\\n",
+            exp(theta), exp(theta - 1.96/sqrt(sum(w))),
+            exp(theta + 1.96/sqrt(sum(w)))))
+Q <- sum(w * (logrr - theta)^2)
+cat(sprintf("Q = %.2f con %d gl; I^2 = %.0f%%\\n",
+            Q, length(a)-1, max(0, 100*(Q-(length(a)-1))/Q)))
+# Tu turno: calcula el combinado en la escala RD como hizo Normand.`}
+  tasks={[
+    "El código ya calcula Q e I²: ¿qué dice la heterogeneidad de estos ensayos?",
+    "Replica el análisis en la escala RD (yi = a/n1 − c/n2) y compara con el +2.94 pp de Normand.",
+    "Escribe el párrafo de reporte clínico: ¿recomendarías lidocaína profiláctica?",
+  ]}
+  hint="tau² = max(0, (Q − (k−1))/C) con C = Σw − Σw²/Σw; luego repite la ponderación con 1/(v+τ²)."
+  solution="Q ≈ 0.86 con 5 gl, así que I² = 0%: heterogeneidad nula; el modelo de efectos aleatorios coincide con el fijo (tau² = 0). En la escala RD el combinado es +2.94 pp (0.4–5.5), igual que la Tabla VII de Normand."
+/>
+
+<SasBlock code={`/* Hine et al. (1989): RD por estudio, varianza y peso inverso */
+data hine;
+  length estudio $8;
+  input estudio $ a n1 c n2;
+  rd = a/n1 - c/n2;
+  v  = a*(n1-a)/n1**3 + c*(n2-c)/n2**3;
+  w  = 1/v;
+  datalines;
+Chopra    2  39 1  43
+Mogensen  4  44 4  44
+Pitt      6 107 4 110
+Darby     7 103 5 100
+Bennett   7 110 3 106
+OBrien   11 154 4 146
+;
+/* Efecto fijo inverso-varianza + Q de Cochran: */
+proc sql;
+  select sum(w*rd)/sum(w) as RD_FE format=8.4,
+         calculated RD_FE - 1.96/sqrt(sum(w)) as lo format=8.4,
+         calculated RD_FE + 1.96/sqrt(sum(w)) as hi format=8.4,
+         sum(w*(rd - calculated RD_FE)**2) as Q format=8.2
+  from hine;
+quit;
+/* Efectos aleatorios (DerSimonian-Laird aprox): PROC MIXED */
+proc mixed data=hine method=reml cl;
+  model rd = / solution cl;
+  weight w;
+run;`} />
+
+<ToolCard task="meta" />
+
+<Callout type="note" title="El assurance cierra el ciclo del diseño">
+El módulo 5 introdujo la garantía de precisión P(L ≤ L₀) ≥ 1 − β
+condicionada a una p anticipada; el módulo 6 hizo lo mismo con la
+potencia. La síntesis final es elegir el punto de apoyo: p₀ puede salir
+de una elicitación de expertos o, mejor, de un meta-análisis de
+estudios previos, cuya incertidumbre entra al cálculo como una prior
+Beta(a, b). Con pesos beta-binomiales sobre x, la garantía deja de
+depender de una única suposición y se convierte en assurance
+(O'Hagan 2005): el promedio de la probabilidad de éxito sobre lo que
+creemos saber. Es la aplicación más honesta del principio 5 de
+Woodward: la evidencia previa no solo estima, también dimensiona.
+</Callout>
+
+## Proyecto final
+
+<Callout type="note" title="Entrega: proyecto integrador">
+Elige uno: (a) meta-análisis breve de un dataset publicado con forest
+plot, I² y decisión clínica; (b) análisis UQ con intervalos conformes
+sobre una serie epidemiológica real (ej. SINAN). En ambos: reporta
+estimación + incertidumbre + decisión, citando al menos un principio de
+Woodward por sección.
+</Callout>
+
+## Cierre del curso
+
+El curso es una escalera que sube el mismo escalón, módulo a módulo:
+
+1. **Módulos 1–6**: la epidemiología compara, mide con denominadores honestos, y calibra su inferencia cuando los conteos son bajos.
+2. **Módulos 7–10**: la confusión es el enemigo: estratificar, estandarizar, describir la interacción.
+3. **Módulos 11–13**: el tiempo enriquece la comparación: censura, Kaplan–Meier, persona-tiempo.
+4. **Módulos 14–15**: el diseño puede muestrear al revés, al precio del <Term k="OR">OR</Term>.
+5. **Módulos 16–17**: los modelos resumen todo, y la incertidumbre se cuantifica, no se esconde.
+
+## Lecturas
+
+- **Normand (1999)**: meta-análisis en la práctica clínica (lidocaína).
+- **Coscrato, Izbicki &amp; Stern (2018)**: pruebas agnósticas.
+- **<Term k="izbicki-uq">Izbicki (2024)</Term>**, cap. 8: UQ aplicada a decisiones de salud.
+- **<Term k="Tukey">Tukey (1962)</Term>**, *The Future of Data Analysis*: la nota filosófica de cierre.
+- **Wasserstein &amp; Lazar (2016)**: la declaración de la ASA; vuelve al principio 4.

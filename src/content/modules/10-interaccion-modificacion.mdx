@@ -1,0 +1,157 @@
+---
+title: "Interacción, modificación de efecto y paradoja de Simpson"
+slug: "10-interaccion-modificacion"
+objective: "Distinguir confusión de interacción, clasificar la interacción en sinergismo/antagonismo/unilateralismo, y evaluarla con el test de Breslow–Day en las escalas aditiva y multiplicativa."
+order: 10
+datasets: []
+duration: 90
+prerequisites: ["Módulo 8: Estratificación"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { InteractionExplorer } from '@/components/EpiSims'
+import { RCell } from '@/components/RCell'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+
+<Callout type="tip" title="La interacción no es un sesgo, es un hallazgo">
+Confusión: el agregado miente y hay que corregirlo. Interacción: los
+estratos difieren *de verdad* y hay que describirlo. La modificación de
+efecto dice que el efecto de $E$ sobre $D$ **cambia según el nivel de otro
+factor**; no se corrige, se reporta por estrato.
+</Callout>
+
+## Los tres tipos de interacción (Woodward, Fig. 4.7)
+
+- **Sinergismo**: mismo signo y magnitud amplificada; el efecto conjunto
+  supera lo que cada factor haría solo.
+- **Antagonismo**: el efecto cambia de signo entre estratos. El ejemplo
+  canónico del <Term k="SHHS">SHHS</Term> (Ejemplo 4.13): el <Term k="RR">RR</Term> de tabaquismo para CHD es
+  **2.40** en personas sin infarto previo pero **0.64** en quienes ya lo
+  tuvieron (los infartados que sobrevivieron forman un grupo seleccionado
+  resistente, o cambiaron de hábito).
+- **Unilateralismo**: el efecto existe solo en presencia del segundo
+  factor: RR distinto de 1 en un estrato, exactamente 1 en el otro.
+
+<InteractionExplorer title={<>El diagrama R₀₀–R₁₁: dos estratos, una historia por escala</>} />
+
+## La escala importa
+
+Woodward (Ch. 4.8.3): el test de interacción **depende de la escala**.
+Puede haber interacción multiplicativa (los RR difieren) sin interacción
+aditiva (las diferencias de riesgo son iguales), y viceversa. La
+epidemiología de salud pública privilegia la aditiva (importa el exceso
+absoluto de casos); la analítica clásica reporta la multiplicativa (los
+RR u <Term k="OR">OR</Term> entre estratos).
+
+## El test de homogeneidad de Breslow–Day
+
+$$
+\chi^2_{BD} = \sum_k \frac{\left(\ln \widehat{OR}_k - \ln \widehat{OR}_{MH}\right)^2}
+{\mathrm{Var}(\ln \widehat{OR}_k)},
+\qquad \text{gl} = K - 1
+$$
+
+Si los OR por estrato difieren (BD significativo), no procede resumirlos
+con <Term k="MH">MH</Term>; hay que reportar el OR por estrato.
+
+<RCell
+  id="10/breslow-day"
+  title="¿Un solo OR o uno por estrato? (Breslow–Day)"
+  code={`# Homogeneidad de OR entre K estratos, en base R (equivalente a
+# Breslow-Day; en SAS: TABLES ... / CMH + opcion BRESLOWDAY).
+breslow_day <- function(arr) {
+  K <- dim(arr)[3]
+  ors <- apply(arr, 3, function(t) t[1,1]*t[2,2]/(t[1,2]*t[2,1]))
+  # OR comun de Mantel-Haenszel:
+  num <- sum(apply(arr, 3, function(t) t[1,1]*t[2,2]/sum(t)))
+  den <- sum(apply(arr, 3, function(t) t[1,2]*t[2,1]/sum(t)))
+  ormh <- num/den
+  vars <- apply(arr, 3, function(t) 1/sum(1/t))
+  chi <- sum((log(ors) - log(ormh))^2 / vars)
+  list(chi2 = chi, gl = K - 1, p = 1 - pchisq(chi, K - 1), ors = ors, ormh = ormh)
+}
+
+# Caso A: estratos homogeneos (mismo OR)
+A <- array(c(40,60,20,180, 50,10,60,40), dim = c(2,2,2))
+print(breslow_day(A))
+
+# Caso B: estratos con OR distintos -> interaccion, no resumir
+B <- array(c(40,60,20,180, 10,90,80,20), dim = c(2,2,2))
+print(breslow_day(B))`}
+/>
+
+<SasBlock code={`/* En SAS, Breslow-Day ya viene dentro del output de CMH */
+data A; input k $ e $ d $ n; datalines;
+1 si si 40  1 si no 20  1 no si 60  1 no no 180
+2 si si 50  2 si no 60  2 no si 10  2 no no 40 ;
+data B; input k $ e $ d $ n; datalines;
+1 si si 40  1 si no 20  1 no si 60  1 no no 180
+2 si si 10  2 si no 80  2 no si 90  2 no no 20 ;
+
+proc freq data=A order=data; weight n;
+  tables k*e*d / cmh bdt;   /* BDT = correccion de Tarone */
+run;
+proc freq data=B order=data; weight n;
+  tables k*e*d / cmh bdt;
+run;
+/* Caso B: Breslow-Day significativo -> los OR difieren de verdad:
+   interaccion, reportar por estrato, no resumir con MH */`} />
+
+<Callout type="note" title="La corrección de Tarone (1985)">
+Cuando $\widehat{OR}_{MH}$ se estima de los mismos datos, el test de
+Breslow–Day es ligeramente conservador. Tarone propuso corregirlo usando
+el estimador MH en la varianza; en SAS aparece como opción
+<code>BDT</code>. La conclusión cualitativa rara vez cambia, pero es el
+nombre que aparece en la literatura.
+</Callout>
+
+<Callout type="warning" title="La falacia del no-rechazo (tests agnósticos)">
+Breslow–Day no significativo **no demuestra homogeneidad**: solo dice que
+la evidencia no alcanzó para rechazarla. Coscrato, Izbicki y Stern (2018)
+formalizan el problema: los tests clásicos controlan el error tipo I pero
+no el tipo II, así que "no rechazo ≠ aceptación". Su propuesta de tests
+agnósticos añade una tercera respuesta: "la muestra no decide". Con
+pocos estratos o estratos pequeños, la respuesta honesta suele ser la
+tercera.
+</Callout>
+
+<Callout type="tip" title="La regla de decisión del bloque">
+1. Estratifica por el sospechoso.
+2. Si los OR por estrato difieren entre sí (Breslow–Day significativo) →
+   **interacción**: reporta cada estrato, no hay resumen honesto.
+3. Si son homogéneos pero difieren del crudo → **confusión**: reporta
+   $\widehat{OR}_{MH}$.
+4. Si todo coincide → no había problema.
+</Callout>
+
+<Quiz
+  question="En el SHHS el RR de tabaco→CHD es 2.40 sin infarto previo y 0.64 con infarto previo. ¿Qué reportas?"
+  options={[
+    "OR-MH ≈ 1.5 como resumen del efecto del tabaco",
+    "Los dos RR por estrato: el antagonismo es el hallazgo y no se puede resumir",
+    "Que el tabaco no tiene efecto porque el promedio da ~1.5",
+    "Que hay error en los datos porque un RR no puede bajar de 1"
+  ]}
+  correctIndex={1}
+  explanation="Es antagonismo (Ejemplo 4.13 de Woodward): el efecto cambia de signo entre estratos. Resumirlo con MH produciría un número entre 0.64 y 2.40 que no representa a nadie. La regla: interacción real → reporte por estrato."
+/>
+
+<ToolCard task="bdt" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: análisis de interacción">
+Replica el Ejemplo 4.13 (o un dataset propio con dos estratos): diagrama
+de riesgos, test de Breslow–Day, clasificación del patrón (sinergismo /
+antagonismo / unilateralismo / ninguno) y decisión de reporte en ambas
+escalas, aditiva y multiplicativa.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), caps. 4.7–4.9**: modificación de efecto, Ejemplos 4.13–4.14, la cuestión de la escala.
+- **<Term k="BD">Breslow &amp; Day (1980)</Term>**, vol. I: el test de homogeneidad.
+- **Coscrato, Izbicki &amp; Stern (2018)**: pruebas agnósticas; anticipo del módulo 17.

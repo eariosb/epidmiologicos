@@ -43,7 +43,7 @@ export function DiagnosticsPanel() {
     <div className="flex h-full flex-col overflow-hidden rounded border border-ink-200 bg-white">
       <div className="flex items-center justify-between border-b border-ink-200 bg-ink-50 px-3 py-1.5">
         <span className="text-xs font-semibold text-ink-700">
-          Diagnóstico — {events.length} eventos (anillo, máx. 500)
+          Diagnóstico: {events.length} eventos (anillo, máx. 500)
         </span>
         <button
           type="button"
@@ -67,7 +67,7 @@ export function DiagnosticsPanel() {
             </span>
             <span className="truncate text-ink-600" title={ev.data ? JSON.stringify(ev.data) : ev.message}>
               {ev.message}
-              {ev.data ? ` — ${JSON.stringify(ev.data)}` : ''}
+              {ev.data ? ` · ${JSON.stringify(ev.data)}` : ''}
             </span>
           </div>
         ))}

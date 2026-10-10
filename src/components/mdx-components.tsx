@@ -11,8 +11,39 @@ import { DataTable } from '@/components/DataTable';
 import { ProcessSteps } from '@/components/ProcessSteps';
 import { RCell } from '@/components/RCell';
 import { LabExercise } from '@/components/LabExercise';
-import { MatrixBuilder } from '@/components/MatrixBuilder';
+import {
+  TwoByTwoExplorer,
+  ConfusionExplorer,
+  PvalueVsEffect,
+  KaplanMeierSim,
+  McNemarCmhDemo,
+  DiagnosticTestExplorer,
+  DesignTree,
+  PrevalenceExplorer,
+  StandardizationExplorer,
+  InteractionExplorer,
+  CohortGantt,
+  BerksonExplorer,
+  RocExplorer,
+  MetaExplorer,
+} from '@/components/EpiSims';
+import {
+  ExactTestExplorer,
+  ExactPowerExplorer,
+  CorrectionExplorer,
+  SampleSizeExplorer,
+  CIMethodsExplorer,
+  PrecisionSampleSizeExplorer,
+} from '@/components/ExactSims';
+import { LangTabs } from '@/components/LangTabs';
+import { SasBlock } from '@/components/SasBlock';
+import { DecisionPanel } from '@/components/DecisionPanel';
+import { DecisionCard } from '@/components/DecisionCard';
+import { SimReset } from '@/components/SimReset';
+import { ToolCard } from '@/components/ToolCard';
 import { FormulaPalette } from '@/components/FormulaPalette';
+import { Term } from '@/components/Term';
+import { BradfordHill, EpiTable } from '@/components/CourseBlocks';
 import { BlackboardAnchor, BlackboardEmbed } from '@cursos/blackboard';
 
 /**
@@ -60,6 +91,17 @@ function MdxInlineCode({ children }: { children?: ReactNode }) {
   );
 }
 
+/** Envuelve un interactivo con el botón "Reiniciar" (remonta el estado). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const withReset = (C: ComponentType<any>) =>
+  function Resettable(props: Record<string, unknown>) {
+    return (
+      <SimReset>
+        <C {...props} />
+      </SimReset>
+    );
+  };
+
 export const mdxComponents: MDXComponents = {
   Callout,
   CodeBlock,
@@ -70,8 +112,35 @@ export const mdxComponents: MDXComponents = {
   ProcessSteps,
   RCell,
   LabExercise,
-  MatrixBuilder,
+  TwoByTwoExplorer: withReset(TwoByTwoExplorer),
+  ConfusionExplorer: withReset(ConfusionExplorer),
+  PvalueVsEffect: withReset(PvalueVsEffect),
+  KaplanMeierSim: withReset(KaplanMeierSim),
+  McNemarCmhDemo: withReset(McNemarCmhDemo),
+  DiagnosticTestExplorer: withReset(DiagnosticTestExplorer),
+  DesignTree: withReset(DesignTree),
+  PrevalenceExplorer: withReset(PrevalenceExplorer),
+  StandardizationExplorer: withReset(StandardizationExplorer),
+  InteractionExplorer: withReset(InteractionExplorer),
+  CohortGantt: withReset(CohortGantt),
+  BerksonExplorer: withReset(BerksonExplorer),
+  RocExplorer: withReset(RocExplorer),
+  MetaExplorer: withReset(MetaExplorer),
+  ExactTestExplorer: withReset(ExactTestExplorer),
+  ExactPowerExplorer: withReset(ExactPowerExplorer),
+  CorrectionExplorer: withReset(CorrectionExplorer),
+  SampleSizeExplorer: withReset(SampleSizeExplorer),
+  CIMethodsExplorer: withReset(CIMethodsExplorer),
+  PrecisionSampleSizeExplorer: withReset(PrecisionSampleSizeExplorer),
+  LangTabs,
+  ToolCard,
+  SasBlock,
+  DecisionPanel: withReset(DecisionPanel),
+  DecisionCard,
   FormulaPalette,
+  Term,
+  EpiTable,
+  BradfordHill,
   BlackboardAnchor,
   BlackboardEmbed,
   table: MdxTable,

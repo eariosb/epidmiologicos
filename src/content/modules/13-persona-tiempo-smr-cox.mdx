@@ -1,0 +1,271 @@
+---
+title: "Persona-tiempo, SMR y aproximación a Cox"
+slug: "13-persona-tiempo-smr-cox"
+objective: "Calcular tasas de incidencia con denominadores persona-tiempo cuando el seguimiento es desigual, aplicar el SMR como razón de tasas y dar el primer modelo de Cox con hazard ratios."
+order: 13
+datasets: ["recid.csv"]
+duration: 90
+prerequisites: ["Módulo 12: Kaplan–Meier", "Módulo 9: SMR"]
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard } from '@/components/Flashcard'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+
+<Callout type="tip" title="El denominador persona-tiempo hace honesto al seguimiento desigual">
+Con entradas escalonadas y pérdidas, "riesgo = casos/n" engaña: cada
+persona aportó un tiempo distinto de observación. La **densidad de
+incidencia**, eventos por persona-tiempo, es el denominador correcto.
+El <Term k="SMR">SMR</Term> lo usa para comparar contra tasas de
+referencia; la regresión de Poisson y el modelo de <Term k="Cox">Cox</Term>
+lo internalizan como offset y como riesgo instantáneo.
+</Callout>
+
+## Persona-tiempo en la práctica
+
+Cada sujeto aporta tiempo desde el ingreso hasta el evento, la salida o
+el cierre. El diagrama de Gantt del módulo 11 lo mostró visualmente; el
+código siguiente lo calcula a partir de fechas y luego compara dos tasas
+con `poisson.test`, que entrega el IC exacto de la razón de tasas.
+
+<RCell
+  id="13/persona-anos"
+  title="Persona-años desde fechas (clase 17)"
+  code={`# Tasas especificas por edad: cada sujeto aporta tiempo desde el
+# ingreso hasta el evento, la salida o el cierre del estudio.
+cohorte <- data.frame(
+  id = 1:6,
+  nacimiento = as.Date(c("1955-03-01","1960-07-15","1958-01-20",
+                         "1962-11-05","1957-05-30","1965-09-12")),
+  ingreso    = as.Date(rep("2000-01-01", 6)),
+  salida     = as.Date(c("2010-06-30","2015-12-31","2005-03-15",
+                         "2020-01-01","2008-08-20","2018-06-01")),
+  evento     = c(1, 0, 1, 0, 1, 0)   # 1 = evento, 0 = censura
+)
+cohorte$anios <- as.numeric(difftime(cohorte$salida, cohorte$ingreso,
+                                     units = "days")) / 365.25
+cohorte$edad_ingreso <- as.numeric(difftime(cohorte$ingreso,
+                                            cohorte$nacimiento, "days"))/365.25
+print(cohorte[, c("id","edad_ingreso","anios","evento")])
+
+# Tasa de incidencia = eventos / persona-tiempo total:
+pt <- sum(cohorte$anios); ev <- sum(cohorte$evento)
+cat(sprintf("\\npersona-anios = %.1f   eventos = %d   tasa = %.2f por 100 p-a\\n",
+            pt, ev, 100 * ev / pt))
+
+# Razon de tasas (IRR) entre dos grupos, con IC Poisson:
+tasa1 <- 12/800; tasa0 <- 20/1600
+cat(sprintf("\\nIRR = %.2f\\n", tasa1/tasa0))
+print(poisson.test(c(12, 20), c(800, 1600)))`}
+/>
+
+<SasBlock code={`data cohorte;
+  input id nacimiento :yymmdd10. salida :yymmdd10. evento;
+  ingreso = '01jan2000'd;
+  anios = (salida - ingreso) / 365.25;
+  edad_ingreso = (ingreso - nacimiento) / 365.25;
+  datalines;
+1 1955-03-01 2010-06-30 1
+2 1960-07-15 2015-12-31 0
+3 1958-01-20 2005-03-15 1
+4 1962-11-05 2020-01-01 0
+5 1957-05-30 2008-08-20 1
+6 1965-09-12 2018-06-01 0
+;
+proc sql;
+  select sum(anios) as pt format=8.1,
+         sum(evento) as ev,
+         100*calculated ev/calculated pt as tasa100 format=8.2
+  from cohorte;
+quit;
+/* poisson.test -> GENMOD Poisson con offset log(pt):
+   el IC del IRR sale del parametro del modelo */
+data tasas; input grupo $ ev pt; lpt = log(pt); datalines;
+exp 12 800  noexp 20 1600 ;
+proc genmod data=tasas;
+  class grupo(ref='noexp');
+  model ev = grupo / dist=poisson link=log offset=lpt;
+  lsmeans grupo / diff exp cl;   /* IRR exp vs noexp + IC */
+run;`} />
+
+## El SMR revisitado
+
+El módulo 9 presentó el <Term k="SMR">SMR</Term> como estandarización
+indirecta. Con persona-tiempo se ve su forma natural: comparar lo
+observado contra lo esperado bajo tasas de referencia,
+
+$$
+SMR = \frac{\text{eventos observados}}{\sum_k PT_k \, \lambda_k^{ref}}
+$$
+
+El ejemplo 5.14 de Woodward (<Term k="SHHS">SHHS</Term>), mortalidad por tenencia de vivienda
+con denominadores persona-tiempo y <Term k="OR">OR</Term>-<Term k="MH">MH</Term> ≈ 1.41, muestra que la
+estratificación del bloque II y el persona-tiempo conviven: la edad se
+estratifica y el tiempo se suma.
+
+### La cohorte de Doll & Hill como ancla
+
+El British Doctors Study es la demostración histórica del denominador
+persona-tiempo: ~34 000 médicos seguidos desde 1951, con muertes
+registradas por los obituarios profesionales. A los 10 años la
+mortalidad por cáncer de pulmón era ~0.07 por 1000 personas-año en
+nunca fumadores y escalaba 0.57 → 0.96 → 1.39 → 1.66 según
+cigarrillos/día: un gradiente de razones de tasa de ~8 a ~24. Dos
+detalles lo hacen didácticamente perfecto:
+
+- **Es un SMR natural**: la mortalidad de los médicos se comparó contra
+  las tasas de referencia de la población masculina británica ajustada
+  por edad — el O/E del módulo 9 hecho cohorte real.
+- **Documentó reversibilidad**: quienes dejaron de fumar mostraron tasas
+  intermedias, menores cuanto más tiempo llevaban sin fumar. Eso es,
+  *avant la lettre*, una covariable **dependiente del tiempo**: la
+  exposición cambia durante el seguimiento y la persona-tiempo se
+  reparte entre estados. Es el argumento que cierra la causalidad del
+  módulo 2 y el que motiva las extensiones de Cox más allá del básico.
+
+## Del log-rank al modelo de Cox
+
+El modelo de <Term k="Cox">riesgos proporcionales</Term> (1972) estima cómo
+cada covariable multiplica el riesgo instantáneo, sin especificar la forma
+del riesgo basal $h_0(t)$:
+
+$$
+h(t \mid x) = h_0(t)\, e^{\beta_1 x_1 + \cdots + \beta_p x_p}
+$$
+
+El hazard ratio $e^{\beta_j}$ es el análogo continuo del log-rank: con una
+sola covariable binaria, el test del score de Cox **es** el log-rank del
+módulo anterior.
+
+El ajuste siguiente usa `coxph` sobre recid.csv (semanas hasta re-arresto
+en 432 exconvictos): estima el HR de cada covariable y verifica el
+supuesto de riesgos proporcionales con `cox.zph`.
+
+<RCell
+  id="13/cox-recid"
+  title="Primer modelo de Cox (recid.csv)"
+  code={`# recid.csv: semanas hasta re-arresto de 432 exconvictos (Allison).
+r <- read.csv("recid.csv")
+print(names(r)[1:10])
+print(table(r$arrest))   # 1 = re-arrestado, 0 = censurado
+
+library(survival)
+fit <- coxph(Surv(week, arrest) ~ fin + age + race + wexp + mar + paro + prio,
+             data = r)
+print(summary(fit))
+
+# HR = exp(beta): HR > 1 acelera el arresto, < 1 protege.
+hr <- exp(coef(fit))
+print(round(hr, 3))
+
+# Supuesto de riesgos proporcionales:
+print(cox.zph(fit))`}
+/>
+
+<SasBlock code={`proc import datafile="recid.csv" out=r dbms=csv replace;
+  getnames=yes;
+run;
+/* coxph -> PROC PHREG: arrest(0) marca la censura.
+   La tabla 'Parameter Estimates' ya incluye el Hazard Ratio. */
+proc phreg data=r;
+  model week*arrest(0) = fin age race wexp mar paro prio
+        / risklimits;
+  /* cox.zph -> ASSESS: chequeo de riesgos proporcionales */
+  assess var=(fin age race wexp mar paro prio) ph / resample seed=7;
+run;`} />
+
+<Callout type="warning" title="El supuesto que hay que chequear">
+Cox asume riesgos proporcionales: las curvas de riesgo no se cruzan y el
+HR es constante en el tiempo. Con <code>cox.zph(fit)</code> se contrasta;
+un HR que cambia con t exige estratificar el tiempo o un modelo con
+interacción temporal.
+</Callout>
+
+<Quiz
+  question="En recid.csv, coxph da HR(fin) = 0.68, IC95% (0.49, 0.95). ¿Qué significa?"
+  options={[
+    "El 68% de los que recibieron apoyo financiero fueron re-arrestados",
+    "Quienes recibieron apoyo financiero tienen riesgo instantáneo de re-arresto 32% menor que los que no, ajustando por las demás covariables, y el IC no cubre 1",
+    "La probabilidad de re-arresto cae 68 puntos porcentuales",
+    "El apoyo financiero elimina el riesgo de re-arresto"
+  ]}
+  correctIndex={1}
+  explanation="El hazard ratio multiplica el riesgo instantáneo: HR=0.68 reduce el hazard un 32% en cada momento, ajustando por edad, raza, experiencia, etc. El IC (0.49–0.95) no cubre 1, así que el efecto es real y no trivial: estimación más incertidumbre, como Woodward exige."
+/>
+
+<Flashcard
+  title="Persona-tiempo y Cox en cuatro tarjetas"
+  items={[
+    { front: "Persona-tiempo", back: "Suma de los tiempos en riesgo de cada sujeto. Denominador honesto cuando el seguimiento es desigual." },
+    { front: "IRR", back: "Razón de tasas de incidencia: λ₁/λ₀ sobre persona-tiempo. poisson.test da el IC." },
+    { front: "SMR con PT", back: "Observados / Σ PTₖ·λₖ(ref). Igual que el módulo 9, pero el denominador es persona-tiempo." },
+    { front: "Cox HR", back: "e^β: multiplicador del riesgo instantáneo. Con una binaria, su score test ≡ log-rank. Supuesto: PH (cox.zph)." },
+  ]}
+/>
+
+<LabExercise
+  id="lab-12-personatiempo"
+  title="Laboratorio: dos cohortes, dos denominadores"
+  code={`# Compara dos exposiciones con seguimientos distintos.
+grupo <- c(rep("exp", 5), rep("noexp", 5))
+pt    <- c(3.2, 4.8, 2.1, 5.0, 1.9,   2.0, 3.5, 4.2, 2.8, 4.0)
+ev    <- c(1,   0,   1,   0,   1,     1,   0,   1,   0,   0)
+dat <- data.frame(grupo, pt, ev)
+print(aggregate(cbind(pt, ev) ~ grupo, dat, sum))
+# Tu turno: tasas, IRR con poisson.test, e interpretacion.`}
+  tasks={[
+    "Suma persona-tiempo y eventos por grupo.",
+    "Calcula la razón de tasas con IC de poisson.test.",
+    "¿Por qué casos/n daría una respuesta distinta? ¿Cuál es la correcta?",
+  ]}
+  hint="La tasa es eventos/persona-tiempo; el n de sujetos no entra en el denominador."
+  solution="Las tasas usan PT, no personas. Con seguimiento desigual, casos/n mide 'fracción del estudio', no riesgo. El IRR de poisson.test es la comparación correcta con su IC."
+/>
+
+<SasBlock code={`data dat; input grupo $ pt ev; datalines;
+exp 3.2 1  exp 4.8 0  exp 2.1 1  exp 5.0 1  exp 1.9 0
+noexp 2.0 1  noexp 3.5 0  noexp 4.2 1  noexp 2.8 0  noexp 4.0 0 ;
+/* Suma de persona-tiempo y eventos por grupo: */
+proc means data=dat sum; class grupo; var pt ev; run;
+/* IRR con IC: GENMOD Poisson + offset */
+proc sql;
+  create table agg as
+  select grupo, sum(ev) as ev, sum(pt) as pt,
+         log(calculated pt) as lpt
+  from dat group by grupo;
+quit;
+proc genmod data=agg;
+  class grupo(ref='noexp');
+  model ev = grupo / dist=poisson link=log offset=lpt;
+  lsmeans grupo / diff exp cl;   /* IRR exp vs noexp + IC */
+run;`} />
+
+<ToolCard task="ptcox" />
+
+<Callout type="note" title="Precisión con denominador persona-tiempo">
+El dimensionamiento por precisión del módulo 5 tiene su versión
+persona-tiempo: si el tiempo hasta el evento es ~exponencial, la
+longitud del <Term k="IC">IC</Term> para la media hereda una distribución gamma exacta y la
+garantía P(L ≤ L₀) se calcula sin simulación vía χ²: el mismo caso que
+el seminario de Correa resuelve para tiempos de espera. En tasas de
+incidencia, lo que se dimensiona no es n sino los persona-años
+necesarios para que el IC Poisson de la tasa alcance la precisión
+relativa exigida.
+</Callout>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: persona-tiempo + primer Cox">
+Análisis completo: tasas por exposición con denominador persona-tiempo,
+SMR contra referencia, y un primer coxph sobre recid.csv con interpretación
+del HR y chequeo de riesgos proporcionales.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), caps. 5.6–5.7, 11.6**: persona-tiempo, Ejemplo 5.14, introducción a Cox.
+- **Notas de clase (Salazar), clases 17–18**: persona-años desde fechas, tasas específicas.

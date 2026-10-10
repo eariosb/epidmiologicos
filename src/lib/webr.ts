@@ -6,11 +6,12 @@
  * `runRCode` helper that captures console output, plots (as PNG data
  * URLs) and simple data frames printed to the console.
  *
- * The stochastic-processes course is mostly base R (simulation of
- * random walks, Markov chains, Poisson processes, Brownian motion,
- * Euler-Maruyama). Heavier textbook packages (`sde`, `Sim.DiffProc`,
- * `yuima`, `fptdApprox`, `markovchain`, `expm`) install lazily the
- * first time a cell calls `library(...)`.
+ * The epidemiology course is mostly base R (2×2 tables, χ², Mantel-
+ * Haenszel, McNemar, Kaplan-Meier by hand). `survival` is a recommended
+ * package available in the wasm repo and installs lazily the first time
+ * a cell calls `library(survival)`. `epiR`/`vcdExtra` may not be in the
+ * wasm repo — the course computes their statistics in base R instead,
+ * which is also more transparent pedagogically.
  */
 import type { WebR as WebRType } from 'webr';
 
@@ -18,10 +19,8 @@ import type { WebR as WebRType } from 'webr';
 // Only light, widely-used packages go here; domain packages install on
 // demand via `ensurePackagesAvailable()` when a cell calls library(...).
 export const PRELOAD_PACKAGES = [
-  'MASS', // mvrnorm: multivariate normal draws (Gaussian processes)
-  'expm', // matrix exponential: continuous-time Markov chains
-  'moments', // skewness/kurtosis diagnostics
-  'tseries', // runs.test and friends for stationarity checks
+  'MASS', // mvrnorm and friends
+  'survival', // Surv, survfit (Kaplan-Meier), survdiff (log-rank), coxph, clogit
 ];
 
 export interface RRunResult {
@@ -46,9 +45,7 @@ const fetchedDatasets = new Set<string>();
  * multiple times — initialisation only happens once.
  */
 export function getWebR(): Promise<WebRType> {
-  if (!webRPromise) {
-    webRPromise = initWebR();
-  }
+  webRPromise ??= initWebR();
   return webRPromise;
 }
 
@@ -93,7 +90,15 @@ async function initWebR(): Promise<WebRType> {
  * la lista empieza vacía: basta con dejar el CSV en `public/data/` y
  * agregar su nombre aquí.
  */
-const LOCAL_DATASETS: string[] = [];
+const LOCAL_DATASETS: string[] = [
+  'bcg_matching.csv',      // M15: matching 1:1, vacuna BCG
+  'caso_control_11.csv',   // M15: laboratorio de parejas
+  'ddimer.csv',            // M15: clogit con matching variable
+  'leucemia.txt',          // M12: ensayo 6-MP (Freireich)
+  'recid.csv',             // M13: primer coxph
+  'shhs_vivienda.csv',     // M8: vivienda y CHD estratificado
+  'valung.csv',            // M12: laboratorio VA lung
+];
 
 const DATA_DIR = '/data';
 
@@ -130,7 +135,8 @@ async function ensureDatasetsAvailable(webR: WebRType, code: string): Promise<vo
 function rewriteDatasetUrls(code: string): string {
   let rewritten = code;
   for (const filename of LOCAL_DATASETS) {
-    const quoted = new RegExp(`(["'])${filename.replace('.', '\\.')}\\1`, 'g');
+    const escaped = filename.replace('.', String.raw`\.`);
+    const quoted = new RegExp(String.raw`(["'])${escaped}\1`, 'g');
     rewritten = rewritten.replace(quoted, `$1${DATA_DIR}/${filename}$1`);
   }
   return rewritten;
@@ -163,6 +169,42 @@ async function ensurePackagesAvailable(webR: WebRType, code: string): Promise<vo
 }
 
 /**
+ * Maps a `captureR()` output stream to console text lines plus the
+ * R-level error message, if the run produced one.
+ */
+function collectOutput(output: { type: string; data: unknown }[]): {
+  lines: string[];
+  error?: string;
+} {
+  const lines: string[] = [];
+  let error: string | undefined;
+  for (const out of output) {
+    if (out.type === 'stdout' || out.type === 'stderr') {
+      lines.push(out.data as string);
+    } else if (out.type === 'message' || out.type === 'warning') {
+      const data = out.data as { message?: string };
+      if (data?.message) lines.push(data.message.trimEnd());
+    } else if (out.type === 'error') {
+      const data = out.data as { message?: string };
+      error = data?.message ?? String(out.data);
+      if (error) lines.push(`Error: ${error}`);
+    }
+  }
+  return { lines, error };
+}
+
+/** Rasterizes a captured WebR canvas image to a PNG data URL. */
+function imageToDataUrl(img: ImageBitmap): string | null {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0);
+  return canvas.toDataURL('image/png');
+}
+
+/**
  * Runs a chunk of R code, capturing printed output and any plots
  * generated via the `Cairo`/`png` graphics device that WebR exposes
  * through its canvas capture API.
@@ -170,7 +212,7 @@ async function ensurePackagesAvailable(webR: WebRType, code: string): Promise<vo
 export async function runRCode(code: string): Promise<RRunResult> {
   const webR = await getWebR();
   const plots: string[] = [];
-  const outputLines: string[] = [];
+  let outputLines: string[] = [];
   let errorMsg: string | undefined;
 
   // Open a capturing canvas device so any base/ggplot2 plot is recorded.
@@ -195,29 +237,14 @@ export async function runRCode(code: string): Promise<RRunResult> {
       captureConditions: true,
     });
 
-    for (const out of result.output) {
-      if (out.type === 'stdout' || out.type === 'stderr') {
-        outputLines.push(out.data as string);
-      } else if (out.type === 'message' || out.type === 'warning') {
-        const data = out.data as { message?: string };
-        if (data?.message) outputLines.push(data.message.trimEnd());
-      } else if (out.type === 'error') {
-        const data = out.data as { message?: string };
-        errorMsg = data?.message ?? String(out.data);
-        if (errorMsg) outputLines.push(`Error: ${errorMsg}`);
-      }
-    }
+    const collected = collectOutput(result.output);
+    outputLines = collected.lines;
+    errorMsg = collected.error;
 
     // Collect any captured plot images.
     for (const img of result.images) {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        plots.push(canvas.toDataURL('image/png'));
-      }
+      const dataUrl = imageToDataUrl(img);
+      if (dataUrl) plots.push(dataUrl);
     }
   } catch (err) {
     errorMsg = err instanceof Error ? err.message : String(err);

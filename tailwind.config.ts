@@ -4,9 +4,8 @@ import typography from '@tailwindcss/typography';
 /**
  * Sistema de diseño heredado de los cursos interactivos UNAL (paleta `ink`
  * de grises, tipografía Inter, radios 0.5rem, animaciones sutiles), con el
- * acento en violeta profundo (#5b21b6 / #4c1d95) como identidad del curso
- * de Procesos Estocásticos (accent-700 = color base). El verde #2e7d32 se
- * reserva como color de éxito (`positive`).
+ * acento en verde azulado #2aa9a3 como identidad del curso de Epidemiología
+ * (accent-500 = color base). El verde #2e7d32 se reserva como éxito.
  */
 const config: Config = {
   content: [
@@ -22,16 +21,16 @@ const config: Config = {
     extend: {
       colors: {
         accent: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#6d28d9',
-          700: '#5b21b6',
-          800: '#4c1d95',
-          900: '#2e1065',
+          50: '#eafaf9',
+          100: '#d0f3f1',
+          200: '#a3e6e3',
+          300: '#6fd5d2',
+          400: '#3fc2be',
+          500: '#2aa9a3',
+          600: '#209089',
+          700: '#1d7670',
+          800: '#185d58',
+          900: '#123f3c',
         },
         ink: {
           50: '#f8f9fa',

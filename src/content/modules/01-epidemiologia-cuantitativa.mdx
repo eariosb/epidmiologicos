@@ -1,0 +1,322 @@
+---
+title: "¿Qué es la epidemiología cuantitativa? Comparar antes de inferir"
+slug: "01-epidemiologia-cuantitativa"
+objective: "Reconstruir el argumento fundacional de la epidemiología: por qué toda medida es comparativa, cómo se deriva una razón de tasas, y por qué la ética es parte integral del método"
+order: 1
+datasets: []
+duration: 90
+prerequisites: []
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { ProcessSteps } from '@/components/ProcessSteps'
+import { RCell } from '@/components/RCell'
+import { SasBlock } from '@/components/SasBlock'
+import { ToolCard } from '@/components/ToolCard'
+import { EpiTable } from '@/components/CourseBlocks'
+import { BradfordHill } from '@/components/CourseBlocks'
+
+<Callout type="tip" title="La dirección del curso">
+Este curso enseña a analizar datos epidemiológicos. Pero antes de
+analizar hay que decidir **qué comparar**. Woodward lo dice en la
+primera página: ninguna medida epidemiológica aislada tiene significado en si misma.
+"El 20% de los fumadores murió" no es un dato. "El 20% de los fumadores
+murió frente al 12% de los no fumadores" sí lo es.
+</Callout>
+
+Los cinco principios que gobiernan el curso son cinco promesas que este
+módulo enuncia y que los módulos siguientes deberán cumplir:
+
+1. **La epidemiología es comparativa.** Toda medida exige un grupo de referencia.
+2. **El diseño determina lo estimable.** Ningún método estadístico rescata lo que el diseño no observó.
+3. **La confusión es el enemigo central.** La mitad del curso existe para combatirla.
+4. **Estimar antes que contrastar.** El tamaño del efecto y su intervalo de confianza preceden al valor p.
+5. **La causalidad es acumulativa.** Ningún estudio ni ningún test la decide por sí solo.
+
+Este módulo no enseña métodos: enseña **por qué los métodos existen**.
+Para eso reconstruye dos casos fundacionales: uno donde la comparación
+se hizo bien (Snow, 1854) y otro donde el diseño se corrompió
+deliberadamente (Tuskegee, 1932–1972).
+
+## Snow y el cólera de Londres
+
+### El problema
+
+En el verano de 1854 el cólera mató a cientos de personas en Londres.
+La teoría dominante era el "miasma": el aire viciado causaba la
+enfermedad. <Term k="Snow">John Snow</Term> sostenía otra hipótesis: el
+agua contaminada la transmitía.
+
+### El experimento natural
+
+Dos compañías abastecían el sur de Londres:
+
+- **Lambeth**: tomaba agua del Támesis **río arriba**, antes de los
+  desagües de la ciudad.
+- **Southwark & Vauxhall**: la tomaba **río abajo**, después de los
+  desagües.
+
+En los subdistritos donde ambas compañías competían, las tuberías
+llegaban a casas vecinas de la misma calle. Los clientes no elegían la
+compañía por razones relacionadas con la salud: ingreso, ocupación y
+vecindario quedaban repartidos al azar entre los dos grupos. Snow lo
+llamó un *grand experiment*: lo que hoy llamamos un cuasi-experimento,
+una asignación casi aleatoria de la exposición sin intervención del
+investigador.
+
+<Callout type="note" title="Por qué 'experimento natural'">
+Snow no asignó a nadie, pero la mezcla casa a casa de las compañías
+hizo que los dos grupos fueran comparables en todo excepto la fuente de
+agua. Esa comparabilidad es exactamente lo que la confusión amenaza y
+lo que el módulo 7 formalizará: la epidemiología funciona cuando los
+grupos comparados difieren solo en la exposición.
+</Callout>
+
+### Los números
+
+Snow reconstruyó los conteos casa por casa. A nivel poblacional, el
+cuadro histórico es:
+
+<EpiTable
+  title="Mortalidad por cólera según compañía de agua (Londres, 1854)"
+  rows={['Southwark & Vauxhall', 'Lambeth', 'Resto de Londres']}
+  cols={['Población', 'Muertes', 'Por 10 000']}
+  data={[
+    ['167 654', '1 263', '75.3'],
+    ['17 348',  '98',    '56.5'],
+    ['2 228 173', '1 422', '6.4'],
+  ]}
+  caption="Tabla clásica de Snow (1855). Las dos compañías tienen tasas
+  similares a escala poblacional: la comparación burda es débil."
+/>
+
+La razón de tasas poblacional es $75.3/56.5 \approx 1.33$: modesta. Pero
+ese número agrega territorios enteros donde la mayoría de las casas no
+estaba en la zona de mezcla. Cuando Snow restringe la comparación a los
+subdistritos donde ambas compañías repartían casa a casa y mide por
+**casas abastecidas**, el cuadro cambia:
+
+<EpiTable
+  title="El gran experimento (subdistritos con tuberías entremezcladas)"
+  rows={['Southwark & Vauxhall', 'Lambeth']}
+  cols={['Muertes por 10 000 casas']}
+  data={[['71'], ['5']]}
+  caption="Mortalidad por cada 10 000 casas abastecidas, calculada solo
+  en los subdistritos donde ambas compañías repartían casa a casa.
+  Razón ≈ 14."
+/>
+
+El **factor 14** que los textos citan no sale de la primera tabla; sale
+de la segunda. No es una cifra inflada: es la comparación hecha a la
+granulación correcta, donde casas contiguas, del mismo vecindario y del
+mismo ingreso, difieren solo en el agua que llega al grifo. Esta es la
+primera lección metodológica del curso: **una cifra citada de memoria
+suele colapsar una comparación más fina, y la fuerza de la evidencia
+vive en el denominador y el nivel de comparación, no en el titular**.
+
+<Callout type="warning" title="La lección metodológica">
+Snow no tenía teoría microbiana, ni test estadístico, ni intervalo de
+confianza. Tenía una **comparación bien construida**: mismas calles,
+mismo aire, distinta agua. Eso bastó para fundar la epidemiología
+moderna. La maquinaria estadística del curso sofisticará ese gesto, pero
+no lo reemplazará: **comparar bien es previo a inferir**.
+</Callout>
+
+### Evaluación causal de Snow
+
+La estructura formal para evaluar una asociación se detalla en el
+módulo 2; aquí se anticipa como lectura de un caso real. Nota que Snow
+no cumple todos los criterios y que eso no invalida su conclusión:
+
+<BradfordHill
+  title="¿Cumple Snow los criterios de Bradford Hill?"
+  items={[
+    { criterion: 'Fuerza', status: 'si', note: 'El factor ~14 a nivel de casas es una asociación muy fuerte; el 1.33 poblacional es el mismo efecto diluido por agregación.' },
+    { criterion: 'Consistencia', status: 'parcial', note: 'Snow acumuló brotes anteriores (1848–49) con el mismo patrón; la replicación sistemática llegaría después.' },
+    { criterion: 'Temporalidad', status: 'si', note: 'El suministro contaminado precedió a las muertes; el orden temporal está documentado.' },
+    { criterion: 'Gradiente', status: 'si', note: 'Los subdistritos con mayor mezcla de fuentes contaminadas mostraban mortalidad intermedia.' },
+    { criterion: 'Plausibilidad', status: 'no', note: 'Snow no tenía teoría microbiana: el argumento es puramente comparativo, y aun así correcto.' },
+    { criterion: 'Reversibilidad', status: 'parcial', note: 'El brote de Broad Street ya declinaba al retirar la manija; la atribución causal de ese gesto es retrospectiva.' },
+  ]}
+/>
+
+## El estudio de Tuskegee
+
+### Qué tipo de estudio era
+
+El <Term k="Tuskegee">estudio de Tuskegee</Term> (1932–1972) era, en el
+papel, un **estudio de cohorte prospectivo**: 399 hombres
+afroamericanos con sífilis y 201 controles sin ella, seguidos 40 años
+para observar la progresión natural de la enfermedad. Tenía la forma de
+un buen diseño. Y sin embargo **falló como estudio**, no solo como
+ética. Tres fallas analíticas concretas:
+
+1. **Sesgo de selección en los controles**: los 201 hombres sin sífilis
+   fueron elegidos por conveniencia administrativa, no para representar
+   a la población que produjo los casos. Una comparación con controles
+   seleccionados así no estima el efecto de la sífilis en la población
+   general (anticipo del módulo 14).
+2. **Cero control de confusión**: casos y controles diferían en acceso a
+   salud, nutrición y coinfecciones, y nada se ajustó ni se estratificó.
+   La comparación cruda mezcla la enfermedad con la pobreza.
+3. **Desenlace no operacionalizado**: "progresión de la sífilis" nunca se
+   definió con criterios estandarizados; las autopsias, hechas sin
+   consentimiento, no alimentaron un análisis reproducible.
+
+Un estudio de cohorte con estas fallas no produce estimación válida:
+produce observación sin inferencia. El principio 2 no es un límite
+técnico; es una condición de existencia.
+
+### Cómo se corrompió, paso a paso
+
+<ProcessSteps
+  title="Cronología de Tuskegee (1932–1974)"
+  steps={[
+    { title: '1932: inicio en Macon County, Alabama', description: '399 casos y 201 controles, en su mayoría aparceros analfabetos. Nunca se informó el diagnóstico: se les dijo "mala sangre", término coloquial que el Servicio de Salud explotó deliberadamente.' },
+    { title: '1943–1945: la penicilina se generaliza', description: 'El tratamiento estándar cambia. El estudio no se detiene; se hacen arreglos para excluir a los hombres del reclutamiento militar, donde habrían recibido penicilina. La observación pasiva se convierte en daño activo.' },
+    { title: '1969: panel dividido', description: 'Un comité convocado a revisar el estudio se divide; algunos médicos abogan por continuar. Ya habían muerto 373 de los ~616 enrolados: letalidad acumulada >60% en 37 años.' },
+    { title: '1972: filtración a la prensa', description: 'El estudio termina por presión mediática, no por decisión ética interna. Cuarenta años sin autocorrección institucional.' },
+    { title: '1974: acuerdo y Comisión Nacional', description: 'US$10 millones a sobrevivientes y herederos; nace la comisión que producirá el Informe Belmont (1979).' },
+  ]}
+/>
+
+<Callout type="warning" title="La ética como parte del método">
+El dato analítico que la cronología esconde: 373 muertes de 616 es una
+mortalidad acumulada del 60% en 37 años, el fenómeno que las curvas de
+<Term k="KM">Kaplan–Meier</Term> (módulo 12) formalizan. Tuskegee nunca
+produjo ni siquiera esa curva. Los tres principios de Belmont, respeto
+por las personas, beneficencia y justicia, no son un apéndice moral del
+método: son condiciones que protegen la validez del diseño. Un estudio
+que engaña a sus sujetos también está engañando a sus estimadores.
+</Callout>
+
+<Quiz
+  question="Tuskegee era, en el papel, una cohorte prospectiva de 40 años. ¿Cuál es su falla analítica más grave?"
+  options={[
+    "El tamaño muestral de 616 es insuficiente para estimar la progresión de la sífilis",
+    "Los controles no representan a la población que produjo los casos, así que la comparación no estima el efecto de la sífilis",
+    "Cuarenta años de seguimiento es demasiado para una cohorte",
+    "La sífilis ya no era endémica en Macon County al iniciar"
+  ]}
+  correctIndex={1}
+  explanation="El problema central es sesgo de selección: con controles elegidos por conveniencia, ningún tamaño muestral ni duración rescata la comparación. Es la lección del principio 2 en su forma negativa: el análisis no puede reparar lo que el diseño corrompió."
+/>
+
+<Quiz
+  question="La decisión de 1945 de impedir que los hombres de Tuskegee recibieran penicilina viola directamente..."
+  options={[
+    "Justicia: la carga recayó en una población vulnerable",
+    "Beneficencia: retener un tratamiento disponible convierte la observación en daño activo",
+    "Respeto por las personas: el consentimiento informado nunca existió",
+    "Los tres, aunque la de 1945 corresponde específicamente a beneficencia"
+  ]}
+  correctIndex={3}
+  explanation="Los tres principios de Belmont fueron violados en conjunto, pero la acción concreta de 1945 (interferir activamente para que no fueran tratados) es beneficencia fallida: el estudio dejó de ser observacional para ser daño organizado."
+/>
+
+## El vocabulario de campo
+
+Todo brote se describe con la tríada **agente–huésped–ambiente** y se
+mide con dos instrumentos:
+
+- **Agente**: la causa necesaria (microbio, toxina, exposición).
+- **Huésped**: quien alberga y responde al agente.
+- **Ambiente**: las condiciones que permiten el contacto.
+- **Tasa de ataque**: la incidencia acumulada en una población expuesta
+  durante un brote; es la medida que Snow construyó para el cólera y la
+  que el módulo 3 formaliza.
+- **Vigilancia**: la recolección sistemática y continua de datos de
+  salud; la infraestructura que detecta el brote antes de que sea
+  epidemia. El módulo 17 la retoma con el nowcasting de dengue.
+
+## La comparación de Snow en R
+
+La comparación de Snow se reduce a una tabla 2×2 con denominadores. El
+código siguiente la construye con los datos históricos, calcula los dos
+riesgos acumulados, su razón y su intervalo de confianza por el método
+log-normal (Katz). Es la misma estructura que los módulos 4 y 5 usarán
+para <Term k="RR">RR</Term>, <Term k="OR">OR</Term>, <Term k="RD">RD</Term> y <Term k="NNT">NNT</Term>:
+
+<RCell
+  id="01/snow-2x2"
+  title="El experimento de Snow como tabla 2×2"
+  code={`# Snow 1854: muertes por colera segun compania de agua.
+# Convencion del curso: filas = exposicion, columnas = desenlace.
+tabla <- matrix(
+  c(1263, 166391,   # Southwark: muertes, sobrevivientes
+      98,  17250),  # Lambeth:   muertes, sobrevivientes
+  nrow = 2, byrow = TRUE,
+  dimnames = list(
+    Agua      = c("Southwark", "Lambeth"),
+    Desenlace = c("Muerto", "Vivo")
+  )
+)
+print(tabla)
+
+# Riesgos acumulados (muertes / clientes):
+r_s <- tabla[1,1] / sum(tabla[1,])
+r_l <- tabla[2,1] / sum(tabla[2,])
+cat(sprintf("\\nRiesgo Southwark: %.2f por 1000", r_s * 1000))
+cat(sprintf("\\nRiesgo Lambeth:   %.2f por 1000", r_l * 1000))
+
+# Razon de riesgos e IC95% log-normal (Katz):
+rr  <- r_s / r_l
+se  <- sqrt(1/tabla[1,1] - 1/sum(tabla[1,]) +
+            1/tabla[2,1] - 1/sum(tabla[2,]))
+ic  <- exp(log(rr) + c(-1.96, 1.96) * se)
+
+cat(sprintf("\\n\\nRR = %.2f,  IC95%% [%.2f, %.2f]\\n", rr, ic[1], ic[2]))
+cat("La mortalidad acumulada en clientes de Southwark fue ~33% mayor.\\n")
+cat("El factor 14 vive en la comparacion por casas, no en esta tabla.\\n")`}
+/>
+
+<SasBlock code={`data snow;
+  length agua $9;
+  input agua $ muertes clientes;
+  logpob = log(clientes);
+  datalines;
+Southwark 1263 167654
+Lambeth    98  17348
+;
+/* Razon de mortalidades acumuladas via regresion de Poisson:
+   el offset logpob convierte conteos en tasas por cliente */
+proc genmod data=snow;
+  class agua(ref="Lambeth");
+  model muertes = agua / dist=poisson link=log offset=logpob;
+  estimate "RR S&V vs Lambeth" agua 1 / exp;
+run;`} />
+
+<Callout type="tip" title="Qué acabas de hacer">
+Reconstruiste el análisis que fundó la epidemiología con la maquinaria
+que Snow no tuvo: tabla 2×2, razón de riesgos, intervalo de confianza.
+En los módulos 4 y 5 usarás exactamente esta estructura para RR, OR, RD
+y NNT. Snow no es una anécdota: es el punto de partida del curso.
+</Callout>
+
+<ToolCard task="tasas" />
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: análisis estructurado (1 página, 4 párrafos)">
+Responde cuatro preguntas concretas; se evalúa la precisión, no la
+extensión:
+
+1. **Comparación**: ¿qué grupo de referencia usa Snow y por qué es
+   válido? ¿Cuál usa Tuskegee y por qué no lo es?
+2. **Diseño**: Tuskegee se describe como cohorte prospectiva. ¿Qué
+   elementos del diseño están corrompidos? ¿Qué se podría haber estimado
+   con un diseño correcto?
+3. **Causalidad**: aplica al menos tres criterios de Bradford Hill al
+   caso Snow. ¿Cuáles cumple, cuáles no, y basta lo que cumple?
+4. **Principios**: ¿cuál de los cinco principios falla más claramente en
+   Tuskegee? Justifica con un hecho concreto del caso.
+</Callout>
+
+## Lecturas
+
+- **Woodward (2014), cap. 1.1–1.3**: la epidemiología como disciplina comparativa.
+- **Snow (1855)**, *On the Mode of Communication of Cholera*, 2ª ed.: las tablas originales por población y por casas.
+- **Brandt (1978)**, *Racism and Research: The Case of the Tuskegee Syphilis Study*, Hastings Center Report.
+- **Informe Belmont (1979)**: respeto, beneficencia, justicia.
+- **Notas de clase (Salazar), clases 1–2**: historia, glosario de campo CDC.

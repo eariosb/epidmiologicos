@@ -9,9 +9,9 @@ import { ThemeSync } from '@/components/ThemeSync';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Procesos Estocásticos con Introducción a las EDE | Curso Interactivo',
+  title: 'Análisis Estadístico de Datos Epidemiológicos | Curso Interactivo',
   description:
-    'Curso interactivo de procesos estocásticos con introducción a las ecuaciones diferenciales estocásticas, con R: cadenas de Markov, procesos estacionarios y gaussianos, movimiento browniano, integral de Itô, proceso de Poisson, difusiones y procesos de Lévy. Universidad Nacional de Colombia, sede Medellín.',
+    'Curso interactivo de análisis de datos epidemiológicos con R en el navegador: medidas de asociación, confusión e interacción, cohortes y supervivencia, casos y controles, y cuantificación de incertidumbre. Basado en Woodward, Epidemiology: Study Design and Data Analysis. Universidad Nacional de Colombia, sede Medellín.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

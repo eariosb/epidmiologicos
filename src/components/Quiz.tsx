@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CircleHelp } from 'lucide-react';
 import clsx from 'clsx';
+import { MathText } from '@/lib/math-text';
 
 export interface QuizProps {
   question: string;
@@ -25,7 +26,7 @@ export function Quiz({ question, options, correctIndex, explanation }: QuizProps
     <div className="my-6 rounded border border-ink-200 bg-white p-5 shadow-sm">
       <p className="mb-3 flex items-start gap-2 font-medium text-ink-900">
         <CircleHelp aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-ink-500" />
-        {question}
+        <MathText text={question} />
       </p>
       <fieldset disabled={submitted} className="space-y-2">
         <legend className="sr-only">Opciones de respuesta</legend>
@@ -47,7 +48,7 @@ export function Quiz({ question, options, correctIndex, explanation }: QuizProps
               onChange={() => setSelected(i)}
               className="mt-0.5 accent-accent-600"
             />
-            <span className="text-ink-700">{opt}</span>
+            <span className="text-ink-700"><MathText text={opt} /></span>
           </label>
         ))}
       </fieldset>
@@ -70,7 +71,7 @@ export function Quiz({ question, options, correctIndex, explanation }: QuizProps
           role="status"
         >
           <p className="mb-1 font-semibold">{isCorrect ? '✓ ¡Correcto!' : '✗ No exactamente.'}</p>
-          <p>{explanation}</p>
+          <p><MathText text={explanation} /></p>
           <button
             type="button"
             onClick={() => {
