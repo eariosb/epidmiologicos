@@ -9,6 +9,8 @@ export { BlackboardAssistant } from './components/BlackboardAssistant';
 export { BlackboardExport } from './components/BlackboardExport';
 export { BlackboardSettingsPanel } from './components/BlackboardSettingsPanel';
 export { BlackboardContextBridge } from './components/BlackboardContextBridge';
+export type { AssistantProfile } from './lib/prompts/system';
+export { setAssistantProfile } from './lib/prompts/system';
 export { BlackboardAnchor } from './components/BlackboardAnchor';
 export { BlackboardEmbed } from './components/BlackboardEmbed';
 export { Blackboard } from './components/Blackboard';

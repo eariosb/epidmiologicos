@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { useBlackboard, BlackboardSkeleton } from '@cursos/blackboard';
+import { useBlackboard, BlackboardSkeleton, setAssistantProfile } from '@cursos/blackboard';
+import { EPI_ASSISTANT_PROFILE } from '@/config/assistant';
 import type { ModuleBlock, ModuleNavItem } from './ModulesMenu';
 
 interface DynamicCourseBlackboardProps {
@@ -20,6 +22,10 @@ const CourseBlackboard = dynamic(
  */
 export function DynamicCourseBlackboard({ modules, blocks }: DynamicCourseBlackboardProps) {
   const { state } = useBlackboard();
+  // Registra el perfil del curso en cualquier página, no solo en módulos.
+  useEffect(() => {
+    setAssistantProfile(EPI_ASSISTANT_PROFILE);
+  }, []);
   if (!state.isOpen) return null;
   return <CourseBlackboard modules={modules} blocks={blocks} />;
 }
