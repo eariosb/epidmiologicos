@@ -26,6 +26,10 @@ const components = {
   InteractionExplorer: stub, CohortGantt: stub, BerksonExplorer: stub,
   RocExplorer: stub, MetaExplorer: stub, LangTabs: stub, SasBlock: stub, ToolCard: stub,
   DecisionPanel: stub, DecisionCard: stub,
+  EpiTable: stub, BradfordHill: stub,
+  ExactTestExplorer: stub, ExactPowerExplorer: stub, CorrectionExplorer: stub,
+  CIMethodsExplorer: stub, PrecisionSampleSizeExplorer: stub,
+  SampleSizeExplorer: stub,
   // Term se renderiza de verdad: label + tooltip, para validar el texto.
   Term: ({ k, tip, children }) =>
     createElement('span', null, children ?? k, tip ? ` (${tip})` : null),

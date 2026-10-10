@@ -16,7 +16,7 @@ import type { AssistantMode, LLMMessage } from '../types/blackboard';
 
 const FALLBACK_MODULE = {
   slug: 'general',
-  title: 'Curso GAMLSS: regresión distribucional',
+  title: 'Curso ADEI: análisis de datos epidemiológicos',
   objective: [] as string[],
   datasets: [] as string[],
   order: 0,

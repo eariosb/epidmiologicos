@@ -182,11 +182,15 @@ run;`} />
 Cox asume riesgos proporcionales: las curvas de riesgo no se cruzan y el
 HR es constante en el tiempo. Con <code>cox.zph(fit)</code> se contrasta;
 un HR que cambia con t exige estratificar el tiempo o un modelo con
-interacción temporal.
+interacción temporal. En este ajuste el chequeo **sí** detecta
+violaciones: <code>age</code> (p ≈ 0.015), <code>wexp</code> (p ≈ 0.040)
+y el test global (p ≈ 0.013). En un reporte real no basta interpretar los
+HR: habría que estratificar por edad o añadir una interacción con el
+tiempo antes de sacar conclusiones causales.
 </Callout>
 
 <Quiz
-  question="En recid.csv, coxph da HR(fin) = 0.68, IC95% (0.49, 0.95). ¿Qué significa?"
+  question="En recid.csv, coxph da HR(fin) = 0.68, IC95% (0.470, 0.996). ¿Qué significa?"
   options={[
     "El 68% de los que recibieron apoyo financiero fueron re-arrestados",
     "Quienes recibieron apoyo financiero tienen riesgo instantáneo de re-arresto 32% menor que los que no, ajustando por las demás covariables, y el IC no cubre 1",
@@ -194,7 +198,7 @@ interacción temporal.
     "El apoyo financiero elimina el riesgo de re-arresto"
   ]}
   correctIndex={1}
-  explanation="El hazard ratio multiplica el riesgo instantáneo: HR=0.68 reduce el hazard un 32% en cada momento, ajustando por edad, raza, experiencia, etc. El IC (0.49–0.95) no cubre 1, así que el efecto es real y no trivial: estimación más incertidumbre, como Woodward exige."
+  explanation="El hazard ratio multiplica el riesgo instantáneo: HR=0.68 reduce el hazard un 32% en cada momento, ajustando por edad, raza, experiencia, etc. El IC (0.470–0.996) apenas excluye 1: hay evidencia de efecto, pero el límite superior roza la nulidad — es una señal compatible con reducciones desde 53% hasta menos de 1%. Estimación más incertidumbre, como Woodward exige."
 />
 
 <Flashcard

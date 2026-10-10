@@ -10,7 +10,7 @@ import type { LabExerciseProps } from '@/types/course';
  * Guided executable lab rendered at the end of a module. Wraps an editable
  * WebR cell (RCell) with a statement, an analysis checklist ("Tu turno"),
  * and collapsible hint / guide-answer sections. Intended for small simulated
- * datasets and cheap GAMLSS families — the expensive real-course models stay
+ * datasets and cheap epidemiological analyses — the expensive real-course models stay
  * precomputed in CodeBlocks.
  */
 export function LabExercise({

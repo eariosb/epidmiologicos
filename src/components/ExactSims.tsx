@@ -363,7 +363,8 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
         </p>
       )}
       <SimGuide>
-        La tabla por defecto es Perondi et al. (2004): 7/34 vs. 1/34. Con α = 0.05 el
+        La tabla por defecto es Perondi et al. (2004): 7/34 niños sobrevivieron 24 h con
+        dosis estándar (grupo 1) vs. 1/34 con dosis alta (grupo 2). Con α = 0.05 el
         veredicto depende del procedimiento: Fisher dice «no», Boschloo dice «sí». Mueve
         x₁, x₂ o los tamaños y mira cómo cambia la franja naranja del mapa: esas son las
         tablas donde elegir el test cambia la conclusión.
@@ -589,8 +590,9 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
       <SimGuide>
         Fija p₁ y p₂ en un escenario clínicamente plausible y calcula las curvas: la
         discordancia oscila con n porque el espacio muestral es discreto; más datos no
-        siempre significan menos desacuerdo. En el escenario de Perondi (0.20, 0.03) la
-        potencia de Fisher a n = 34 es ~0.43 y la de Boschloo ~0.55.
+        siempre significan menos desacuerdo. En un escenario hipotético tipo Perondi
+        (p₁ = 0.20, p₂ = 0.03) la potencia de Fisher a n = 34 es ~0.43 y la de Boschloo
+        ~0.55.
       </SimGuide>
       <p className={NOTE}>
         Toda la curva es exacta por enumeración (sin Monte Carlo); el supremo sobre el
@@ -741,9 +743,9 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
       <SimGuide>
         Con c = 0 el OR suele ser ∞ si hay celdas en cero. Sube c: la varianza cae pero el
         sesgo crece; el ECM tiene un mínimo interior. En Perondi el óptimo puntual está
-        cerca de c ≈ 0.8, pero evaluado sobre la posterior es ≈ 0.55, casi la corrección
-        de Haldane (c = 1/2). La RD apenas se mueve: la fragilidad es de la escala OR,
-        no de los datos.
+        cerca de c ≈ 0.8, pero promediado sobre la posterior de Jeffreys cae a ≈ 0.5:
+        casi exactamente la corrección de Haldane. La RD apenas se mueve: la fragilidad
+        es de la escala OR, no de los datos.
       </SimGuide>
       <p className={NOTE}>
         Estimador corregido θ̂_c = log((a+c)(d+c)/((b+c)(c+c))); ECM calculado por
@@ -925,8 +927,9 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
       </div>
 
       <SimGuide>
-        Pon el escenario de Perondi (p₁ = 0.20, p₂ = 0.03, 80%): la fórmula pide ~55 por
-        grupo; el ensayo real usó 34 y por eso su potencia con Fisher era ~0.43. Baja
+        Pon un escenario hipotético tipo Perondi (p₁ = 0.20, p₂ = 0.03, 80%): la fórmula
+        pide ~55 por grupo; el ensayo real usó 34, así que con ese escenario su potencia
+        con Fisher habría sido ~0.43. Baja
         p₂ hacia eventos raros y verás cómo la potencia exacta se aleja de la curva
         asintótica: ahí es donde el módulo 6 calibra la fórmula por enumeración.
       </SimGuide>
@@ -1250,6 +1253,14 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
           onChange={(e) => setPriorB(Math.max(0.1, Number(e.target.value) || 0.1))}
           className={CELL_INPUT} /> (garantía bayesiana, assurance)
       </label>
+      {method === 'wald' && (
+        <p className="mt-1 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-800">
+          Ojo con Wald: cuando x = 0 la varianza estimada se anula y el IC colapsa a un
+          punto (L = 0), así que esos resultados cuentan como «precisión lograda» y
+          sobrestiman la garantía. Es exactamente la falla de Wald cerca del borde;
+          compara con Wilson o Agresti–Coull en la misma configuración.
+        </p>
+      )}
 
       <div className="mt-3 grid gap-4 lg:grid-cols-2">
         <div>
@@ -1358,9 +1369,11 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
         beta-binomiales (predictiva a priori). Ojo: P(L ≤ L₀) no es monótona en n
         (dientes de sierra por la discreción); el n reportado es el menor a partir del
         cual la garantía se sostiene en toda la ventana evaluada. La «fórmula original»
-        se muestra solo para comparar: confunde L con la semiamplitud y no alcanza la
-        garantía que promete. Referencias: Correa (seminario), Brown–Cai–DasGupta
-        (2001), Rothman &amp; Greenland (2018, paquete presize).
+        se muestra solo para comparar: confunde L con la semiamplitud y trata z_β como
+        si multiplicara la desviación de L. Por eso su n no es interpretable — suele
+        quedar muy por encima del necesario, no por debajo. Referencias: Correa
+        (seminario), Brown–Cai–DasGupta (2001), Rothman &amp; Greenland (2018,
+        paquete presize).
       </p>
     </div>
   );

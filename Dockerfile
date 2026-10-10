@@ -1,4 +1,4 @@
-# Entorno de desarrollo del curso GAMLSS (Fase 1: sin WebR, sin R)
+# Entorno de desarrollo del curso ADEI - análisis de datos epidemiológicos
 FROM node:22-alpine
 
 WORKDIR /app

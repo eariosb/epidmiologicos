@@ -84,19 +84,22 @@ La familia **incondicional** toma la otra vía: mantiene el modelo de dos
 binomiales, ordena las tablas por algún estadístico de discrepancia y
 maximiza el valor p sobre el parámetro de estorbo $p$ (la probabilidad
 común bajo H₀). El resultado es exacto (no puede exceder α) pero puede
-acercarse mucho más a α que Fisher. (Precisión terminológica: la
-variante original de Suissa–Shuster evalúa el parámetro de estorbo en el
-estimador combinado $\hat{p} = m/N$ en lugar de maximizar; lo que aquí
-se implementa y muestra es la forma incondicional con supremo, que es la
-estrictamente exacta.)
+acercarse mucho más a α que Fisher. En la práctica el supremo se evalúa
+sobre una malla finita de $p$, así que el valor reportado es una cota
+inferior del supremo verdadero; en los ejemplos del módulo la diferencia
+con una malla refinada es despreciable (~10⁻⁷). (Precisión terminológica: Suissa y
+Shuster (1985) sí maximizan sobre el parámetro de estorbo — es lo que
+aquí se implementa y muestra. Evaluar el supremo solo en el estimador
+combinado $\hat{p} = m/N$ es una variante posterior, el E-test de
+Storer–Kim (1990): es más liberal y no garantiza exactitud estricta.)
 
 | Procedimiento | Ordenamiento | Modelo | Carácter |
 |---|---|---|---|
 | Fisher | probabilidad hipergeométrica | ambos márgenes fijos | exacto, conservador |
-| mid-p | Fisher menos media masa propia | ambos márgenes fijos | casi-exacto, menos conservador |
+| mid-p | Fisher menos la mitad de la masa empatada | ambos márgenes fijos | casi-exacto, menos conservador |
 | z agrupada (supremo) | \|z\| con varianza común | dos binomiales | exacto, nominal |
 | Boschloo | valor p de Fisher | dos binomiales | exacto, uniformemente más potente que Fisher |
-| Berger–Boos | Boschloo sobre IC del parámetro | dos binomiales | exacto (γ), aún más liberal |
+| Berger–Boos | Boschloo sobre IC del parámetro | dos binomiales | exacto (γ); en tablas pequeñas suele coincidir con Boschloo |
 
 <Callout type="warning" title="El parámetro de estorbo es la disputa">
 El test incondicional necesita responder "¿cuál es la probabilidad de
@@ -104,9 +107,10 @@ una tabla al menos tan extrema?" cuando H₀ no especifica $p$. La solución
 de Barnard y de Boschloo es tomar el supremo sobre $p \in (0,1)$; la de
 Berger–Boos restringe el supremo a un intervalo de confianza de $p$ y le
 suma γ (típicamente 0.001). La controversia no es computacional: es si
-ese supremo responde la pregunta del diseño. En un experimento con
-márgenes fijos el supremo no existe como problema; en un estudio
-observacional sí.
+ese supremo responde la pregunta del diseño. Si el diseño fijara ambos
+márgenes —raro fuera del experimento de la dama del té; un ensayo fija
+solo los tamaños de grupo— el supremo no existiría como problema; en un
+estudio que deja el margen de eventos libre, sí.
 </Callout>
 
 ## Misma tabla, cinco procedimientos
@@ -117,9 +121,11 @@ $(n_1, n_2)$ y colorea cada tabla según qué procedimientos la rechazan al
 exactas, cada una con sus cinco valores p calculados.
 
 La tabla por defecto es el caso ilustrativo de Perondi et al. (2004):
-epinefrina en paro cardíaco pediátrico, 7/34 sobrevivientes con dosis
-alta vs. 1/34 con dosis estándar. Es solo un ejemplo; reemplázala con
-cualquier tabla 2×2 de tu interés.
+epinefrina en paro cardíaco pediátrico, 7/34 niños sobrevivieron 24 h
+con **dosis estándar** (grupo 1) vs. 1/34 con **dosis alta** (grupo 2).
+La moraleja clínica del ensayo es incómoda: la dosis alta no solo no
+ayudaba — la evidencia apunta a que dañaba. Es solo un ejemplo;
+reemplázala con cualquier tabla 2×2 de tu interés.
 
 <ExactTestExplorer title={<>Espacio de tablas y regiones de rechazo (α editable)</>} />
 
@@ -127,7 +133,10 @@ El hallazgo de la tabla comparada es el corazón del módulo: **la elección
 del procedimiento no es un detalle técnico, es parte del estimando**.
 Fisher da p = 0.054 (no rechaza a α = 0.05); Boschloo da p = 0.038
 (rechaza). La franja naranja del mapa (donde solo el incondicional
-rechaza) es el precio en potencia del condicionamiento.
+rechaza) es el precio en potencia del condicionamiento. Vale anotar que
+en este escenario la z agrupada incondicional tiene aún más potencia que
+Boschloo (~0.61 vs ~0.55): no hay un test uniformemente mejor dentro de
+la familia incondicional; Boschloo solo domina a Fisher.
 
 ## El tamaño real del test
 
@@ -147,14 +156,20 @@ usa en la práctica porque introduce aleatoriedad ajena a los datos.
 
 <ExactPowerExplorer title={<>Tamaño real bajo H₀, potencia exacta y discordancia vs. n</>} />
 
-Dos resultados del panel de potencia merecen nota. Primero, la potencia
-de Fisher en el escenario de Perondi con n = 34 es ~0.43: el ensayo tenía
-menos de la mitad de la potencia convencional con el procedimiento que
-efectivamente se reporta. Segundo, la curva de discordancia (probabilidad
-de que Fisher y Boschloo den veredictos opuestos) oscila con n: no
-converge monótonamente a cero, porque la discreción del espacio muestral
-no desaparece con tamaños modestos. Aumentar n no garantiza que el
-condicionamiento deje de costar.
+Dos resultados del panel de potencia merecen nota. Primero: si el
+protocolo de Perondi hubiera declarado querer detectar una diferencia
+entre 20% y 3% de supervivencia —un escenario hipotético de diseño, no
+el efecto que se observó—, la potencia exacta de Fisher con n = 34 por
+grupo sería ~0.43 y la de Boschloo ~0.55. El ensayo habría tenido menos
+de la mitad de la potencia convencional con el procedimiento que
+efectivamente se reporta. (Ojo: 0.20 y 0.03 casualmente se parecen a las
+proporciones observadas; usar las observadas como escenario sería
+potencia post hoc, la falacia que condena la sección siguiente. Aquí se
+lee como "lo que habría detectado un diseño con esas ambiciones".)
+Segundo, la curva de discordancia (probabilidad de que Fisher y Boschloo
+den veredictos opuestos) oscila con n: no converge monótonamente a cero,
+porque la discreción del espacio muestral no desaparece con tamaños
+modestos. Aumentar n no garantiza que el condicionamiento deje de costar.
 
 <Callout type="warning" title="No rechazar ≠ aceptar: el argumento agnóstico">
 Si el tamaño real de Fisher con n = 34 es ~0.03 sobre un nominal de
@@ -171,47 +186,51 @@ del espacio muestral, no los datos, hizo el veredicto.
 ## Ceros, correcciones y el trade-off sesgo-varianza
 
 Con celdas en cero el estimador puntual del OR no existe (es infinito con
-probabilidad ~0.36 en el diseño de Perondi). La práctica habitual suma
-una constante c a cada celda antes de estimar: c = 1/2 es la corrección
-de Haldane–Anscombe (y la corrección por continuidad implícita en Firth),
-c = 1 la de Woolf original. El simulador calcula por enumeración exacta
-el sesgo, la varianza y el ECM del estimador corregido en el punto
+probabilidad ~0.36 en la configuración observada de Perondi). La práctica
+habitual suma una constante c a cada celda antes de estimar: c = 1/2 es
+la corrección de Haldane–Anscombe (y la que equivale, en espíritu, al
+ajuste de Firth); c = 1 aparece también en la práctica por convenio. El
+simulador calcula por enumeración exacta el sesgo, la varianza y el ECM
+del estimador corregido **en escala log-OR** en el punto
 $(\hat p_1, \hat p_2)$ de tu tabla.
 
 <CorrectionExplorer title={<>Corrección aditiva: efecto sobre el OR, el ECM y la cobertura</>} />
 
 La curva de ECM tiene el mínimo interior que la teoría predice: bajar c
 reduce el sesgo pero dispara la varianza; subirlo hace lo contrario. En
-el punto observado de Perondi el óptimo está cerca de c ≈ 0.8, pero
-evaluado sobre la distribución posterior del escenario (Jeffreys) el
-óptimo cae a ≈ 0.55: casi exactamente la corrección de Haldane. La
-recomendación práctica no depende del punto, porque el punto es lo que
-se estima.
+el punto observado de Perondi el óptimo está cerca de c ≈ 0.8, pero ese
+punto es lo que se estima —no lo que se conoce—, así que el criterio más
+honesto promedia el ECM sobre la posterior de Jeffreys
+$p_i \sim \mathrm{Beta}(x_i + 1/2,\ n_i - x_i + 1/2)$. Ese promedio
+(reproducible por Monte Carlo sobre la malla de tablas) mueve el óptimo
+a c ≈ 0.5: casi exactamente la corrección de Haldane.
 
-La otra lección es de escala: en la misma tabla de Perondi, el OR sin
-corregir es 8.56, con c = 1/2 es 6.09 y con c = 1 es 4.86: se mueve 40%
-según la corrección, mientras la RD apenas cambia (0.176 con o sin
-corrección; el IC de Agresti–Caffo es [0.012, 0.322]). El estimando
-robusto aquí es la diferencia de riesgos; el OR es el parámetro
-quebradizo. Reportar el OR solo, con una corrección no declarada, es
-reportar menos información de la disponible.
+La otra lección es de escala: en la misma tabla de Perondi, el OR de
+supervivencia (estándar vs. alta) sin corregir es 8.56, con c = 1/2 es
+6.09 y con c = 1 es 4.86: se mueve 40% según la corrección, mientras la
+RD apenas cambia (+0.176 a favor de la estándar con o sin corrección;
+el IC de Agresti–Caffo es [0.012, 0.322]). El estimando robusto aquí es
+la diferencia de riesgos; el OR es el parámetro quebradizo. Reportar el
+OR solo, con una corrección no declarada, es reportar menos información
+de la disponible.
 
 ## Cobertura y longitud del IC
 
 El IC de Woolf (log-OR con corrección c = 1/2) es el estándar de facto en
 tablas grandes; con celdas pequeñas su cobertura real cae por debajo del
-nominal (~0.92 en el escenario de Perondi, verificable en el simulador).
+nominal (≈0.95 en el punto observado de Perondi y ≈0.92 con c = 1;
+verificable por enumeración en el simulador).
 El IC exacto condicional (Cornfield) garantiza cobertura ≥ 0.95
 invirtiendo la prueba de Fisher, pero con una celda en cero produce
 límites que son infinitos con probabilidad alta: es un IC honesto en
 cobertura e inútil como resumen puntual.
 
 Para la RD existen opciones mejores comportadas: el IC de Agresti–Caffo
-(que suma dos éxitos y dos fracasos imaginarios por grupo) y el de
-Newcombe (que combina límites de Wilson por separado) mantienen la
-cobertura nominal con longitudes razonables incluso con celdas en cero.
-En Perondi ambos excluyen el cero sin dramatismo: [0.012, 0.322] y
-[0.019, 0.340] respectivamente.
+(que suma un éxito y un fracaso imaginarios por grupo) y el de Newcombe
+(que combina límites de Wilson por separado) mantienen la cobertura
+nominal con longitudes razonables incluso con celdas en cero. En Perondi
+ambos excluyen el cero sin dramatismo: [0.012, 0.322] y [0.019, 0.340]
+respectivamente.
 
 <Callout type="note" title="Exacto no es sinónimo de informativo">
 Un IC exacto garantiza cobertura pero puede tener longitud infinita; un
@@ -226,10 +245,11 @@ lector necesita saber cuál se usó para interpretar el límite superior.
 El problema de la cobertura se estudia en su forma más simple con una
 sola proporción. El intervalo de Wald (p̂ ± z·√(p̂q̂/n)) es el de todos
 los textos, y Brown, Cai y DasGupta (2001) demostraron que su cobertura
-es errática de forma "mucho más persistente de lo que se aprecia": es
-liberal para p pequeño, conservadora para p cercano a 1, y cuando
-p̂ = 0 o p̂ = 1 la varianza estimada se anula y el intervalo colapsa a un
-punto. Para epidemiología, donde las prevalencias suelen ser bajas y los
+es errática de forma "mucho más persistente de lo que se aprecia":
+subcubre severamente en ambos extremos —la cobertura de Wald es
+simétrica en p ↔ 1 − p, así que falla igual en p = 0.02 que en
+p = 0.98— y cuando p̂ = 0 o p̂ = 1 la varianza estimada se anula y el
+intervalo colapsa a un punto. Para epidemiología, donde las prevalencias suelen ser bajas y los
 brotes pueden empezar con cero casos detectados, Wald no es un método
 de trabajo: es el contraejemplo docente.
 
@@ -256,8 +276,8 @@ que se evaluó para Woolf vs. Cornfield en la escala del OR.
 <CIMethodsExplorer title={<>Seis métodos de IC para una proporción: admisibilidad y cobertura real</>} />
 
 <Callout type="warning" title="El mito N ≥ 30">
-La regla "con 30 observaciones alcanza la normalidad" proviene de las
-tablas de Student impresas, no de un teorema. La velocidad de
+La regla "con 30 observaciones alcanza la normalidad" no proviene de
+ningún teorema: es una heurística transmitida sin justificación formal. La velocidad de
 convergencia del TCL depende de la asimetría y la curtosis de la
 distribución original; con prevalencias de 1–5%, un n de 100 sigue
 subcubriendo bajo Wald. La cobertura exacta del simulador permite
@@ -333,8 +353,10 @@ de ética debería ver.
 <Callout type="warning" title="El ensayo subpotenciado es un problema ético">
 Un ensayo sin potencia suficiente expone a los participantes al riesgo
 del protocolo sin capacidad real de responder la pregunta. Perondi et
-al. aleatorizaron 68 niños a un procedimiento invasivo con potencia real
-~43–55% según el test: ni el resultado "negativo" ni el "positivo"
+al. compararon dos dosis de epinefrina de rescate en 68 niños en paro
+cardíaco; en un escenario hipotético de diseño del orden del efecto que
+se observó (20% vs. 3% de supervivencia), la potencia exacta habría
+sido ~43–55% según el test: ni el resultado "negativo" ni el "positivo"
 habrían sido concluyentes al α nominal. Calibrar el tamaño muestral con
 el procedimiento que se usará no es un refinamiento estadístico; es
 parte del protocolo ético del estudio.
@@ -371,7 +393,8 @@ responde estas preguntas, en este orden:
 <RCell
   id="06/fisher-vs-boschloo"
   title="Fisher, mid-p, z agrupada y Boschloo en R base"
-  code={`# Tabla de Perondi: 7/34 vs 1/34. Solo R base, sin Monte Carlo.
+  code={`# Tabla de Perondi: 7/34 sobrevivientes con dosis estandar (grupo 1)
+# vs 1/34 con dosis alta (grupo 2). Solo R base, sin Monte Carlo.
 # Truco de eficiencia: el valor p de Fisher por tabla se calcula por
 # hipergeometrica directa (equivale a fisher.test()$p.value, metodo
 # minlike) y los supremos sobre el parametro de estorbo se hacen con
@@ -389,8 +412,12 @@ p_fisher <- function(a, b) {
 pf  <- p_fisher(x1, x2)                    # = fisher.test()$p.value
 pfs <- outer(0:n1, 0:n2, Vectorize(p_fisher))
 
-# 2) mid-p: Fisher menos la mitad de la masa hipergeometrica propia
-pmid <- pf - 0.5 * dhyper(x1, n1, n2, x1 + x2)
+# 2) mid-p: Fisher menos la mitad de TODA la masa empatada (misma
+#    convencion del simulador: con n1 = n2 la tabla (1,7) tiene la misma
+#    probabilidad hipergeometrica que la observada (7,1)).
+m  <- x1 + x2; xs <- max(0, m - n2):min(n1, m)
+pr <- dhyper(xs, n1, n2, m); p0 <- dhyper(x1, n1, n2, m)
+pmid <- sum(pr[pr < p0*(1 - 1e-7)]) + 0.5*sum(pr[abs(pr/p0 - 1) <= 1e-7])
 
 # 3) z agrupada: |z| con varianza combinada bajo H0
 z_pooled <- function(a, b) {
@@ -415,7 +442,7 @@ pb <- sup_p(rej_b)
 
 cat(sprintf("Fisher = %.4f   mid-p = %.4f\\n", pf, pmid))
 cat(sprintf("z agrupada = %.4f   Boschloo = %.4f\\n", pz, pb))
-# Salida esperada: 0.054, 0.042, ~0.03, 0.038. Con alpha = 0.05 el
+# Salida esperada: 0.054, 0.030, ~0.03, 0.038. Con alpha = 0.05 el
 # veredicto depende del procedimiento y del modelo muestral.
 cat("El veredicto a alpha=0.05 depende del procedimiento.\\n")`}
 />
@@ -461,7 +488,10 @@ cat(sprintf("Tamano real maximo: Fisher = %.3f  Boschloo = %.3f (alpha=%.2f)\\n"
             max(tam_F), max(tam_B), alpha))
 # Esperado: Fisher ~0.03 (usa ~2/3 del nominal), Boschloo ~0.05.
 
-# Potencia en el escenario Perondi
+# Potencia en un escenario HIPOTETICO de diseno tipo Perondi:
+# "que potencia habria tenido un estudio que quisiera detectar 20% vs 3%"
+# (p1 = estandar mejor). No es la potencia del ensayo real: usar las
+# proporciones observadas como escenario seria potencia post hoc.
 p1 <- 0.20; p2 <- 0.03
 cat(sprintf("Potencia en (0.20, 0.03): Fisher = %.3f  Boschloo = %.3f\\n",
             P_rechazo(rej_F, p1, p2), P_rechazo(rej_B, p1, p2)))
@@ -470,7 +500,7 @@ cat(sprintf("Potencia en (0.20, 0.03): Fisher = %.3f  Boschloo = %.3f\\n",
 />
 
 <Quiz
-  question="En la tabla de Perondi (7/34 vs. 1/34), Fisher da p = 0.054 y Boschloo p = 0.038. Con α = 0.05, ¿qué afirmación es correcta?"
+  question="En la tabla de Perondi (7/34 sobrevivientes con dosis estándar vs. 1/34 con dosis alta), Fisher da p = 0.054 y Boschloo p = 0.038. Con α = 0.05, ¿qué afirmación es correcta?"
   options={[
     "Fisher es más exacto, por lo que su veredicto 'no significativo' es el correcto",
     "Los dos valores p responden modelos muestrales distintos; cuál aplica depende de qué fijó el diseño",
@@ -508,9 +538,8 @@ del OR bajo dos correcciones distintas y el estimando alternativo (RD).
 - **Fisher (1935), *The Design of Experiments***: la justificación original del condicionamiento.
 - **Boschloo (1970)**: el test incondicional ordenado por el valor p de Fisher.
 - **Berger & Boos (1994)**: maximización sobre un IC del parámetro de estorbo.
-- **Mehrotra, Chan & Berger (2003)**: revisión crítica de los tests exactos 2×2; por qué mid-p no es estrictamente exacto.
+- **Mehrotra, Chan & Berger (2003)**: comparación de los tests incondicionales 2×2 (z agrupada vs. no agrupada y el ordenamiento de Boschloo); la referencia técnica de la familia del supremo.
 - **Hoenig & Heisey (2001)**: la falacia de la potencia observada.
 - **Halpern et al. (2002)**: ética del ensayo clínico subpotenciado.
-- **Ensayo técnico (repositorio del curso)**: enumeración exacta completa del caso Perondi, con el código R reproducible en `simulacion3.R` y `sesgo_varianza.R`.
 - **Coscrato, Izbicki & Stern (2018)**: tests agnósticos; la tercera respuesta "la muestra no decide".
 - **App `modulo_precision/` (repositorio del curso)**: la Shiny app del seminario de Correa con la distribución de la longitud del IC; complemento interactivo de la sección de cobertura.

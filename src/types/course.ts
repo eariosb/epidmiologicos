@@ -1,4 +1,4 @@
-// Shared content types for the GAMLSS course (MDX-based architecture).
+// Shared content types for the epidemiology course (MDX-based architecture).
 
 /** Front-matter metadata stored at the top of each module's .mdx file. */
 export interface ModuleMeta {
@@ -45,7 +45,7 @@ export interface RCellProps {
 /**
  * Guided executable lab ("sandbox ligero") placed at the end of a module:
  * a statement, an editable WebR cell with small simulated data and cheap
- * GAMLSS families, a "Tu turno" analysis checklist, and collapsible
+ * epidemiological analyses, a "Tu turno" analysis checklist, and collapsible
  * hint / guide-answer sections. Real course models remain precomputed.
  */
 export interface LabExerciseProps {

@@ -195,7 +195,7 @@ tasa <- casos / pt
 cat(sprintf("riesgo 5-anos      = %.3f (probabilidad)\\n", riesgo))
 cat(sprintf("persona-anos       = %.0f\\n", pt))
 cat(sprintf("tasa de incidencia = %.2f por 1000 p-a\\n", tasa * 1000))
-cat("\\nEl riesgo usa n=1000; la tasa usa pt=%.0f.\\n", pt)
+cat(sprintf("\\nEl riesgo usa n=1000; la tasa usa pt=%.0f.\\n", pt))
 cat("Con seguimiento variable, solo la tasa es honesta.\\n")
 
 # P = I x D: hipertension, I = 3%/ano, D = 25 anos (cronica)

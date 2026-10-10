@@ -177,22 +177,28 @@ que es lo que interesa.
 El pareamiento no es gratis y sus fracasos tienen nombre:
 
 - **Overmatching**: si se parean por una variable que no es confusora —
-  por ejemplo un mediador causal o un correlato de la exposición — se
-  fabrican concordancias artificiales y el <Term k="OR">OR</Term> pareado se sesga hacia 1.
-  Regla práctica: solo se parean por confusores verdaderos (el <Term k="DAG">DAG</Term> del
-  módulo 7 decide), nunca por lo que el investigador tenga a la mano.
-- **Conjuntos incompletos**: en clogit con 1:c variable, un set cuyo
-  caso tiene exposición que no añade contraste sobre los controles
-  disponibles (o al revés) no contribuye a la verosimilitud. No es un
-  bug: la condicional solo usa los sets que discriminan. En DDIMER,
-  sets con c ≠ 1 son exactamente donde esta disciplina importa.
+  por ejemplo un mero correlato de la exposición — se fabrican
+  concordancias artificiales: bajo análisis condicional el <Term k="OR">OR</Term> no se
+  sesga, pero la eficiencia cae porque sobran parejas que no discriminan.
+  El sesgo sí aparece cuando se parean por un mediador causal (se
+  bloquea parte del efecto E → D). Regla práctica: solo se parean por
+  confusores verdaderos (el <Term k="DAG">DAG</Term> del módulo 7 decide), nunca por lo
+  que el investigador tenga a la mano.
+- **Conjuntos incompletos vs. concordantes**: son dos cosas distintas.
+  Un set *incompleto* —un caso con menos controles de los planeados, o
+  controles sin su caso— sí aporta a la verosimilitud condicional
+  mientras conserve contraste de exposición. Lo que no aporta es el set
+  *concordante o no informativo*: caso y controles todos expuestos (o
+  todos no expuestos), o un set donde la exposición del caso no difiere
+  de la de sus controles. No es un bug: la condicional solo usa los
+  sets que discriminan. En DDIMER, sets con c ≠ 1 son exactamente donde
+  esta disciplina importa.
 - **Legionella**: el ejemplo de las clases 21–23 es la lección de costo.
-  En la investigación del brote de Filadelfia de 1976, parear casos por
-  características tan específicas (asistentes a la convención, rango de
-  edad, lugar de alojamiento) dejó pocos controles elegibles y varias
-  parejas con exposición discordante inservible. El diseño ganó
-  control de confusión y perdió eficiencia: el precio del matching se
-  paga en sets que no informan.
+  La investigación del brote de legionelosis muestra la tensión clásica:
+  criterios de pareamiento muy específicos reducen el pool de controles
+  elegibles y dejan sets sin contraste de exposición utilizable. El
+  diseño gana control de confusión y pierde eficiencia: el precio del
+  matching se paga en sets que no informan.
 
 <Callout type="warning" title="Cuándo NO parear">
 No parear por: (a) variables en el camino causal E → D (mediadores),

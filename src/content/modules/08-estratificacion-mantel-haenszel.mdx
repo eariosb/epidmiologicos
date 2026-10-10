@@ -204,11 +204,20 @@ cat(sprintf("OR fuma     = %.2f\\n",
             arr[1,1,2]*arr[2,2,2]/(arr[1,2,2]*arr[2,1,2])))
 print(mantelhaen.test(arr, correct = FALSE))
 
-# Riesgos por estrato -> RD aproximada del efecto de la vivienda:
+# Riesgos por estrato -> RD del efecto de la vivienda con IC:
 r_e <- c(arr[1,1,1]/sum(arr[1,,1]), arr[1,1,2]/sum(arr[1,,2]))
 r_n <- c(arr[2,1,1]/sum(arr[2,,1]), arr[2,1,2]/sum(arr[2,,2]))
-cat(sprintf("\\nRD estratos: %.3f y %.3f -> NNT ~ %.0f\\n",
-            r_e[1]-r_n[1], r_e[2]-r_n[2], 1/mean(r_e-r_n)))`}
+n_e <- c(sum(arr[1,,1]), sum(arr[1,,2])); n_n <- c(sum(arr[2,,1]), sum(arr[2,,2]))
+rd <- r_e - r_n
+se <- sqrt(r_e*(1-r_e)/n_e + r_n*(1-r_n)/n_n)
+w <- 1/se^2                                   # combinado inversa-varianza
+rd_c <- sum(w*rd)/sum(w); se_c <- sqrt(1/sum(w))
+cat(sprintf("\\nRD estratos: %.3f y %.3f\\n", rd[1], rd[2]))
+cat(sprintf("RD combinada = %.3f [%.3f, %.3f] -> NNT ~ %.0f\\n",
+            rd_c, rd_c - 1.96*se_c, rd_c + 1.96*se_c, 1/rd_c))
+# Esperado: RD ~ 0.026 [-0.001, 0.052] -> NNT ~ 39. El IC roza cero,
+# coherente con el MH al borde (p = 0.051): el punto favorece, la
+# incertidumbre manda.`}
 />
 
 <SasBlock code={`proc import datafile="shhs_vivienda.csv" out=viv
@@ -222,20 +231,23 @@ run;`} />
 <DecisionPanel
   panelId="vivienda"
   arr={0.026}
-  arrLo={0.004}
-  arrHi={0.048}
+  arrLo={-0.001}
+  arrHi={0.052}
   eventLabel="caso de CHD evitado"
-  title={<>Programa de vivienda: NNT ≈ 38, ¿vale el costo?</>}
-  note={<>Con la <Term k="RD">RD</Term> ajustada (~2.6 pp), mejorar la vivienda de ~38 familias
-  evita un caso de CHD. Mueve el costo por familia intervenida y el valor
-  del evento: la decisión depende de cuánto valora la sociedad un CHD
-  evitado, y el IC es ancho.</>}
+  title={<>Programa de vivienda: NNT ≈ 39, ¿vale el costo?</>}
+  note={<>Con la <Term k="RD">RD</Term> combinada de la celda (~2.6 pp, IC que roza cero:
+  [-0.001, 0.052]), mejorar la vivienda de ~39 familias evitaría un caso de
+  CHD — si el efecto es real. Mueve el costo por familia intervenida y el
+  valor del evento: la decisión depende de cuánto valora la sociedad un
+  CHD evitado, y el IC cruza cero.</>}
 />
 
 **Crítica, antes de firmar:**
 
-- El OR crudo (1.6) y el MH (~1.3) cuentan historias distintas: ¿cuál va
-  en la carta al ministerio y por qué? (principio 3).
+- El OR crudo (1.59) y el MH (~1.30) cuentan historias distintas: ¿cuál va
+  en la carta al ministerio y por qué? (principio 3). Ojo: estos datos son
+  una adaptación docente que preserva la dirección del ejemplo real de
+  Woodward (crudo 1.45 → MH 1.32); no son sus conteos literales.
 - El IC del MH en el ejemplo real de Woodward toca 1 (0.95–1.82): ¿cambia
   eso la recomendación de política, aunque el punto estimado favorezca?
 

@@ -172,10 +172,11 @@ abajo, no el p del log-rank.
 </Callout>
 
 <Callout type="note" title="Log-rank y sus primos sin censura">
-Con dos grupos y sin censura, el log-rank equivale al test de Wilcoxon
-aplicado a los tiempos; con más de dos grupos, a Kruskal–Wallis. La
-censura es lo que hace necesario el log-rank: sin ella se recuperan los
-tests de siempre (clase 15). Y un puente hacia el bloque II: la
+Con dos grupos y sin censura, el log-rank equivale al test de Savage
+(scores exponenciales) aplicado a los tiempos; el test que sí se reduce a
+Wilcoxon es su variante ponderada Gehan–Breslow (pesos = tamaños del
+riesgo). La censura es lo que hace necesaria la familia: sin ella se
+recuperan los tests de siempre (clase 15). Y un puente hacia el bloque II: la
 mortalidad del SHHS se analizó también con <Term k="CMH">CMH</Term> sobre
 una tabla 2×2×9 estratificada (clase 16, <code>mantelhaen.test</code>),
 mostrando que la estratificación clásica y la supervivencia comparten
@@ -210,13 +211,19 @@ la misma lógica observado-menos-esperado.
   code={`# valung.csv: dataset del Veterans Administration (clase 16).
 va <- read.csv("valung.csv")
 print(names(va)); print(head(va))
-print(table(va$censor))   # verifica: 1 = muerte o 1 = censura?
+print(table(va$censor))          # 128 ceros y 9 unos
+print(tapply(va$SurvTime, va$censor, median))
+# Los 9 con censor = 1 tienen tiempos largos: en este dataset 1 = CENSURA
+# y 0 = muerte. Surv() exige 1 = evento, asi que hay que invertir el flag:
+va$dead <- 1 - va$censor
 
 # KM y log-rank por terapia:
 library(survival)
-sf <- survfit(Surv(SurvTime, censor) ~ Therapy, data = va)
+sf <- survfit(Surv(SurvTime, dead) ~ Therapy, data = va)
 print(sf)
-print(survdiff(Surv(SurvTime, censor) ~ Therapy, data = va))
+print(survdiff(Surv(SurvTime, dead) ~ Therapy, data = va))
+# por tipo celular (factor pronostico, no confusor: el ensayo es aleatorizado):
+print(survdiff(Surv(SurvTime, dead) ~ Cell, data = va))
 plot(sf, col = c("#dc2626","#0284c7"), lwd = 2, mark.time = TRUE,
      xlab = "dias", ylab = "S(t)")
 legend("bottomleft", levels(factor(va$Therapy)),
@@ -227,22 +234,23 @@ legend("bottomleft", levels(factor(va$Therapy)),
     "Aplica log-rank: ¿difiere la supervivencia entre terapias?",
     "Estratifica por Cell (squamous, small, adeno, large): ¿la terapia o el tipo celular explican la supervivencia?",
   ]}
-  hint="En el dataset VA, censor suele codificar 1 = muerte. Corre table(va$censor, va$Therapy) y survdiff(... ~ Cell) para comparar."
-  solution="El log-rank por Therapy no es significativo; por Cell sí. El tipo celular, no la terapia, domina la supervivencia en cáncer de pulmón. Es el ejemplo clásico de confusor que el análisis ingenuo esconde."
+  hint="En este dataset censor = 1 marca la censura (los 9 pacientes vivos al cierre tienen los tiempos más largos) y 0 la muerte: usa dead &lt;- 1 - censor antes de Surv(). Corre table(va$censor, va$Therapy) y survdiff(... ~ Cell) para comparar."
+  solution="El log-rank por Therapy no es significativo (p ≈ 0.9); por Cell es contundente (χ² ≈ 25, p ≈ 1e-05). El tipo celular domina la supervivencia en cáncer de pulmón: como el ensayo es aleatorizado, no es un confusor sino un factor pronóstico fuerte — estratificar por él aumenta la precisión, no corrige sesgo."
 />
 
 <SasBlock code={`proc import datafile="valung.csv" out=va dbms=csv replace;
   getnames=yes;
 run;
-/* Verificar la codificacion de la censura antes de modelar: */
+/* Verificar la codificacion de la censura antes de modelar:
+   en este dataset 1 = censurado (los 9 tiempos largos), 0 = muerte. */
 proc freq data=va; tables censor*Therapy; run;
 /* KM + log-rank por terapia y por tipo celular: */
 proc lifetest data=va method=km plots=survival;
-  time SurvTime*censor(0);
+  time SurvTime*censor(1);
   strata Therapy;
 run;
 proc lifetest data=va method=km;
-  time SurvTime*censor(0);
+  time SurvTime*censor(1);
   strata Cell;
 run;`} />
 
@@ -267,13 +275,25 @@ leu <- read.table("leucemia.txt", header = TRUE)
 
 sf <- survfit(Surv(tiempo, status) ~ grupo, data = leu)
 s  <- summary(sf, times = 23)     # S(23) por brazo; estrato 1 = placebo
-r_ctrl <- 1 - s$surv[1]
-r_trat <- 1 - s$surv[2]
-arr  <- r_ctrl - r_trat
+print(s)                        # trae el IC Greenwood de cada S(23)
+r_ctrl <- 1 - s$surv[1]         # 1.00: los 21 del placebo recayeron
+r_trat <- 1 - s$surv[2]         # 0.55
+arr  <- r_ctrl - r_trat         # = S_6MP(23) - S_placebo(23) = 0.45
 
+# IC del ARR estilo Newcombe: combina el IC Greenwood de S_6MP(23)
+# [lower, upper del summary] con un IC de Wilson para S_placebo (0/21).
+wilson <- function(x, n, z = 1.96) {
+  ce <- (x + z^2/2)/(n + z^2); hw <- z/(n + z^2)*sqrt(x*(n-x)/n + z^2/4)
+  c(max(0, ce - hw), min(1, ce + hw))
+}
+ic_sp <- wilson(0, 21)                       # S_placebo: [0, 0.15]
+ic_st <- c(s$lower[2], s$upper[2])           # S_6MP Greenwood
 cat(sprintf("riesgo recaida 23sem: placebo = %.2f  6-MP = %.2f\\n",
             r_ctrl, r_trat))
-cat(sprintf("ARR = %.2f  ->  NNT(23 sem) = %.1f\\n", arr, 1/arr))
+cat(sprintf("ARR = %.2f [%.2f, %.2f]  ->  NNT(23 sem) = %.1f\\n",
+            arr, ic_st[1] - ic_sp[2], ic_st[2] - ic_sp[1], 1/arr))
+# Esperado: ARR = 0.45 [~0.09, ~0.81] -> NNT ~ 2.2. El IC es ancho:
+# la decision es robusta pero la magnitud exacta no.
 print(survdiff(Surv(tiempo, status) ~ grupo, data = leu))
 cat("\\nEl NNT horizonte-fijo usa S(t): es el puente KM -> decision.\\n")`}
 />
@@ -289,9 +309,9 @@ run;
 
 <DecisionPanel
   panelId="6mp"
-  arr={0.5}
-  arrLo={0.2}
-  arrHi={0.75}
+  arr={0.45}
+  arrLo={0.09}
+  arrHi={0.81}
   eventLabel="recaída evitada"
   title={<>6-MP de mantenimiento: NNT ≈ 2 contra una enfermedad fatal</>}
   note={<>Con un evento tan grave, el valor de evitar una recaída es enorme
@@ -327,7 +347,7 @@ run;
 <Callout type="note" title="Entrega: análisis de supervivencia">
 Curvas KM de VALUNG por terapia (y por tipo celular), log-rank de cada
 comparación y una nota interpretativa de 200 palabras: ¿qué explica la
-supervivencia, el tratamiento o el confusor?
+supervivencia, el tratamiento o el tipo celular como factor pronóstico?
 </Callout>
 
 ## Lecturas

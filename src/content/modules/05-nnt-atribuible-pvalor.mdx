@@ -68,54 +68,67 @@ $$
 Un RR grande con exposición rara puede explicar pocos casos; un RR modesto
 con exposición común (tabaquismo, sedentarismo) explica muchos. El ejemplo
 de clase sobre tabaquismo materno y bajo peso al nacer lo ilustra. El
-script calcula riesgos, RR y OR, y deriva PRA, PRAP y NNT a partir de la
+script calcula riesgos, RR y OR, y deriva PRA, PRAP y NNH a partir de la
 prevalencia de exposición observada en la propia tabla — ahora con su
-incertidumbre: el principio 4 exige IC también para estas medidas. El IC
-de Kleinbaum–Kupper del script del curso usa solo las cuatro celdas, así
-que funciona igual en casos y controles (donde el PRA se estima con el OR:
-la fórmula de Levin, $(OR-1)/OR$), y el IC del NNT se obtiene invirtiendo
-el IC del RD.
+incertidumbre: el principio 4 exige IC también para estas medidas. Como la
+exposición es dañina, el inverso del RD es **NNH** (number needed to harm),
+no NNT. El PRAP tiene IC según el diseño: en cohorte se usa el de Walter
+(la función `attributable()` del curso); en casos y controles, donde no
+hay riesgos, el de Kleinbaum–Kupper sobre el OR — aquí con el factor
+delta corregido, $d(a+c)/(ad-bc)$. Y una distinción que las fórmulas
+confunden: la de Levin, $P(E)(RR-1)/(1+P(E)(RR-1))$, es para **PRAP**;
+$(OR-1)/OR$ en casos-controles estima la fracción atribuible **en
+expuestos**, otra medida.
 
 <RCell
   id="05/riesgo-atribuible"
   title="PRA y PRAP (tabaquismo materno y bajo peso)"
   code={`# Adaptado de Riesgo_atribuible.R (Salazar): fumadora vs. bajo peso.
-tab <- matrix(c(30, 70, 20, 180), ncol = 2,
+tab <- matrix(c(30, 70, 20, 180), ncol = 2, byrow = TRUE,
               dimnames = list(fuma = c("si","no"), bpeso = c("si","no")))
 print(tab)
 
-a <- tab[1,1]; b <- tab[1,2]; c <- tab[2,1]; d <- tab[2,2]
+a <- tab[1,1]; b <- tab[1,2]; c <- tab[2,1]; d <- tab[2,2]; n <- sum(tab)
 r1 <- a/(a+b); r0 <- c/(c+d); RR <- r1/r0; OR <- a*d/(b*c)
 PRA  <- (RR - 1)/RR
-Pe   <- (a+b)/sum(tab)                       # prevalencia de exposicion
-PRAP <- Pe*(RR - 1)/(1 + Pe*(RR - 1))
-NNT  <- 1/(r1 - r0)
+Pe   <- (a+b)/n                              # prevalencia de exposicion
+PRAP <- Pe*(RR - 1)/(1 + Pe*(RR - 1))        # formula de Levin
+NNH  <- 1/(r1 - r0)
 
 cat(sprintf("r1=%.3f  r0=%.3f  RR=%.2f  OR=%.2f\\n", r1, r0, RR, OR))
 cat(sprintf("PRA  = %.1f%%  (fraccion del riesgo de fumadoras debida a fumar)\\n", 100*PRA))
 cat(sprintf("PRAP = %.1f%%  (fraccion del bajo peso poblacional atribuible)\\n", 100*PRAP))
-cat(sprintf("NNT  = %.0f  -> cada %.0f no-fumadoras mas, ~1 bajo peso evitado\\n",
-            NNT, NNT))
+cat(sprintf("NNH  = %.0f  -> cada %.0f fumadoras, ~1 bajo peso de mas (exposicion danina)\\n",
+            NNH, NNH))
 
-# IC del NNT: invertir el IC del RD. Si el IC cruza 0, el NNT pasa por
-# infinito (RD=0 -> 1/0): reportar "NNTB hasta NNTH" en ese caso.
+# IC del NNH: invertir el IC del RD. Si el IC cruza 0, pasa por infinito
+# (RD=0 -> 1/0): reportar "NNHB hasta NNBH" en ese caso.
 se_rd <- sqrt(r1*(1-r1)/(a+b) + r0*(1-r0)/(c+d))
 ic_rd <- (r1-r0) + c(-1,1)*1.96*se_rd
-cat(sprintf("\\nIC95%% RD = (%.3f, %.3f) -> NNT (%.1f, %.1f)\\n",
+cat(sprintf("\\nIC95%% RD = (%.3f, %.3f) -> NNH (%.1f, %.1f)\\n",
             ic_rd[1], ic_rd[2], 1/ic_rd[2], 1/ic_rd[1]))
 
-# IC de Kleinbaum-Kupper para la fraccion atribuible (formula del
-# script del curso Riesgo_atribuible_casos_controles.R): solo usa
-# a,b,c,d -> valida tambien en casos y controles, donde no hay riesgos.
-theta <- ((a*d)-(b*c))/(d*(a+c))
-mu <- (1.96*d*(b+d)/(a*(b+d)-b*(a+c))) *
-      sqrt(a/(c*(a+c)) + b/(d*(b+d)))
-lo <- 1/(1 + ((1-theta)/theta)*exp( mu))
-hi <- 1/(1 + ((1-theta)/theta)*exp(-mu))
-cat(sprintf("PRAP (CC) = %.3f  IC95%% KK (%.3f, %.3f)\\n", theta, lo, hi))
+# IC del PRAP en COHORTE (Walter, funcion attributable() del curso):
+theta_w <- ((a+c) - n*c/(c+d))/(a+c)
+mu_w <- 1.96*((a+c)*(c+d)/(a*d - b*c)) *
+        sqrt((a*d*(n-c) + c^2*b)/(n*c*(a+c)*(c+d)))
+cat(sprintf("PRAP cohorte = %.3f  IC Walter (%.3f, %.3f)\\n", theta_w,
+            1/(1+((1-theta_w)/theta_w)*exp(mu_w)),
+            1/(1+((1-theta_w)/theta_w)*exp(-mu_w))))
 
-# PRA en casos y controles (Levin): el OR sustituye al RR.
-cat(sprintf("PRA en CC (Levin) = %.3f\\n", (OR-1)/OR))`}
+# IC del PRAP en CASOS-CONTROLES (Kleinbaum-Kupper, delta sobre logit):
+# factor corregido d(a+c)/(ad-bc); el script de clase usa d(b+d), que
+# solo coincide cuando a+c = b+d -> subestima la precision en general.
+theta <- (a*d - b*c)/(d*(a+c))
+se_l1 <- sqrt(a/(c*(a+c)) + b/(d*(b+d)))      # SE de log(1 - theta)
+mu <- 1.96 * se_l1 * d*(a+c)/(a*d - b*c)      # = 1.96 * SE(logit theta)
+cat(sprintf("PRAP (CC) = %.3f  IC95%% KK (%.3f, %.3f)\\n", theta,
+            1/(1+((1-theta)/theta)*exp(mu)),
+            1/(1+((1-theta)/theta)*exp(-mu))))
+
+# En casos y controles el RR no existe: (OR-1)/OR estima la fraccion
+# atribuible EN EXPUESTOS (no es la formula de Levin, que es para PRAP).
+cat(sprintf("PRA en CC ((OR-1)/OR) = %.3f\\n", (OR-1)/OR))`}
 />
 
 <SasBlock code={`data bajo;
@@ -179,7 +192,7 @@ se retoma en el módulo 17.
   items={[
     { front: "NNT", back: "1/RD: pacientes a tratar para evitar un evento. Mismo RR ≠ mismo NNT; depende del riesgo basal." },
     { front: "PRA vs PRAP", back: "PRA: fracción del riesgo del expuesto debida a la exposición. PRAP: lo mismo en la población; depende de la prevalencia de exposición." },
-    { front: "Valor p", back: "Probabilidad del dato bajo H₀: mezcla efecto y n. RR=2 con n=50: p=0.12; con n=100: p=0.03 (Woodward 3.7)." },
+    { front: "Valor p", back: "Probabilidad de un resultado al menos tan extremo como el observado, bajo H₀: mezcla efecto y n. RR=2 con n=50: p=0.12; con n=100: p=0.03 (Woodward 3.7)." },
     { front: "Orden del reporte", back: "Estimador puntual → IC95% → (si acaso) p. El IC ya contiene la pregunta del test, más el tamaño." },
   ]}
 />
@@ -218,14 +231,18 @@ del módulo siguiente.
 <RCell
   id="05/tamano-muestral"
   title="Cálculo por fórmula y por funciones de R"
-  code={`# Escenario Perondi: epinefrina en paro cardiaco pediatrico,
-# supervivencia 0.20 vs 0.03. Cuantos por grupo para 80% de potencia?
+  code={`# Escenario HIPOTETICO tipo Perondi: epinefrina en paro cardiaco
+# pediatrico, supervivencia 0.20 vs 0.03 ("que tan grande tendria que ser
+# un estudio que quisiera detectar esa diferencia"). No es el efecto
+# observado del ensayo real: usar proporciones observadas como escenario
+# seria potencia post hoc. Cuantos por grupo para 80% de potencia?
 p1 <- 0.20; p2 <- 0.03
 
-# 1) power.prop.test: la funcion estandar de R (test de dos proporciones).
-#    Usa la transformacion arcoseno (h de Cohen) y es mas optimista.
+# 1) power.prop.test: la funcion estandar de R usa la misma aproximacion
+#    normal de Fleiss (varianza combinada bajo H0): n = 54.09 -> 55.
 print(power.prop.test(p1 = p1, p2 = p2, sig.level = 0.05, power = 0.80))
-#    Salida esperada: n ~ 47 por grupo.
+#    Salida esperada: n ~ 54 por grupo. La version con arcoseno (h de
+#    Cohen, pwr::pwr.2p.test) da 47 y es mas optimista.
 
 # 2) Formula explicita de Fleiss (Woodward cap. 8): la que usa el simulador.
 #    Mas conservadora porque usa la varianza combinada bajo H0.
@@ -234,9 +251,10 @@ pb <- (p1 + p2)/2
 n_fleiss <- (za*sqrt(2*pb*(1-pb)) + zb*sqrt(p1*(1-p1) + p2*(1-p2)))^2 / (p1-p2)^2
 cat(sprintf("n por grupo (Fleiss) = %d\\n", ceiling(n_fleiss)))   # -> 55
 
-# La discrepancia (47 vs 55) no es un error: son aproximaciones distintas.
-# Ninguna garantiza la potencia real del test que finalmente se use:
-# con n = 34 por grupo la potencia exacta de Fisher era ~0.43.
+# La discrepancia (47 arcoseno vs 55 Fleiss) no es un error: son
+# aproximaciones distintas. Ninguna garantiza la potencia real del test
+# que finalmente se use: si un diseno hubiera querido detectar 20% vs 3%
+# con n = 34 por grupo, la potencia exacta de Fisher seria ~0.43.
 
 # 3) Ajuste por perdidas: si el 20% se pierde en seguimiento
 cat(sprintf("n ajustado (20%% perdidas) = %d\\n", ceiling(n_fleiss/0.8)))  # -> 68`}
@@ -270,9 +288,10 @@ La fórmula n = z²p(1−p)/δ² trata la semiamplitud δ como si el
 investigador la impusiera. En realidad la longitud del IC que se
 obtendrá, L = 2δ̂, **depende del dato**: es una variable aleatoria con su
 propia distribución. Un n calculado con la fórmula clásica garantiza
-solo E[L] ≈ δ en promedio; una fracción sustancial de los estudios
-(en el ejemplo de abajo, ~57%) replica un intervalo más ancho que el
-prometido.
+solo E[L] ≈ L₀ en promedio (L₀ = 2δ); una fracción sustancial de los
+estudios replica un intervalo más ancho que el prometido — con n = 50 y
+p = 0.10, P(L > E[L]) ≈ 0.57, y aun con el n clásico (~97) la mitad de
+los estudios supera L₀.
 
 La formulación de Correa controla dos niveles de error: α (cobertura del
 IC) y β (probabilidad de que la longitud observada exceda un máximo

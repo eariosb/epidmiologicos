@@ -60,18 +60,24 @@ cajón.
 
 ## Incertidumbre cuantificada, no escondida
 
-La literatura moderna (<Term k="izbicki-uq">Izbicki 2024</Term>) formaliza
+La literatura moderna (<Term k="izbicki-uq">Izbicki 2025</Term>) formaliza
 lo que Woodward predica: **una estimación sin su incertidumbre es medio
 dato**. Dos piezas:
 
 - **Aleatoria vs. epistémica**: la primera es el azar irreducible del
-  fenómeno; la segunda se reduce con más datos o mejor modelo. El IC95%
-  mezcla ambas; la predicción conforme las separa.
+  fenómeno; la segunda se reduce con más datos o mejor modelo. Ojo con la
+  contabilidad: un IC95% para un parámetro es casi todo epistémica (el
+  parámetro es fijo; lo que fluctúa es el intervalo), mientras un
+  intervalo de predicción conforme cubre el total —el error del dato
+  nuevo, que incluye ambas— de forma **marginal**, no separada.
 - **<Term k="CP">Predicción conforme</Term>**: construye intervalos con
   cobertura garantizada $1-\alpha$ **sin suponer la distribución**; basta
   con datos intercambiables. En vigilancia epidemiológica (nowcasting de
   dengue, <Term k="SINAN">SINAN</Term>), es la alternativa honesta al
-  score puntual.
+  score puntual — con una advertencia: las series temporales violan la
+  intercambiabilidad (autocorrelación, cambios de régimen), así que el
+  nowcasting serio usa conforme adaptativo o por bloques, no el split
+  simple de la celda.
 
 <RCell
   id="17/conforme"
@@ -186,7 +192,7 @@ cat(sprintf("Q = %.2f con %d gl; I^2 = %.0f%%\\n",
     "Escribe el párrafo de reporte clínico: ¿recomendarías lidocaína profiláctica?",
   ]}
   hint="tau² = max(0, (Q − (k−1))/C) con C = Σw − Σw²/Σw; luego repite la ponderación con 1/(v+τ²)."
-  solution="Q ≈ 0.86 con 5 gl, así que I² = 0%: heterogeneidad nula; el modelo de efectos aleatorios coincide con el fijo (tau² = 0). En la escala RD el combinado es +2.94 pp (0.4–5.5), igual que la Tabla VII de Normand."
+  solution="En la escala log-RR que calcula el código, Q ≈ 1.57 con 5 gl, así que I² = 0% (en escala RD, Q ≈ 0.86): la varianza entre ensayos no excede lo esperable por azar, y el modelo de efectos aleatorios coincide con el fijo (tau² = 0). Ojo: I² = 0 con solo 6 ensayos pequeños no demuestra homogeneidad — es la lección agnóstica del módulo 10, ausencia de evidencia no es evidencia de ausencia. En la escala RD el combinado es +2.94 pp (0.4–5.5), igual que la Tabla VII de Normand."
 />
 
 <SasBlock code={`/* Hine et al. (1989): RD por estudio, varianza y peso inverso */
@@ -257,6 +263,6 @@ El curso es una escalera que sube el mismo escalón, módulo a módulo:
 
 - **Normand (1999)**: meta-análisis en la práctica clínica (lidocaína).
 - **Coscrato, Izbicki &amp; Stern (2018)**: pruebas agnósticas.
-- **<Term k="izbicki-uq">Izbicki (2024)</Term>**, cap. 8: UQ aplicada a decisiones de salud.
+- **<Term k="izbicki-uq">Izbicki (2025)</Term>**, cap. 8: UQ aplicada a decisiones de salud.
 - **<Term k="Tukey">Tukey (1962)</Term>**, *The Future of Data Analysis*: la nota filosófica de cierre.
 - **Wasserstein &amp; Lazar (2016)**: la declaración de la ASA; vuelve al principio 4.

@@ -17,10 +17,20 @@ export const dynamic = 'force-dynamic';
 const VISION_URL = process.env.VISION_SERVICE_URL ?? 'http://localhost:8765';
 const TIMEOUT_MS = 3000;
 
+/** In production the proxy only runs when the service URL is configured. */
+const VISION_ENABLED =
+  process.env.VISION_SERVICE_URL !== undefined || process.env.NODE_ENV !== 'production';
+
 async function proxy(
   req: NextRequest,
   { params }: { params: Promise<{ path?: string[] }> },
 ): Promise<NextResponse> {
+  if (!VISION_ENABLED) {
+    return NextResponse.json(
+      { error: 'vision service not configured' },
+      { status: 503 },
+    );
+  }
   const path = ((await params).path ?? []).join('/');
   const url = `${VISION_URL}/${path}${req.nextUrl.search}`;
   try {

@@ -1,39 +1,39 @@
 import type { LLMProvider, LLMMessage, LLMChatOptions } from '../../types/blackboard';
 
 const CONTRACT_RESPONSE = `**Respuesta breve**
-Un proceso estocástico es una familia de variables aleatorias $\\{X_t\\}_{t \\in T}$ indexadas por el tiempo: la evolución del azar, no una distribución aislada.
+Una tabla 2x2 resume la asociación entre una exposición binaria y un desenlace binario: de ella se estiman el RR, el OR y la RD según el diseño que la produjo.
 
 **Definición / Formulación**
-$$\\{X_t : t \\in T\\}, \\quad X_t : \\Omega \\to E$$
-donde $E$ es el espacio de estados. Una trayectoria es una realización $t \\mapsto X_t(\\omega)$ para un $\\omega$ fijo.
+Con la convención del curso (filas = exposición, columnas = desenlace): $a$ = expuestos con evento, $b$ = expuestos sin evento, $c$ = no expuestos con evento, $d$ = no expuestos sin evento.
+$$RR = \\frac{a/(a+b)}{c/(c+d)}, \\qquad OR = \\frac{ad}{bc}, \\qquad RD = \\frac{a}{a+b} - \\frac{c}{c+d}$$
 
 **Ejemplo en R**
 \`\`\`r
-set.seed(42)
-# caminata aleatoria simple: el proceso discreto más célebre
-n <- 200
-pasos <- sample(c(-1, 1), n, replace = TRUE, prob = c(0.5, 0.5))
-plot(cumsum(pasos), type = "l", col = "#5b21b6",
-     xlab = "t", ylab = expression(S[t]), main = "Caminata aleatoria simple")
+# tabaquismo materno y bajo peso al nacer (modulo 5)
+# convencion: matrix() llena por columnas -> byrow = TRUE
+tab <- matrix(c(30, 70, 20, 180), ncol = 2, byrow = TRUE,
+              dimnames = list(fuma = c("si", "no"), bpeso = c("si", "no")))
+a <- tab[1,1]; b <- tab[1,2]; cc <- tab[2,1]; d <- tab[2,2]
+c(RR = (a/(a+b))/(cc/(cc+d)),
+  OR = a*d/(b*cc),
+  RD = a/(a+b) - cc/(cc+d))
+# -> RR = 3.00, OR = 3.86, RD = 0.20: estimador -> IC -> p, en ese orden
 \`\`\`
 
 **Interpretación**
-Cada corrida produce una trayectoria distinta: el objeto de estudio es la ley del proceso completo (distribuciones finito-dimensionales), no un valor puntual.
+RR compara riesgos entre expuestos y no expuestos (legible en cohortes); OR es el estimando universal del diseño de casos y controles; RD es la escala de salud pública (casos atribuibles por persona expuesta).
 
 **Referencias**
 [sin fuentes del corpus en este turno — respuesta de conocimiento general]`;
 
 const PLOT_RESPONSE = `**Ejemplo en R**
 \`\`\`r
-set.seed(42)
-n <- 200
-# movimiento browniano por escalado de una caminata aleatoria
-dt <- 1 / n
-cam <- cumsum(rnorm(n))
-B <- c(0, cam * sqrt(dt))
-plot(0:n, B, type = "l", col = "#5b21b6",
-     xlab = "t", ylab = expression(B[t]), main = "Movimiento browniano simulado")
-abline(h = 0, col = "grey60", lty = 2)
+# curva epidemica de un brote: casos incidentes por semana
+semana <- 1:12
+casos <- c(2, 5, 14, 30, 58, 90, 120, 105, 70, 38, 16, 6)
+barplot(casos, names.arg = semana, col = "#2166ac",
+        xlab = "Semana del brote", ylab = "Casos incidentes",
+        main = "Curva epidemica (histograma de casos por semana)")
 \`\`\`
 
 **Referencias**

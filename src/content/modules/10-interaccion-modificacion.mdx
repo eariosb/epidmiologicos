@@ -60,25 +60,37 @@ con <Term k="MH">MH</Term>; hay que reportar el OR por estrato.
 <RCell
   id="10/breslow-day"
   title="¿Un solo OR o uno por estrato? (Breslow–Day)"
-  code={`# Homogeneidad de OR entre K estratos, en base R (equivalente a
-# Breslow-Day; en SAS: TABLES ... / CMH + opcion BRESLOWDAY).
+  code={`# Homogeneidad de OR entre K estratos: Breslow-Day con correccion
+# de Tarone (en SAS: TABLES ... / CMH + opcion BDT).
+# Idea: bajo un OR comun psi (el de Mantel-Haenszel), cada celda 'a' tiene
+# un valor esperado que se resuelve numericamente; chi^2 = suma (a-E)^2/V.
 breslow_day <- function(arr) {
   K <- dim(arr)[3]
-  ors <- apply(arr, 3, function(t) t[1,1]*t[2,2]/(t[1,2]*t[2,1]))
-  # OR comun de Mantel-Haenszel:
   num <- sum(apply(arr, 3, function(t) t[1,1]*t[2,2]/sum(t)))
   den <- sum(apply(arr, 3, function(t) t[1,2]*t[2,1]/sum(t)))
-  ormh <- num/den
-  vars <- apply(arr, 3, function(t) 1/sum(1/t))
-  chi <- sum((log(ors) - log(ormh))^2 / vars)
-  list(chi2 = chi, gl = K - 1, p = 1 - pchisq(chi, K - 1), ors = ors, ormh = ormh)
+  psi <- num/den                                  # OR comun de MH
+  X <- 0; sa <- 0; se <- 0; sv <- 0
+  for (k in 1:K) {
+    t <- arr[,,k]; m1 <- sum(t[1,]); n1 <- sum(t[,1]); N <- sum(t)
+    lo <- max(0, m1 + n1 - N); hi <- min(m1, n1)
+    f <- function(a) a*(N - m1 - n1 + a) - psi*(m1 - a)*(n1 - a)
+    ea <- uniroot(f, c(lo, hi), tol = 1e-10)$root  # E[a] bajo OR comun
+    v  <- 1/(1/ea + 1/(m1-ea) + 1/(n1-ea) + 1/(N-m1-n1+ea))
+    X  <- X + (t[1,1] - ea)^2/v
+    sa <- sa + t[1,1]; se <- se + ea; sv <- sv + v
+  }
+  tarone <- X - (sa - se)^2/sv                     # correccion de Tarone
+  list(ors = apply(arr, 3, function(t) t[1,1]*t[2,2]/(t[1,2]*t[2,1])),
+       or_mh = psi, BD = X, BD_Tarone = tarone,
+       p = pchisq(tarone, K - 1, lower.tail = FALSE))
 }
 
-# Caso A: estratos homogeneos (mismo OR)
+# Caso A: estratos homogeneos (mismo OR): BD ~ 1.35, p ~ 0.25
 A <- array(c(40,60,20,180, 50,10,60,40), dim = c(2,2,2))
 print(breslow_day(A))
 
-# Caso B: estratos con OR distintos -> interaccion, no resumir
+# Caso B: estratos con OR distintos -> interaccion, no resumir:
+# BD ~ 135, p ~ 0: homogeneidad rechazada con claridad
 B <- array(c(40,60,20,180, 10,90,80,20), dim = c(2,2,2))
 print(breslow_day(B))`}
 />
@@ -102,8 +114,12 @@ run;
 
 <Callout type="note" title="La corrección de Tarone (1985)">
 Cuando $\widehat{OR}_{MH}$ se estima de los mismos datos, el test de
-Breslow–Day es ligeramente conservador. Tarone propuso corregirlo usando
-el estimador MH en la varianza; en SAS aparece como opción
+Breslow–Day sin corregir es ligeramente liberal: usa los grados de
+libertad K−1 como si el OR común fuera conocido, pero $\widehat{OR}_{MH}$
+se estimó de los mismos datos. Tarone resta el término
+$(\sum a_k - \sum E_k)^2/\sum V_k$, que nunca aumenta el estadístico
+($X_{BDT} \le X_{BD}$) y lo vuelve ligeramente más conservador; en SAS
+aparece como opción
 <code>BDT</code>. La conclusión cualitativa rara vez cambia, pero es el
 nombre que aparece en la literatura.
 </Callout>

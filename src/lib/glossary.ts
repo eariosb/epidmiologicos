@@ -37,7 +37,7 @@ export const GLOSSARY: Record<string, string> = {
   // Estadística general
   IC: 'Intervalo de confianza (CI, confidence interval): el rango compatible con los datos; precede al valor p en la jerarquía de interpretación.',
   EE: 'Error estándar (standard error, SE): la desviación estándar del estimador; mide precisión, no dispersión.',
-  p: 'Valor p (p-value): probabilidad de un resultado al menos tan extremo bajo H₀; depende de n, no del tamaño del efecto; Woodward: estimar antes que contrastar.',
+  p: 'Valor p (p-value): probabilidad de un resultado al menos tan extremo que el observado, bajo H₀; depende tanto del tamaño del efecto como de n — un efecto trivial puede ser «significativo» con n enorme y uno grande puede no serlo con n chico; Woodward: estimar antes que contrastar.',
   H0: 'Hipótesis nula: la ausencia de asociación o efecto que el test pone a prueba.',
   ETS: 'Enfermedad de transmisión sexual.',
   SIDA: 'Síndrome de inmunodeficiencia adquirida (AIDS).',
@@ -75,7 +75,7 @@ export const GLOSSARY: Record<string, string> = {
   boschloo:
     'Test incondicional de Boschloo (1970): ordena las tablas por el valor p de Fisher y maximiza el p sobre el parámetro de estorbo; uniformemente más potente que Fisher bajo el modelo de dos binomiales.',
   'mid-p':
-    'Mid-p: el valor p de Fisher menos la mitad de la masa de probabilidad de la tabla observada; menos conservador, pero su tamaño puede exceder α nominal.',
+    'Mid-p: el valor p de Fisher menos la mitad de la masa de probabilidad empatada con la tabla observada (todas las tablas con su misma probabilidad hipergeométrica); menos conservador, pero su tamaño puede exceder α nominal.',
   'berger-boos':
     'Ajuste de Berger y Boos (1994): maximiza el valor p incondicional solo sobre un intervalo de confianza del parámetro de estorbo y suma γ; exacto con penalización controlada.',
   csm:

@@ -30,7 +30,7 @@ export const BIBLIOGRAPHY: BibEntry[] = [
     venue: 'Chapman & Hall/CRC, 3ª edición',
     isbn: '978-1-4398-3970-6',
     summary:
-      'Texto guía del curso, centrado en el cohorte SHHS como dataset de hilván. Cap. 1: enfoque estadístico, estudios animales y ecológicos, ensayos clínicos, prueba de hipótesis vs. estimación. Cap. 2: medidas de asociación (RR, OR, SMR, riesgo atribuible, NNT) y ICs. Cap. 3: confusión, estratificación, Mantel-Haenszel, Breslow-Day, efecto modificador. Caps. 4-5: diseños de cohorte, supervivencia, Kaplan-Meier, log-rank, modelos de Cox y de Poisson. Cap. 8: casos y controles, matching, sesgos (Berkson, Neyman, recuerdo). Woodward insiste: la epidemiología es comparativa; el diseño determina qué se puede estimar; la confusión es el enemigo central; estimar antes que contrastar; la causalidad es acumulación de evidencia (Bradford Hill).',
+      'Texto guía del curso, centrado en el cohorte SHHS como dataset de hilván. Cap. 1: enfoque estadístico, estudios animales y ecológicos, ensayos clínicos, prueba de hipótesis vs. estimación. Cap. 2: medidas de frecuencia (incidencia, prevalencia, tasas, P = I x D). Cap. 3: medidas de asociación (RR, OR, RD, atribuibles, NNT) y sus ICs. Cap. 4: confusión, estratificación, Mantel-Haenszel, Breslow-Day, efecto modificador (ejemplos SHHS, Glasgow). Cap. 5: diseños de cohorte y supervivencia (tablas de vida, Kaplan-Meier, log-rank, persona-tiempo). Cap. 6: casos y controles, selección de controles, matching, sesgos (Berkson, Neyman, recuerdo). Cap. 8: tamaño muestral y potencia. Caps. 10-11: meta-análisis y modelos de regresión. Woodward insiste: la epidemiología es comparativa; el diseño determina qué se puede estimar; la confusión es el enemigo central; estimar antes que contrastar; la causalidad es acumulación de evidencia (Bradford Hill).',
   },
   {
     id: 'salazar-2025',
@@ -39,7 +39,7 @@ export const BIBLIOGRAPHY: BibEntry[] = [
     year: 2025,
     venue: 'Curso ADEI, Escuela de Estadística, Universidad Nacional de Colombia, Medellín',
     summary:
-      'Material docente del curso: 24 clases con scripts R/SAS y datos reales. Ejemplos canónicos: deporte y depresión (tabla 2×2 con χ² y corrección de Yates), leucemia (Kaplan-Meier con ICs y risk table), VALUNG y RECID (log-rank, Cox), equivalencia McNemar ⇔ CMH en pareamiento 1:1, DDIMER (matching variable 1:c), BCG (matching 1:1 con clogit), médicos y ortopedicidad (Mantel-Haenszel con confusión), SMR en bronquitis, tabaquismo materno y peso al nacer (PRA, PRAP). Cada clase abre con una cita de Cervantes.',
+      'Material docente del curso: 24 clases con scripts R/SAS y datos reales. Ejemplos canónicos: deporte y depresión (tabla 2×2 con χ² y corrección de Yates), leucemia (Kaplan-Meier con ICs y risk table), VALUNG y RECID (log-rank, Cox), equivalencia McNemar ⇔ CMH en pareamiento 1:1, DDIMER (matching variable 1:c), BCG (matching 1:5 con clogit), médicos y ortopedicidad (Mantel-Haenszel con confusión), SMR en bronquitis, tabaquismo materno y peso al nacer (PRA, PRAP). Cada clase abre con una cita de Cervantes.',
   },
   {
     id: 'snow-1855',
@@ -108,7 +108,7 @@ export const BIBLIOGRAPHY: BibEntry[] = [
     id: 'izbicki-uq',
     title: 'Machine Learning Beyond Point Predictions: Uncertainty Quantification',
     authors: 'Izbicki, R.',
-    year: 2024,
+    year: 2025,
     venue: 'Notas/manuscrito, con lectura relacionada de Coscrato & Izbicki (agnostic tests)',
     summary:
       'Base del módulo de incertidumbre: predicción conforme (cobertura garantizada sin supuestos distribucionales), distinción aleatoria vs. epistémica, y por qué un modelo con buen AUC puede ser clínicamente inútil si su calibración es pobre. Los tests agnósticos de Coscrato-Izbicki-Stern conectan con la filosofía de Woodward: contrastar sin imponer el modelo.',

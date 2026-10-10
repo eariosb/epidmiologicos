@@ -6,13 +6,32 @@ import type { RagDoc } from '@cursos/blackboard/rag';
 export const dynamic = 'force-dynamic';
 
 function stripMdx(text: string): string {
-  return text
-    .replace(/```[\s\S]*?```/g, ' ') // code fences
-    .replace(/<[^>]+>/g, ' ') // JSX/MDX tags
-    .replace(/\$[^$]*\$/g, ' ') // inline math
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ') // images
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    text
+      // fenced code blocks (```r ... ```)
+      .replace(/```[\s\S]*?```/g, ' ')
+      // JSX props carrying executable code as template literals: code={`...`}
+      // (must go before tag stripping: R code contains '>' and '->' that
+      // would prematurely close the <[^>]+> pass and leak code into BM25)
+      .replace(/\{`[\s\S]*?`\}/g, ' ')
+      // inline math before tags so $<...$ isn't eaten as a "tag"
+      .replace(/\$[^$]*\$/g, ' ')
+      // remaining JSX expressions {...}: keep the inner quoted strings
+      // (quiz options, explanations, flashcard backs, lab steps are content)
+      .replace(/\{[^{}]*\}/g, (m) => {
+        const strs = [...m.matchAll(/"([^"]*)"|'([^']*)'/g)].map((x) => x[1] ?? x[2]);
+        return strs.length > 0 ? ` ${strs.join(' ')} ` : ' ';
+      })
+      // JSX/MDX tags (what's left of them)
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/<\/[A-Za-z]+>/g, ' ')
+      // images
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+      // markdown links: keep the anchor text
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 function slugify(heading: string): string {

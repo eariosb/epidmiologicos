@@ -83,31 +83,33 @@ expuestos (RR verdadero = 4), y extrae tres muestras:
 <RCell
   id="02/tres-disenos"
   title="Una población, tres muestreos"
-  code={`# Poblacion base: la exposicion triplica el riesgo.
-set.seed(2024)
+  code={`# Poblacion base: la exposicion cuadruplica el riesgo (0.20 vs 0.05).
+set.seed(1)
 N <- 200000
 E <- rbinom(N, 1, 0.30)
 D <- rbinom(N, 1, ifelse(E == 1, 0.20, 0.05))
 pob <- data.frame(E, D)
-cat("Verdad poblacional: RR =",
-    mean(pob$D[pob$E==1]) / mean(pob$D[pob$E==0]), "\\n\\n")
+r1p <- mean(pob$D[pob$E==1]); r0p <- mean(pob$D[pob$E==0])
+cat(sprintf("Verdad poblacional: RR = %.2f  OR = %.2f\\n\\n",
+            r1p/r0p, (r1p/(1-r1p))/(r0p/(1-r0p))))
+# RR = 3.98, OR = 4.72: con desenlace frecuente el OR se aleja del RR.
 
-# 1) COHORTE: muestrear por exposicion (500 expuestos, 500 no).
-co <- rbind(pob[sample(which(pob$E==1), 500), ],
-            pob[sample(which(pob$E==0), 500), ])
+# 1) COHORTE: muestrear por exposicion (4000 expuestos, 4000 no).
+co <- rbind(pob[sample(which(pob$E==1), 4000), ],
+            pob[sample(which(pob$E==0), 4000), ])
 r1 <- mean(co$D[co$E==1]); r0 <- mean(co$D[co$E==0])
 cat(sprintf("Cohorte:       riesgos %.3f vs %.3f -> RR = %.2f, RD = %.3f\\n",
             r1, r0, r1/r0, r1-r0))
 
-# 2) CASOS Y CONTROLES: muestrear por desenlace (200 casos, 200 controles).
-cc <- rbind(pob[sample(which(pob$D==1), 200), ],
-            pob[sample(which(pob$D==0), 200), ])
+# 2) CASOS Y CONTROLES: muestrear por desenlace (800 casos, 800 controles).
+cc <- rbind(pob[sample(which(pob$D==1), 800), ],
+            pob[sample(which(pob$D==0), 800), ])
 o1 <- mean(cc$E[cc$D==1]) / (1 - mean(cc$E[cc$D==1]))
 o0 <- mean(cc$E[cc$D==0]) / (1 - mean(cc$E[cc$D==0]))
 cat(sprintf("Casos-control: solo OR = %.2f (riesgo no estimable)\\n", o1/o0))
 
 # 3) TRANSVERSAL: muestreo aleatorio, medicion unica.
-ct <- pob[sample(N, 2000), ]
+ct <- pob[sample(N, 10000), ]
 prev <- table(ct$E, ct$D)
 or_ct <- prev[1,1]*prev[2,2] / (prev[1,2]*prev[2,1])
 cat(sprintf("Transversal:   prevalencia y OR de prevalencia = %.2f\\n", or_ct))
@@ -119,7 +121,7 @@ cat("en la practica eso se reporta declarando el diseno, no 'corrigiendo'.\\n")`
 Tres observaciones que el ejercicio hace concretas. Primero, en la
 cohorte la muestra preserva los denominadores de exposición: los riesgos
 son estimables y RR ≈ 4 sale directo. Segundo, en casos y controles los
-200 + 200 son una decisión del investigador, no de la naturaleza: el
+800 + 800 son una decisión del investigador, no de la naturaleza: el
 "riesgo" de 0.50 que saldría de esa tabla es un artefacto del muestreo,
 y por eso el diseño solo produce OR. Tercero, en el transversal se
 estima el OR de *prevalencia*, no de incidencia: mide la asociación en
@@ -229,7 +231,7 @@ por separado. En el caso de Doll y Hill la cadena quedó así:
 | Temporalidad | La cohorte registró el hábito *antes* del desenlace; la exposición precedió siempre al diagnóstico |
 | Dosis–respuesta | Gradiente continuo: 0.57 → 0.96 → 1.39 → 1.66 por 1000 según cigarrillos/día |
 | Reversibilidad | El riesgo de los exfumadores caía con los años desde el cese |
-| Replicación | Reproducido en cohortes de EE. UU., Suecia, Japón con distintos diseños |
+| Replicación | Reproducido en cohortes de Estados Unidos, Suecia, Japón con distintos diseños |
 | Plausibilidad | El alquitrán del humo produce tumores en piel animal; el mecanismo llegó después |
 | Alternativas | Los casos y controles iniciales resistieron el escrutinio de recuerdo y selección de controles |
 

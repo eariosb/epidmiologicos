@@ -14,9 +14,15 @@ for f in sorted(pathlib.Path('src/content/modules').glob('*.mdx')):
     src = f.read_text(encoding='utf-8')
     wrapped = set(re.findall(r'Term k="([^"]+)"', src))
     in_code = False
+    in_math = False
     mentioned = set()
     first_line = {}
-    for ln, line in enumerate(src.split('\n'), 1):
+    lines = src.split('\n')
+    # Saltar frontmatter YAML.
+    if lines and lines[0].strip() == '---':
+        end = next((i for i in range(1, len(lines)) if lines[i].strip() == '---'), 0)
+        lines = lines[end + 1:]
+    for ln, line in enumerate(lines, 1):
         if '={`' in line:
             if line.count('`') % 2:
                 in_code = not in_code
@@ -24,9 +30,16 @@ for f in sorted(pathlib.Path('src/content/modules').glob('*.mdx')):
             if '`}' in line:
                 in_code = False
             continue
+        if '$$' in line:
+            in_math = not in_math
+            continue
+        if in_math:
+            continue
         s = re.sub(r'\$[^$]*\$', '', line)
         s = re.sub(r'<Term k="[^"]+">.*?</Term>', '', s)
-        s = re.sub(r'\w+="[^"]*"', '', s)
+        s = re.sub(r'(?:\w+\s*[:=]|[\[,{])\s*"[^"]*"', '', s)   # props y arrays JS
+        s = re.sub(r'^\s*"[^"]*",?\s*(?://.*)?$', '', s)        # literal solo en su linea
+        s = re.sub(r"'[^']*'", '', s)
         for m in PAT.finditer(s):
             mentioned.add(m.group(1))
             first_line.setdefault(m.group(1), ln)
