@@ -131,12 +131,26 @@ reemplázala con cualquier tabla 2×2 de tu interés.
 
 El hallazgo de la tabla comparada es el corazón del módulo: **la elección
 del procedimiento no es un detalle técnico, es parte del estimando**.
-Fisher da p = 0.054 (no rechaza a α = 0.05); Boschloo da p = 0.038
-(rechaza). La franja naranja del mapa (donde solo el incondicional
+Fisher da p = <Claim k="m6.perondi.fisher" d={3} /> (no rechaza a α = 0.05);
+Boschloo da p = <Claim k="m6.perondi.boschloo" d={3} /> (rechaza). La
+franja naranja del mapa (donde solo el incondicional
 rechaza) es el precio en potencia del condicionamiento. Vale anotar que
 en este escenario la z agrupada incondicional tiene aún más potencia que
-Boschloo (~0.61 vs ~0.55): no hay un test uniformemente mejor dentro de
+Boschloo (~<Claim k="m6.power.z" d={2} /> vs ~<Claim k="m6.power.boschloo" d={2} />):
+no hay un test uniformemente mejor dentro de
 la familia incondicional; Boschloo solo domina a Fisher.
+
+<Callout type="note" title="El supremo tiene máximos locales">
+El valor p incondicional es un supremo sobre $p \in (0,1)$ y esa función
+no es unimodal: en la tabla de Perondi la cola de Boschloo tiene **tres
+picos** —0.0282 cerca de p ≈ 0.134 y de p ≈ 0.866, y el máximo global
+0.0385 en p = 0.5—. Una maximización que se detiene en el primer pico
+local reporta 0.028 en lugar de 0.0385 y cambia el veredicto. Por eso el
+curso evalúa sobre una malla densa de todo (0,1) y no sobre un
+optimizador de un solo arranque. Detalle técnico: como n₁ = n₂ aquí, las
+definiciones bilaterales *minlike* y *central* de Boschloo coinciden
+(ambas dan 0.0385); con grupos desbalanceados pueden diferir.
+</Callout>
 
 ## El tamaño real del test
 
@@ -158,21 +172,24 @@ usa en la práctica porque introduce aleatoriedad ajena a los datos.
 
 Dos resultados del panel de potencia merecen nota. Primero: si el
 protocolo de Perondi hubiera declarado querer detectar una diferencia
-entre 20% y 3% de supervivencia —un escenario hipotético de diseño, no
-el efecto que se observó—, la potencia exacta de Fisher con n = 34 por
-grupo sería ~0.43 y la de Boschloo ~0.55. El ensayo habría tenido menos
+entre 20% y 3% de supervivencia —un **escenario de referencia anclado en
+las proporciones observadas** (7/34 ≈ 0.21 y 1/34 ≈ 0.03), legítimo como
+pre-especificación antes de ver los datos, no como potencia real del
+ensayo—, la potencia exacta de Fisher con n = 34 por
+grupo sería ~<Claim k="m6.power.fisher" d={2} /> y la de
+Boschloo ~<Claim k="m6.power.boschloo" d={2} />. El ensayo habría tenido menos
 de la mitad de la potencia convencional con el procedimiento que
-efectivamente se reporta. (Ojo: 0.20 y 0.03 casualmente se parecen a las
-proporciones observadas; usar las observadas como escenario sería
-potencia post hoc, la falacia que condena la sección siguiente. Aquí se
-lee como "lo que habría detectado un diseño con esas ambiciones".)
+efectivamente se reporta. (La distinción importa: usar el resultado
+observado para estimar la potencia del mismo estudio es la falacia de la
+potencia post hoc que condena la sección siguiente; aquí se lee como
+"lo que habría detectado un diseño declarado a priori con esas ambiciones".)
 Segundo, la curva de discordancia (probabilidad de que Fisher y Boschloo
 den veredictos opuestos) oscila con n: no converge monótonamente a cero,
 porque la discreción del espacio muestral no desaparece con tamaños
 modestos. Aumentar n no garantiza que el condicionamiento deje de costar.
 
 <Callout type="warning" title="No rechazar ≠ aceptar: el argumento agnóstico">
-Si el tamaño real de Fisher con n = 34 es ~0.03 sobre un nominal de
+Si el tamaño real de Fisher con n = 34 es ~<Claim k="m6.size.fisher" d={3} /> sobre un nominal de
 0.05, un "no significativo" es todavía más débil de lo habitual: el test
 casi nunca alcanza a rechazar. Coscrato, Izbicki y Stern (2018)
 proponen la respuesta honesta de los **tests agnósticos**: además de
@@ -186,7 +203,8 @@ del espacio muestral, no los datos, hizo el veredicto.
 ## Ceros, correcciones y el trade-off sesgo-varianza
 
 Con celdas en cero el estimador puntual del OR no existe (es infinito con
-probabilidad ~0.36 en la configuración observada de Perondi). La práctica
+probabilidad ~<Claim k="m6.perondi.pZeroCell" d={2} /> en la configuración
+observada de Perondi). La práctica
 habitual suma una constante c a cada celda antes de estimar: c = 1/2 es
 la corrección de Haldane–Anscombe (y la que equivale, en espíritu, al
 ajuste de Firth); c = 1 aparece también en la práctica por convenio. El
@@ -206,10 +224,13 @@ $p_i \sim \mathrm{Beta}(x_i + 1/2,\ n_i - x_i + 1/2)$. Ese promedio
 a c ≈ 0.5: casi exactamente la corrección de Haldane.
 
 La otra lección es de escala: en la misma tabla de Perondi, el OR de
-supervivencia (estándar vs. alta) sin corregir es 8.56, con c = 1/2 es
-6.09 y con c = 1 es 4.86: se mueve 40% según la corrección, mientras la
-RD apenas cambia (+0.176 a favor de la estándar con o sin corrección;
-el IC de Agresti–Caffo es [0.012, 0.322]). El estimando robusto aquí es
+supervivencia (estándar vs. alta) sin corregir es <Claim k="m6.perondi.or" d={2} />,
+con c = 1/2 es <Claim k="m6.perondi.orC05" d={2} /> y con c = 1 es
+<Claim k="m6.perondi.orC10" d={2} />: se mueve 40% según la corrección, mientras la
+RD apenas cambia (+<Claim k="m6.perondi.rd" d={3} /> a favor de la estándar
+con o sin corrección; el IC de Agresti–Caffo es
+[<Claim k="m6.perondi.acLo" d={3} />, <Claim k="m6.perondi.acHi" d={3} />]). El
+estimando robusto aquí es
 la diferencia de riesgos; el OR es el parámetro quebradizo. Reportar el
 OR solo, con una corrección no declarada, es reportar menos información
 de la disponible.
@@ -218,7 +239,8 @@ de la disponible.
 
 El IC de Woolf (log-OR con corrección c = 1/2) es el estándar de facto en
 tablas grandes; con celdas pequeñas su cobertura real cae por debajo del
-nominal (≈0.95 en el punto observado de Perondi y ≈0.92 con c = 1;
+nominal (≈<Claim k="m6.woolf.cov.obs.c05" d={2} /> en el punto observado
+de Perondi y ≈<Claim k="m6.woolf.cov.obs.c10" d={2} /> con c = 1;
 verificable por enumeración en el simulador).
 El IC exacto condicional (Cornfield) garantiza cobertura ≥ 0.95
 invirtiendo la prueba de Fisher, pero con una celda en cero produce
@@ -229,8 +251,23 @@ Para la RD existen opciones mejores comportadas: el IC de Agresti–Caffo
 (que suma un éxito y un fracaso imaginarios por grupo) y el de Newcombe
 (que combina límites de Wilson por separado) mantienen la cobertura
 nominal con longitudes razonables incluso con celdas en cero. En Perondi
-ambos excluyen el cero sin dramatismo: [0.012, 0.322] y [0.019, 0.340]
+ambos excluyen el cero sin dramatismo:
+[<Claim k="m6.perondi.acLo" d={3} />, <Claim k="m6.perondi.acHi" d={3} />] y
+[<Claim k="m6.perondi.newcombeLo" d={3} />, <Claim k="m6.perondi.newcombeHi" d={3} />]
 respectivamente.
+
+<Callout type="note" title="La misma tabla, leída por Bayes">
+Existe un puente elegante entre el valor p frecuentista y la lectura
+bayesiana (Altham, 1969): la probabilidad unilateral de Fisher,
+P(X₁ ≥ 7) = 0.0272, es exactamente la probabilidad posterior
+P(p₁ > p₂ | datos) cuando p₁ ~ Beta(0, 1) y p₂ ~ Beta(1, 0) —previas
+empujadas hacia las esquinas—. Con previas uniformes Beta(1, 1) la
+posterior del evento da 0.0138. El puente no valida ni invalida ninguna
+lectura: muestra que el valor p condicional puede replicarse como una
+probabilidad posterior con una previa particular, y que la respuesta
+bayesiana depende de esa previa tanto como la frecuentista depende del
+ordenamiento elegido.
+</Callout>
 
 <Callout type="note" title="Exacto no es sinónimo de informativo">
 Un IC exacto garantiza cobertura pero puede tener longitud infinita; un
@@ -354,12 +391,17 @@ de ética debería ver.
 Un ensayo sin potencia suficiente expone a los participantes al riesgo
 del protocolo sin capacidad real de responder la pregunta. Perondi et
 al. compararon dos dosis de epinefrina de rescate en 68 niños en paro
-cardíaco; en un escenario hipotético de diseño del orden del efecto que
-se observó (20% vs. 3% de supervivencia), la potencia exacta habría
-sido ~43–55% según el test: ni el resultado "negativo" ni el "positivo"
+cardíaco; en un escenario de referencia anclado en las proporciones
+observadas (20% vs. 3% de supervivencia), la potencia exacta habría
+sido ~<Claim k="m6.power.fisher" d={0} pct />–<Claim k="m6.power.boschloo" d={0} pct /> según el test: ni el
+resultado "negativo" ni el "positivo"
 habrían sido concluyentes al α nominal. Calibrar el tamaño muestral con
 el procedimiento que se usará no es un refinamiento estadístico; es
-parte del protocolo ético del estudio.
+parte del protocolo ético del estudio. Y la tesis complementaria: la
+elección del test **también debe declararse a la vista** —decidir entre
+Fisher y Boschloo después de ver cuál da el veredicto deseado convierte
+la decisión clínica en azar analítico— (ensayo técnico del curso, en
+anexos).
 </Callout>
 
 ## Qué declarar en el reporte
@@ -446,6 +488,18 @@ cat(sprintf("z agrupada = %.4f   Boschloo = %.4f\\n", pz, pb))
 # veredicto depende del procedimiento y del modelo muestral.
 cat("El veredicto a alpha=0.05 depende del procedimiento.\\n")`}
 />
+
+<Callout type="warning" title="La orientación de la tabla cambia el resultado">
+La misma tabla transpuesta **no da el mismo valor p** en algunos
+paquetes, y ninguno avisa. `Exact::exact.test` en R supone los grupos en
+filas; `scipy.stats.barnard_exact` en Python los supone en columnas. Con
+la tabla de Perondi transpuesta, el método CSM reporta 0.0244 y
+`barnard_exact` 0.0505 —valores distintos del correcto (0.0385) sin
+ningún mensaje de error—. Lección de reproducibilidad: al replicar un
+análisis 2×2 en otro paquete, verificar primero la orientación con una
+tabla de resultado conocido. El espacio de tablas del simulador usa la
+convención del curso: grupos en filas, eventos en la primera columna.
+</Callout>
 
 <RCell
   id="06/tamano-y-potencia"
