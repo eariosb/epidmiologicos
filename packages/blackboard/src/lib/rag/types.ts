@@ -1,7 +1,7 @@
 /** A retrievable document in the course corpus. */
 export interface RagDoc {
   id: string;
-  source: 'module' | 'bibliography' | 'note' | 'external';
+  source: 'module' | 'bibliography' | 'quiz' | 'note' | 'external';
   text: string;
   meta: Record<string, unknown>;
 }

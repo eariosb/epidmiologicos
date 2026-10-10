@@ -222,6 +222,69 @@ export const BIBLIOGRAPHY: BibEntry[] = [
       'La propuesta que sustenta el hilo de precisión: la longitud del IC es una variable aleatoria con distribución enumerable, no un δ fijo impuesto; dimensionar n exige controlar α (cobertura) y β (garantía P(L ≤ L₀)) simultáneamente. La fórmula original del documento —que sumaba z_β a z_α confundiendo L con la semiamplitud— se conserva en el código solo como contraejemplo pedagógico, corregida por enumeración exacta.',
   },
   {
+    id: 'altham-1969',
+    title: 'Exact Bayesian Analysis of a 2×2 Contingency Table, and Fisher\'s "Exact" Significance Test',
+    authors: 'Altham, P.M.E.',
+    year: 1969,
+    venue: 'Journal of the Royal Statistical Society, Series B, 31(2)',
+    summary:
+      'El puente entre Fisher y Bayes: la probabilidad unilateral de Fisher en la 2×2 es exactamente una probabilidad posterior P(p1 > p2) con previas Beta(0,1) y Beta(1,0); con uniformes la posterior difiere (0.0138 vs 0.0272 en la tabla de Perondi). Muestra que el valor p condicional puede replicarse como posterior bajo una previa particular y que la respuesta bayesiana depende de la previa.',
+  },
+  {
+    id: 'oswego-1940',
+    title: 'Oswego: un brote de enfermedad gastrointestinal tras una cena comunitaria (caso docente CDC)',
+    authors: 'Reporte original del brote; adaptación docente de los CDC',
+    year: 1940,
+    venue: 'Caso clásico de investigación de brotes (church supper, Nueva York)',
+    summary:
+      'El ejercicio canónico de tasas de ataque: tras una cena comunitaria, se tabula la tasa de enfermos entre quienes comieron y no comieron cada alimento; el helado de vainilla separa mejor enfermos de sanos (43/54 vs. 3/65) y se identifica como vehículo. Enseña la lógica de investigación de brote: hipótesis por alimento, tabla 2×2 por exposición, vehículo antes que agente.',
+  },
+  {
+    id: 'reading-1984-legionella',
+    title: 'Estudio de casos y controles del brote de legionelosis (Reading, 1984)',
+    authors: 'Investigación del brote de Legionella, Reading',
+    year: 1984,
+    venue: 'Ejemplo de diseño de casos y controles en brote',
+    summary:
+      'Ejemplo canónico de selección de controles en investigación de brote: casos del brote contra controles de la comunidad; la fuente de los controles determina si el OR apunta al sistema de agua o al azar. Ilustra que el control define el estimando en un estudio de casos y controles.',
+  },
+  {
+    id: 'autier-1996-melanoma',
+    title: 'Estudio de casos y controles de melanoma con controles de vecindario (Autier, 1996)',
+    authors: 'Autier, P. y colaboradores',
+    year: 1996,
+    venue: 'Ejemplo de controles de vecindario y sesgo de detección',
+    summary:
+      'Caso de enseñanza sobre controles de vecindario en melanoma: la exposición "acceso a dermatoscopio" actúa como confusor de detección —quien se revisa la piel encuentra más lesiones—. Ilustra cómo un confusor de vía de detección contamina la asociación.',
+  },
+  {
+    id: 'moritz-1997-hip',
+    title: 'Fractura de cadera: controles comunitarios contra hospitalarios (Moritz, 1997)',
+    authors: 'Moritz, D.J. y colaboradores',
+    year: 1997,
+    venue: 'Ejemplo de la Tabla 6.6 de Woodward',
+    summary:
+      'El experimento mental hecho estudio: comparar los OR de un estudio de fractura de cadera usando controles comunitarios versus hospitalarios —la Tabla 6.6 de Woodward muestra que la estimación cambia con la fuente de controles—. Demuestra empíricamente que el control no es un detalle operativo sino parte del estimando.',
+  },
+  {
+    id: 'sackett-1979-sesgos',
+    title: 'Bias in Analytic Research',
+    authors: 'Sackett, D.L.',
+    year: 1979,
+    venue: 'Journal of Chronic Diseases, 32(1-2)',
+    summary:
+      'El catálogo fundacional de sesgos en investigación analítica: decenas de sesgos nombrados y clasificados (selección, información, confusión). Referencia marco del módulo de casos y controles: los sesgos no se "arreglan" en el análisis, se previenen en el diseño.',
+  },
+  {
+    id: 'hine-1989-lidocaina',
+    title: 'Meta-análisis de lidocaína profiláctica en infarto agudo de miocardio (Hine 1989; tutorial Normand 1999)',
+    authors: 'Hine, L.K. y colaboradores; Normand, S.L.T. (tutorial)',
+    year: 1989,
+    venue: 'Meta-analysis example (Progress in Cardiovascular Diseases / Statistics in Medicine)',
+    summary:
+      'El meta-análisis docente del curso: cada estudio individual de lidocaína en IAM es no concluyente, pero el combinado muestra exceso de mortalidad (RD ≈ +2.94 pp, IC95% 0.4–5.5). Ejemplifica la causalidad acumulativa: ningún estudio solo decide, la síntesis ponderada sí informa; y por qué la lidocaína profiláctica dejó de indicarse.',
+  },
+  {
     id: 'R-epiR',
     title: 'epiR: Tools for the Analysis of Epidemiological Data (R package)',
     authors: 'Stevenson, M. et al.',

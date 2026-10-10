@@ -3,16 +3,21 @@
 import { useEffect } from 'react';
 import { useBlackboardContext } from '../lib/context';
 import { SCHEMA_VERSIONS } from '../lib/persistence/version';
+import { setAssistantProfile } from '../lib/prompts/system';
+import type { AssistantProfile } from '../lib/prompts/system';
 import type { ModuleContext } from '../types/blackboard';
 
 interface BlackboardContextBridgeProps {
   context: ModuleContext;
+  /** Perfil del asistente del curso anfitrión; se registra una vez. */
+  profile?: AssistantProfile;
 }
 
-export function BlackboardContextBridge({ context }: BlackboardContextBridgeProps) {
+export function BlackboardContextBridge({ context, profile }: BlackboardContextBridgeProps) {
   const { state, dispatch, storage } = useBlackboardContext();
 
   useEffect(() => {
+    if (profile) setAssistantProfile(profile);
     dispatch({ type: 'SET_MODULE_CONTEXT', context });
 
     const defaultSceneId = `blackboard/${context.slug}`;
@@ -51,7 +56,7 @@ export function BlackboardContextBridge({ context }: BlackboardContextBridgeProp
     });
 
     return () => { cancelled = true; };
-  }, [context, dispatch, storage, state.activeSceneId]);
+  }, [context, profile, dispatch, storage, state.activeSceneId]);
 
   return null;
 }

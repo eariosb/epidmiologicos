@@ -20,6 +20,7 @@ import { PresentationSync } from '@/components/PresentationSync';
 import { RemoteCursor } from '@/components/RemoteCursor';
 import { BlackboardContextBridge } from '@cursos/blackboard';
 import type { ModuleContext } from '@cursos/blackboard';
+import { EPI_ASSISTANT_PROFILE } from '@/config/assistant';
 
 export function generateStaticParams() {
   return getAllModules().map((mod) => ({ slug: mod.meta.slug }));
@@ -45,7 +46,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
 
   return (
     <AppLayout>
-      <BlackboardContextBridge context={moduleContext} />
+      <BlackboardContextBridge context={moduleContext} profile={EPI_ASSISTANT_PROFILE} />
       <SessionTracker slug={entry.meta.slug} title={entry.meta.title} />
       <PresentationSync />
 
