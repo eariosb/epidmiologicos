@@ -6,7 +6,7 @@ export function Footer() {
         href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
         target="_blank"
         rel="noreferrer"
-        className="underline hover:text-accent-600"
+        className="underline hover:text-brand-600"
       >
         CC BY-NC-SA 4.0
       </a>

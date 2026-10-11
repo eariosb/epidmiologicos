@@ -96,7 +96,7 @@ export function ExportPanel() {
           type="button"
           onClick={handleExportAll}
           disabled={exporting}
-          className="text-xs text-accent-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="text-xs text-brand-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           {exporting ? 'Exportando…' : 'Exportar todo'}
         </button>
@@ -105,7 +105,7 @@ export function ExportPanel() {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
-          className="text-xs text-accent-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="text-xs text-brand-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           {importing ? 'Importando…' : 'Importar'}
         </button>

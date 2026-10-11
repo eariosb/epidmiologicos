@@ -9,13 +9,13 @@ import {
 } from '@cursos/blackboard';
 
 const KIND_COLOR: Record<string, string> = {
-  'save-missed': 'text-red-600',
-  'insert-failed': 'text-red-600',
-  'replace-failed': 'text-red-600',
-  'corpus-error': 'text-red-600',
-  'chat-error': 'text-red-600',
+  'save-missed': 'text-danger-600',
+  'insert-failed': 'text-danger-600',
+  'replace-failed': 'text-danger-600',
+  'corpus-error': 'text-danger-600',
+  'chat-error': 'text-danger-600',
   'tool-result': 'text-blue-600',
-  'corpus-loaded': 'text-green-600',
+  'corpus-loaded': 'text-success-505',
   'pdf-export': 'text-ink-600',
   session: 'text-ink-600',
   'scene-flush': 'text-ink-400',
@@ -48,7 +48,7 @@ export function DiagnosticsPanel() {
         <button
           type="button"
           onClick={() => void clearEvents()}
-          className="text-[11px] text-ink-500 hover:text-red-600"
+          className="text-[11px] text-ink-500 hover:text-danger-600"
         >
           Limpiar
         </button>

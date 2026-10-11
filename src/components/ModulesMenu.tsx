@@ -93,7 +93,7 @@ export function ModulesMenu({ modules, blocks }: ModulesMenuProps) {
                           onClick={() => setOpen(false)}
                           className={`block truncate px-3 py-1.5 text-xs transition-colors ${
                             active
-                              ? 'bg-accent-50 font-medium text-accent-700 dark:bg-accent-900/30 dark:text-accent-300'
+                              ? 'bg-brand-50 font-medium text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
                               : 'text-ink-700 hover:bg-ink-50 dark:text-ink-200 dark:hover:bg-ink-700'
                           }`}
                         >

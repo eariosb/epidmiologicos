@@ -47,7 +47,7 @@ export function CaptureGallery() {
           type="button"
           onClick={() => setFilter('all')}
           className={`rounded px-2 py-0.5 text-xs font-medium ${
-            filter === 'all' ? 'bg-accent-100 text-accent-700' : 'text-ink-500 hover:bg-ink-100'
+            filter === 'all' ? 'bg-brand-100 text-brand-700' : 'text-ink-500 hover:bg-ink-100'
           }`}
         >
           Todas
@@ -58,7 +58,7 @@ export function CaptureGallery() {
             type="button"
             onClick={() => setFilter(type)}
             className={`rounded px-2 py-0.5 text-xs font-medium ${
-              filter === type ? 'bg-accent-100 text-accent-700' : 'text-ink-500 hover:bg-ink-100'
+              filter === type ? 'bg-brand-100 text-brand-700' : 'text-ink-500 hover:bg-ink-100'
             }`}
           >
             {TYPE_LABELS[type]}
@@ -73,7 +73,7 @@ export function CaptureGallery() {
         {filtered.map((cap) => (
           <div
             key={cap.id}
-            className="group rounded border border-ink-200 bg-white p-2 transition-colors hover:border-accent-300"
+            className="group rounded border border-ink-200 bg-white p-2 transition-colors hover:border-brand-300"
             draggable
             onDragStart={(e) => {
               e.dataTransfer.setData('text/plain', cap.dataUrl);
@@ -103,7 +103,7 @@ export function CaptureGallery() {
                   <button
                     type="button"
                     onClick={() => startRename(cap)}
-                    className="text-left text-xs font-medium text-ink-700 hover:text-accent-600"
+                    className="text-left text-xs font-medium text-ink-700 hover:text-brand-600"
                   >
                     {cap.name}
                   </button>
@@ -133,7 +133,7 @@ export function CaptureGallery() {
                       },
                     })
                   }
-                  className="text-[10px] text-accent-600 hover:text-accent-700"
+                  className="text-[10px] text-brand-600 hover:text-brand-700"
                   title="Insertar en la pizarra"
                 >
                   A la pizarra
@@ -141,7 +141,7 @@ export function CaptureGallery() {
                 <button
                   type="button"
                   onClick={() => removeCapture(cap.id)}
-                  className="text-[10px] text-red-500 hover:text-red-700"
+                  className="text-[10px] text-danger-500 hover:text-danger-700"
                 >
                   Borrar
                 </button>

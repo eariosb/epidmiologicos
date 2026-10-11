@@ -4,13 +4,95 @@
 
 @import 'katex/dist/katex.min.css';
 
+/* ------------------------------------------------------------------
+ * Tokens semánticos de diseño (canales RGB para componer con alfa).
+ * brand    = identidad del curso (verde azulado)
+ * warning  = advertencias y cautelas metodológicas
+ * danger   = rechazo / incumplimiento / errores
+ * success  = veredictos favorables / metas alcanzadas
+ * info     = resaltado neutral (tablas, fieldsets, referencias)
+ * code     = fondo de bloques de código
+ * Los tonos interpolados (55, 105, 405, 505, 515, 650, 705, 715)
+ * preservan los hex exactos de las paletas heredadas (positive,
+ * green, rose) para que la migración no mueva un solo píxel.
+ * ----------------------------------------------------------------- */
+:root {
+  --bg: 250 250 250;
+  --fg: 33 37 41;
+
+  --brand-50: 234 250 249;
+  --brand-100: 208 243 241;
+  --brand-200: 163 230 227;
+  --brand-300: 111 213 210;
+  --brand-400: 63 194 190;
+  --brand-500: 42 169 163;
+  --brand-600: 32 144 137;
+  --brand-700: 29 118 112;
+  --brand-800: 24 93 88;
+  --brand-900: 18 63 60;
+
+  --warning-50: 255 251 235;
+  --warning-100: 254 243 199;
+  --warning-200: 253 230 138;
+  --warning-300: 252 211 77;
+  --warning-400: 251 191 36;
+  --warning-500: 245 158 11;
+  --warning-600: 217 119 6;
+  --warning-700: 180 83 9;
+  --warning-800: 146 64 14;
+  --warning-900: 120 53 15;
+
+  --danger-50: 254 242 242;
+  --danger-100: 254 226 226;
+  --danger-200: 254 202 202;
+  --danger-300: 252 165 165;
+  --danger-400: 248 113 113;
+  --danger-500: 239 68 68;
+  --danger-600: 220 38 38;
+  --danger-650: 225 29 72;
+  --danger-700: 185 28 28;
+  --danger-800: 153 27 27;
+  --danger-900: 127 29 29;
+
+  --success-50: 236 253 245;
+  --success-55: 232 245 233;
+  --success-100: 209 250 229;
+  --success-105: 220 252 231;
+  --success-200: 167 243 208;
+  --success-300: 110 231 183;
+  --success-400: 52 211 153;
+  --success-405: 74 222 128;
+  --success-500: 16 185 129;
+  --success-505: 22 163 74;
+  --success-515: 46 125 50;
+  --success-600: 5 150 105;
+  --success-700: 4 120 87;
+  --success-705: 21 128 61;
+  --success-715: 27 94 32;
+  --success-800: 6 95 70;
+  --success-900: 6 78 59;
+
+  --info-50: 240 249 255;
+  --info-100: 224 242 254;
+  --info-200: 186 230 253;
+  --info-300: 125 211 252;
+  --info-400: 56 189 248;
+  --info-500: 14 165 233;
+  --info-600: 2 132 199;
+  --info-700: 3 105 161;
+  --info-800: 7 89 133;
+  --info-900: 12 74 110;
+
+  --code: 30 30 46;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: #fafafa;
-  color: #212529;
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
 }
 
 /* Flashcard: efecto de volteo 3D */

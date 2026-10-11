@@ -65,7 +65,7 @@ export function LangTabs({
             onClick={() => setLang(k)}
             className={
               lang === k
-                ? 'rounded bg-accent-600 px-3 py-1 text-xs font-medium text-white'
+                ? 'rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white'
                 : 'rounded border border-ink-200 px-3 py-1 text-xs text-ink-600 hover:bg-ink-100'
             }
           >
@@ -80,7 +80,7 @@ export function LangTabs({
         <code>{code[lang]}</code>
       </pre>
       {trap && (
-        <p className="mt-2 rounded bg-amber-50 p-2 text-xs text-amber-900">
+        <p className="mt-2 rounded bg-warning-50 p-2 text-xs text-warning-900">
           <strong>Trampa común:</strong> {trap}
         </p>
       )}

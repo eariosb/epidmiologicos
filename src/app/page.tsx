@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
-        <p className="text-sm font-semibold uppercase tracking-wider text-accent-600">
+        <p className="text-sm font-semibold uppercase tracking-wider text-brand-600">
           Universidad Nacional de Colombia · Sede Medellín
         </p>
         <h1 className="mt-2 text-4xl font-bold leading-tight text-ink-900">
@@ -19,7 +19,7 @@ export default function HomePage() {
           repaso por algunos proyectos y conceptos interesantes de estudi 
           actualmente en epidemiología.
         </p>
-        <blockquote className="mt-5 border-l-4 border-accent-400 pl-4 text-ink-700 italic">
+        <blockquote className="mt-5 border-l-4 border-brand-400 pl-4 text-ink-700 italic">
           &ldquo;Somos propensos a sobrestimar lo que entendemos del mundo y a 
           subestimar el papel del azar en los acontecimientos.&rdquo;  Daniel Kahneman, <em>Epidemiology</em> (2014)
         </blockquote>
@@ -41,9 +41,9 @@ export default function HomePage() {
                   <li key={mod.meta.slug}>
                     <Link
                       href={`/cursos/${mod.meta.slug}`}
-                      className="group block rounded border border-ink-200 bg-white px-5 py-3.5 shadow-sm transition-all hover:border-accent-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                      className="group block rounded border border-ink-200 bg-white px-5 py-3.5 shadow-sm transition-all hover:border-brand-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                     >
-                      <span className="font-medium text-ink-900 group-hover:text-accent-700">
+                      <span className="font-medium text-ink-900 group-hover:text-brand-700">
                         {mod.meta.order}. {mod.meta.title.replace(/^\d+\.\s*/, '')}
                       </span>
                       <span className="mt-0.5 block text-sm text-ink-500">{mod.meta.objective}</span>

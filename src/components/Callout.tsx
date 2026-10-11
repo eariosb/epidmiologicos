@@ -15,8 +15,8 @@ const STYLES: Record<
   { wrap: string; badge: string; Icon: ComponentType<{ className?: string }>; label: string }
 > = {
   tip: {
-    wrap: 'border-accent-200 bg-accent-50',
-    badge: 'text-accent-700',
+    wrap: 'border-brand-200 bg-brand-50',
+    badge: 'text-brand-700',
     Icon: Lightbulb,
     label: 'Tip',
   },
@@ -27,20 +27,20 @@ const STYLES: Record<
     label: 'Nota',
   },
   warning: {
-    wrap: 'border-amber-200 bg-amber-50',
-    badge: 'text-amber-800',
+    wrap: 'border-warning-200 bg-warning-50',
+    badge: 'text-warning-800',
     Icon: TriangleAlert,
     label: 'Atención',
   },
   curiosity: {
-    wrap: 'border-accent-200 bg-accent-50',
-    badge: 'text-accent-800',
+    wrap: 'border-brand-200 bg-brand-50',
+    badge: 'text-brand-800',
     Icon: Search,
     label: 'Para el curioso',
   },
   success: {
-    wrap: 'border-emerald-200 bg-emerald-50',
-    badge: 'text-emerald-800',
+    wrap: 'border-success-200 bg-success-50',
+    badge: 'text-success-800',
     Icon: CheckCircle2,
     label: 'Buena práctica',
   },
@@ -59,7 +59,7 @@ export function Callout({ type = 'tip', title, children }: CalloutProps) {
         <s.Icon aria-hidden className="h-4 w-4" />
         {title ?? s.label}
       </p>
-      <div className="prose prose-sm max-w-none text-ink-700 prose-p:my-1 prose-code:before:content-none prose-code:after:content-none prose-code:bg-[#1e1e2e] prose-code:text-gray-100">{children}</div>
+      <div className="prose prose-sm max-w-none text-ink-700 prose-p:my-1 prose-code:before:content-none prose-code:after:content-none prose-code:bg-code prose-code:text-gray-100">{children}</div>
     </div>
   );
 }

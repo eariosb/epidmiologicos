@@ -105,13 +105,13 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
-          className="flex items-center gap-2 text-sm font-semibold text-accent-800 hover:text-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="flex items-center gap-2 text-sm font-semibold text-brand-800 hover:text-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <span aria-hidden className={clsx('transition-transform', expanded && 'rotate-90')}>▸</span>
           <StickyNote aria-hidden className="h-4 w-4" />
           Mis notas
           {notes.length > 0 && (
-            <span className="rounded-full bg-accent-100 px-2 py-0.5 text-xs font-medium text-accent-700">
+            <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">
               {notes.length}
             </span>
           )}
@@ -120,14 +120,14 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
           <button
             type="button"
             onClick={handleExport}
-            className="text-xs text-accent-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+            className="text-xs text-brand-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
             Exportar
           </button>
           <button
             type="button"
             onClick={() => setShowImport((v) => !v)}
-            className="text-xs text-accent-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+            className="text-xs text-brand-600 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
             Importar
           </button>
@@ -141,7 +141,7 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
             type="file"
             accept="application/json,.md,.markdown,.txt"
             onChange={handleImport}
-            className="text-xs text-ink-600 file:mr-2 file:rounded file:border-0 file:bg-accent-50 file:px-2 file:py-1 file:text-xs file:text-accent-700 hover:file:bg-accent-100"
+            className="text-xs text-ink-600 file:mr-2 file:rounded file:border-0 file:bg-brand-50 file:px-2 file:py-1 file:text-xs file:text-brand-700 hover:file:bg-brand-100"
           />
         </div>
       )}
@@ -160,7 +160,7 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
                     <button
                       type="button"
                       onClick={() => handleEdit(note)}
-                      className="flex-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                      className="flex-1 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                     >
                       <p className="text-sm font-medium text-ink-800">
                         {note.title || 'Sin título'}
@@ -179,7 +179,7 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
                       type="button"
                       onClick={() => handleDelete(note.id)}
                       aria-label="Eliminar nota"
-                      className="rounded p-1 text-ink-400 hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                      className="rounded p-1 text-ink-400 hover:bg-danger-50 hover:text-danger-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                     >
                       <X aria-hidden className="h-3.5 w-3.5" />
                     </button>
@@ -197,28 +197,28 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
                 value={draftTitle}
                 onChange={(e) => setDraftTitle(e.target.value)}
                 placeholder="Título de la nota (opcional)"
-                className="w-full rounded border border-ink-200 bg-white px-3 py-2 text-sm text-ink-800 focus:border-accent-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                className="w-full rounded border border-ink-200 bg-white px-3 py-2 text-sm text-ink-800 focus:border-brand-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               />
               <textarea
                 value={draftContent}
                 onChange={(e) => setDraftContent(e.target.value)}
                 placeholder="Escribe tu nota aquí…"
                 rows={5}
-                className="w-full rounded border border-ink-200 bg-ink-50 p-3 text-sm text-ink-800 focus:border-accent-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                className="w-full rounded border border-ink-200 bg-ink-50 p-3 text-sm text-ink-800 focus:border-brand-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               />
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleSave}
                   disabled={!draftContent.trim()}
-                  className="rounded bg-accent-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                  className="rounded bg-brand-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                 >
                   Guardar
                 </button>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                  className="rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                 >
                   Cancelar
                 </button>
@@ -231,7 +231,7 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
             <button
               type="button"
               onClick={handleNewNote}
-              className="mt-2 w-full rounded border border-dashed border-ink-300 py-2 text-sm text-ink-500 transition-colors hover:border-accent-400 hover:bg-accent-50 hover:text-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+              className="mt-2 w-full rounded border border-dashed border-ink-300 py-2 text-sm text-ink-500 transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
             >
               + Nueva nota
             </button>

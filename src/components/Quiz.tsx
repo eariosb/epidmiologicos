@@ -35,9 +35,9 @@ export function Quiz({ question, options, correctIndex, explanation }: QuizProps
             key={i}
             className={clsx(
               'flex cursor-pointer items-start gap-2.5 rounded border px-3 py-2 text-sm transition-colors',
-              submitted && i === correctIndex && 'border-emerald-300 bg-emerald-50',
-              submitted && selected === i && i !== correctIndex && 'border-red-300 bg-red-50',
-              !submitted && selected === i && 'border-accent-400 bg-accent-50',
+              submitted && i === correctIndex && 'border-success-300 bg-success-50',
+              submitted && selected === i && i !== correctIndex && 'border-danger-300 bg-danger-50',
+              !submitted && selected === i && 'border-brand-400 bg-brand-50',
               !submitted && selected !== i && 'border-ink-200 hover:bg-ink-50'
             )}
           >
@@ -46,7 +46,7 @@ export function Quiz({ question, options, correctIndex, explanation }: QuizProps
               name={question}
               checked={selected === i}
               onChange={() => setSelected(i)}
-              className="mt-0.5 accent-accent-600"
+              className="mt-0.5 accent-brand-600"
             />
             <span className="text-ink-700"><MathText text={opt} /></span>
           </label>
@@ -58,7 +58,7 @@ export function Quiz({ question, options, correctIndex, explanation }: QuizProps
           type="button"
           disabled={selected === null}
           onClick={() => setSubmitted(true)}
-          className="mt-4 rounded bg-accent-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="mt-4 rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           Verificar
         </button>
@@ -66,7 +66,7 @@ export function Quiz({ question, options, correctIndex, explanation }: QuizProps
         <div
           className={clsx(
             'mt-4 rounded border px-4 py-3 text-sm animate-fade-in',
-            isCorrect ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-900'
+            isCorrect ? 'border-success-200 bg-success-50 text-success-900' : 'border-warning-200 bg-warning-50 text-warning-900'
           )}
           role="status"
         >

@@ -110,7 +110,7 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
           {session?.title ?? 'Sesión actual'}
           {isEnded && <span className="ml-2 rounded bg-ink-200 px-1.5 py-0.5 text-[10px] text-ink-600">Finalizada</span>}
           {!isEnded && session && (
-            <span className="ml-2 rounded bg-green-100 px-1.5 py-0.5 text-[10px] text-green-700">En curso</span>
+            <span className="ml-2 rounded bg-success-105 px-1.5 py-0.5 text-[10px] text-success-705">En curso</span>
           )}
         </span>
         <span className="text-[10px] text-ink-400">
@@ -153,7 +153,7 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
           type="button"
           onClick={handleExportPDF}
           disabled={exporting}
-          className="inline-flex items-center gap-1 rounded bg-accent-500 px-3 py-1 text-xs font-medium text-white hover:bg-accent-600 disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded bg-brand-500 px-3 py-1 text-xs font-medium text-white hover:bg-brand-600 disabled:opacity-50"
           title="Exportar sesión a PDF"
         >
           {exporting ? (

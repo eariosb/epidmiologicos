@@ -17,6 +17,7 @@ import {
   woolfCI,
 } from '@/lib/exact2x2';
 import { runExact } from '@/lib/exactRunner';
+import { tokens } from '@/lib/tokens';
 import { useExactTask } from '@/hooks/useExactTask';
 import {
   CI_METHODS,
@@ -33,8 +34,8 @@ const FIG = 'my-6 rounded border border-ink-200 bg-white p-4 shadow-sm';
 const CAPTION = 'mb-2 text-sm font-semibold text-ink-800';
 const NOTE = 'mt-2 border-t border-ink-100 pt-2 text-xs text-ink-600';
 const CELL_INPUT =
-  'w-16 rounded border border-ink-200 px-1.5 py-0.5 text-center text-xs focus:border-accent-400 focus:outline-none';
-const SLIDER = 'w-full accent-accent-600';
+  'w-16 rounded border border-ink-200 px-1.5 py-0.5 text-center text-xs focus:border-brand-400 focus:outline-none';
+const SLIDER = 'w-full accent-brand-600';
 const fmt = (x: number, d = 3) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 /** Coordenadas SVG redondeadas: evita hydration mismatch por diferencias
  *  de punto flotante entre Node (SSR) y el navegador. */
@@ -83,8 +84,8 @@ function TableInputs({
 }) {
   return (
     <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
-      <fieldset className="rounded border border-red-200 bg-red-50/50 px-2 pb-1.5 pt-0.5">
-        <legend className="px-1 text-[10px] font-semibold text-red-700">{label1}</legend>
+      <fieldset className="rounded border border-danger-200 bg-danger-50/50 px-2 pb-1.5 pt-0.5">
+        <legend className="px-1 text-[10px] font-semibold text-danger-700">{label1}</legend>
         <div className="flex gap-3">
           <CountInput label="x₁" value={t.x1} max={t.n1}
             onChange={(v) => setT({ ...t, x1: Math.min(v, t.n1) })} />
@@ -92,8 +93,8 @@ function TableInputs({
             onChange={(v) => setT({ ...t, n1: Math.max(1, v), x1: Math.min(t.x1, Math.max(1, v)) })} />
         </div>
       </fieldset>
-      <fieldset className="rounded border border-sky-200 bg-sky-50/50 px-2 pb-1.5 pt-0.5">
-        <legend className="px-1 text-[10px] font-semibold text-sky-700">{label2}</legend>
+      <fieldset className="rounded border border-info-200 bg-info-50/50 px-2 pb-1.5 pt-0.5">
+        <legend className="px-1 text-[10px] font-semibold text-info-700">{label2}</legend>
         <div className="flex gap-3">
           <CountInput label="x₂" value={t.x2} max={t.n2}
             onChange={(v) => setT({ ...t, x2: Math.min(v, t.n2) })} />
@@ -125,19 +126,19 @@ function LinePlot({
       aria-label={`${yLabel} en función de ${xLabel}`}>
       {(yTicks ?? []).map((v) => (
         <g key={v}>
-          <line x1={px(xmin)} x2={px(xmax)} y1={py(v)} y2={py(v)} stroke="#e5e7eb" />
-          <text x={L - 5} y={py(v) + 3} textAnchor="end" fontSize={9} fill="#6b7280">{v}</text>
+          <line x1={px(xmin)} x2={px(xmax)} y1={py(v)} y2={py(v)} stroke={tokens.chart.grid} />
+          <text x={L - 5} y={py(v) + 3} textAnchor="end" fontSize={9} fill={tokens.chart.text}>{v}</text>
         </g>
       ))}
       {(xTicks ?? []).map((v) => (
-        <text key={v} x={px(v)} y={height - B + 13} textAnchor="middle" fontSize={9} fill="#6b7280">{v}</text>
+        <text key={v} x={px(v)} y={height - B + 13} textAnchor="middle" fontSize={9} fill={tokens.chart.text}>{v}</text>
       ))}
       {hline && (
         <>
           <line x1={px(xmin)} x2={px(xmax)} y1={py(hline.y)} y2={py(hline.y)}
-            stroke="#9ca3af" strokeDasharray="4 3" />
+            stroke={tokens.chart.tick} strokeDasharray="4 3" />
           {hline.label && (
-            <text x={px(xmax) - 4} y={py(hline.y) - 3} textAnchor="end" fontSize={9} fill="#6b7280">
+            <text x={px(xmax) - 4} y={py(hline.y) - 3} textAnchor="end" fontSize={9} fill={tokens.chart.text}>
               {hline.label}
             </text>
           )}
@@ -148,15 +149,15 @@ function LinePlot({
           strokeDasharray={s.dash ? '4 2.5' : undefined}
           points={s.x.map((v, j) => `${px(v)},${py(s.y[j])}`).join(' ')} />
       ))}
-      <line x1={px(xmin)} x2={px(xmax)} y1={py(ymin)} y2={py(ymin)} stroke="#9ca3af" />
-      <line x1={px(xmin)} x2={px(xmin)} y1={py(ymin)} y2={py(ymax)} stroke="#9ca3af" />
+      <line x1={px(xmin)} x2={px(xmax)} y1={py(ymin)} y2={py(ymin)} stroke={tokens.chart.tick} />
+      <line x1={px(xmin)} x2={px(xmin)} y1={py(ymin)} y2={py(ymax)} stroke={tokens.chart.tick} />
       <foreignObject x={px((xmin + xmax) / 2) - 60} y={height - 18} width={120} height={16}>
-        <div style={{ fontSize: 10, color: '#4b5563', textAlign: 'center', lineHeight: '16px' }}>
+        <div style={{ fontSize: 10, color: tokens.chart.title, textAlign: 'center', lineHeight: '16px' }}>
           <MathText text={`$${xLabel}$`} />
         </div>
       </foreignObject>
       <foreignObject x={4} y={py(ymax) + 1} width={200} height={16}>
-        <div style={{ fontSize: 10, color: '#4b5563', lineHeight: '16px' }}>
+        <div style={{ fontSize: 10, color: tokens.chart.title, lineHeight: '16px' }}>
           <MathText text={`$${yLabel}$`} />
         </div>
       </foreignObject>
@@ -179,10 +180,10 @@ const PROCEDURES = [
 type PKey = (typeof PROCEDURES)[number]['key'];
 
 const CELL_STATE = {
-  neither: '#f3f4f6',
-  both: '#4C72B0',
-  onlyU: '#DD8452', // incondicional rechaza, Fisher no
-  onlyF: '#C44E52', // Fisher rechaza, incondicional no
+  neither: tokens.chart.gridSoft,
+  both: tokens.chart.primary,
+  onlyU: tokens.chart.secondary, // incondicional rechaza, Fisher no
+  onlyF: tokens.chart.alert, // Fisher rechaza, incondicional no
 } as const;
 
 export function ExactTestExplorer({ title }: { title?: ReactNode }) {
@@ -286,7 +287,7 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
                   <td className="py-1 pr-2 text-right font-mono">{fmt(r.p, 4)}</td>
                   <td className="py-1 text-right">
                     {r.p <= alpha ? (
-                      <span className="font-semibold text-red-700">sí</span>
+                      <span className="font-semibold text-danger-700">sí</span>
                     ) : (
                       <span className="text-ink-400">no</span>
                     )}
@@ -326,11 +327,11 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
                   width={cw + 2}
                   height={ch + 2}
                   fill="none"
-                  stroke="#111827"
+                  stroke={tokens.chart.axis}
                   strokeWidth={1.6}
                 />
-                <text x={40 + W / 2} y={H + 22} textAnchor="middle" fontSize={10} fill="#4b5563">x₂</text>
-                <text x={14} y={H / 2} fontSize={10} fill="#4b5563"
+                <text x={40 + W / 2} y={H + 22} textAnchor="middle" fontSize={10} fill={tokens.chart.title}>x₂</text>
+                <text x={14} y={H / 2} fontSize={10} fill={tokens.chart.title}
                   transform={`rotate(-90 14 ${H / 2})`} textAnchor="middle">x₁</text>
               </svg>
               <SimLegend
@@ -356,7 +357,7 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
       </div>
 
       {(t.n1 > 60 || t.n2 > 60) && (
-        <p className="mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <p className="mt-3 rounded border border-warning-200 bg-warning-50 px-3 py-2 text-xs text-warning-800">
           La enumeración exhaustiva se calcula para n₁, n₂ ≤ 60 por fluidez en el
           navegador; reduce los tamaños para ver el mapa de decisiones.
         </p>
@@ -502,9 +503,9 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
           </table>
           <LinePlot
             series={[
-              { x: Array.from(sizeCurves.grid), y: Array.from(sizeCurves.fisher), color: '#4C72B0' },
-              { x: Array.from(sizeCurves.grid), y: Array.from(sizeCurves.boschloo), color: '#DD8452' },
-              { x: Array.from(sizeCurves.grid), y: Array.from(sizeCurves.z), color: '#55A868' },
+              { x: Array.from(sizeCurves.grid), y: Array.from(sizeCurves.fisher), color: tokens.chart.primary },
+              { x: Array.from(sizeCurves.grid), y: Array.from(sizeCurves.boschloo), color: tokens.chart.secondary },
+              { x: Array.from(sizeCurves.grid), y: Array.from(sizeCurves.z), color: tokens.chart.tertiary },
             ]}
             xmin={0} xmax={1} ymin={0} ymax={Math.max(0.06, alpha * 1.4)}
             xLabel="p" yLabel="P_p(\mathrm{rechazo})"
@@ -530,7 +531,7 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
             <button
               onClick={computeCurves}
               disabled={busy}
-              className="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-700 disabled:opacity-50"
+              className="rounded bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50"
             >
               {busy ? 'Calculando…' : `Calcular para n = 10…60 en (p₁, p₂) actuales`}
             </button>
@@ -539,9 +540,9 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
             <>
               <LinePlot
                 series={[
-                  { x: curves.n, y: curves.fisher, color: '#4C72B0' },
-                  { x: curves.n, y: curves.boschloo, color: '#DD8452' },
-                  { x: curves.n, y: curves.z, color: '#55A868' },
+                  { x: curves.n, y: curves.fisher, color: tokens.chart.primary },
+                  { x: curves.n, y: curves.boschloo, color: tokens.chart.secondary },
+                  { x: curves.n, y: curves.z, color: tokens.chart.tertiary },
                 ]}
                 xmin={10} xmax={60} ymin={0} ymax={1}
                 xLabel="n" yLabel="\mathrm{potencia}"
@@ -550,7 +551,7 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
                 height={180}
               />
               <LinePlot
-                series={[{ x: curves.n, y: curves.disc, color: '#C44E52' }]}
+                series={[{ x: curves.n, y: curves.disc, color: tokens.chart.alert }]}
                 xmin={10} xmax={60} ymin={0} ymax={Math.max(0.15, ...curves.disc) * 1.15}
                 xLabel="n" yLabel="\mathrm{discordancia}"
                 xTicks={[10, 20, 30, 40, 50, 60]}
@@ -567,10 +568,10 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
       <SimLegend
         className="mt-2"
         items={[
-          { color: '#4C72B0', label: 'Fisher' },
-          { color: '#DD8452', label: 'Boschloo' },
-          { color: '#55A868', label: 'z agrupada' },
-          { color: '#C44E52', label: 'P(decisiones opuestas Fisher–Boschloo)' },
+          { color: tokens.chart.primary, label: 'Fisher' },
+          { color: tokens.chart.secondary, label: 'Boschloo' },
+          { color: tokens.chart.tertiary, label: 'z agrupada' },
+          { color: tokens.chart.alert, label: 'P(decisiones opuestas Fisher–Boschloo)' },
         ]}
       />
       <SimGuide>
@@ -686,9 +687,9 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
           {curve && (
             <LinePlot
               series={[
-                { x: curve.cs, y: curve.bias2, color: '#b2182b' },
-                { x: curve.cs, y: curve.va, color: '#2166ac' },
-                { x: curve.cs, y: curve.mse, color: '#111827' },
+                { x: curve.cs, y: curve.bias2, color: tokens.chart.bias },
+                { x: curve.cs, y: curve.va, color: tokens.chart.variance },
+                { x: curve.cs, y: curve.mse, color: tokens.chart.axis },
               ]}
               xmin={0} xmax={2}
               ymin={0} ymax={Math.max(...curve.mse, ...curve.va, ...curve.bias2) * 1.05}
@@ -700,9 +701,9 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
           <SimLegend
             className="mt-1"
             items={[
-              { color: '#b2182b', label: 'sesgo² en (p̂₁, p̂₂)' },
-              { color: '#2166ac', label: 'varianza' },
-              { color: '#111827', label: 'ECM = sesgo² + varianza' },
+              { color: tokens.chart.bias, label: 'sesgo² en (p̂₁, p̂₂)' },
+              { color: tokens.chart.variance, label: 'varianza' },
+              { color: tokens.chart.axis, label: 'ECM = sesgo² + varianza' },
             ]}
           />
           <label className="mt-2 flex items-center gap-2 text-xs text-ink-600">
@@ -853,10 +854,10 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
                 ] as const).map(([name, f, a]) => (
                   <tr key={name} className="border-b border-ink-100">
                     <td className="py-1 text-ink-700">{name}</td>
-                    <td className={`py-1 text-right font-mono ${f >= targetPower ? 'text-emerald-700 font-semibold' : 'text-rose-600'}`}>
+                    <td className={`py-1 text-right font-mono ${f >= targetPower ? 'text-success-700 font-semibold' : 'text-danger-650'}`}>
                       {fmt(f, 3)}
                     </td>
-                    <td className={`py-1 text-right font-mono ${a >= targetPower ? 'text-emerald-700 font-semibold' : 'text-rose-600'}`}>
+                    <td className={`py-1 text-right font-mono ${a >= targetPower ? 'text-success-700 font-semibold' : 'text-danger-650'}`}>
                       {fmt(a, 3)}
                     </td>
                   </tr>
@@ -882,7 +883,7 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
         <div>
           {curve && (
             <LinePlot
-              series={[{ x: curve.ns, y: curve.pw, color: '#4C72B0' }]}
+              series={[{ x: curve.ns, y: curve.pw, color: tokens.chart.primary }]}
               xmin={5} xmax={curve.ns[curve.ns.length - 1]}
               ymin={0} ymax={1}
               xLabel="n" yLabel="\mathrm{potencia}"
@@ -894,7 +895,7 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
           )}
           <SimLegend
             className="mt-1"
-            items={[{ color: '#4C72B0', label: 'potencia (aproximación normal del test z)' }]}
+            items={[{ color: tokens.chart.primary, label: 'potencia (aproximación normal del test z)' }]}
           />
         </div>
       </div>
@@ -920,12 +921,12 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
 /* ================================================================== */
 
 const METHOD_COLORS: Record<CIMethodKey, string> = {
-  wald: '#C44E52',
-  wilson: '#4C72B0',
-  agrestiCoull: '#55A868',
-  jeffreys: '#8172B3',
-  clopperPearson: '#937860',
-  lr: '#DD8452',
+  wald: tokens.chart.alert,
+  wilson: tokens.chart.primary,
+  agrestiCoull: tokens.chart.tertiary,
+  jeffreys: tokens.chart.aux,
+  clopperPearson: tokens.ui.boardWood,
+  lr: tokens.chart.secondary,
 };
 
 export function CIMethodsExplorer({ title }: { title?: ReactNode }) {
@@ -1009,25 +1010,25 @@ export function CIMethodsExplorer({ title }: { title?: ReactNode }) {
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img"
             aria-label="Intervalos de confianza por método">
             {/* inadmissible zones */}
-            <rect x={40} y={4} width={px(0) - 40} height={H - 22} fill="#fecaca" opacity={0.4} />
-            <rect x={px(1)} y={4} width={W - 20 - px(1)} height={H - 22} fill="#fecaca" opacity={0.4} />
-            <line x1={px(0)} x2={px(0)} y1={4} y2={H - 22} stroke="#9ca3af" />
-            <line x1={px(1)} x2={px(1)} y1={4} y2={H - 22} stroke="#9ca3af" />
+            <rect x={40} y={4} width={px(0) - 40} height={H - 22} fill={tokens.status.dangerSoft} opacity={0.4} />
+            <rect x={px(1)} y={4} width={W - 20 - px(1)} height={H - 22} fill={tokens.status.dangerSoft} opacity={0.4} />
+            <line x1={px(0)} x2={px(0)} y1={4} y2={H - 22} stroke={tokens.chart.tick} />
+            <line x1={px(1)} x2={px(1)} y1={4} y2={H - 22} stroke={tokens.chart.tick} />
             <line x1={px(phat)} x2={px(phat)} y1={4} y2={H - 22}
-              stroke="#374151" strokeDasharray="3 3" />
+              stroke={tokens.chart.deep} strokeDasharray="3 3" />
             {rows.map((r, i) => {
               const yc = 16 + i * 26;
               return (
                 <g key={r.key}>
                   <line x1={px(Math.max(-0.05, r.lo))} x2={px(Math.min(1.05, r.hi))}
                     y1={yc} y2={yc} stroke={METHOD_COLORS[r.key]} strokeWidth={3.5} />
-                  <text x={8} y={yc + 3} fontSize={8} fill={r.admisible ? '#374151' : '#b91c1c'}>
+                  <text x={8} y={yc + 3} fontSize={8} fill={r.admisible ? tokens.chart.deep : tokens.status.dangerText}>
                     {r.label.slice(0, 7)}
                   </text>
                 </g>
               );
             })}
-            <text x={px(phat)} y={H - 6} textAnchor="middle" fontSize={9} fill="#6b7280">
+            <text x={px(phat)} y={H - 6} textAnchor="middle" fontSize={9} fill={tokens.chart.text}>
               p̂ = {fmt(phat, 3)}
             </text>
           </svg>
@@ -1052,7 +1053,7 @@ export function CIMethodsExplorer({ title }: { title?: ReactNode }) {
                     {r.admisible ? (
                       <span className="text-ink-400">sí</span>
                     ) : (
-                      <span className="font-semibold text-red-700">no</span>
+                      <span className="font-semibold text-danger-700">no</span>
                     )}
                   </td>
                 </tr>
@@ -1227,7 +1228,7 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
           className={CELL_INPUT} /> (garantía bayesiana, assurance)
       </label>
       {method === 'wald' && (
-        <p className="mt-1 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-800">
+        <p className="mt-1 rounded border border-warning-200 bg-warning-50 px-2 py-1 text-[11px] text-warning-800">
           Ojo con Wald: cuando x = 0 la varianza estimada se anula y el IC colapsa a un
           punto (L = 0), así que esos resultados cuentan como «precisión lograda» y
           sobrestiman la garantía. Es exactamente la falla de Wald cerca del borde;
@@ -1246,8 +1247,8 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
             aria-label="Distribución de masa de la longitud L">
             {[0.25, 0.5, 0.75, 1].map((g) => (
               <g key={g}>
-                <line x1={40} x2={WL - 15} y1={ly(g * maxProb)} y2={ly(g * maxProb)} stroke="#e5e7eb" />
-                <text x={36} y={ly(g * maxProb) + 3} textAnchor="end" fontSize={8} fill="#6b7280">
+                <line x1={40} x2={WL - 15} y1={ly(g * maxProb)} y2={ly(g * maxProb)} stroke={tokens.chart.grid} />
+                <text x={36} y={ly(g * maxProb) + 3} textAnchor="end" fontSize={8} fill={tokens.chart.text}>
                   {(g * maxProb).toFixed(2)}
                 </text>
               </g>
@@ -1256,12 +1257,12 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
               <rect key={L}
                 x={lx(L) - bw / 2} y={ly(pr)}
                 width={Math.max(bw, 1.2)} height={ly(0) - ly(pr)}
-                fill={L <= L0 ? '#4C72B0' : '#d1d5db'} />
+                fill={L <= L0 ? tokens.chart.primary : tokens.chart.border} />
             ))}
             <line x1={lx(L0)} x2={lx(L0)} y1={12} y2={ly(0)}
-              stroke="#C44E52" strokeDasharray="4 3" />
-            <text x={lx(L0)} y={9} fontSize={9} fill="#C44E52" textAnchor="middle">L₀</text>
-            <text x={(40 + WL - 15) / 2} y={HL - 4} textAnchor="middle" fontSize={10} fill="#4b5563">
+              stroke={tokens.chart.alert} strokeDasharray="4 3" />
+            <text x={lx(L0)} y={9} fontSize={9} fill={tokens.chart.alert} textAnchor="middle">L₀</text>
+            <text x={(40 + WL - 15) / 2} y={HL - 4} textAnchor="middle" fontSize={10} fill={tokens.chart.title}>
               L
             </text>
           </svg>
@@ -1277,7 +1278,7 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
           </p>
           {!computed && (
             <button onClick={compute} disabled={busy}
-              className="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-700 disabled:opacity-50">
+              className="rounded bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50">
               {busy ? 'Calculando…' : 'Calcular n y curva de sensibilidad'}
             </button>
           )}
@@ -1288,8 +1289,8 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
                   <div className="text-[10px] uppercase tracking-wide text-ink-500">clásica (≈50%)</div>
                   <div className="font-mono text-sm font-semibold">{computed.nClassic.toLocaleString()}</div>
                 </div>
-                <div className="rounded border border-accent-200 bg-accent-50/60 px-2 py-1.5">
-                  <div className="text-[10px] uppercase tracking-wide text-accent-700">exacta, garantía</div>
+                <div className="rounded border border-brand-200 bg-brand-50/60 px-2 py-1.5">
+                  <div className="text-[10px] uppercase tracking-wide text-brand-700">exacta, garantía</div>
                   <div className="font-mono text-sm font-semibold">
                     {Number.isFinite(computed.nExact) ? computed.nExact.toLocaleString() : 'no alcanza'}
                   </div>
@@ -1301,11 +1302,11 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
               </div>
               <LinePlot
                 series={[
-                  { x: computed.sens.L0, y: computed.sens.nc, color: '#9ca3af' },
+                  { x: computed.sens.L0, y: computed.sens.nc, color: tokens.chart.tick },
                   {
                     x: computed.sens.L0.filter((_, i) => Number.isFinite(computed.sens.ne[i])),
                     y: computed.sens.ne.filter(Number.isFinite),
-                    color: '#4C72B0',
+                    color: tokens.chart.primary,
                   },
                 ]}
                 xmin={computed.sens.L0[0]} xmax={computed.sens.L0[8]}
@@ -1326,8 +1327,8 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
       <SimLegend
         className="mt-2"
         items={[
-          { color: '#4C72B0', label: 'L ≤ L₀ (garantía)', mark: 'bar' },
-          { color: '#d1d5db', label: 'L > L₀', mark: 'bar' },
+          { color: tokens.chart.primary, label: 'L ≤ L₀ (garantía)', mark: 'bar' },
+          { color: tokens.chart.border, label: 'L > L₀', mark: 'bar' },
         ]}
       />
       <SimGuide>

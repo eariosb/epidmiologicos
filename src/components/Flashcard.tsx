@@ -21,12 +21,12 @@ function Card({ front, back }: FlashcardItem) {
       aria-pressed={flipped}
       aria-label={flipped ? `Reverso de la tarjeta ${front}` : `Tarjeta ${front}: pulsa para voltear`}
       className={clsx(
-        'flashcard block h-48 w-full cursor-pointer [perspective:1000px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500',
+        'flashcard block h-48 w-full cursor-pointer [perspective:1000px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
         flipped && 'flashcard-flipped'
       )}
     >
       <span className="flashcard-inner relative block h-full w-full">
-        <span className="flashcard-face absolute inset-0 flex items-center justify-center rounded border border-accent-200 bg-accent-700 shadow-md">
+        <span className="flashcard-face absolute inset-0 flex items-center justify-center rounded border border-brand-200 bg-brand-700 shadow-md">
           <span className="px-4 text-center text-2xl font-bold tracking-wide text-white">
             <MathText text={front} />
           </span>

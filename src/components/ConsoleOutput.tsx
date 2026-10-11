@@ -26,7 +26,7 @@ export function ConsoleOutput({ text }: { text: string }) {
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="w-full border-t border-ink-700 px-4 py-1.5 text-left text-xs font-medium text-accent-300 hover:text-accent-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-400"
+          className="w-full border-t border-ink-700 px-4 py-1.5 text-left text-xs font-medium text-brand-300 hover:text-brand-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400"
           aria-expanded={expanded}
         >
           {expanded ? '− Mostrar menos' : `+ Ver salida completa (${lines.length} líneas)`}

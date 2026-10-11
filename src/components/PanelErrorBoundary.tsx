@@ -33,13 +33,13 @@ export class PanelErrorBoundary extends Component<Props, State> {
     if (error === null) return this.props.children;
     if (this.props.fallback) return this.props.fallback;
     return (
-      <div className="m-2 rounded border border-red-300 bg-red-50 p-3 text-xs text-red-700">
+      <div className="m-2 rounded border border-danger-300 bg-danger-50 p-3 text-xs text-danger-700">
         <p className="font-medium">El panel “{this.props.name}” falló.</p>
         <p className="mt-1 font-mono">{error.message}</p>
         <button
           type="button"
           onClick={() => this.setState({ error: null })}
-          className="mt-2 rounded border border-red-300 px-2 py-0.5 hover:bg-red-100"
+          className="mt-2 rounded border border-danger-300 px-2 py-0.5 hover:bg-danger-100"
         >
           Reintentar
         </button>

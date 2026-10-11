@@ -39,15 +39,15 @@ export function LessonProgressTracker({ current, total = 20 }: LessonProgressTra
         </span>
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink-200">
           <div
-            className="h-full rounded-full bg-accent-600 transition-all duration-300"
+            className="h-full rounded-full bg-brand-600 transition-all duration-300"
             style={{ width: `${coursePercent}%` }}
           />
         </div>
-        <span className="text-xs font-medium text-accent-700">{coursePercent}%</span>
+        <span className="text-xs font-medium text-brand-700">{coursePercent}%</span>
       </div>
-      <div className="h-0.5 bg-accent-200">
+      <div className="h-0.5 bg-brand-200">
         <div
-          className={clsx('h-full bg-accent-400 transition-all duration-150')}
+          className={clsx('h-full bg-brand-400 transition-all duration-150')}
           style={{ width: `${scrollProgress * 100}%` }}
         />
       </div>

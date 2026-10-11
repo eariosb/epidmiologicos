@@ -9,7 +9,7 @@ import {
 } from '@cursos/blackboard';
 
 const btn =
-  'flex h-8 w-8 items-center justify-center rounded text-sm font-semibold text-ink-700 transition-colors hover:bg-accent-100 hover:text-accent-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500 disabled:cursor-not-allowed disabled:opacity-40 dark:text-ink-200 dark:hover:bg-accent-900/40 dark:hover:text-accent-300';
+  'flex h-8 w-8 items-center justify-center rounded text-sm font-semibold text-ink-700 transition-colors hover:bg-brand-100 hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-40 dark:text-ink-200 dark:hover:bg-brand-900/40 dark:hover:text-brand-300';
 
 /**
  * Compact page navigation for the icon rail:
@@ -136,7 +136,7 @@ export function PageNav({
         type="button"
         onClick={() => void handleDeletePage()}
         disabled={!activeSceneId}
-        className={`${btn} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30`}
+        className={`${btn} hover:bg-danger-50 hover:text-danger-600 dark:hover:bg-danger-900/30`}
         title="Eliminar página actual"
         aria-label="Eliminar página actual"
       >

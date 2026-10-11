@@ -62,12 +62,12 @@ function MdxTable({ children }: { children?: ReactNode }) {
 }
 
 function MdxThead({ children }: { children?: ReactNode }) {
-  return <thead className="bg-accent-50">{children}</thead>;
+  return <thead className="bg-brand-50">{children}</thead>;
 }
 
 function MdxTh({ children }: { children?: ReactNode }) {
   return (
-    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-accent-800">
+    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-brand-800">
       {children}
     </th>
   );
@@ -79,7 +79,7 @@ function MdxTd({ children }: { children?: ReactNode }) {
 
 function MdxPre({ children }: { children?: ReactNode }) {
   return (
-    <pre className="my-4 overflow-x-auto rounded-lg bg-[#1e1e2e] px-4 py-3 text-sm leading-relaxed text-gray-100 [&_code]:rounded-none [&_code]:bg-transparent [&_code]:px-0 [&_code]:py-0 [&_code]:text-inherit">
+    <pre className="my-4 overflow-x-auto rounded-lg bg-code px-4 py-3 text-sm leading-relaxed text-gray-100 [&_code]:rounded-none [&_code]:bg-transparent [&_code]:px-0 [&_code]:py-0 [&_code]:text-inherit">
       {children}
     </pre>
   );
@@ -87,7 +87,7 @@ function MdxPre({ children }: { children?: ReactNode }) {
 
 function MdxInlineCode({ children }: { children?: ReactNode }) {
   return (
-    <code className="rounded bg-[#1e1e2e] px-1.5 py-0.5 text-[0.85em] font-mono text-gray-100">
+    <code className="rounded bg-code px-1.5 py-0.5 text-[0.85em] font-mono text-gray-100">
       {children}
     </code>
   );

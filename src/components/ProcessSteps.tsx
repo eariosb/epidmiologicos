@@ -20,7 +20,7 @@ export function ProcessSteps({ steps, title }: ProcessStepsProps) {
           <li key={i} className="flex gap-4">
             <span
               aria-hidden
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-700 text-sm font-bold text-white"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-700 text-sm font-bold text-white"
             >
               {i + 1}
             </span>
