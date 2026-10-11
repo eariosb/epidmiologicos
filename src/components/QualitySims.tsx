@@ -298,6 +298,10 @@ interface Finding {
   label: string;
   detail: string;
   severity: 'ok' | 'warn';
+  /** Veredicto esperado tras revisar la evidencia del propio hallazgo. */
+  expected: 'verificado' | 'documentado';
+  /** Por qué ese veredicto y no otro (se muestra al marcar). */
+  porque: string;
 }
 
 const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[]) => Finding[] }> = {
@@ -321,30 +325,40 @@ const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[
           label: `Dominio de Prior: valores {${[...priors].sort().join(', ')}}`,
           detail: 'El protocolo usa 0/10, no 0/1 — quien espere binario lo recodifica mal.',
           severity: 'warn',
+          expected: 'documentado',
+          porque: 'Es una convención del protocolo, no un dato errado: se documenta para no recodificarla como binaria.',
         },
         {
           dimension: 'Conformidad',
           label: `Dominio de censor: valores {${[...censors].sort().join(', ')}}`,
           detail: 'censor = 1 marca censura, no evento: el script del profesor lo confirma.',
           severity: 'warn',
+          expected: 'documentado',
+          porque: 'El código ya está confirmado por la fuente: convención a documentar, no sospecha abierta.',
         },
         {
           dimension: 'Completitud',
           label: `${rows.length} filas × ${Object.keys(rows[0] ?? {}).length} columnas, 0 celdas vacías`,
           detail: 'Sin faltantes verdaderos: la completitud de VALUNG no es el problema.',
           severity: 'ok',
+          expected: 'verificado',
+          porque: 'La revisión salió limpia: no hay nada que sospechar ni convención que documentar.',
         },
         {
           dimension: 'Plausibilidad',
           label: `${(mult10 * 100).toFixed(1)}% de Kps en múltiplos de 10`,
           detail: 'Preferencia de dígito: el Karnofsky se anotaba redondeado (75, 85, 99 son los únicos no redondos).',
           severity: 'warn',
+          expected: 'documentado',
+          porque: 'El redondeo es práctica clínica conocida: se documenta como rasgo de la medición, no se corrige.',
         },
         {
           dimension: 'Plausibilidad',
           label: `${outliers.length} valores de SurvTime sobre ${fmt(upper, 0)} días`,
           detail: 'El boxplot los marca, pero 999 y 991 son seguimientos reales verificados contra la fuente: se marcan, se verifican, no se borran.',
           severity: 'warn',
+          expected: 'verificado',
+          porque: 'Sí eran sospechosos — hasta verificarlos contra la fuente. Una vez confirmados, el veredicto es verificado.',
         },
       ];
     },
@@ -378,30 +392,40 @@ const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[
           label: `${naCells.toLocaleString('es')} celdas emp vacías, solo en los arrestados`,
           detail: 'Faltantes estructurales: después del arresto no hubo semana que observar. No son NA de Rubin.',
           severity: 'warn',
+          expected: 'documentado',
+          porque: 'Es la estructura del diseño, no un dato perdido: se documenta para no tratarla como faltante de Rubin.',
         },
         {
           dimension: 'Completitud',
           label: `${structural} filas con emp vacío exactamente tras el evento`,
           detail: 'El patrón es monótono y alineado con week: la estructura del faltante confirma el diseño.',
           severity: 'ok',
+          expected: 'verificado',
+          porque: 'El patrón coincide exactamente con el diseño esperado: verificado, sin sospecha pendiente.',
         },
         {
           dimension: 'Conformidad',
           label: `week ∈ {${[...weeks].join(', ')}} en los 318 no arrestados`,
           detail: 'week = 53 es convención del archivo ("siguió las 52 semanas"), no una semana que existió.',
           severity: 'warn',
+          expected: 'documentado',
+          porque: 'Convención del archivo: se documenta para no sumarla como una semana real de seguimiento.',
         },
         {
           dimension: 'Plausibilidad',
           label: `prio: var/media = ${fmt(vp / mp)}`,
           detail: 'Sobredispersión frente a Poisson: importa cuando prio entre a un modelo de conteos.',
           severity: 'warn',
+          expected: 'documentado',
+          porque: 'Es una propiedad real del dato que condiciona el modelo futuro: se documenta, no es un valor errado.',
         },
         {
           dimension: 'Plausibilidad',
           label: `${unexpected} filas con huecos emp dentro del seguimiento`,
           detail: 'Cero huecos internos: el faltante es siempre de cola, nunca intermedio.',
           severity: 'ok',
+          expected: 'verificado',
+          porque: 'La verificación salió limpia: ningún hueco interno que investigar.',
         },
       ];
     },
@@ -434,6 +458,9 @@ export function DataQualityPanel({
 
   const findings = useMemo(() => (rows ? spec.checks(rows) : null), [rows, spec]);
   const marked = Object.keys(marks).length;
+  const correct = findings
+    ? findings.filter((f, i) => marks[i] === f.expected).length
+    : 0;
 
   return (
     <div className={FIG}>
@@ -458,8 +485,9 @@ export function DataQualityPanel({
           ))}
         </select>
         {findings && (
-          <span className="ml-auto text-ink-500">
-            {marked} de {findings.length} hallazgos revisados
+          <span className={`ml-auto ${marked === findings.length ? 'font-medium text-ink-700' : 'text-ink-500'}`}>
+            {correct} de {findings.length} veredictos correctos
+            {marked < findings.length && ` · ${findings.length - marked} por revisar`}
           </span>
         )}
       </div>
@@ -483,14 +511,25 @@ export function DataQualityPanel({
                   {f.label}
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-ink-600">{f.detail}</p>
+                {marks[i] && (
+                  <p className={`mt-1 text-xs leading-relaxed ${
+                    marks[i] === f.expected ? 'text-success-700' : 'text-warning-800'
+                  }`}>
+                    {marks[i] === f.expected
+                      ? `✓ veredicto correcto — ${f.porque}`
+                      : `esperado: «${f.expected}» — ${f.porque}`}
+                  </p>
+                )}
               </div>
               <select
                 value={marks[i] ?? ''}
                 onChange={(e) => setMarks((m) => ({ ...m, [i]: e.target.value }))}
                 className={`shrink-0 rounded border px-2 py-1 text-xs ${
-                  marks[i]
-                    ? 'border-success-400 bg-success-50 text-success-800'
-                    : 'border-ink-200 text-ink-500'
+                  !marks[i]
+                    ? 'border-ink-200 text-ink-500'
+                    : marks[i] === f.expected
+                      ? 'border-success-400 bg-success-50 text-success-800'
+                      : 'border-warning-400 bg-warning-50 text-warning-800'
                 }`}
                 aria-label={`Marcar hallazgo ${i + 1}`}
               >
@@ -506,13 +545,15 @@ export function DataQualityPanel({
 
       <p className={NOTE}>
         Regla de la auditoría: un dato sospechoso se marca, se verifica y se
-        documenta — nunca se borra por un criterio estadístico.
+        documenta — nunca se borra por un criterio estadístico. El texto de
+        cada hallazgo ya trae la evidencia de la verificación: el ejercicio
+        es elegir el veredicto que esa evidencia sostiene.
       </p>
 
       <SimGuide>
         <li>Los hallazgos se calculan del archivo real al cargar: <code>{spec.label}</code> no viene con el informe hecho.</li>
-        <li>Marca cada hallazgo: esa decisión — verificado, sospechoso o documentado — es el producto de la auditoría.</li>
-        <li>Cambia a la otra base: el mismo esquema de tres dimensiones produce hallazgos distintos porque el diseño es distinto.</li>
+        <li>Lee la evidencia antes de marcar: «sospechoso» solo aplica mientras la verificación está pendiente — el detalle del hallazgo suele ya resolverla.</li>
+        <li>Cambia a la otra base y repite la auditoría: el veredicto correcto cambia con el diseño, no con la intuición.</li>
       </SimGuide>
     </div>
   );
