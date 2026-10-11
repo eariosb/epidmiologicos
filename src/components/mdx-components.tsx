@@ -47,7 +47,7 @@ import { Term } from '@/components/Term';
 import { BradfordHill, EpiTable } from '@/components/CourseBlocks';
 import { ConductStudy, ConductStep } from '@/components/ConductStudy';
 import { Table1Builder, DataQualityPanel } from '@/components/QualitySims';
-import { MissingDataLab, EValueCalculator, BiasAnalysis2x2 } from '@/components/WorldSims';
+import { MissingDataLab, EValueCalculator, BiasAnalysis2x2, CityLab } from '@/components/WorldSims';
 import { Claim } from '@/components/Claim';
 import { Anexo } from '@/components/Anexo';
 import { BlackboardAnchor, BlackboardEmbed } from '@cursos/blackboard';
@@ -155,6 +155,7 @@ export const mdxComponents: MDXComponents = {
   MissingDataLab: withReset(MissingDataLab),
   EValueCalculator: withReset(EValueCalculator),
   BiasAnalysis2x2: withReset(BiasAnalysis2x2),
+  CityLab: withReset(CityLab),
   Claim,
   Anexo,
   BlackboardAnchor,

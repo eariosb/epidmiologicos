@@ -184,4 +184,8 @@ export const GLOSSARY: Record<string, string> = {
     'Eventos por variable (EPV, Peduzzi 1996): cuántos eventos hay por parámetro del modelo; con pocos eventos por variable la estimación se sesga y la regresión de Firth o menos covariables preespecificadas ayudan.',
   STROBE:
     'STROBE (2007): la lista de verificación del reporte de estudios observacionales (cohorte, casos y controles, transversal); RECORD es su extensión para datos recolectados de rutina.',
+  sesgo_berkson:
+    'Sesgo de Berkson (1946): tomar casos y controles entre hospitalizados (o asistentes a un servicio) cuando el ingreso depende tanto del desenlace como de la exposición; condicionar sobre el colisionador fabrica o invierte asociaciones.',
+  colisionador:
+    'Colisionador: variable causada por dos otras (E → H ← D). Estratificar o muestrear condicionado a ella abre un camino no causal entre sus causas y sesga la asociación.',
 };

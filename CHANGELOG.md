@@ -88,6 +88,26 @@ Primera versión completa del curso tras el plan de diez fases
   deriva de una de sus clases) y de la corrección del IC de
   Kleinbaum–Kupper con su tabla de cobertura.
 
+## [Sin versión] — Ciudad simulada (fase 10e)
+
+### Agregado
+
+- **`ciudad_simulada.R`** (`public/anexos`): generador de la ciudad de
+  Simépolis — 20 000 habitantes con asignación exacta por estrato, así la
+  verdad de la ciudad finita coincide con el mecanismo: RR causal = 3.00
+  dentro de cada C, RR crudo = 3.85 (confusión sembrada), P(E|control
+  hospitalario) = 0.75 (colisionador). Registrado en el manifiesto de
+  anexos.
+- **`CityLab`** (`src/components/WorldSims.tsx`): paridad TypeScript del
+  generador — el estudiante muestrea la misma ciudad con cohorte,
+  transversal, casos y controles con controles de la población fuente o
+  hospitalarios, y compara el estimador contra la verdad sembrada.
+- **M2 — sección "La ciudad de Simépolis"**: mecanismo sembrado
+  (confusor C, colisionador H), RCell que expone las verdades
+  (RR crudo 3.85 vs 3.00 por estrato, P(E|controles) 0.21 vs 0.75) y el
+  ejercicio de Berkson con OR invertido (≈0.43).
+- **Glosario**: sesgo_berkson, colisionador.
+
 ## [Sin versión] — Datos del mundo real (fase 10d)
 
 ### Agregado

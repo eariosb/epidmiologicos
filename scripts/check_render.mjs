@@ -31,6 +31,7 @@ const components = {
   ConductStudy: stub, ConductStep: stub,
   Table1Builder: stub, DataQualityPanel: stub,
   MissingDataLab: stub, EValueCalculator: stub, BiasAnalysis2x2: stub,
+  CityLab: stub,
   ExactTestExplorer: stub, ExactPowerExplorer: stub, CorrectionExplorer: stub,
   CIMethodsExplorer: stub, PrecisionSampleSizeExplorer: stub,
   SampleSizeExplorer: stub,

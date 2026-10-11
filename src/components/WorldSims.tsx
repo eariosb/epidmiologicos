@@ -438,3 +438,190 @@ export function BiasAnalysis2x2({ title }: { title?: ReactNode }) {
     </div>
   );
 }
+
+/* ============================ CityLab ============================== */
+
+type Citizen = { C: number; E: number; D: number; H: number };
+type Design = 'cohorte' | 'cc-poblacion' | 'cc-hospital' | 'transversal';
+
+const DESIGN_LABEL: Record<Design, string> = {
+  cohorte: 'Cohorte — muestra aleatoria, seguir hasta el desenlace',
+  'cc-poblacion': 'Casos y controles — controles de la población fuente',
+  'cc-hospital': 'Casos y controles — controles hospitalarios',
+  transversal: 'Transversal — muestra aleatoria, medir hoy',
+};
+
+const CITY_N = 20000;
+const CITY_SEED = 2024;
+
+// Asignación exacta en cascada (paridad con ciudad_simulada.R): las
+// prevalencias y riesgos de la ciudad finita igualan al mecanismo; el
+// azar vive solo en QUÉ habitantes reciben cada marca y en el muestreo.
+function generateCity(): Citizen[] {
+  const rand = mulberry32(CITY_SEED);
+  const city: Citizen[] = Array.from({ length: CITY_N }, () => ({ C: 0, E: 0, D: 0, H: 0 }));
+  const assign = (pool: number[], k: number, set: (c: Citizen) => void) => {
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    for (let i = 0; i < Math.min(k, pool.length); i++) set(city[pool[i]]);
+  };
+  assign([...Array(CITY_N).keys()], Math.round(0.3 * CITY_N), (c) => (c.C = 1));
+  for (const cc of [0, 1]) {
+    const pool = city.map((c, i) => (c.C === cc ? i : -1)).filter((i) => i >= 0);
+    assign(pool, Math.round((0.15 + 0.3 * cc) * pool.length), (c) => (c.E = 1));
+  }
+  for (const e of [0, 1]) for (const cc of [0, 1]) {
+    const pool = city.map((c, i) => (c.E === e && c.C === cc ? i : -1)).filter((i) => i >= 0);
+    assign(pool, Math.round(0.04 * 3 ** e * 2 ** cc * pool.length), (c) => (c.D = 1));
+  }
+  for (const d of [0, 1]) for (const e of [0, 1]) {
+    const pool = city.map((c, i) => (c.D === d && c.E === e ? i : -1)).filter((i) => i >= 0);
+    assign(pool, Math.round((0.02 + 0.4 * d + 0.2 * e) * pool.length), (c) => (c.H = 1));
+  }
+  return city;
+}
+
+function rrOf(city: Citizen[], pred: (c: Citizen) => boolean = () => true) {
+  const in1 = city.filter((c) => c.E === 1 && pred(c));
+  const in0 = city.filter((c) => c.E === 0 && pred(c));
+  const r1 = in1.filter((c) => c.D === 1).length / in1.length;
+  const r0 = in0.filter((c) => c.D === 1).length / in0.length;
+  return r1 / r0;
+}
+
+function orOf(cases: Citizen[], controls: Citizen[]) {
+  const a = cases.filter((c) => c.E === 1).length;
+  const b = cases.length - a;
+  const c = controls.filter((x) => x.E === 1).length;
+  const d = controls.length - c;
+  return (a * d) / (b * c);
+}
+
+/**
+ * La ciudad de Simépolis (paridad con public/anexos/ciudad_simulada.R):
+ * verdad conocida RR(E→D | C) = 3, confusión sembrada por C y un
+ * colisionador H (hospitalización) para el ejercicio de Berkson.
+ * El estudiante elige el diseño y ve qué estimador sobrevive.
+ */
+export function CityLab({ title }: { title?: ReactNode }) {
+  const [design, setDesign] = useState<Design>('cc-hospital');
+  const [n, setN] = useState(1000);
+
+  const city = useMemo(generateCity, []);
+
+  const truth = useMemo(() => {
+    const rrCrudo = rrOf(city);
+    const rrC0 = rrOf(city, (c) => c.C === 0);
+    const rrC1 = rrOf(city, (c) => c.C === 1);
+    return { rrCrudo, rrC0, rrC1 };
+  }, [city]);
+
+  const result = useMemo(() => {
+    const rand = mulberry32(7);
+    const sample = (pool: Citizen[], k: number) => {
+      const idx = new Set<number>();
+      while (idx.size < Math.min(k, pool.length)) {
+        idx.add(Math.floor(rand() * pool.length));
+      }
+      return [...idx].map((i) => pool[i]);
+    };
+    const cases = city.filter((c) => c.D === 1);
+    const nonCases = city.filter((c) => c.D === 0);
+
+    if (design === 'cohorte' || design === 'transversal') {
+      const m = sample(city, n);
+      return { kind: 'pob' as const, rr: rrOf(m), or: orOf(m.filter((c) => c.D === 1), m.filter((c) => c.D === 0)), n: m.length };
+    }
+    const pool = design === 'cc-poblacion' ? nonCases : nonCases.filter((c) => c.H === 1);
+    const ct = sample(pool, Math.min(n, pool.length));
+    return { kind: 'or' as const, or: orOf(cases, ct), n: cases.length + ct.length, nControls: ct.length };
+  }, [city, design, n]);
+
+  const target = 3.0;
+
+  return (
+    <div className={FIG}>
+      <div className={CAPTION}>
+        {title ?? 'La ciudad de Simépolis: una verdad conocida, cuatro formas de muestrearla'}
+      </div>
+
+      <p className="mb-2 text-xs leading-relaxed text-ink-600">
+        Ciudad cerrada de {CITY_N.toLocaleString('es')} habitantes. La
+        exposición triplica el riesgo <em>dentro de cada estrato del
+        confusor C</em> (verdad sembrada: <strong>RR = 3.00</strong>), pero
+        C también causa la exposición — la asociación cruda no es la
+        causal. La hospitalización H depende de D <em>y</em> de E: es la
+        trampa del colisionador. Mismos datos que{' '}
+        <code>public/anexos/ciudad_simulada.R</code>.
+      </p>
+
+      <div className="grid gap-x-4 gap-y-2 text-[11px] text-ink-600">
+        <label className="flex items-center gap-2">
+          <span className="w-20 shrink-0">diseño:</span>
+          <select value={design} onChange={(e) => setDesign(e.target.value as Design)}
+            className="rounded border border-ink-200 px-2 py-1">
+            {(Object.keys(DESIGN_LABEL) as Design[]).map((dd) => (
+              <option key={dd} value={dd}>{DESIGN_LABEL[dd]}</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2">
+          <span className="w-44 shrink-0">
+            {design === 'cohorte' || design === 'transversal' ? `n muestreado = ${n}` : `controles por muestrear ≈ ${n}`}
+          </span>
+          <input type="range" min={200} max={5000} step={100} value={n}
+            onChange={(e) => setN(+e.target.value)} className={SLIDER} />
+        </label>
+      </div>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="rounded border border-ink-200 p-3">
+          <p className="text-[11px] uppercase tracking-wide text-ink-500">Verdad sembrada</p>
+          <p className="mt-1 text-2xl font-semibold text-ink-800">RR = 3.00</p>
+          <p className="mt-1 text-xs text-ink-600">causal, dentro de cada C</p>
+        </div>
+        <div className="rounded border border-ink-200 p-3">
+          <p className="text-[11px] uppercase tracking-wide text-ink-500">Crudo en la ciudad</p>
+          <p className="mt-1 text-2xl font-semibold text-ink-800">RR = {fmt(truth.rrCrudo, 2)}</p>
+          <p className="mt-1 text-xs text-ink-600">
+            inflado por confusión (estratos: {fmt(truth.rrC0, 2)} / {fmt(truth.rrC1, 2)})
+          </p>
+        </div>
+        <div className="rounded border border-brand-200 bg-brand-50/60 p-3">
+          <p className="text-[11px] uppercase tracking-wide text-ink-500">
+            Tu diseño estima
+          </p>
+          <p className={`mt-1 text-2xl font-semibold ${
+            result.kind === 'or' && (result.or < 1 || result.or > target * 1.7)
+              ? 'text-danger-700' : 'text-brand-700'}`}>
+            {result.kind === 'pob' ? `RR = ${fmt(result.rr, 2)}` : `OR = ${fmt(result.or, 2)}`}
+          </p>
+          <p className="mt-1 text-xs text-ink-600">
+            {result.kind === 'pob'
+              ? `n = ${result.n} — ¿crudo o ajustado por C?`
+              : `${result.nControls} controles de ${result.n} en la muestra`}
+          </p>
+        </div>
+      </div>
+
+      <p className={NOTE}>
+        {design === 'cohorte' &&
+          'La cohorte recupera el RR — pero el crudo sale inflado (≈3.85), no 3.00: C confunde. Estratificar o ajustar por C acerca al 3.00. La enfermedad es rara aquí, así que el OR ≈ el RR.'}
+        {design === 'transversal' &&
+          'El transversal ve la misma asociación cruda que la cohorte — mismo denominador, misma confusión — pero sin tiempo: no distingue incidencia de prevalencia.'}
+        {design === 'cc-poblacion' &&
+          'Con controles de la población fuente el OR ≈ el OR crudo de la ciudad — confundido por C, pero honesto en su marco. La comparación justa exige controles del mismo universo que produjo los casos.'}
+        {design === 'cc-hospital' &&
+          'Controles hospitalarios: H depende de la exposición, así que los "sanos" del hospital están sobrerrepresentados en expuestos (P(E|control) ≈ 0.75 vs 0.22 en la fuente). El OR se invierte — la exposición parece proteger. Sesgo de Berkson: condicionar sobre el colisionador.'}
+      </p>
+
+      <SimGuide>
+        <li>Empieza por "controles hospitalarios": el OR sale por debajo de 1 — la exposición protectora es el artefacto del colisionador.</li>
+        <li>Cambia a controles de la población fuente: el OR vuelve a ≈4 — recuperaste la asociación, con la confusión incluida.</li>
+        <li>En cohorte, compara el RR crudo con los RR por estrato de C (arriba, en la tarjeta "Crudo"): cada estrato ronda 3.00.</li>
+      </SimGuide>
+    </div>
+  );
+}
