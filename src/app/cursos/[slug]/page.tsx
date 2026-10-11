@@ -56,18 +56,19 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
               Bloque {block.id} · {block.title} · Módulo {entry.meta.order} de {modules.length}
             </p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight text-ink-900">
+            <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight text-ink-900">
               {entry.meta.title.replace(/^\d+\.\s*/, '')}
             </h1>
-            <p className="mt-3 text-ink-600">{entry.meta.objective}</p>
+            <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ink-600">{entry.meta.objective}</p>
             {entry.meta.datasets.length > 0 && (
-              <p className="mt-2 text-sm text-ink-500">
-                <span className="font-medium">Datos:</span> {entry.meta.datasets.join(', ')}
+              <p className="mt-3 text-sm text-ink-500">
+                <span className="font-medium uppercase tracking-wide">Datos:</span>{' '}
+                {entry.meta.datasets.join(', ')}
               </p>
             )}
           </header>
 
-          <div className="prose prose-ink max-w-none prose-headings:scroll-mt-20 prose-headings:text-ink-900 prose-a:text-brand-600 prose-code:rounded prose-code:bg-code prose-code:text-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:bg-code prose-pre:text-gray-100">
+          <div className="prose prose-ink max-w-none prose-headings:scroll-mt-20 prose-headings:text-ink-900 prose-h2:mt-10 prose-h2:border-t prose-h2:border-ink-100 prose-h2:pt-7 prose-blockquote:border-brand-300 prose-blockquote:font-display prose-blockquote:text-ink-700 prose-a:text-brand-600 prose-code:rounded prose-code:bg-code prose-code:text-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:bg-code prose-pre:text-gray-100">
             <MDXRemote
               source={source}
               components={mdxComponents}
