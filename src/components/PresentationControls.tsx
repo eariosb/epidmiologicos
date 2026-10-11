@@ -69,7 +69,7 @@ export function PresentationControls({ canvasRef, vertical }: PresentationContro
         title={presentationMode ? 'Salir de presentación (Esc)' : 'Modo presentación (P)'}
         className={`rounded border px-2 py-0.5 text-xs font-medium transition-colors ${
           presentationMode
-            ? 'border-accent-400 bg-accent-100 text-accent-700'
+            ? 'border-brand-400 bg-brand-100 text-brand-700'
             : 'border-ink-200 text-ink-600 hover:bg-ink-100 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800'
         }`}
       >

@@ -49,6 +49,87 @@ const config: Config = {
           500: '#2e7d32',
           700: '#1b5e20',
         },
+        /* ----------------------------------------------------------
+         * Tokens semánticos (fase 5): los valores viven en
+         * globals.css como canales RGB (--rol-tono). Los nombres
+         * describen el PAPEL del color, no su apariencia, para que
+         * futuras fases (sistema visual, modo oscuro) redefinan la
+         * variable y no cada uso.
+         * brand → identidad del curso · warning → cautelas
+         * danger → rechazo/error · success → favorable/meta
+         * info → resaltado neutral · code → fondo de código
+         * Tonos interpolados (55…715): hex heredados de positive,
+         * green y rose preservados bit a bit.
+         * ---------------------------------------------------------- */
+        brand: {
+          50: 'rgb(var(--brand-50) / <alpha-value>)',
+          100: 'rgb(var(--brand-100) / <alpha-value>)',
+          200: 'rgb(var(--brand-200) / <alpha-value>)',
+          300: 'rgb(var(--brand-300) / <alpha-value>)',
+          400: 'rgb(var(--brand-400) / <alpha-value>)',
+          500: 'rgb(var(--brand-500) / <alpha-value>)',
+          600: 'rgb(var(--brand-600) / <alpha-value>)',
+          700: 'rgb(var(--brand-700) / <alpha-value>)',
+          800: 'rgb(var(--brand-800) / <alpha-value>)',
+          900: 'rgb(var(--brand-900) / <alpha-value>)',
+        },
+        warning: {
+          50: 'rgb(var(--warning-50) / <alpha-value>)',
+          100: 'rgb(var(--warning-100) / <alpha-value>)',
+          200: 'rgb(var(--warning-200) / <alpha-value>)',
+          300: 'rgb(var(--warning-300) / <alpha-value>)',
+          400: 'rgb(var(--warning-400) / <alpha-value>)',
+          500: 'rgb(var(--warning-500) / <alpha-value>)',
+          600: 'rgb(var(--warning-600) / <alpha-value>)',
+          700: 'rgb(var(--warning-700) / <alpha-value>)',
+          800: 'rgb(var(--warning-800) / <alpha-value>)',
+          900: 'rgb(var(--warning-900) / <alpha-value>)',
+        },
+        danger: {
+          50: 'rgb(var(--danger-50) / <alpha-value>)',
+          100: 'rgb(var(--danger-100) / <alpha-value>)',
+          200: 'rgb(var(--danger-200) / <alpha-value>)',
+          300: 'rgb(var(--danger-300) / <alpha-value>)',
+          400: 'rgb(var(--danger-400) / <alpha-value>)',
+          500: 'rgb(var(--danger-500) / <alpha-value>)',
+          600: 'rgb(var(--danger-600) / <alpha-value>)',
+          650: 'rgb(var(--danger-650) / <alpha-value>)',
+          700: 'rgb(var(--danger-700) / <alpha-value>)',
+          800: 'rgb(var(--danger-800) / <alpha-value>)',
+          900: 'rgb(var(--danger-900) / <alpha-value>)',
+        },
+        success: {
+          50: 'rgb(var(--success-50) / <alpha-value>)',
+          55: 'rgb(var(--success-55) / <alpha-value>)',
+          100: 'rgb(var(--success-100) / <alpha-value>)',
+          105: 'rgb(var(--success-105) / <alpha-value>)',
+          200: 'rgb(var(--success-200) / <alpha-value>)',
+          300: 'rgb(var(--success-300) / <alpha-value>)',
+          400: 'rgb(var(--success-400) / <alpha-value>)',
+          405: 'rgb(var(--success-405) / <alpha-value>)',
+          500: 'rgb(var(--success-500) / <alpha-value>)',
+          505: 'rgb(var(--success-505) / <alpha-value>)',
+          515: 'rgb(var(--success-515) / <alpha-value>)',
+          600: 'rgb(var(--success-600) / <alpha-value>)',
+          700: 'rgb(var(--success-700) / <alpha-value>)',
+          705: 'rgb(var(--success-705) / <alpha-value>)',
+          715: 'rgb(var(--success-715) / <alpha-value>)',
+          800: 'rgb(var(--success-800) / <alpha-value>)',
+          900: 'rgb(var(--success-900) / <alpha-value>)',
+        },
+        info: {
+          50: 'rgb(var(--info-50) / <alpha-value>)',
+          100: 'rgb(var(--info-100) / <alpha-value>)',
+          200: 'rgb(var(--info-200) / <alpha-value>)',
+          300: 'rgb(var(--info-300) / <alpha-value>)',
+          400: 'rgb(var(--info-400) / <alpha-value>)',
+          500: 'rgb(var(--info-500) / <alpha-value>)',
+          600: 'rgb(var(--info-600) / <alpha-value>)',
+          700: 'rgb(var(--info-700) / <alpha-value>)',
+          800: 'rgb(var(--info-800) / <alpha-value>)',
+          900: 'rgb(var(--info-900) / <alpha-value>)',
+        },
+        code: 'rgb(var(--code) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],

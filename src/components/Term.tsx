@@ -21,7 +21,7 @@ export function Term({ k, tip, children }: TermProps) {
   return (
     <span
       tabIndex={0}
-      className="group relative inline cursor-help border-b border-dotted border-accent-600 decoration-1"
+      className="group relative inline cursor-help border-b border-dotted border-brand-600 decoration-1"
     >
       {label}
       {text && (

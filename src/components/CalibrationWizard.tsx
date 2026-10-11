@@ -26,8 +26,8 @@ const CROSSES: { x: number; y: number }[] = [
 type Phase = 'starting' | 'capturing' | 'done' | 'error';
 
 function crossClass(index: number, captured: number): string {
-  if (index < captured) return 'border-green-400 bg-green-400/30';
-  if (index === captured) return 'border-accent-400 bg-accent-400/20';
+  if (index < captured) return 'border-success-405 bg-success-405/30';
+  if (index === captured) return 'border-brand-400 bg-brand-400/20';
   return 'border-white/50';
 }
 
@@ -99,7 +99,7 @@ export function CalibrationWizard({ onClose }: Readonly<{ onClose: () => void }>
           {phase === 'error' && 'Calibración no disponible'}
         </p>
         {phase === 'error' && (
-          <p className="mt-1 text-xs text-red-600">{error}</p>
+          <p className="mt-1 text-xs text-danger-600">{error}</p>
         )}
         <div className="mt-1 flex justify-end">
           <button

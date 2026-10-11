@@ -109,7 +109,7 @@ export function TableOfContents({ headings: propHeadings }: TableOfContentsProps
                 'block border-l-2 py-1 text-sm transition-colors',
                 h.level === 2 ? 'pl-3' : 'pl-6 text-xs',
                 activeId === h.id
-                  ? 'border-accent-600 font-medium text-accent-700'
+                  ? 'border-brand-600 font-medium text-brand-700'
                   : 'border-transparent text-ink-500 hover:text-ink-800'
               )}
             >

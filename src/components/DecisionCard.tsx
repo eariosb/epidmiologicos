@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ClipboardCheck } from 'lucide-react';
 
 const INPUT =
-  'w-full rounded border border-ink-200 px-2.5 py-1.5 text-sm text-ink-800 focus:border-accent-400 focus:outline-none bg-white';
+  'w-full rounded border border-ink-200 px-2.5 py-1.5 text-sm text-ink-800 focus:border-brand-400 focus:outline-none bg-white';
 
 interface DecisionCardProps {
   /** Identificador único, p. ej. "decision-05-lidocaina". */
@@ -89,15 +89,15 @@ export function DecisionCard({ id, title, panelId, options }: DecisionCardProps)
     !panel
       ? 'border-ink-200 bg-white text-ink-500'
       : panel.verdict === 'si'
-        ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+        ? 'bg-success-100 text-success-800 border-success-300'
         : panel.verdict === 'no'
-          ? 'bg-red-100 text-red-800 border-red-300'
-          : 'bg-amber-100 text-amber-800 border-amber-300';
+          ? 'bg-danger-100 text-danger-800 border-danger-300'
+          : 'bg-warning-100 text-warning-800 border-warning-300';
 
   return (
-    <section className="my-6 overflow-hidden rounded-lg border border-accent-300 bg-white shadow-sm">
-      <div className="flex items-center gap-2 border-b border-accent-200 bg-accent-50 px-4 py-2">
-        <ClipboardCheck className="h-4 w-4 text-accent-700" aria-hidden />
+    <section className="my-6 overflow-hidden rounded-lg border border-brand-300 bg-white shadow-sm">
+      <div className="flex items-center gap-2 border-b border-brand-200 bg-brand-50 px-4 py-2">
+        <ClipboardCheck className="h-4 w-4 text-brand-700" aria-hidden />
         <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">
           Memo de decisión
         </span>
@@ -135,7 +135,7 @@ export function DecisionCard({ id, title, panelId, options }: DecisionCardProps)
                 key={o}
                 className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${
                   st.decision === o
-                    ? 'border-accent-600 bg-accent-600 text-white'
+                    ? 'border-brand-600 bg-brand-600 text-white'
                     : 'border-ink-200 bg-white text-ink-600 hover:bg-ink-50'
                 }`}
               >
@@ -176,7 +176,7 @@ export function DecisionCard({ id, title, panelId, options }: DecisionCardProps)
 
         {/* Vista previa del memo tal como queda en el portafolio */}
         {(st.decision || st.rationale || st.reflection) && (
-          <div className="rounded border-l-4 border-accent-500 bg-accent-50/50 px-3 py-2 text-xs text-ink-700">
+          <div className="rounded border-l-4 border-brand-500 bg-brand-50/50 px-3 py-2 text-xs text-ink-700">
             <p className="font-semibold text-ink-800">MEMO: {title}</p>
             {st.decision && <p><strong>Decisión:</strong> {st.decision}</p>}
             {panel && (
@@ -191,12 +191,12 @@ export function DecisionCard({ id, title, panelId, options }: DecisionCardProps)
           <button
             type="button"
             onClick={save}
-            className="rounded bg-accent-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-700"
+            className="rounded bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
           >
             Guardar en el portafolio
           </button>
           {saved && (
-            <span className="text-xs text-emerald-700">
+            <span className="text-xs text-success-700">
               Guardada · {new Date(saved).toLocaleString()}
             </span>
           )}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Highlight, themes } from 'prism-react-renderer';
 import clsx from 'clsx';
+import { tokens as uiTokens } from '@/lib/tokens';
 
 const MAX_CONSOLE_LINES = 30;
 
@@ -85,7 +86,7 @@ export function CodeBlock({ id, code, language = 'r', title, precomputed }: Code
           onClick={() => setShowCode((v) => !v)}
           aria-expanded={showCode}
           aria-controls={`code-${id}`}
-          className="flex items-center gap-2 text-sm font-medium text-ink-700 transition-colors hover:text-accent-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="flex items-center gap-2 text-sm font-medium text-ink-700 transition-colors hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <span
             aria-hidden
@@ -104,11 +105,11 @@ export function CodeBlock({ id, code, language = 'r', title, precomputed }: Code
         <button
           type="button"
           onClick={copy}
-          className="inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           aria-label="Copiar código al portapapeles"
         >
           {copied ? (
-            <span className="text-positive-700">✓ Copiado</span>
+            <span className="text-success-715">✓ Copiado</span>
           ) : (
             <>
               <svg
@@ -135,7 +136,7 @@ export function CodeBlock({ id, code, language = 'r', title, precomputed }: Code
             <pre
               id={`code-${id}`}
               className={clsx(className, 'overflow-x-auto px-4 py-3 text-sm leading-relaxed')}
-              style={{ ...style, backgroundColor: '#1e1e2e', margin: 0 }}
+              style={{ ...style, backgroundColor: uiTokens.ui.codeBg, margin: 0 }}
             >
               {tokens.map((line, i) => (
                 <div key={i} {...getLineProps({ line })}>
@@ -158,7 +159,7 @@ export function CodeBlock({ id, code, language = 'r', title, precomputed }: Code
             type="button"
             onClick={() => setShowResult((v) => !v)}
             aria-expanded={showResult}
-            className="flex w-full items-center gap-2 bg-white px-4 py-2 text-left text-sm font-medium text-accent-700 transition-colors hover:bg-accent-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+            className="flex w-full items-center gap-2 bg-white px-4 py-2 text-left text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
             <span
               aria-hidden
@@ -182,7 +183,7 @@ export function CodeBlock({ id, code, language = 'r', title, precomputed }: Code
                       type="button"
                       onClick={() => setConsoleExpanded((v) => !v)}
                       aria-expanded={consoleExpanded}
-                      className="w-full border-t border-ink-700 px-4 py-1.5 text-left text-xs font-medium text-accent-300 hover:text-accent-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-400"
+                      className="w-full border-t border-ink-700 px-4 py-1.5 text-left text-xs font-medium text-brand-300 hover:text-brand-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400"
                     >
                       {consoleExpanded ? '− Ver menos' : '+ Ver salida completa'}
                     </button>

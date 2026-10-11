@@ -36,7 +36,7 @@ export function ElementEditor({
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-ink-500 hover:text-red-600"
+            className="text-xs text-ink-500 hover:text-danger-600"
           >
             Cerrar
           </button>
@@ -121,7 +121,7 @@ function MathEditor({
         type="button"
         onClick={handleSave}
         disabled={saving || !latex.trim()}
-        className="rounded bg-accent-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-600 disabled:opacity-50"
+        className="rounded bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600 disabled:opacity-50"
       >
         {saving ? 'Actualizando…' : 'Actualizar fórmula'}
       </button>

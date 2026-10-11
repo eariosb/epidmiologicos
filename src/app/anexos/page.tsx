@@ -41,7 +41,7 @@ export default function AnexosPage() {
     <AppLayout>
       <div className="mx-auto max-w-3xl">
         <header className="mb-8 border-b border-ink-200 pb-6">
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent-600">
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
             Material complementario
           </p>
           <h1 className="mt-2 text-3xl font-bold leading-tight text-ink-900">Anexos</h1>
@@ -67,13 +67,13 @@ export default function AnexosPage() {
                 return (
                   <li key={a.id} id={a.id} className="scroll-mt-20 p-4">
                     <div className="flex items-start gap-3">
-                      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-accent-600" aria-hidden />
+                      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
                       <div className="min-w-0 flex-1">
                         <a
                           href={`/anexos/${a.archivo}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-medium text-ink-900 underline decoration-ink-300 underline-offset-2 transition-colors hover:text-accent-700 hover:decoration-accent-500"
+                          className="font-medium text-ink-900 underline decoration-ink-300 underline-offset-2 transition-colors hover:text-brand-700 hover:decoration-brand-500"
                         >
                           {a.titulo}
                         </a>

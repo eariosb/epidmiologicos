@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { Scale } from 'lucide-react';
 
-const SLIDER = 'w-full accent-accent-600';
+const SLIDER = 'w-full accent-brand-600';
 const NOTE = 'mt-2 border-t border-ink-100 pt-2 text-xs text-ink-600';
 const fmt = (x: number, d = 1) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 
@@ -85,10 +85,10 @@ export function DecisionPanel({
 
   const chip =
     verdict === 'si'
-      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+      ? 'bg-success-100 text-success-800 border-success-300'
       : verdict === 'no'
-        ? 'bg-red-100 text-red-800 border-red-300'
-        : 'bg-amber-100 text-amber-800 border-amber-300';
+        ? 'bg-danger-100 text-danger-800 border-danger-300'
+        : 'bg-warning-100 text-warning-800 border-warning-300';
   const chipLabel =
     verdict === 'si' ? 'Recomendar' : verdict === 'no' ? 'No recomendar' : 'Zona gris: más evidencia';
 
@@ -131,7 +131,7 @@ export function DecisionPanel({
   return (
     <figure className="my-6 rounded border border-ink-200 bg-white p-4 shadow-sm">
       <figcaption className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink-800">
-        <Scale className="h-4 w-4 text-accent-700" aria-hidden />
+        <Scale className="h-4 w-4 text-brand-700" aria-hidden />
         {title ?? <>Panel de decisión: umbral NNT de Sinclair</>}
       </figcaption>
 

@@ -26,13 +26,13 @@ export function EpiTable({ rows, cols, data, caption, title }: EpiTableProps) {
       )}
       <div className="w-full overflow-x-auto rounded border border-ink-200">
         <table className="min-w-full divide-y divide-ink-200 text-sm">
-          <thead className="bg-accent-50">
+          <thead className="bg-brand-50">
             <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-accent-800" />
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-brand-800" />
               {cols.map((c) => (
                 <th
                   key={c}
-                  className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-accent-800"
+                  className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-brand-800"
                 >
                   {c}
                 </th>
@@ -79,8 +79,8 @@ interface BradfordHillProps {
 }
 
 const STATUS_STYLE: Record<HillItem['status'], string> = {
-  si: 'border-emerald-300 bg-emerald-50 text-emerald-800',
-  parcial: 'border-amber-300 bg-amber-50 text-amber-800',
+  si: 'border-success-300 bg-success-50 text-success-800',
+  parcial: 'border-warning-300 bg-warning-50 text-warning-800',
   no: 'border-ink-200 bg-ink-50 text-ink-500',
 };
 

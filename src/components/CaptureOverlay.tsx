@@ -125,8 +125,8 @@ export function CaptureOverlay({ onCapture, onCancel }: CaptureOverlayProps) {
       {rect && (
         <div
           className={clsx(
-            'pointer-events-none absolute border-2 border-accent-500 bg-accent-500/20',
-            dragging && 'bg-accent-500/10'
+            'pointer-events-none absolute border-2 border-brand-500 bg-brand-500/20',
+            dragging && 'bg-brand-500/10'
           )}
           style={{
             left: rect.x,

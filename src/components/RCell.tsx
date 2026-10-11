@@ -6,6 +6,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { r as rMode } from '@codemirror/legacy-modes/mode/r';
 import { toPng } from 'html-to-image';
+import { tokens } from '@/lib/tokens';
 import { useRCell } from '@/hooks/useWebR';
 import { ConsoleOutput } from './ConsoleOutput';
 import { saveCapture } from '@/lib/session-store';
@@ -39,7 +40,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
     setCaptureError(null);
     try {
       const dataUrl = await toPng(cellRef.current, {
-        backgroundColor: '#ffffff',
+        backgroundColor: tokens.ui.surface,
         pixelRatio: 2,
         cacheBust: true,
         skipFonts: true,
@@ -124,7 +125,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
         type="button"
         onClick={handleSendPlots}
         disabled={sendingPlots}
-        className="inline-flex items-center gap-1.5 rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+        className="inline-flex items-center gap-1.5 rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
       >
         <ChartColumn aria-hidden className="h-3.5 w-3.5" />
         {sendingPlots ? 'Enviando…' : 'Enviar gráficos'}
@@ -135,7 +136,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
       <button
         type="button"
         onClick={handleSendOutput}
-        className="inline-flex items-center gap-1.5 rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+        className="inline-flex items-center gap-1.5 rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
       >
         <FileText aria-hidden className="h-3.5 w-3.5" />
         Enviar resultado
@@ -154,7 +155,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="inline-flex shrink-0 items-center gap-1 rounded border border-ink-300 px-2.5 py-1 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="inline-flex shrink-0 items-center gap-1 rounded border border-ink-300 px-2.5 py-1 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           {open ? (
             <>
@@ -187,7 +188,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
           type="button"
           onClick={() => run(code)}
           disabled={isRunning}
-          className="inline-flex items-center gap-1.5 rounded bg-accent-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="inline-flex items-center gap-1.5 rounded bg-brand-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           {isRunning ? (
             <>
@@ -205,7 +206,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
           type="button"
           onClick={() => setCode(initialCode)}
           disabled={code === initialCode}
-          className="rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           Restaurar código original
         </button>
@@ -213,7 +214,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
           type="button"
           onClick={handleCapture}
           disabled={capturing}
-          className="inline-flex items-center gap-1.5 rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="inline-flex items-center gap-1.5 rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <Camera aria-hidden className="h-3.5 w-3.5" />
           {capturing ? 'Capturando…' : 'Capturar'}
@@ -222,14 +223,14 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
           type="button"
           onClick={handleSendCode}
           disabled={sendingCode}
-          className="inline-flex items-center gap-1.5 rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="inline-flex items-center gap-1.5 rounded border border-ink-300 px-3 py-1.5 text-sm font-medium text-ink-600 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <Send aria-hidden className="h-3.5 w-3.5" />
           {sendingCode ? 'Enviando…' : 'Enviar código'}
         </button>
         {extraButton}
         {captureError && (
-          <span className="text-xs text-red-600" role="alert">
+          <span className="text-xs text-danger-600" role="alert">
             Error: {captureError}
           </span>
         )}
@@ -243,7 +244,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
       )}
 
       {webRStatus === 'error' && (
-        <div className="px-4 py-2 text-sm text-red-700 bg-red-50 border-t border-ink-200" role="alert">
+        <div className="px-4 py-2 text-sm text-danger-700 bg-danger-50 border-t border-ink-200" role="alert">
           <strong>No se pudo iniciar el entorno R (WebAssembly).</strong>
           <div className="mt-1 text-xs">
             {webRError ?? 'Error desconocido al cargar WebR.'}
@@ -266,7 +267,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
       {result && (
         <div className="animate-fade-in border-t border-ink-200">
           {result.error && (
-            <div className="px-4 py-2 text-sm text-red-700 bg-red-50" role="alert">
+            <div className="px-4 py-2 text-sm text-danger-700 bg-danger-50" role="alert">
               <strong>Error en R:</strong> {result.error}
             </div>
           )}

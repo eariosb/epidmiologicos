@@ -215,7 +215,7 @@ export function MatrixBuilder({ initialSize = 4, canvasRef, initialValues, editE
                 max={8}
                 value={size}
                 onChange={(e) => updateSize(Number(e.target.value))}
-                className="ml-2 accent-accent-500"
+                className="ml-2 accent-brand-500"
               />
               <span className="ml-1 font-mono text-xs text-ink-700">{size}×{size}</span>
             </label>
@@ -230,7 +230,7 @@ export function MatrixBuilder({ initialSize = 4, canvasRef, initialValues, editE
                   step={0.01}
                   value={rho}
                   onChange={(e) => setRho(Number(e.target.value))}
-                  className="ml-2 accent-accent-500"
+                  className="ml-2 accent-brand-500"
                 />
                 <span className="ml-1 font-mono text-xs text-ink-700">{rho.toFixed(2)}</span>
               </label>
@@ -268,7 +268,7 @@ export function MatrixBuilder({ initialSize = 4, canvasRef, initialValues, editE
               type="button"
               onClick={handleInsert}
               disabled={inserting || !canvasRef?.current}
-              className="inline-flex items-center gap-1.5 rounded bg-accent-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-600 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600 disabled:opacity-50"
             >
               {inserting ? 'Guardando…' : editElementId ? 'Actualizar matriz' : (
                 <>
@@ -292,7 +292,7 @@ export function MatrixBuilder({ initialSize = 4, canvasRef, initialValues, editE
               Copiar R
             </button>
             {insertError && (
-              <span className="text-xs text-red-600">{insertError}</span>
+              <span className="text-xs text-danger-600">{insertError}</span>
             )}
           </div>
         </div>

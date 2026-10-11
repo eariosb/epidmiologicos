@@ -23,7 +23,7 @@ export function Anexo({ id, children }: AnexoProps) {
   return (
     <Link
       href={`/anexos#${anexo.id}`}
-      className="inline-flex items-baseline gap-1 font-medium text-accent-700 underline decoration-accent-300 underline-offset-2 transition-colors hover:text-accent-800 hover:decoration-accent-500"
+      className="inline-flex items-baseline gap-1 font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 transition-colors hover:text-brand-800 hover:decoration-brand-500"
     >
       <FileText className="h-3.5 w-3.5 translate-y-0.5 shrink-0" aria-hidden />
       {children ?? anexo.titulo}

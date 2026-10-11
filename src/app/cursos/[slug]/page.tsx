@@ -53,7 +53,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
       <div className="mx-auto flex max-w-6xl justify-center gap-8">
         <article className="min-w-0 max-w-3xl flex-1">
           <header className="mb-8 border-b border-ink-200 pb-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-accent-600">
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
               Bloque {block.id} · {block.title} · Módulo {entry.meta.order} de {modules.length}
             </p>
             <h1 className="mt-2 text-3xl font-bold leading-tight text-ink-900">
@@ -67,7 +67,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
             )}
           </header>
 
-          <div className="prose prose-ink max-w-none prose-headings:scroll-mt-20 prose-headings:text-ink-900 prose-a:text-accent-600 prose-code:rounded prose-code:bg-[#1e1e2e] prose-code:text-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[#1e1e2e] prose-pre:text-gray-100">
+          <div className="prose prose-ink max-w-none prose-headings:scroll-mt-20 prose-headings:text-ink-900 prose-a:text-brand-600 prose-code:rounded prose-code:bg-code prose-code:text-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:bg-code prose-pre:text-gray-100">
             <MDXRemote
               source={source}
               components={mdxComponents}
@@ -87,7 +87,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
             {prev ? (
               <Link
                 href={`/cursos/${prev.meta.slug}`}
-                className="rounded border border-ink-200 bg-white px-4 py-2.5 text-sm text-ink-700 shadow-sm transition-all hover:border-accent-300 hover:shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                className="rounded border border-ink-200 bg-white px-4 py-2.5 text-sm text-ink-700 shadow-sm transition-all hover:border-brand-300 hover:shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               >
                 ← {prev.meta.order}. {prev.meta.title.replace(/^\d+\.\s*/, '')}
               </Link>
@@ -97,7 +97,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
             {next && (
               <Link
                 href={`/cursos/${next.meta.slug}`}
-                className="rounded border border-ink-200 bg-white px-4 py-2.5 text-right text-sm text-ink-700 shadow-sm transition-all hover:border-accent-300 hover:shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+                className="rounded border border-ink-200 bg-white px-4 py-2.5 text-right text-sm text-ink-700 shadow-sm transition-all hover:border-brand-300 hover:shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               >
                 {next.meta.order}. {next.meta.title.replace(/^\d+\.\s*/, '')} →
               </Link>

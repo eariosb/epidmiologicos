@@ -21,8 +21,8 @@ export interface DataTableProps {
 export function DataTable({ title, description, variables, source, license }: DataTableProps) {
   return (
     <div className="my-6 overflow-hidden rounded border border-ink-200 bg-white shadow-sm">
-      <div className="border-b border-ink-200 bg-accent-50 px-4 py-3">
-        <p className="flex items-center gap-2 text-sm font-semibold text-accent-800">
+      <div className="border-b border-ink-200 bg-brand-50 px-4 py-3">
+        <p className="flex items-center gap-2 text-sm font-semibold text-brand-800">
           <Table aria-hidden className="h-4 w-4" />
           {title}
         </p>
@@ -46,7 +46,7 @@ export function DataTable({ title, description, variables, source, license }: Da
           <tbody>
             {variables.map((v) => (
               <tr key={v.name} className="border-t border-ink-100">
-                <td className="px-4 py-2 font-mono text-xs text-accent-700">{v.name}</td>
+                <td className="px-4 py-2 font-mono text-xs text-brand-700">{v.name}</td>
                 <td className="px-4 py-2 text-ink-600">{v.type}</td>
                 <td className="px-4 py-2 text-ink-700">{v.description}</td>
               </tr>

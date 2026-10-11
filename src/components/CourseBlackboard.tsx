@@ -249,7 +249,7 @@ export function CourseBlackboard({
                 onClick={() => window.dispatchEvent(new CustomEvent('start-capture'))}
                 title="Capturar región de la pantalla (Ctrl+Shift+S)"
                 aria-label="Capturar región de la pantalla"
-                className="rounded p-1.5 text-sm text-accent-700 hover:bg-accent-50 dark:text-accent-300 dark:hover:bg-accent-900/40"
+                className="rounded p-1.5 text-sm text-brand-700 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-900/40"
               >
                 <Camera aria-hidden className="h-4 w-4" />
               </button>
@@ -273,7 +273,7 @@ export function CourseBlackboard({
                   aria-label={tab.label}
                   className={`rounded p-1.5 text-sm transition-colors ${
                     toolDrawerOpen && toolTab === tab.id
-                      ? 'bg-accent-100 text-accent-700'
+                      ? 'bg-brand-100 text-brand-700'
                       : 'text-ink-500 hover:bg-ink-100 dark:text-ink-400 dark:hover:bg-ink-700'
                   }`}
                 >
@@ -314,11 +314,11 @@ export function CourseBlackboard({
                       Asistente
                     </span>
                     {state.llmStatus === 'streaming' && (
-                      <span className="text-accent-500">● generando…</span>
+                      <span className="text-brand-500">● generando…</span>
                     )}
                     {!assistantOpen &&
                       state.llmMessages.length - lastSeenCount > 0 && (
-                        <span className="rounded-full bg-accent-100 px-1.5 text-accent-700">
+                        <span className="rounded-full bg-brand-100 px-1.5 text-brand-700">
                           {state.llmMessages.length - lastSeenCount} nuevos
                         </span>
                       )}
@@ -353,7 +353,7 @@ export function CourseBlackboard({
                 aria-pressed={mode === 'teacher'}
                 className={`rounded p-1.5 text-sm transition-colors ${
                   mode === 'teacher'
-                    ? 'bg-accent-100 text-accent-700'
+                    ? 'bg-brand-100 text-brand-700'
                     : 'text-ink-500 hover:bg-ink-100 dark:text-ink-400 dark:hover:bg-ink-700'
                 }`}
               >
@@ -384,7 +384,7 @@ export function CourseBlackboard({
               <button
                 type="button"
                 onClick={() => setScratchCode(null)}
-                className="text-xs text-ink-500 hover:text-red-600"
+                className="text-xs text-ink-500 hover:text-danger-600"
               >
                 Cerrar
               </button>

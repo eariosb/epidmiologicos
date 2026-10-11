@@ -42,7 +42,7 @@ export function QuestionsPanel() {
               type="checkbox"
               checked={q.resolved}
               onChange={(e) => resolveQuestion(q.id, e.target.checked)}
-              className="mt-1 accent-accent-500"
+              className="mt-1 accent-brand-500"
               title="Marcar como respondida"
             />
             <div className="flex-1">
@@ -54,7 +54,7 @@ export function QuestionsPanel() {
             <button
               type="button"
               onClick={() => removeQuestion(q.id)}
-              className="text-[10px] text-red-500 hover:text-red-700"
+              className="text-[10px] text-danger-500 hover:text-danger-700"
               title="Eliminar pregunta"
             >
               <X aria-hidden className="h-3.5 w-3.5" />
@@ -79,7 +79,7 @@ export function QuestionsPanel() {
             type="button"
             onClick={handleAdd}
             disabled={!draft.trim()}
-            className="rounded bg-accent-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-600 disabled:opacity-50"
+            className="rounded bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600 disabled:opacity-50"
           >
             Añadir
           </button>

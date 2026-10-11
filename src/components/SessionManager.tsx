@@ -42,7 +42,7 @@ export function SessionManager() {
                     key={s.id}
                     className={`flex items-center justify-between rounded border px-3 py-2 text-xs ${
                       s.id === session?.id
-                        ? 'border-accent-300 bg-accent-50'
+                        ? 'border-brand-300 bg-brand-50'
                         : 'border-ink-200 bg-white'
                     }`}
                   >
@@ -57,7 +57,7 @@ export function SessionManager() {
                         <button
                           type="button"
                           onClick={() => switchSession(s.id).then(() => setOpen(false))}
-                          className="rounded bg-accent-500 px-2 py-1 text-[10px] font-medium text-white hover:bg-accent-600"
+                          className="rounded bg-brand-500 px-2 py-1 text-[10px] font-medium text-white hover:bg-brand-600"
                         >
                           Cargar
                         </button>
@@ -65,7 +65,7 @@ export function SessionManager() {
                       <button
                         type="button"
                         onClick={() => removeSession(s.id)}
-                        className="rounded border border-red-200 px-2 py-1 text-[10px] font-medium text-red-500 hover:bg-red-50"
+                        className="rounded border border-danger-200 px-2 py-1 text-[10px] font-medium text-danger-500 hover:bg-danger-50"
                       >
                         Borrar
                       </button>

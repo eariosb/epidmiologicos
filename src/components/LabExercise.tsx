@@ -28,7 +28,7 @@ export function LabExercise({
       data-lab-id={id}
     >
       <div className="flex items-center gap-2.5 border-b border-ink-200 bg-ink-50 px-4 py-2.5">
-        <FlaskConical aria-hidden className="h-4 w-4 text-accent-700" />
+        <FlaskConical aria-hidden className="h-4 w-4 text-brand-700" />
         <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">
           Laboratorio
         </span>
@@ -36,7 +36,7 @@ export function LabExercise({
       </div>
 
       {children && (
-        <div className="prose prose-sm max-w-none px-4 py-3 text-ink-700 prose-p:my-1.5 prose-code:before:content-none prose-code:after:content-none prose-code:bg-[#1e1e2e] prose-code:text-gray-100">
+        <div className="prose prose-sm max-w-none px-4 py-3 text-ink-700 prose-p:my-1.5 prose-code:before:content-none prose-code:after:content-none prose-code:bg-code prose-code:text-gray-100">
           {children}
         </div>
       )}
@@ -67,7 +67,7 @@ export function LabExercise({
         <div className="space-y-1 border-t border-ink-100 px-4 py-2.5">
           {hint && (
             <details>
-              <summary className="cursor-pointer select-none text-sm font-medium text-accent-700 transition-colors hover:text-accent-800">
+              <summary className="cursor-pointer select-none text-sm font-medium text-brand-700 transition-colors hover:text-brand-800">
                 Ver pista
               </summary>
               <div className="prose prose-sm mt-1.5 max-w-none whitespace-pre-line text-ink-600">
@@ -77,7 +77,7 @@ export function LabExercise({
           )}
           {solution && (
             <details>
-              <summary className="cursor-pointer select-none text-sm font-medium text-accent-700 transition-colors hover:text-accent-800">
+              <summary className="cursor-pointer select-none text-sm font-medium text-brand-700 transition-colors hover:text-brand-800">
                 Ver respuestas guía
               </summary>
               <div className="prose prose-sm mt-1.5 max-w-none whitespace-pre-line text-ink-600">

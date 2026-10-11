@@ -175,7 +175,7 @@ export function FormulaPalette() {
             className={clsx(
               'rounded px-2 py-0.5 text-xs font-medium transition-colors',
               activeCategory === cat
-                ? 'bg-accent-100 text-accent-700'
+                ? 'bg-brand-100 text-brand-700'
                 : 'text-ink-500 hover:bg-ink-100'
             )}
           >
@@ -188,7 +188,7 @@ export function FormulaPalette() {
         {filtered.map((item) => (
           <div
             key={item.id}
-            className="rounded border border-ink-200 p-3 transition-colors hover:border-accent-300 hover:bg-accent-50/30"
+            className="rounded border border-ink-200 p-3 transition-colors hover:border-brand-300 hover:bg-brand-50/30"
           >
             <div className="mb-1 flex items-center justify-between">
               <p className="text-xs font-medium text-ink-700">{item.label}</p>
@@ -196,7 +196,7 @@ export function FormulaPalette() {
                 <button
                   type="button"
                   onClick={() => handleDelete(item.id)}
-                  className="text-[10px] text-red-500 hover:text-red-700"
+                  className="text-[10px] text-danger-500 hover:text-danger-700"
                 >
                   Borrar
                 </button>
@@ -206,27 +206,27 @@ export function FormulaPalette() {
               <code className="text-xs text-ink-600">{item.latex}</code>
             </div>
             <div className="flex items-center justify-between">
-              <code className="font-mono text-xs text-accent-700">{item.rCode}</code>
+              <code className="font-mono text-xs text-brand-700">{item.rCode}</code>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => handleInsert(item)}
                   disabled={insertingId === item.id}
-                  className="text-[10px] text-ink-400 hover:text-accent-600 disabled:opacity-50"
+                  className="text-[10px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
                 >
                   {insertingId === item.id ? '…' : 'Insertar en pizarra'}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleCopy(item, 'latex')}
-                  className="text-[10px] text-ink-400 hover:text-accent-600"
+                  className="text-[10px] text-ink-400 hover:text-brand-600"
                 >
                   {copiedId === `${item.id}-latex` ? '✓' : 'Copiar LaTeX'}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleCopy(item, 'rCode')}
-                  className="text-[10px] text-ink-400 hover:text-accent-600"
+                  className="text-[10px] text-ink-400 hover:text-brand-600"
                 >
                   {copiedId === `${item.id}-rCode` ? '✓' : 'Copiar R'}
                 </button>
@@ -241,7 +241,7 @@ export function FormulaPalette() {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="w-full rounded border border-accent-200 bg-white px-3 py-1.5 text-sm font-medium text-accent-600 transition-colors hover:bg-accent-50"
+            className="w-full rounded border border-brand-200 bg-white px-3 py-1.5 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-50"
           >
             + Nueva fórmula
           </button>
@@ -281,7 +281,7 @@ export function FormulaPalette() {
               <button
                 type="button"
                 onClick={handleAdd}
-                className="rounded bg-accent-500 px-3 py-1 text-xs font-medium text-white hover:bg-accent-600"
+                className="rounded bg-brand-500 px-3 py-1 text-xs font-medium text-white hover:bg-brand-600"
               >
                 Guardar
               </button>

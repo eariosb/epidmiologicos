@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useBroadcast } from '@/hooks/useBroadcast';
+import { tokens } from '@/lib/tokens';
 
 export function RemoteCursor() {
   const { subscribe, broadcast, mode } = useBroadcast();
@@ -64,9 +65,9 @@ export function RemoteCursor() {
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden>
           <path
             d="M4 2L4 16L8 12L11 18L13 17L10 11L16 11Z"
-            fill="#2c7a7b"
+            fill={tokens.ui.cursor}
             fillOpacity="0.7"
-            stroke="#2c7a7b"
+            stroke={tokens.ui.cursor}
             strokeWidth="1"
             strokeLinejoin="round"
           />
@@ -82,7 +83,7 @@ export function RemoteCursor() {
             top: pulse.y - 20,
             width: 40,
             height: 40,
-            border: '2px solid #2c7a7b',
+            border: `2px solid ${tokens.ui.cursor}`,
             borderRadius: '50%',
             opacity: 0.5,
           }}

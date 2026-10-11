@@ -28,7 +28,7 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
         <Link
           href="/"
           onClick={onNavigate}
-          className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <span className="inline-flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -62,9 +62,9 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
                         onClick={onNavigate}
                         aria-current={active ? 'page' : undefined}
                         className={clsx(
-                          'block rounded px-3 py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500',
+                          'block rounded px-3 py-1.5 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
                           active
-                            ? 'bg-accent-50 font-medium text-accent-700'
+                            ? 'bg-brand-50 font-medium text-brand-700'
                             : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900'
                         )}
                       >
@@ -102,7 +102,7 @@ export function Navigation({ modules, blocks }: NavigationProps) {
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="Abrir índice del curso"
-          className="fixed left-4 top-4 z-40 rounded border border-ink-200 bg-white p-2 shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="fixed left-4 top-4 z-40 rounded border border-ink-200 bg-white p-2 shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <svg aria-hidden width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="3" y1="6" x2="21" y2="6" />
@@ -123,7 +123,7 @@ export function Navigation({ modules, blocks }: NavigationProps) {
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Cerrar índice"
-                className="absolute right-3 top-3 rounded p-1.5 text-ink-500 hover:bg-ink-100 hover:text-ink-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-500"
+                className="absolute right-3 top-3 rounded p-1.5 text-ink-500 hover:bg-ink-100 hover:text-ink-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
               >
                 <X aria-hidden className="h-4 w-4" />
               </button>
