@@ -16,6 +16,7 @@ import { RCell } from '@/components/RCell'
 import { SasBlock } from '@/components/SasBlock'
 import { ToolCard } from '@/components/ToolCard'
 import { EpiTable } from '@/components/CourseBlocks'
+import { Table1Builder } from '@/components/QualitySims'
 
 
 <Callout type="tip" title="Toda asociación es sospechosa hasta descartar confusión">
@@ -181,6 +182,52 @@ run;`} />
 />
 
 <ToolCard task="simular" />
+
+## La Tabla 1 como diagnóstico
+
+La primera tabla de casi todo artículo describe a los grupos comparados
+antes de cualquier ajuste. En el curso se lee como **instrumento de
+detección**, no como trámite:
+
+- **Desbalance de confusores**: diferencias de edad, conducta o
+  comorbilidad entre expuestos y no expuestos anticipan la confusión
+  que el DAG formaliza. La herramienta es la **diferencia
+  estandarizada** — el desbalance en unidades de dispersión, |d| > 0.1
+  enciende la alarma — y *no* el valor p: en una Tabla 1 el p mide el
+  tamaño muestral, no el desbalance (Austin 2009). Con n grande, un
+  desbalance trivial es "significativo"; con n chico, uno peligroso no
+  lo es.
+- **Selección**: en casos y controles, los controles deben parecerse a
+  la población fuente en todo lo que no es la exposición.
+- **Información**: más faltantes o más "no sabe" en un grupo sugieren
+  medición diferencial — el sesgo que ningún ajuste repara.
+
+El constructor siguiente produce la Tabla 1 del archivo real. La
+demostración de fuerza del módulo es comparar dos agrupadores sobre la
+misma base RECID:
+
+<Table1Builder
+  dataset="recid"
+  group="fin"
+  title={<>Tabla 1 de RECID: ¿dónde está la confusión?</>}
+/>
+
+- Agrupando por `fin` — la ayuda financiera **aleatorizada** del
+  experimento — casi ninguna fila supera |d| > 0.1: la aleatorización
+  deja la Tabla 1 en silencio, que es exactamente su trabajo.
+- Agrupando por `arrest` — el desenlace — las filas que se encienden
+  son los confusores observados: edad, arrestos previos, trabajo
+  previo. La Tabla 1 anticipa lo que el análisis tendrá que ajustar.
+
+<Callout type="warning" title="La falacia de la Tabla 2">
+Otro diagnóstico que la literatura cobró caro (Westreich y Greenland,
+2013): los coeficientes de las **covariables de ajuste** en un modelo de
+regresión no son efectos interpretables — son ajustes internos del
+modelo para el efecto principal. Reportarlos como si fueran
+asociaciones propias mezcla estimandos distintos en una misma tabla.
+La Tabla 2 del paper es solo para el efecto de la exposición; las
+covariables van al apéndice o no van.
+</Callout>
 
 ## Producto del módulo
 

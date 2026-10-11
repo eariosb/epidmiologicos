@@ -29,6 +29,7 @@ const components = {
   DecisionPanel: stub, DecisionCard: stub,
   EpiTable: stub, BradfordHill: stub, Claim: stub, Anexo: stub,
   ConductStudy: stub, ConductStep: stub,
+  Table1Builder: stub, DataQualityPanel: stub,
   ExactTestExplorer: stub, ExactPowerExplorer: stub, CorrectionExplorer: stub,
   CIMethodsExplorer: stub, PrecisionSampleSizeExplorer: stub,
   SampleSizeExplorer: stub,

@@ -46,6 +46,7 @@ import { FormulaPalette } from '@/components/FormulaPalette';
 import { Term } from '@/components/Term';
 import { BradfordHill, EpiTable } from '@/components/CourseBlocks';
 import { ConductStudy, ConductStep } from '@/components/ConductStudy';
+import { Table1Builder, DataQualityPanel } from '@/components/QualitySims';
 import { Claim } from '@/components/Claim';
 import { Anexo } from '@/components/Anexo';
 import { BlackboardAnchor, BlackboardEmbed } from '@cursos/blackboard';
@@ -148,6 +149,8 @@ export const mdxComponents: MDXComponents = {
   BradfordHill,
   ConductStudy,
   ConductStep,
+  Table1Builder: withReset(Table1Builder),
+  DataQualityPanel: withReset(DataQualityPanel),
   Claim,
   Anexo,
   BlackboardAnchor,
