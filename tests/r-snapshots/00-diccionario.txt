@@ -1,0 +1,9 @@
+0   1
+128   9
+los '1' son censurados: sobrevivieron al seguimienton
+ 0 10
+97 40
+          Treatment
+Therapy     0  1
+  standard 69  0
+  test      0 68

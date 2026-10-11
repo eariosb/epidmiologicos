@@ -133,4 +133,23 @@ export const GLOSSARY: Record<string, string> = {
   CQR: 'Conformalized quantile regression: predicción conforme sobre cuantiles; bandas con cobertura garantizada que se adaptan a la heterocedasticidad.',
   SINAN:
     'Sistema de Información de Agravios de Notificación (Brasil): la vigilancia epidemiológica nacional; dengue y otros agravios de notificación obligatoria.',
+
+  // Exploración y calidad del dato (módulo 0)
+  unidad_analisis:
+    'Unidad de análisis: el nivel al que se cuenta cada observación (persona, pareja, conjunto pareado, persona-semana); lo define el diseño y cambia todas las cifras que siguen.',
+  faltante_estructural:
+    'Faltante estructural: celda vacía porque la información no existía o no se podía recoger (no por azar ni omisión); tratarla como NA ordinario distorsiona completitud y medias.',
+  MCAR: 'Missing completely at random: los faltantes no dependen de nada; los casos completos solo pierden precisión, no sesgan.',
+  MAR: 'Missing at random: los faltantes dependen de variables observadas; recuperable con modelos o imputación que usen esas variables.',
+  MNAR: 'Missing not at random: los faltantes dependen del propio valor perdido (el enfermo grave no responde); el sesgo no se corrige sin supuestos externos.',
+  preferencia_digito:
+    'Preferencia de dígito (digit preference): acumulación de mediciones en valores redondos (…0, …5) que revela redondeo o medición grosera en la fuente.',
+  MAD: 'Desviación absoluta mediana (median absolute deviation): mediana de |x − mediana|; medida de dispersión robusta que los atípicos no inflan.',
+  ECDF: 'Función de distribución empírica (empirical cumulative distribution function): la proporción acumulada de datos ≤ x; muestra toda la distribución sin elegir bins.',
+  sobredispersion:
+    'Sobredispersión: varianza mayor que la que el modelo supone (p. ej. var > media bajo Poisson); los errores estándar del modelo quedan cortos si no se ajusta.',
+  curva_epidemica:
+    'Curva epidémica: histograma de casos por fecha de inicio; su forma sugiere el tipo de fuente (puntual, continua, propagativa) y el ancho de barra cambia lo que se ve.',
+  retraso_notificacion:
+    'Retraso de notificación (reporting delay): tiempo entre el caso real y su registro; hace que las últimas barras de la curva epidémica siempre estén incompletas.',
 };

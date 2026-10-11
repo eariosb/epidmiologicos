@@ -46,7 +46,8 @@ export default function HomePage() {
                       className="group block rounded border border-ink-200 bg-white px-5 py-3.5 shadow-sm transition-[transform,box-shadow,border-color] duration-200 ease-out-expo hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                     >
                       <span className="font-medium text-ink-900 group-hover:text-brand-700">
-                        {mod.meta.order}. {mod.meta.title.replace(/^\d+\.\s*/, '')}
+                        {mod.meta.order === 0 ? 'Repaso' : `${mod.meta.order}.`}{' '}
+                        {mod.meta.title.replace(/^\d+\.\s*/, '')}
                       </span>
                       <span className="mt-0.5 block text-sm text-ink-500">{mod.meta.objective}</span>
                     </Link>

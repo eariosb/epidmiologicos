@@ -1,0 +1,8 @@
+base filas               unidad
+1          valung   137              persona
+2 caso_control_11    50               pareja
+3             bcg   666         conjunto 1:5
+4          ddimer   135         conjunto 1:c
+5           recid   432 persona (52 semanas)
+6        leucemia    42              persona
+filas: 666  | sets (la unidad real): 111 n

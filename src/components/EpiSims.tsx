@@ -1769,3 +1769,200 @@ export function MetaExplorer({ title }: { title?: ReactNode }) {
     </div>
   );
 }
+
+/* ---------------------------------------------------------------- */
+/* EpiCurveExplorer: curva epidémica SIR con ruido y retraso.        */
+/* Determinístico (Euler semanal) + Poisson con semilla propia:      */
+/* barato, se calcula en el hilo principal.                          */
+/* ---------------------------------------------------------------- */
+
+function mulberry32(seed: number) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function poissonSample(lambda: number, rand: () => number) {
+  if (lambda <= 0) return 0;
+  if (lambda > 40) {
+    // Normal approximation for large means; deterministic via rand().
+    const u = Math.max(rand(), 1e-9);
+    const v = Math.max(rand(), 1e-9);
+    const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * z));
+  }
+  const L = Math.exp(-lambda);
+  let k = 0;
+  let p = 1;
+  do {
+    k += 1;
+    p *= rand();
+  } while (p > L);
+  return k - 1;
+}
+
+interface SirWeek {
+  week: number;
+  incidence: number; // nuevas infecciones verdaderas en la semana
+}
+
+function sirIncidence(beta: number, gamma: number, weeks: number, n = 10000, i0 = 10): SirWeek[] {
+  let s = n - i0;
+  let i = i0;
+  let r = 0;
+  const out: SirWeek[] = [];
+  for (let w = 0; w < weeks; w++) {
+    const newInf = (beta * s * i) / n;
+    const newRec = gamma * i;
+    s = Math.max(0, s - newInf);
+    i = Math.max(0, i + newInf - newRec);
+    r += newRec;
+    out.push({ week: w, incidence: newInf });
+  }
+  return out;
+}
+
+export function EpiCurveExplorer({ title }: { title?: ReactNode }) {
+  const [beta, setBeta] = useState(0.45);
+  const [gamma, setGamma] = useState(0.2);
+  const [noise, setNoise] = useState(true);
+  const [delayMean, setDelayMean] = useState(2);
+  const [barWidth, setBarWidth] = useState<1 | 2 | 4>(1);
+  const [seed, setSeed] = useState(7);
+
+  const WEEKS = 52;
+  const R0 = beta / gamma;
+
+  const { trueInc, reported, incompleteFrom } = useMemo(() => {
+    const sir = sirIncidence(beta, gamma, WEEKS);
+    const rand = mulberry32(seed * 7919 + 13);
+    const obs = sir.map(({ incidence }) =>
+      noise ? poissonSample(incidence, rand) : Math.round(incidence)
+    );
+    // Reparto de cada caso observado a su semana de notificación.
+    const rep = new Array(WEEKS + 8).fill(0);
+    obs.forEach((count, w) => {
+      for (let c = 0; c < count; c++) {
+        const d = delayMean > 0 ? poissonSample(delayMean, rand) : 0;
+        rep[w + d] += 1;
+      }
+    });
+    const horizon = WEEKS + 8;
+    // Las últimas barras acumulan casos que aún no llegaron: incompletas.
+    const incompleteFrom = Math.max(0, horizon - Math.ceil(delayMean) - 1);
+    return { trueInc: sir.map((s2) => s2.incidence), reported: rep, incompleteFrom };
+  }, [beta, gamma, noise, delayMean, seed]);
+
+  // Agrupación por ancho de barra sobre las semanas notificadas.
+  const groups = useMemo(() => {
+    const g: { start: number; end: number; cases: number; incomplete: boolean }[] = [];
+    for (let w = 0; w < reported.length; w += barWidth) {
+      const end = Math.min(w + barWidth - 1, reported.length - 1);
+      g.push({
+        start: w,
+        end,
+        cases: reported.slice(w, end + 1).reduce((a, b) => a + b, 0),
+        incomplete: end >= incompleteFrom,
+      });
+    }
+    return g;
+  }, [reported, barWidth, incompleteFrom]);
+
+  const W = 560;
+  const H = 220;
+  const maxY = Math.max(1, ...groups.map((g) => g.cases), Math.max(...trueInc) + 5);
+  const xScale = (w: number) => (w / (reported.length - 1)) * W;
+  const yScale = (c: number) => H - (c / maxY) * (H - 20);
+  const barW = Math.max(2, xScale(barWidth) - xScale(0) - 1);
+
+  const incPath = trueInc
+    .map((c, i) => `${i === 0 ? 'M' : 'L'}${xScale(i + 0.5).toFixed(1)},${yScale(c).toFixed(1)}`)
+    .join(' ');
+
+  return (
+    <div className={FIG}>
+      <div className={CAPTION}>
+        {title ?? 'Curva epidémica SIR: incidencia real, ruido y retraso de notificación'}
+      </div>
+
+      <div className="grid gap-x-4 gap-y-1 text-[11px] text-ink-600 sm:grid-cols-2">
+        <label className="flex items-center gap-2">
+          <span className="w-40 shrink-0">tasa de contagio β = {beta.toFixed(2)}</span>
+          <input type="range" min={0.15} max={1} step={0.05} value={beta}
+            onChange={(e) => setBeta(+e.target.value)} className={SLIDER} />
+        </label>
+        <label className="flex items-center gap-2">
+          <span className="w-44 shrink-0">tasa de recuperación γ = {gamma.toFixed(2)}</span>
+          <input type="range" min={0.05} max={0.5} step={0.05} value={gamma}
+            onChange={(e) => setGamma(+e.target.value)} className={SLIDER} />
+        </label>
+        <label className="flex items-center gap-2">
+          <span className="w-52 shrink-0">retraso medio de notificación = {delayMean.toFixed(1)} sem.</span>
+          <input type="range" min={0} max={5} step={0.5} value={delayMean}
+            onChange={(e) => setDelayMean(+e.target.value)} className={SLIDER} />
+        </label>
+        <div className="flex items-center gap-3">
+          <span className="shrink-0">barra:</span>
+          {([1, 2, 4] as const).map((w) => (
+            <button key={w} type="button" onClick={() => setBarWidth(w)}
+              className={`rounded border px-2 py-0.5 ${barWidth === w ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-ink-200 text-ink-600 hover:bg-ink-50'}`}>
+              {w} sem.
+            </button>
+          ))}
+          <label className="ml-1 flex items-center gap-1">
+            <input type="checkbox" checked={noise} onChange={(e) => setNoise(e.target.checked)}
+              className="accent-brand-600" />
+            ruido
+          </label>
+          <button type="button" onClick={() => setSeed((s) => s + 1)}
+            className="rounded border border-ink-200 px-2 py-0.5 text-ink-600 hover:bg-ink-50">
+            nueva muestra
+          </button>
+        </div>
+      </div>
+
+      <p className="mt-1 text-[11px] text-ink-500">
+        R₀ = β/γ = {R0.toFixed(2)} — {R0 > 1 ? 'la epidemia crece' : 'la epidemia se apaga'}.
+        Población de 10 000 personas con 10 infectados iniciales.
+      </p>
+
+      <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 w-full" role="img"
+        aria-label="Curva epidémica: barras de casos notificados y línea de incidencia verdadera">
+        <line x1={0} y1={yScale(0)} x2={W} y2={yScale(0)} stroke={GRAY} strokeWidth={1} />
+        {groups.map((g) => (
+          <rect key={g.start}
+            x={xScale(g.start)} y={yScale(g.cases)}
+            width={barW} height={yScale(0) - yScale(g.cases)}
+            fill={g.incomplete ? tokens.status.warning : tokens.chart.primary}
+            fillOpacity={g.incomplete ? 0.45 : 0.85} />
+        ))}
+        <path d={incPath} fill="none" stroke={EXP_COLOR} strokeWidth={2} strokeDasharray="5 3" />
+      </svg>
+
+      <SimLegend className="mt-2" items={[
+        { color: tokens.chart.primary, label: 'casos notificados por semana', mark: 'bar' },
+        { color: tokens.status.warning, label: 'semanas incompletas (retraso de notificación)', mark: 'bar' },
+        { color: EXP_COLOR, label: 'incidencia verdadera del modelo SIR', dash: true },
+      ]} />
+
+      <SimGuide>
+        Sube β o baja γ: el pico llega antes y más alto. Activa el ruido: con
+        conteos pequeños el azar de Poisson deforma la curva, igual que en los
+        boletines reales. Sube el retraso medio: la cola se aplana y las últimas
+        semanas quedan siempre por debajo de la verdad — nunca interpretes la
+        cola de una curva epidémica reciente como descenso real.
+      </SimGuide>
+      <p className={NOTE}>
+        Modelo SIR de la clase 2B del curso (dS/dt = −βSI/N, dI/dt = βSI/N − γI)
+        integrado por semanas; los casos notificados se retrasan según un
+        Poisson de media editable. La nueva muestra cambia solo el azar, no el
+        modelo — así se ve qué es señal y qué es ruido.
+      </p>
+    </div>
+  );
+}

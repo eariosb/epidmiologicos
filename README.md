@@ -13,11 +13,21 @@ de usarse, los ejemplos vienen de los datasets reales del curso y las cifras
 de la narrativa están atadas al código que las produce (sistema `<Claim>`),
 no escritas a mano.
 
-## Estructura (19 módulos en seis bloques)
+## Estructura (repaso + 19 módulos en seis bloques)
 
 Una idea central por módulo: cada uno tiene **un concepto, un ejemplo
 ancla, un visual interactivo y un producto** que alimenta un portafolio
 analítico.
+
+**Antes de empezar — Repaso (módulo 0)**
+
+0. Leer los datos antes de analizarlos: unidad de análisis, diccionario,
+   faltantes estructurales, atípicos, tres lecturas de una tabla,
+   muestreo y vigilancia — todo anclado en las bases reales del curso
+   (`valung`, `recid`, `bcg`, parejas 1:1, `ddimer`, leucemia) y con el
+   simulador `EpiCurveExplorer` (SIR + ruido Poisson + retraso de
+   notificación). Sin renumerar: es lectura previa recomendada, no
+   cuenta en el "de 19".
 
 **Bloque I — Diseño, medidas e inferencia en la tabla 2×2 (módulos 1–6)**
 
@@ -96,7 +106,7 @@ analítico.
 src/
   app/                    App Router: /, /anexos, /cursos/[slug], api/
   components/             Simuladores, RCell, Callout, Quiz, mdx-components…
-  content/modules/        19 módulos MDX + claims.json generado
+  content/modules/        repaso (00) + 19 módulos MDX + claims.json generado
   hooks/                  useExactTask, useProgress, useWebR, useBroadcast…
   lib/                    exact2x2, precision, exactTasks, exactRunner,
                           tokens, claims, anexos, rag/, modules, glossary…
@@ -162,9 +172,9 @@ pnpm start            # sirve el build
 |---|---|
 | `pnpm typecheck` | `tsc --noEmit` sin errores |
 | `pnpm test` | 215 tests Vitest (exact2x2, precision, tasks, claims, RAG, hooks, componentes) |
-| `pnpm check:mdx` | Los 19 módulos compilan con next-mdx-remote |
+| `pnpm check:mdx` | Los 20 archivos MDX (repaso + 19 módulos) compilan con next-mdx-remote |
 | `pnpm check:r` | Las salidas de las celdas R coinciden con los snapshots de `tests/r-snapshots` |
-| `pnpm test:visual` | 42 capturas Playwright (19 módulos + home + anexos × escritorio/móvil) |
+| `pnpm test:visual` | 44 capturas Playwright (20 páginas de módulo + home + anexos × escritorio/móvil) |
 
 Otras utilidades: `python scripts/run_all_r.py --update` regenera los
 snapshots de R; `pnpm exec playwright test --update-snapshots` regenera

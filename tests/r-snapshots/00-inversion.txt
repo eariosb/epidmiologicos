@@ -1,0 +1,5 @@
+fraccion de casos en el archivo: 0.167 n
+      0   1
+  0 219 336
+  1  54  57
+P(vacunado | caso)   = 0.514 nP(vacunado | control)= 0.605 n
