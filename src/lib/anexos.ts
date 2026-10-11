@@ -176,6 +176,18 @@ const RAW_ANEXOS: unknown[] = [
     anio: 2026,
     permiso: 'autor-curso',
   },
+  {
+    id: 'ciudad-simulada',
+    titulo: 'ciudad_simulada.R — la ciudad de Simépolis con verdad conocida',
+    descripcion:
+      'Generador de la población sintética del módulo 2: 20 000 habitantes con confusor sembrado (RR causal = 3 dentro de cada estrato, RR crudo inflado) y un colisionador (hospitalización) para el ejercicio de controles hospitalarios. Es el mismo mecanismo que corre CityLab en el navegador.',
+    tipo: 'script',
+    archivo: 'ciudad_simulada.R',
+    modulo: '02-mapa-disenos-causalidad',
+    autores: 'Ríos, E.',
+    anio: 2026,
+    permiso: 'autor-curso',
+  },
 ];
 
 export const ANEXOS: Anexo[] = RAW_ANEXOS.map((a) => anexoSchema.parse(a));

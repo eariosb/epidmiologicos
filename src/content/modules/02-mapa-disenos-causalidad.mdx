@@ -146,6 +146,65 @@ Por eso **nunca** se estima el riesgo ni la incidencia, solo el
 del diseño.
 </Callout>
 
+## La ciudad de Simépolis: una verdad conocida y sus trampas
+
+El ejercicio anterior era demasiado limpio: la exposición se repartía al
+azar y la única lección era el denominador. La práctica real añade dos
+complicaciones: un **confusor** que reparte la exposición de manera
+desigual, y un <Term k="colisionador">colisionador</Term> que abre un
+camino espurio si se muestrea sobre él. La ciudad de Simépolis
+(`public/anexos/ciudad_simulada.R`) siembra ambas:
+
+- 20 000 habitantes, 30% con comorbilidad **C**.
+- **E** (exposición): 15% sin C pero 45% con C — la exposición viene
+  confundida.
+- **D**: riesgo base 4%, ×3 por exposición, ×2 por comorbilidad. La
+  verdad causal sembrada es **RR = 3.00 dentro de cada estrato de C**.
+- **H** (hospitalización): sube con la enfermedad *y* con la exposición
+  por caminos separados — E → H ← D.
+
+<RCell
+  id="02/ciudad"
+  title="Generar la ciudad y exponer sus verdades"
+  code={`# Mismo generador que public/anexos/ciudad_simulada.R:
+# asignacion exacta por estrato -> la verdad de la ciudad finita
+# coincide con el mecanismo; el azar queda en el muestreo.
+set.seed(2024)
+N <- 20000
+C <- E <- D <- H <- integer(N)
+C[sample(N, round(0.30 * N))] <- 1
+for (cc in 0:1) { pool <- which(C == cc)
+  E[sample(pool, round((0.15 + 0.30*cc) * length(pool)))] <- 1 }
+for (e in 0:1) for (cc in 0:1) { pool <- which(E == e & C == cc)
+  D[sample(pool, round(0.04 * 3^e * 2^cc * length(pool)))] <- 1 }
+for (d in 0:1) for (e in 0:1) { pool <- which(D == d & E == e)
+  H[sample(pool, round((0.02 + 0.40*d + 0.20*e) * length(pool)))] <- 1 }
+r1 <- mean(D[E==1]); r0 <- mean(D[E==0])
+cat(sprintf("RR crudo = %.2f  (verdad causal dentro de C: 3.00)\\n", r1/r0))
+cat(sprintf("RR en C=0: %.2f   RR en C=1: %.2f\\n",
+  mean(D[E==1 & C==0])/mean(D[E==0 & C==0]),
+  mean(D[E==1 & C==1])/mean(D[E==0 & C==1])))
+# La trampa: controles tomados entre hospitalizados sin enfermedad
+cat(sprintf("P(E) en controles de poblacion: %.2f\\n", mean(E[D==0])))
+cat(sprintf("P(E) en controles hospitalarios: %.2f\\n", mean(E[D==0 & H==1])))`}
+/>
+
+La asociación cruda de la ciudad sale **inflada** — C confunde — y los
+controles hospitalarios llegan con el triple de exposición que los de la
+población fuente: si los elige así, el estudio inventa una protección
+donde hay daño. El laboratorio siguiente deja comprobarlo muestreando la
+misma ciudad con cuatro diseños:
+
+<CityLab />
+
+<Callout type="warning" title="Lo que la ciudad enseña y lo que no">
+Simépolis enseña que el **mecanismo de muestreo** es tan decisivo como el
+mecanismo causal: el mismo mundo produce RR honesto, RR confundido u OR
+invertido según quién entra a la muestra. Lo que no enseña es que los
+sesgos siempre se detecten: con datos reales no hay tarjeta de "verdad
+sembrada" — por eso el diseño se piensa *antes* de recolectar, no después.
+</Callout>
+
 ## Doll y Hill: cohorte y casos-controles
 
 <Term k="Doll-Hill">Doll y Hill</Term> hicieron la pareja de diseños que
