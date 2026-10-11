@@ -5,13 +5,7 @@ import { MathText } from '@/lib/math-text';
 import { SimGuide, SimLegend } from '@/components/SimBits';
 import {
   agrestiCaffoRD,
-  cornfieldBounds,
   cornfieldCI,
-  coverageFromBounds,
-  coverageLogOr,
-  dbinom,
-  estimatorStats,
-  getTableSpace,
   logOrCorrected,
   newcombeRD,
   nForPower,
@@ -19,10 +13,11 @@ import {
   pZeroCell,
   powerAt,
   rejectionMask,
-  sizeCurve,
   tableIndex,
   woolfCI,
 } from '@/lib/exact2x2';
+import { runExact } from '@/lib/exactRunner';
+import { useExactTask } from '@/hooks/useExactTask';
 import {
   CI_METHODS,
   type CIMethodKey,
@@ -195,9 +190,13 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
   const [alpha, setAlpha] = useState(0.05);
   const [compare, setCompare] = useState<PKey>('pBoschloo');
 
-  const ts = useMemo(
-    () => (t.n1 <= 60 && t.n2 <= 60 ? getTableSpace(t.n1, t.n2, { grid: GRID_UI }) : null),
-    [t.n1, t.n2]
+  // Table space computed in the worker (synchronous fallback when disabled).
+  const { result: ts, pending: tsPending } = useExactTask(
+    'tableSpace',
+    t.n1 <= 60 && t.n2 <= 60
+      ? { n1: t.n1, n2: t.n2, grid: 'ui', bergerBoos: true }
+      : null,
+    [t.n1, t.n2],
   );
 
   const obs = ts ? tableIndex(t.x1, t.x2, t.n2) : 0;
@@ -356,11 +355,14 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
         </div>
       </div>
 
-      {!ts && (
+      {(t.n1 > 60 || t.n2 > 60) && (
         <p className="mt-3 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
           La enumeración exhaustiva se calcula para n₁, n₂ ≤ 60 por fluidez en el
           navegador; reduce los tamaños para ver el mapa de decisiones.
         </p>
+      )}
+      {t.n1 <= 60 && t.n2 <= 60 && !ts && tsPending && (
+        <p className="mt-3 text-center text-xs text-ink-400">Calculando…</p>
       )}
       <SimGuide>
         La tabla por defecto es Perondi et al. (2004): 7/34 niños sobrevivieron 24 h con
@@ -391,32 +393,26 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
   const [seriesN, setSeriesN] = useState<number[] | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Rejection regions at the selected n (per procedure).
-  const tsN = useMemo(
-    () => getTableSpace(nSel, nSel, { grid: GRID_UI, bergerBoos: false }),
-    [nSel]
+  // Rejection regions at the selected n (per procedure), in the worker.
+  const { result: tsN } = useExactTask(
+    'tableSpace',
+    { n1: nSel, n2: nSel, grid: 'ui' },
+    [nSel],
   );
   const masks = useMemo(
-    () => ({
-      fisher: rejectionMask(tsN.pFisher, alpha),
-      midp: rejectionMask(tsN.pMid, alpha),
-      z: rejectionMask(tsN.pZ, alpha),
-      boschloo: rejectionMask(tsN.pBoschloo, alpha),
-    }),
+    () =>
+      tsN
+        ? {
+            fisher: rejectionMask(tsN.pFisher, alpha),
+            midp: rejectionMask(tsN.pMid, alpha),
+            z: rejectionMask(tsN.pZ, alpha),
+            boschloo: rejectionMask(tsN.pBoschloo, alpha),
+          }
+        : null,
     [tsN, alpha]
   );
 
-  const sizeCurves = useMemo(() => {
-    const g = new Float64Array(201);
-    for (let i = 0; i < 201; i++) g[i] = 0.0025 + 0.005 * i;
-    return {
-      grid: g,
-      fisher: sizeCurve(tsN, masks.fisher, g),
-      midp: sizeCurve(tsN, masks.midp, g),
-      boschloo: sizeCurve(tsN, masks.boschloo, g),
-      z: sizeCurve(tsN, masks.z, g),
-    };
-  }, [tsN, masks]);
+  const { result: sizeCurves } = useExactTask('sizeCurves', { n: nSel, alpha }, [nSel, alpha]);
 
   // Power-vs-n and discordance-vs-n, computed on demand for n = 10..60.
   const [curves, setCurves] = useState<{
@@ -425,28 +421,11 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
 
   const computeCurves = () => {
     setBusy(true);
-    setTimeout(() => {
-      const ns = seriesN ?? Array.from({ length: 51 }, (_, i) => i + 10);
-      const fisher: number[] = [], boschloo: number[] = [], z: number[] = [], disc: number[] = [];
-      for (const n of ns) {
-        const ts = getTableSpace(n, n, { grid: GRID_UI, bergerBoos: false });
-        const mF = rejectionMask(ts.pFisher, alpha);
-        const mB = rejectionMask(ts.pBoschloo, alpha);
-        const mZ = rejectionMask(ts.pZ, alpha);
-        fisher.push(powerAt(ts, mF, p1, p2));
-        boschloo.push(powerAt(ts, mB, p1, p2));
-        z.push(powerAt(ts, mZ, p1, p2));
-        let d = 0;
-        for (let x1 = 0; x1 <= n; x1++)
-          for (let x2 = 0; x2 <= n; x2++) {
-            const k = tableIndex(x1, x2, n);
-            if (mF[k] !== mB[k]) d += dbinom(x1, n, p1) * dbinom(x2, n, p2);
-          }
-        disc.push(d);
-      }
-      setCurves({ n: ns, fisher, boschloo, z, disc });
-      setBusy(false);
-    }, 30);
+    const ns = seriesN ?? Array.from({ length: 51 }, (_, i) => i + 10);
+    runExact('powerCurves', { ns, alpha, p1, p2 })
+      .then(setCurves)
+      .catch(() => setCurves(null))
+      .finally(() => setBusy(false));
   };
 
   return (
@@ -487,6 +466,11 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
           <p className="mb-1 text-[11px] font-medium text-ink-600">
             Potencia exacta en (p₁, p₂) con n = {nSel} por grupo
           </p>
+          {(!tsN || !masks || !sizeCurves) && (
+            <p className="py-6 text-center text-xs text-ink-400">Calculando…</p>
+          )}
+          {tsN && masks && sizeCurves && (
+            <>
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="border-b border-ink-200 text-left text-ink-500">
@@ -529,6 +513,8 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
             hline={{ y: alpha, label: 'α' }}
             height={170}
           />
+            </>
+          )}
           <p className="mt-1 text-[11px] text-ink-500">
             Probabilidad de rechazar bajo H₀ como función del valor común p. Las curvas
             escalonadas reflejan que el espacio muestral es discreto: ningún α nominal
@@ -613,9 +599,10 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
   const [c, setC] = useState(0.5);
   const [showCoverage, setShowCoverage] = useState(false);
 
-  const ts = useMemo(
-    () => getTableSpace(t.n1, t.n2, { grid: GRID_UI, bergerBoos: false }),
-    [t.n1, t.n2]
+  const { result: ts } = useExactTask(
+    'tableSpace',
+    { n1: t.n1, n2: t.n2, grid: 'ui' },
+    [t.n1, t.n2],
   );
 
   const p1o = t.x1 / t.n1, p2o = t.x2 / t.n2;
@@ -624,38 +611,30 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
       ? Math.log((p1o / (1 - p1o)) / (p2o / (1 - p2o)))
       : NaN;
 
-  // ECM curve over c evaluated at (p1o, p2o).
-  const curve = useMemo(() => {
-    if (!Number.isFinite(thetaTrue)) return null;
-    const cs: number[] = [], bias2: number[] = [], va: number[] = [], mse: number[] = [];
-    for (let cv = 0.05; cv <= 2.0001; cv += 0.05) {
-      const s = estimatorStats(
-        ts, (a, b) => logOrCorrected(a, t.n1, b, t.n2, cv), thetaTrue, p1o, p2o
-      );
-      cs.push(cv);
-      bias2.push(s.bias * s.bias);
-      va.push(s.variance);
-      mse.push(s.mse);
-    }
-    return { cs, bias2, va, mse };
-  }, [ts, t.n1, t.n2, thetaTrue, p1o, p2o]);
+  // ECM curve over c evaluated at (p1o, p2o), in the worker.
+  const { result: curve } = useExactTask(
+    'ecmCurve',
+    Number.isFinite(thetaTrue)
+      ? { n1: t.n1, n2: t.n2, thetaTrue, p1: p1o, p2: p2o }
+      : null,
+    [t.n1, t.n2, thetaTrue, p1o, p2o],
+  );
 
   const orEst = Math.exp(logOrCorrected(t.x1, t.n1, t.x2, t.n2, c));
   const wCI = woolfCI(t.x1, t.n1, t.x2, t.n2, c);
   const exactCI = cornfieldCI(t.x1, t.n1, t.x2, t.n2);
-  const pZero = pZeroCell(ts, p1o, p2o);
+  const pZero = ts ? pZeroCell(ts, p1o, p2o) : NaN;
   const rdAC = agrestiCaffoRD(t.x1, t.n1, t.x2, t.n2);
   const rdNW = newcombeRD(t.x1, t.n1, t.x2, t.n2);
   const rd = p1o - p2o;
 
-  const coverage = useMemo(() => {
-    if (!showCoverage || !Number.isFinite(thetaTrue)) return null;
-    const cb = cornfieldBounds(t.n1, t.n2);
-    return {
-      woolf: coverageLogOr(ts, (a, b) => woolfCI(a, t.n1, b, t.n2, c), p1o, p2o),
-      exact: coverageFromBounds(ts, cb, p1o, p2o),
-    };
-  }, [showCoverage, ts, t.n1, t.n2, c, p1o, p2o, thetaTrue]);
+  const { result: coverage } = useExactTask(
+    'coveragePair',
+    showCoverage && Number.isFinite(thetaTrue)
+      ? { n1: t.n1, n2: t.n2, c, p1: p1o, p2: p2o }
+      : null,
+    [showCoverage, t.n1, t.n2, c, p1o, p2o, thetaTrue],
+  );
 
   return (
     <div className={FIG}>
@@ -771,20 +750,14 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
   const nFormula = nForPower(p1, p2, alpha, targetPower);
   const nAdj = Math.ceil(nFormula / (1 - loss));
 
-  // Exact power of the pooled-z rejection region at n = nFormula and nAdj.
-  const exact = useMemo(() => {
-    if (!Number.isFinite(nFormula) || nFormula > 80 || nFormula < 4) return null;
-    const tsF = getTableSpace(nFormula, nFormula, { grid: GRID_UI, bergerBoos: false });
-    const tsA = getTableSpace(nAdj, nAdj, { grid: GRID_UI, bergerBoos: false });
-    return {
-      fisherF: powerAt(tsF, rejectionMask(tsF.pFisher, alpha), p1, p2),
-      zF: powerAt(tsF, rejectionMask(tsF.pZ, alpha), p1, p2),
-      boschF: powerAt(tsF, rejectionMask(tsF.pBoschloo, alpha), p1, p2),
-      fisherA: powerAt(tsA, rejectionMask(tsA.pFisher, alpha), p1, p2),
-      zA: powerAt(tsA, rejectionMask(tsA.pZ, alpha), p1, p2),
-      boschA: powerAt(tsA, rejectionMask(tsA.pBoschloo, alpha), p1, p2),
-    };
-  }, [nFormula, nAdj, p1, p2, alpha]);
+  // Exact power of the pooled-z rejection region at n = nFormula and nAdj (worker).
+  const { result: exact } = useExactTask(
+    'exactPowerPair',
+    Number.isFinite(nFormula) && nFormula <= 80 && nFormula >= 4
+      ? { nFormula, nAdj, alpha, p1, p2 }
+      : null,
+    [nFormula, nAdj, p1, p2, alpha],
+  );
 
   // Power-vs-n normal-approx curve (instant) + exact dots at the two n's.
   const curve = useMemo(() => {
