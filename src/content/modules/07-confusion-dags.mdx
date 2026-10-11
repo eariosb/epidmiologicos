@@ -229,6 +229,33 @@ La Tabla 2 del paper es solo para el efecto de la exposición; las
 covariables van al apéndice o no van.
 </Callout>
 
+## ¿Puede un confusor no medido explicarlo todo? Cornfield y el E-value
+
+El DAG dice qué ajustar, pero no silencia la pregunta de siempre:
+¿y si quedó un confusor por fuera? Fisher y Neyman la usaron contra
+Doll y Hill —un "gen del fumar" podría causar tanto el hábito como el
+cáncer— y la respuesta la dio Cornfield en 1959: para que un confusor
+no medido explique **toda** la asociación, debe asociarse con la
+exposición y con el desenlace al menos tan fuertemente como el RR
+observado — las <Term k="cornfield">condiciones de Cornfield</Term>.
+Un RR de 9 exige un confusor con dos asociaciones de magnitud 9:
+ningún gen propuesto se acercaba.
+
+El argumento se formalizó como el <Term k="evalue">E-value</Term>
+(VanderWeele & Ding, 2017): dado un RR observado,
+
+```
+E = RR + √(RR · (RR − 1))
+```
+
+es la fuerza mínima que el confusor tendría que tener en **ambos**
+caminos, más allá de lo ya ajustado, para llevar el estimador al
+nulo. Se calcula también para el límite del IC más cercano a 1 — la
+versión honesta, que incluye la incertidumbre. El calculador está en
+el módulo 17; aquí basta la intuición: **el E-value convierte
+"podría ser confusión" en un número comparable con los confusores
+conocidos**.
+
 ## Producto del módulo
 
 <Callout type="note" title="Entrega: DAG justificado">

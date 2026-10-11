@@ -30,6 +30,7 @@ const components = {
   EpiTable: stub, BradfordHill: stub, Claim: stub, Anexo: stub,
   ConductStudy: stub, ConductStep: stub,
   Table1Builder: stub, DataQualityPanel: stub,
+  MissingDataLab: stub, EValueCalculator: stub, BiasAnalysis2x2: stub,
   ExactTestExplorer: stub, ExactPowerExplorer: stub, CorrectionExplorer: stub,
   CIMethodsExplorer: stub, PrecisionSampleSizeExplorer: stub,
   SampleSizeExplorer: stub,

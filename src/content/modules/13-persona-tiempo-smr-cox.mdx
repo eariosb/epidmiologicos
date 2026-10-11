@@ -261,6 +261,47 @@ necesarios para que el IC Poisson de la tasa alcance la precisión
 relativa exigida.
 </Callout>
 
+## Una covariable que cambia cada semana
+
+`recid.csv` mide `emp1`–`emp52`: si el sujeto tenía empleo *esa
+semana*. Tratar el empleo como una covariable de línea base
+tira la mitad de la información — el sujeto puede estar empleado
+en la semana 10 y desempleado en la 30. La forma honesta es el
+**formato largo**: una fila por persona-semana observada, con la
+exposición de *esa* semana.
+
+<RCell
+  code={`recid <- read.csv("recid.csv")
+long <- do.call(rbind, lapply(1:52, function(w) {
+  data.frame(
+    id    = seq_len(nrow(recid)),
+    wk    = w,
+    emp   = recid[[paste0("emp", w)]],
+    obs   = w <= recid$week,                 # solo semanas observadas
+    event = as.integer(recid$week == w & recid$arrest == 1)
+  )
+}))
+long <- subset(long, obs)
+tab <- aggregate(cbind(n = 1, eventos = long$event) ~ emp, data = long, sum)
+names(tab)[1] <- "empleado_esa_semana"
+tab$tasa_por_1000 <- round(1000 * tab$eventos / tab$n, 2)
+tab`}
+/>
+
+La tasa de re-arresto por 1 000 personas-semana difiere según el
+empleo **de esa misma semana** — eso es una covariable dependiente
+del tiempo. Para usarla dentro de `coxph`, R pide el formato de
+conteo `(tstart, tstop, evento)`: cada persona aporta una fila por
+tramo con exposición constante, y el modelo evalúa el riesgo con el
+empleo *vigente en ese tramo*, no el de la entrada.
+
+<Callout type="warning" title="La covariable también tiene calendario">
+Si la exposición cambia durante el seguimiento —empleo, tratamiento,
+cumplimiento—, la versión de línea base no la representa. Las
+preguntas del paso de exploración aplican igual: ¿la variable se
+midió en cada tramo, o se asumió constante?
+</Callout>
+
 ## Producto del módulo
 
 <Callout type="note" title="Entrega: persona-tiempo + primer Cox">

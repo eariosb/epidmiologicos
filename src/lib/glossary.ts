@@ -170,4 +170,18 @@ export const GLOSSARY: Record<string, string> = {
     'Diseño de usuarios nuevos (new-user design, Ray 2003): incluir solo quienes inician la exposición durante el estudio; los usuarios prevalentes son sobrevivientes de la exposición temprana y sesgan la comparación.',
   censura_informativa:
     'Censura informativa: pérdidas de seguimiento relacionadas con el riesgo del desenlace (los más enfermos se pierden más); viola el supuesto de censura no informativa del log-rank y de Cox.',
+
+  // Datos del mundo real (columna práctica)
+  evalue:
+    'E-value (VanderWeele & Ding, 2017): qué tan fuerte tendría que ser un confusor no medido —asociado con exposición y desenlace— para anular por completo el RR observado. E = RR + √(RR(RR−1)).',
+  cornfield:
+    'Condiciones de Cornfield (1959): para que un confusor no medido explique toda una asociación, debe estar asociado con la exposición y con el desenlace al menos tan fuerte como el RR observado. Nació del debate tabaco–cáncer de Doll y Hill.',
+  mala_clasificacion:
+    'Mala clasificación (misclassification): exposición o desenlace medidos con error. No diferencial (igual en los grupos) suele atenuar hacia 1; diferencial (peor recuerdo en casos) puede inflar o invertir el OR.',
+  imputacion_multiple:
+    'Imputación múltiple (Rubin): m bases imputadas, el mismo análisis en cada una, combinación con las reglas de Rubin; propaga la incertidumbre de imputar. Bajo MAR, con el desenlace en el modelo de imputación.',
+  eventos_por_variable:
+    'Eventos por variable (EPV, Peduzzi 1996): cuántos eventos hay por parámetro del modelo; con pocos eventos por variable la estimación se sesga y la regresión de Firth o menos covariables preespecificadas ayudan.',
+  STROBE:
+    'STROBE (2007): la lista de verificación del reporte de estudios observacionales (cohorte, casos y controles, transversal); RECORD es su extensión para datos recolectados de rutina.',
 };
