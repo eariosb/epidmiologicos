@@ -15,6 +15,7 @@ import { RCell } from '@/components/RCell'
 import { LabExercise } from '@/components/LabExercise'
 import { SasBlock } from '@/components/SasBlock'
 import { ToolCard } from '@/components/ToolCard'
+import { ConductStudy, ConductStep } from '@/components/ConductStudy'
 
 <Callout type="tip" title="El diseño decide qué se puede estimar">
 Antes de cualquier estadística, el diseño ya respondió la pregunta más
@@ -181,6 +182,96 @@ no son asignables éticamente. La regla del curso: el ensayo responde
 observacional responde "¿cuánto daño o beneficio asocia la exposición en
 la población real?". Son preguntas distintas y los reportes las confunden
 con frecuencia.
+
+## Conducir el estudio: siete pasos
+
+Los caminos del árbol difieren en el muestreo, no en el razonamiento.
+Sea cual sea el diseño, conducirlo exige responder las mismas siete
+preguntas en orden — de la pregunta al archivo analizable:
+
+<ConductStudy design="cualquier diseño">
+  <ConductStep n={1}>
+    La pregunta lleva población, exposición, comparador, desenlace,
+    horizonte temporal y una medida objetivo. "¿El tabaco causa cáncer?"
+    no es respondible; "¿la mortalidad pulmonar en fumadores pesados
+    excede la de no fumadores en 10 años?" sí.
+  </ConductStep>
+  <ConductStep n={2}>
+    Definir quiénes podrían haber entrado al estudio y qué listado o
+    registro los representa. Sin población fuente no hay controles ni
+    denominador honesto.
+  </ConductStep>
+  <ConductStep n={3}>
+    Criterios de inclusión y exclusión, esquema de muestreo y — en
+    estudios longitudinales — el **tiempo cero**: el instante en que
+    elegibilidad, inicio de seguimiento y exposición coinciden.
+  </ConductStep>
+  <ConductStep n={4}>
+    Diccionario de datos y protocolo de medición: qué variable se mide
+    en qué momento, con qué instrumento y con qué cegamiento.
+  </ConductStep>
+  <ConductStep n={5}>
+    El esquema del archivo: una fila por persona, por pareja, por
+    conjunto pareado o por persona-semana. El repaso mostró que esta
+    decisión cambia todos los conteos.
+  </ConductStep>
+  <ConductStep n={6}>
+    El informe de calidad, la Tabla 1 y los gráficos de efecto, antes de
+    cualquier prueba. La regla editorial del curso: ninguna inferencia
+    sin haber descrito primero lo que se espera ver.
+  </ConductStep>
+  <ConductStep n={7}>
+    El plan de análisis declarado *antes* de ver los resultados: qué
+    medida estima el diseño y con qué método.
+  </ConductStep>
+</ConductStudy>
+
+Los módulos de diseño (11, 14, 15) repiten esta estructura con su
+vocabulario propio: lo que en cohorte es "seguir expuestos y no
+expuestos", en casos y controles es "muestrear controles de la misma
+población fuente". El paso 6 se desarrolla en el repaso; el paso 7 es lo
+que ocupa el resto del curso.
+
+## El cuarto camino: datos que nadie diseñó
+
+El árbol tiene una rama que los libros a veces omiten porque no es un
+diseño nuevo sino una *situación*: **datos secundarios**. Historias
+clínicas, RIPS, SIVIGILA, registros de cáncer, bases de aseguradoras —
+datos que existen antes de la pregunta y que nadie recolectó para
+responderla. Fuera del aula es la situación más común.
+
+La respuesta metodológica moderna es la <Term k="ensayo_objetivo">
+emulación del ensayo objetivo</Term> (Hernán y Robins, 2016): primero se
+*escribe el protocolo del ensayo ideal que respondería la pregunta*, y
+luego se emula cada componente con los datos disponibles:
+
+| Componente del ensayo objetivo | Qué decide el analista con datos secundarios |
+| --- | --- |
+| Criterios de elegibilidad | Solo con información disponible en o antes del tiempo cero |
+| Estrategias comparadas | Definidas como intervenciones bien especificadas |
+| Asignación | Se emula ajustando por confusores medidos en el tiempo cero |
+| Tiempo cero | Coincide con elegibilidad y asignación: así se evita el tiempo inmortal |
+| Seguimiento | Del tiempo cero al evento, la pérdida o el fin |
+| Desenlace | Definición operativa verificable en la fuente |
+| Contraste causal | Por intención de tratar o por protocolo |
+| Plan de análisis | Declarado antes de ver resultados |
+
+La lección que condensa esta tabla: muchos sesgos célebres de los
+estudios observacionales — el <Term k="tiempo_inmortal">tiempo
+inmortal</Term>, los <Term k="usuarios_nuevos">usuarios
+prevalentes</Term> — no son problemas *de los datos*, son problemas de
+un **tiempo cero mal definido**. Un registro hospitalario bien leído con
+tiempo cero correcto puede emular una comparación honesta; el mismo
+registro leído con tiempo cero ambiguo produce el tipo de asociación
+fantasma que luego no se replica.
+
+<Callout type="note" title="Cuándo el cuarto camino es el único">
+Hay preguntas que ningún diseño prospectivo responde a tiempo (desenlaces
+raros, latencias largas) o que no es ético asignar. Los datos secundarios
+bien emulados son entonces la mejor evidencia posible — con el reporte
+RECORD como estándar de transparencia. Los módulos 11 y 13 retoman este
+camino cuando la unidad pase a ser persona-tiempo.
+</Callout>
 
 ## La unidad de observación y la falacia ecológica
 

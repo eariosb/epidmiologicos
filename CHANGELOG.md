@@ -88,6 +88,41 @@ Primera versión completa del curso tras el plan de diez fases
   deriva de una de sus clases) y de la corrección del IC de
   Kleinbaum–Kupper con su tabla de cobertura.
 
+## [Sin versión] — Conducir el estudio (fase 10b)
+
+### Agregado
+
+- **Componente `ConductStudy`/`ConductStep`** (`src/components/ConductStudy.tsx`):
+  la secuencia de siete pasos —pregunta, población fuente y marco,
+  selección, medición, estructura del archivo, exploración y validación,
+  medida e inferencia— como marco común de todos los diseños. El
+  componente da la forma; el contenido de cada paso vive en el MDX.
+- **M2**: sección "Conducir el estudio: siete pasos" + "El cuarto
+  camino: datos que nadie diseñó" — datos secundarios y la tabla de
+  emulación del ensayo objetivo (Hernán & Robins 2016), con tiempo
+  inmortal y usuarios prevalentes como sesgos de tiempo cero.
+- **M3**: sección "El corte transversal en la práctica" — encuestas con
+  estratos/conglomerados/pesos, razón de prevalencias vs. OR de
+  prevalencia (RCell: RP = 2 fijo, OR de 2.02 a 3.5 según prevalencia),
+  PROC SURVEYFREQ, sesgo prevalencia-incidencia y no respuesta.
+- **M11**: "Conducir el estudio: la cohorte" — tiempo cero/tiempo
+  inmortal, usuarios nuevos, pérdidas por grupo + ejercicio RECID:
+  `week = 53` como convención del archivo, 2 655 celdas `emp` vacías
+  solo en arrestados (faltantes estructurales) y la ambigüedad del
+  denominador (20 127 vs 19 809 personas-semana, 318 semanas fantasma).
+- **M14**: "Conducir el estudio: casos y controles" — población fuente,
+  tipos de controles, muestreo por densidad de incidencia y
+  caso-cohorte + ejercicio BCG: la proporción 1/6 de casos es diseño,
+  no prevalencia; P(vacuna|control) = 0.605 sí estima algo poblacional.
+- **M15**: "Conducir el estudio: el diseño pareado" — análisis
+  condicional obligatorio, sobrepareamiento + ejercicio DDIMER: 20 sets
+  de tamaño variable (1–3 casos por set), no estrictamente 1:c.
+- **8 términos nuevos** en el glosario: tiempo inmortal, ensayo
+  objetivo, caso-cohorte, muestreo por densidad, sobrepareamiento,
+  razón de prevalencias, usuarios nuevos, censura informativa.
+- Snapshots regenerados (declarados): M2, M3, M11, M14, M15 en
+  escritorio y móvil. 4 snapshots R nuevos.
+
 ## [Sin versión] — Apéndice de bibliografía
 
 ### Agregado

@@ -1,0 +1,7 @@
+sets: 20 nmiembros por set:nmiembros
+ 3  4  5  8  9 10 14 15
+ 1  3  9  1  2  2  1  1
+ncasos por set:ncasos
+ 1  2  3
+14  4  2
+sets con mas de un caso: 6 nnpor eso clogit maneja sets de tamano variablen

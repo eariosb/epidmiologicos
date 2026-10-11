@@ -15,6 +15,7 @@ import { RCell } from '@/components/RCell'
 import { LabExercise } from '@/components/LabExercise'
 import { SasBlock } from '@/components/SasBlock'
 import { ToolCard } from '@/components/ToolCard'
+import { ConductStudy, ConductStep } from '@/components/ConductStudy'
 
 
 <Callout type="tip" title="El seguimiento convierte asociación en secuencia">
@@ -68,6 +69,108 @@ muestra enorme ganó en precisión.
 </Callout>
 
 <CohortGantt title={<>Entradas escalonadas y censura administrativa (diagrama de Gantt)</>} />
+
+## Conducir el estudio: la cohorte
+
+Conducir una cohorte real es ejecutar los siete pasos con su vocabulario
+de seguimiento. Los puntos críticos que más estudios tumban en la
+práctica:
+
+<ConductStudy design="cohorte">
+  <ConductStep n={1}>
+    Interés en riesgos, tasas o tiempos-hasta-el-evento. La exposición
+    debe ser medible al inicio y el desenlace observable en el
+    horizonte del estudio.
+  </ConductStep>
+  <ConductStep n={2}>
+    Ocupación, seguro de salud, registro de pacientes, comunidad. El
+    marco define qué tan representativa es la cohorte de la población
+    que te interesa.
+  </ConductStep>
+  <ConductStep n={3}>
+    <strong>El tiempo cero es la decisión que más sesgo produce.</strong>
+    Deben coincidir tres cosas: el sujeto es elegible, empieza el
+    seguimiento y se define su exposición — todo el mismo día. Si el
+    "inicio de exposición" llega después del inicio del seguimiento, el
+    grupo expuesto acumula <Term k="tiempo_inmortal">tiempo
+    inmortal</Term>: periodos en que no podía morir por definición del
+    diseño, y que se le regalan al comparador.
+  </ConductStep>
+  <ConductStep n={4}>
+    En exposiciones farmacológicas, preferir <Term k="usuarios_nuevos">
+    usuarios nuevos</Term> sobre prevalentes: quien ya lleva tiempo
+    expuesto es un sobreviviente de la exposición temprana.
+  </ConductStep>
+  <ConductStep n={5}>
+    Cohorte fija → una fila por persona. Cohorte dinámica →
+    persona-periodo (el archivo largo del módulo 13). Verificar que
+    cada fila sabe cuándo entra y cuándo sale.
+  </ConductStep>
+  <ConductStep n={6}>
+    Reportar pérdidas **por grupo de exposición** y comparar basales de
+    perdidos vs. retenidos. Una tasa de pérdidas igual en ambos grupos
+    aún puede esconder pérdidas de distinto tipo (la <Term
+    k="censura_informativa">censura informativa</Term>).
+  </ConductStep>
+  <ConductStep n={7}>
+    Riesgo acumulado (cohorte fija), tasa por persona-tiempo (dinámica),
+    tabla de vida, Kaplan–Meier, log-rank, Cox. El plan se escribe
+    antes de abrir el archivo.
+  </ConductStep>
+</ConductStudy>
+
+### Ejercicio de conducción: reconstruir el protocolo de RECID
+
+RECID siguió 432 exconvictos hasta 52 semanas tras su liberación y
+registró el primer re-arresto. El protocolo no viene escrito en el
+archivo — se **reconstruye** mirándolo:
+
+<RCell
+  id="11/recid-protocolo"
+  title="¿Qué diseño dejó esta sombra?"
+  code={`r <- read.csv("recid.csv")
+cat("personas:", nrow(r), "\n")
+cat("arrestados:", sum(r$arrest == 1),
+    " | no arrestados:", sum(r$arrest == 0), "\n\n")
+
+# Tiempo de seguimiento por grupo
+cat("semana del evento (arrestados): min", min(r$week[r$arrest == 1]),
+    " max", max(r$week[r$arrest == 1]), "\n")
+cat("week en no arrestados:", unique(r$week[r$arrest == 0]), "\n\n")
+
+# Hallazgo: los 318 no arrestados tienen week = 53
+# ¿Convencion del archivo o error del registro?
+# Pista: emp1-emp52 registran empleo solo hasta la semana 52.
+emp <- r[, paste0("emp", 1:52)]
+cat("NA en emp por grupo:\n")
+cat("  arrestados:", sum(is.na(emp[r$arrest == 1, ])), "celdas\n")
+cat("  no arrestados:", sum(is.na(emp[r$arrest == 0, ])), "celdas\n")
+
+# Personas-semana: el denominador que el diseno deja.
+# Sumar week tal cual cuenta la semana 53 como observada;
+# si es convencion, el seguimiento real toca en 52.
+cat("\npersonas-semana (week tal cual):  ", sum(r$week), "\n")
+cat("personas-semana (53 -> 52):        ", sum(pmin(r$week, 52)), "\n")
+cat("la diferencia son", sum(r$week) - sum(pmin(r$week, 52)),
+    "semanas fantasma: una por cada no arrestado\n")`}
+/>
+
+La celda deja tres decisiones de protocolo explícitas: (a) el desenlace
+es "primer re-arresto", no "cualquier arresto" — solo el primer evento
+cuenta; (b) la censura es administrativa a la semana 52, y `week = 53`
+en los no arrestados es una **convención del archivo** (marca "siguió
+todo el seguimiento"), no una semana 53 que existió — la diferencia
+entre los dos denominadores son exactamente las 318 semanas fantasma,
+y el protocolo tiene que decidir cuál reporta; (c) las celdas `emp`
+vacías después del arresto son faltantes estructurales: no hubo
+seguimiento que registrar, y solo aparecen en los arrestados (2 655
+celdas, ninguna en quienes completaron las 52 semanas). Quien documente
+esto en su protocolo evita tres errores de análisis antes de tocar una
+prueba.
+
+→ **Conecta con M13**, donde la misma base se reestructura a
+persona-semana para usar el empleo como covariable dependiente del
+tiempo.
 
 ## La tabla de vida (actuarial)
 
