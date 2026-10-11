@@ -1,0 +1,1 @@
+personas: 432 narrestados: 114  | no arrestados: 318 nnsemana del evento (arrestados): min 1  max 52 nweek en no arrestados: 53 nnNA en emp por grupo:n  arrestados: 2655 celdasn  no arrestados: 0 celdasnnpersonas-semana (week tal cual):   20127 npersonas-semana (53 -> 52):         19809 nla diferencia son 318 semanas fantasma: una por cada no arrestadon

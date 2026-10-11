@@ -152,4 +152,22 @@ export const GLOSSARY: Record<string, string> = {
     'Curva epidémica: histograma de casos por fecha de inicio; su forma sugiere el tipo de fuente (puntual, continua, propagativa) y el ancho de barra cambia lo que se ve.',
   retraso_notificacion:
     'Retraso de notificación (reporting delay): tiempo entre el caso real y su registro; hace que las últimas barras de la curva epidémica siempre estén incompletas.',
+
+  // Conducir el estudio (columna práctica)
+  tiempo_inmortal:
+    'Tiempo inmortal: periodo de seguimiento en que el sujeto no podía tener el desenlace por definición del diseño (p. ej., el tiempo que tardó en recibir el tratamiento); atribuirlo al grupo expuesto lo beneficia artificialmente. Nace de un tiempo cero mal definido (Suissa).',
+  ensayo_objetivo:
+    'Emulación del ensayo objetivo (target trial emulation, Hernán & Robins 2016): especificar primero el ensayo ideal (elegibilidad, estrategias, asignación, tiempo cero, seguimiento, desenlace, contraste) y emular cada componente con los datos observacionales disponibles.',
+  caso_cohorte:
+    'Diseño caso-cohorte (Prentice 1986): todos los casos de una cohorte más una submuestra aleatoria de toda la cohorte como controles; la subcohorte sirve para varios desenlaces y estima la razón de tasas.',
+  muestreo_densidad:
+    'Muestreo por densidad de incidencia: seleccionar controles en el momento en que aparece cada caso, entre quienes siguen en riesgo; el OR estima la razón de tasas, no solo aproxima el RR.',
+  sobrepareamiento:
+    'Sobrepareamiento (overmatching): parear por una variable que no es confusora (correlato de la exposición o mediador); fabrica concordancias sin información y pierde eficiencia, o bloquea parte del efecto.',
+  razon_prevalencias:
+    'Razón de prevalencias (prevalence ratio): P(E) / P(no E) en un corte transversal; con desenlace frecuente es más honesta que el OR de prevalencia, que siempre exagera.',
+  usuarios_nuevos:
+    'Diseño de usuarios nuevos (new-user design, Ray 2003): incluir solo quienes inician la exposición durante el estudio; los usuarios prevalentes son sobrevivientes de la exposición temprana y sesgan la comparación.',
+  censura_informativa:
+    'Censura informativa: pérdidas de seguimiento relacionadas con el riesgo del desenlace (los más enfermos se pierden más); viola el supuesto de censura no informativa del log-rank y de Cox.',
 };

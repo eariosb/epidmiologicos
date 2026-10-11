@@ -14,6 +14,8 @@ import { BerksonExplorer } from '@/components/EpiSims'
 import { LabExercise } from '@/components/LabExercise'
 import { SasBlock } from '@/components/SasBlock'
 import { ToolCard } from '@/components/ToolCard'
+import { RCell } from '@/components/RCell'
+import { ConductStudy, ConductStep } from '@/components/ConductStudy'
 
 
 <Callout type="tip" title="Muestrear por el desenlace invierte la lógica; el precio es el riesgo">
@@ -181,6 +183,91 @@ run;
 />
 
 <ToolCard task="cc" />
+
+## Conducir el estudio: casos y controles
+
+El caso-control es "investigación en reversa" (Schulz y Grimes): se parte
+del desenlace hacia atrás. Sus siete pasos:
+
+<ConductStudy design="casos y controles">
+  <ConductStep n={1}>
+    Indicado cuando el desenlace es raro o de latencia larga, la
+    exposición es recordable o está registrada, y los recursos no
+    alcanzan para una cohorte.
+  </ConductStep>
+  <ConductStep n={2}>
+    <strong>La población fuente es el corazón del diseño.</strong> Los
+    casos nacen de alguna población; los controles deben muestrearse de
+    esa misma base — quienes habrían sido casos si hubieran
+    enfermado.
+  </ConductStep>
+  <ConductStep n={3}>
+    Tipos de controles y sus sesgos característicos: poblacionales (el
+    ideal), hospitalarios (Berkson), vecinales y de amigos
+    (sobrerrepresentan parecido con el caso). Preferir **casos
+    incidentes** sobre prevalentes: el prevalente es un sobreviviente
+    (Neyman).
+  </ConductStep>
+  <ConductStep n={4}>
+    La exposición se reconstruye: historia clínica, entrevista,
+    registro. El entrevistador ciego al estado caso/control y el
+    registro previo al diagnóstico son las vacunas contra el sesgo de
+    recuerdo.
+  </ConductStep>
+  <ConductStep n={5}>
+    Sin pareamiento: una fila por sujeto. Pareado: la unidad es la
+    pareja o el conjunto — verificarlo en el archivo es el ejercicio de
+    abajo.
+  </ConductStep>
+  <ConductStep n={6}>
+    En la Tabla 1, los controles deben parecerse a la población fuente
+    en todo lo que no es la exposición; una diferencia en faltantes o
+    "no sabe" entre casos y controles sugiere medición diferencial.
+  </ConductStep>
+  <ConductStep n={7}>
+    Solo el OR es estimable — y bajo <Term k="muestreo_densidad">
+    muestreo por densidad de incidencia</Term> (controles elegidos
+    cuando el caso aparece, entre quienes siguen en riesgo) el OR
+    estima directamente la **razón de tasas** de la cohorte subyacente.
+    El <Term k="caso_cohorte">diseño caso-cohorte</Term> (todos los
+    casos + submuestra aleatoria de la cohorte) logra lo mismo con
+    registros grandes, con una subcohorte reutilizable para varios
+    desenlaces.
+  </ConductStep>
+</ConductStudy>
+
+### Ejercicio de conducción: la estructura del archivo
+
+BCG es un caso-control pareado 1:5 sobre 111 conjuntos — verifícalo en
+el archivo y decide qué es la unidad de análisis:
+
+<RCell
+  id="14/bcg-estructura"
+  title="¿111 casos o 666 personas? Verificar el diseño en el archivo"
+  code={`bcg <- read.csv("bcg_matching.csv")
+cat("filas:", nrow(bcg), " | sets:", length(unique(bcg$ID)), "\n")
+cat("todos los sets tienen 6 miembros:",
+    all(table(bcg$ID) == 6), "\n")
+
+# La proporcion de casos es 1/6 por DISENO, no una prevalencia:
+bcg$caso <- as.integer(bcg$Case_control == "Case")
+casos_por_set <- tapply(bcg$caso, bcg$ID, sum)
+cat("casos por set:", paste(unique(casos_por_set), collapse = ", "), "\n")
+cat("proporcion de casos en el archivo:", round(mean(bcg$caso), 3),
+    " <- es 1/6 por construccion\n")
+
+# La vacuna en los CONTROLES si estima algo poblacional:
+cat("\nP(vacuna | control):",
+    round(mean(bcg$Bcg_Status[bcg$caso == 0]), 3),
+    " <- estima la prevalencia poblacional\n")`}
+/>
+
+La proporción 1/6 **no es una prevalencia**: es el diseño hablando a
+través del archivo. Quien la lea como frecuencia poblacional comete el
+mismo error que quien calcula riesgos en un caso-control. Lo que sí
+estima algo poblacional es la exposición **de los controles**: si se
+seleccionaron bien, su proporción de vacunación ≈ la de la población
+fuente que produjo los casos.
 
 ## Producto del módulo
 

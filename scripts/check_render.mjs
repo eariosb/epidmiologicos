@@ -28,6 +28,7 @@ const components = {
   LangTabs: stub, SasBlock: stub, ToolCard: stub,
   DecisionPanel: stub, DecisionCard: stub,
   EpiTable: stub, BradfordHill: stub, Claim: stub, Anexo: stub,
+  ConductStudy: stub, ConductStep: stub,
   ExactTestExplorer: stub, ExactPowerExplorer: stub, CorrectionExplorer: stub,
   CIMethodsExplorer: stub, PrecisionSampleSizeExplorer: stub,
   SampleSizeExplorer: stub,

@@ -17,6 +17,7 @@ import { LabExercise } from '@/components/LabExercise'
 import { DataTable } from '@/components/DataTable'
 import { SasBlock } from '@/components/SasBlock'
 import { ToolCard } from '@/components/ToolCard'
+import { ConductStudy, ConductStep } from '@/components/ConductStudy'
 
 
 <Callout type="tip" title="El pareamiento mueve la confusión al diseño; el precio se paga en el análisis">
@@ -170,6 +171,95 @@ El matching introduce un intercepto por estrato: tantos parámetros como
 parejas. La verosimilitud condicional los elimina condicionando en el
 número de casos por estrato: solo se estiman los β de las covariables,
 que es lo que interesa.
+</Callout>
+
+## Conducir el estudio: el diseño pareado
+
+El pareamiento es el único recurso que **convierte el análisis en el
+diseño**: la confusión se controla antes de recoger datos, a costa de
+información. Sus siete pasos:
+
+<ConductStudy design="estudio pareado">
+  <ConductStep n={1}>
+    Mismo objetivo que el caso-control no pareado: el OR. Se recurre al
+    pareamiento cuando un confusor fuerte y categórico (edad, sexo,
+    hospital) haría difícil ajustarlo después, o cuando los controles
+    elegibles son escasos.
+  </ConductStep>
+  <ConductStep n={2}>
+    Idéntica regla que sin pareamiento: los controles salen de la misma
+    población fuente que produjo los casos.
+  </ConductStep>
+  <ConductStep n={3}>
+    Por cada caso, c controles del mismo nivel del confusor. La
+    proporción fija (1:1, 1:5) es una decisión de eficiencia — más de
+    ~4 controles por caso aporta poco—; la proporción variable (1:c) es
+    lo que ocurre cuando el pool no alcanza.
+  </ConductStep>
+  <ConductStep n={4}>
+    La variable de pareamiento debe medirse sin error y **no ser la
+    exposición ni un mediador**: parear por un factor de interés lo
+    congela dentro de cada set.
+  </ConductStep>
+  <ConductStep n={5}>
+    La unidad ya no es el individuo: es la pareja o el conjunto. El
+    archivo debe llevar la etiqueta del set en cada fila — sin ella el
+    análisis condicional es imposible y el pareamiento quedó en
+    vano.
+  </ConductStep>
+  <ConductStep n={6}>
+    Auditar la estructura: ¿cuántos miembros por set? ¿Cuántos sets
+    discriminan exposición? Un set concordante (caso y controles todos
+    expuestos o todos no) no aporta a la condicional.
+  </ConductStep>
+  <ConductStep n={7}>
+    <strong>Obligatorio: análisis condicional.</strong> McNemar en 1:1,
+    clogit en 1:c. El OR de la tabla sin estratificar ignora el
+    pareamiento y sesga hacia el nulo — el diseño que controla la
+    confusión exige el análisis que la respeta.
+  </ConductStep>
+</ConductStudy>
+
+### Ejercicio de conducción: sets que no respetan el plan
+
+DDIMER tenía un plan 1:c y la realidad lo incumplió — los sets tienen
+tamaño variable. El archivo lo dice si lo miras:
+
+<RCell
+  id="15/ddimer-sets"
+  title="¿Todos los sets son 1:c con el mismo c?"
+  code={`# setno = estrato de matching, cc = caso(1)/control(0)
+dd <- read.csv("ddimer.csv")
+miembros <- table(dd$setno)
+cat("sets:", length(miembros), "\n")
+cat("miembros por set:\n")
+print(table(miembros))
+
+# Cuantos casos por set? (DDIMER no es estrictamente 1:c)
+casos <- tapply(dd$cc, dd$setno, sum)
+cat("\ncasos por set:\n")
+print(table(casos))
+cat("sets con mas de un caso:", sum(casos > 1), "\n")
+
+# La verosimilitud condicional no exige c fijo:
+cat("\npor eso clogit maneja sets de tamano variable\n")`}
+/>
+
+La lección de conducción: el archivo manda sobre el protocolo. DDIMER
+no es 1:c con c fijo — hay sets con 1, 2 y 3 casos—, y eso no lo
+invalide: la verosimilitud condicional se escribe por set y tolera
+tamaños variables. Lo que sí exige es verificar la estructura antes de
+analizarla: quien asume 1:5 fijo y cruza filas por posición, rompe los
+sets.
+
+<Callout type="warning" title="Sobrepareamiento: el lado oscuro del control">
+Parear por algo que no es confusor — un correlato de la exposición sin
+vínculo con el desenlace — fabrica concordancias que no informan: el OR
+no se sesga pero los sets discriminantes escasean y el IC se ensancha
+(<Term k="sobrepareamiento">sobrepareamiento</Term>). Parear por un
+mediador es peor: bloquea parte del efecto real. La regla se repite
+porque se incumple: **solo por confusores verdaderos**, y el DAG del
+módulo 7 es quien dice cuáles lo son.
 </Callout>
 
 ## Los límites del matching

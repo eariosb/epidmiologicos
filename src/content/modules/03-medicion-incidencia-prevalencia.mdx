@@ -16,6 +16,7 @@ import { RCell } from '@/components/RCell'
 import { LabExercise } from '@/components/LabExercise'
 import { SasBlock } from '@/components/SasBlock'
 import { ToolCard } from '@/components/ToolCard'
+import { ConductStudy, ConductStep } from '@/components/ConductStudy'
 
 
 <Callout type="tip" title="Medir es elegir el denominador">
@@ -297,6 +298,114 @@ proc sql;
 quit;`} />
 
 <ToolCard task="medicion" />
+
+## El corte transversal en la práctica
+
+El diseño menos desarrollado hasta aquí merece una parada propia. Un
+corte transversal mide prevalencia — y solo eso — pero es el diseño de
+las encuestas de salud, de la planeación de servicios y de buena parte
+de la generación de hipótesis. Sus siete pasos tienen acento propio:
+
+<ConductStudy design="corte transversal">
+  <ConductStep n={1}>
+    La pregunta típica es de frecuencia: "¿qué proporción de la
+    población tiene X?" o "¿la prevalencia difiere entre grupos?". La
+    medida natural es la prevalencia puntual; la comparación honesta es
+    la <Term k="razon_prevalencias">razón de prevalencias</Term>.
+  </ConductStep>
+  <ConductStep n={2}>
+    La población fuente es civil, no clínica: comunidad, escuela,
+    empresa. El marco es un censo, un listado de viviendas o un
+    registro administrativo.
+  </ConductStep>
+  <ConductStep n={3}>
+    En la práctica casi nunca es aleatorio simple: las encuestas
+    grandes usan **estratos** (regiones), **conglomerados** (manzanas,
+    hogares) y **pesos** que compensan probabilidades de selección
+    distintas y la no respuesta.
+  </ConductStep>
+  <ConductStep n={4}>
+    El instrumento es la encuesta o el examen puntual. Todo se mide el
+    mismo día: exposición y desenlace comparten el calendario — por eso
+    el transversal no ordena el tiempo.
+  </ConductStep>
+  <ConductStep n={5}>
+    Una fila por encuestado, con sus pesos muestrales como columna
+    adicional. Auditar la unidad aquí es fácil; auditar los pesos no.
+  </ConductStep>
+  <ConductStep n={6}>
+    Comparar respondientes y no respondientes en lo que el marco
+    permite (zona, edad, sexo): la no respuesta relacionada con el
+    desenlace sesga la prevalencia sin dejar rastro interno.
+  </ConductStep>
+  <ConductStep n={7}>
+    Prevalencia con su IC; para comparaciones, razón de prevalencias
+    (Poisson con varianza robusta o log-binomial), no el OR de
+    prevalencia. Y con diseño complejo, errores estándar que respeten
+    estratos y conglomerados.
+  </ConductStep>
+</ConductStudy>
+
+### Por qué el OR de prevalencia engaña
+
+La celda siguiente muestra el mismo efecto medido dos veces: cuando la
+enfermedad es rara el OR de prevalencia ≈ la razón de prevalencias, pero
+con desenlace frecuente el OR se aleja de la razón siempre hacia el
+mismo lado — hace ver la asociación más fuerte de lo que es:
+
+<RCell
+  id="03/pr-vs-or"
+  title="Mismo riesgo relativo, distinto OR de prevalencia"
+  code={`# Tres escenarios con la MISMA razon de prevalencias (RP = 2).
+# Cambia solo la prevalencia basal: 1%, 10%, 30%.
+escenarios <- data.frame(
+  p0 = c(0.01, 0.10, 0.30),   # prevalencia en no expuestos
+  p1 = c(0.02, 0.20, 0.60)    # prevalencia en expuestos (siempre 2x)
+)
+escenarios$RP <- escenarios$p1 / escenarios$p0
+escenarios$OR <- with(escenarios,
+  (p1 / (1 - p1)) / (p0 / (1 - p0)))
+escenarios$exceso <- round((escenarios$OR / escenarios$RP - 1) * 100, 1)
+print(escenarios)
+
+# Regla: si el desenlace no es raro, el OR de prevalencia NO es
+# interpretable como razon de prevalencias. Para estimar la RP
+# directamente: glm(D ~ E, family = poisson) con varianza robusta,
+# o glm(D ~ E, family = binomial("log")).
+cat("Con prevalencia 30%, OR =", round(escenarios$OR[3], 2),
+    "pero la asociacion real es RP = 2\n")`}
+/>
+
+<SasBlock code={`/* En una encuesta con pesos y conglomerados, PROC SURVEYFREQ
+   respeta el diseno; PROC FREQ trataria las pesos como frecuencias. */
+proc surveyfreq data=encuesta;
+  strata region;
+  cluster manzana;
+  weight peso;
+  tables exposicion * desenlace / row risk;
+run;
+
+/* Razon de prevalencias: Poisson con varianza robusta */
+proc genmod data=encuesta;
+  class id;
+  model desenlace = exposicion / dist=poisson link=log;
+  repeated subject=id;   /* EE robusto (GEE/exchangeable) */
+run;`} />
+
+<Callout type="warning" title="Los errores estándar ingenuos son incorrectos">
+Una encuesta por conglomerados no contiene n observaciones
+independientes: dos vecinos de la misma manzana se parecen entre sí. El
+error estándar calculado como si hubiera independencia queda **corto**
+—los ICs mienten por el lado optimista—. Software que ignora el diseño
+(`survey` en R, `PROC SURVEYFREQ` en SAS) es un error de análisis, no
+un atajo. El sesgo de prevalencia-incidencia completa el cuadro: en un
+corte sobreviven los casos de curso largo, así que la prevalencia
+mezcla "tener la enfermedad" con "vivir mucho con ella".
+</Callout>
+
+→ **Conecta con M9** (la estandarización corrige comparaciones de
+prevalencias entre poblaciones) y **M17** (meta-análisis de
+prevalencias).
 
 ## Producto del módulo
 
