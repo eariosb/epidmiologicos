@@ -41,6 +41,12 @@ test('anexos', async ({ page }) => {
   await expect(page).toHaveScreenshot('anexos.png', { fullPage: true });
 });
 
+test('bibliografia', async ({ page }) => {
+  await page.goto('/bibliografia', { waitUntil: 'domcontentloaded' });
+  await waitStable(page);
+  await expect(page).toHaveScreenshot('bibliografia.png', { fullPage: true });
+});
+
 for (const slug of slugs) {
   test(`modulo ${slug}`, async ({ page }) => {
     await page.goto(`/cursos/${slug}`, { waitUntil: 'domcontentloaded' });

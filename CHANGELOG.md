@@ -87,3 +87,30 @@ Primera versión completa del curso tras el plan de diez fases
 - Revisión del profesor Salazar Uribe del módulo 0 (único módulo que no
   deriva de una de sus clases) y de la corrección del IC de
   Kleinbaum–Kupper con su tabla de cobertura.
+
+## [Sin versión] — Apéndice de bibliografía
+
+### Agregado
+
+- **`/bibliografia`**: apéndice de bibliografía, enlaces y lecturas de
+  interés (`src/lib/lecturas.ts`). ~60 referencias del plan docente en 14
+  secciones temáticas —textos base, datos longitudinales, información
+  faltante, cohortes con datos secundarios, casos y controles, encuestas
+  transversales, calidad de datos y vigilancia, valores p, muestras
+  pequeñas, sesgos, causalidad gráfica, ética y normativa colombiana,
+  fuentes de los datasets— cada una con su uso en el curso. DOI enlazado
+  solo donde la cita es verificable; la página advierte que volumen y
+  páginas deben cotejarse antes de publicarse en impreso.
+- Sección «Enlaces y recursos» con destinos institucionales estables:
+  STROBE, EQUATOR, Informe Belmont (HHS), Declaración de Helsinki (WMA),
+  Ley 1581 y Decreto 1377 (Secretaría del Senado), Tuskegee (CDC),
+  DAGitty, R y webR.
+- Enlace «Bibliografía y lecturas» en el menú de módulos, junto a
+  «Anexos del curso». Snapshots nuevos (declarados): `bibliografia.png`
+  en escritorio y móvil.
+
+### No agregado al corpus RAG
+
+Estas referencias son lecturas de ampliación; la bibliografía canónica
+del asistente (`src/lib/rag/bibliography.ts`) sigue siendo la única
+citable con `[bib:*]` hasta que el profesor coteje las citas.

@@ -91,6 +91,10 @@ analítico.
 - **Anexos** (`/anexos`): manifiesto validado con Zod (`src/lib/anexos.ts`)
   con el ensayo técnico del test exacto de Fisher (MD + PDF), los scripts
   R originales, resultados y seis figuras.
+- **Bibliografía** (`/bibliografia`): apéndice curado (`src/lib/lecturas.ts`)
+  de ~60 referencias por tema —textos base, faltantes, muestras pequeñas,
+  sesgos, ética y normativa colombiana— con enlaces DOI y recursos
+  institucionales (STROBE, EQUATOR, Belmont, Helsinki, Ley 1581, DAGitty).
 - **Asistente IA con RAG**: corpus propio (`src/lib/rag/corpus.ts`) de
   ~170 documentos (secciones de módulos, quizzes, bibliografía, anexos),
   recuperación BM25 local, perfil pedagógico del curso inyectado al
@@ -104,7 +108,7 @@ analítico.
 
 ```
 src/
-  app/                    App Router: /, /anexos, /cursos/[slug], api/
+  app/                    App Router: /, /anexos, /bibliografia, /cursos/[slug], api/
   components/             Simuladores, RCell, Callout, Quiz, mdx-components…
   content/modules/        repaso (00) + 19 módulos MDX + claims.json generado
   hooks/                  useExactTask, useProgress, useWebR, useBroadcast…
@@ -174,7 +178,7 @@ pnpm start            # sirve el build
 | `pnpm test` | 215 tests Vitest (exact2x2, precision, tasks, claims, RAG, hooks, componentes) |
 | `pnpm check:mdx` | Los 20 archivos MDX (repaso + 19 módulos) compilan con next-mdx-remote |
 | `pnpm check:r` | Las salidas de las celdas R coinciden con los snapshots de `tests/r-snapshots` |
-| `pnpm test:visual` | 44 capturas Playwright (20 páginas de módulo + home + anexos × escritorio/móvil) |
+| `pnpm test:visual` | 46 capturas Playwright (20 páginas de módulo + home + anexos + bibliografía × escritorio/móvil) |
 
 Otras utilidades: `python scripts/run_all_r.py --update` regenera los
 snapshots de R; `pnpm exec playwright test --update-snapshots` regenera
