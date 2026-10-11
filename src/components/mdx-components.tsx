@@ -45,6 +45,7 @@ import { FormulaPalette } from '@/components/FormulaPalette';
 import { Term } from '@/components/Term';
 import { BradfordHill, EpiTable } from '@/components/CourseBlocks';
 import { Claim } from '@/components/Claim';
+import { Anexo } from '@/components/Anexo';
 import { BlackboardAnchor, BlackboardEmbed } from '@cursos/blackboard';
 
 /**
@@ -143,6 +144,7 @@ export const mdxComponents: MDXComponents = {
   EpiTable,
   BradfordHill,
   Claim,
+  Anexo,
   BlackboardAnchor,
   BlackboardEmbed,
   table: MdxTable,

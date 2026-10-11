@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { getAllModules, getModuleSource } from '@/lib/modules';
 import { bibliographyToDocs } from '@/lib/rag/bibliography';
+import { ANEXOS } from '@/lib/anexos';
 import type { RagDoc } from '@cursos/blackboard/rag';
 
 export function stripMdx(text: string): string {
@@ -102,9 +105,48 @@ function quizToDocs(moduleSlug: string, order: number, source: string): RagDoc[]
 }
 
 /**
+ * Annex docs: one entry per manifest item, plus one doc per `##`/`###`
+ * section of each Markdown annex so the essay and the audit are
+ * retrievable by content, not only by title. Server-only: files live in
+ * public/anexos.
+ */
+function anexosToDocs(): RagDoc[] {
+  const docs: RagDoc[] = [];
+  for (const a of ANEXOS) {
+    docs.push({
+      id: `anexo:${a.id}`,
+      source: 'anexo',
+      text: `${a.titulo}. ${a.descripcion}${a.autores ? ` ${a.autores}` : ''}`,
+      meta: { anexoId: a.id, tipo: a.tipo, modulo: a.modulo, archivo: a.archivo },
+    });
+    if (!a.archivo.endsWith('.md')) continue;
+    let raw: string;
+    try {
+      raw = readFileSync(join(process.cwd(), 'public', 'anexos', a.archivo), 'utf8');
+    } catch {
+      continue;
+    }
+    const parts = raw.split(/^#{2,3}\s+/m);
+    parts.forEach((part, i) => {
+      const newline = part.indexOf('\n');
+      const heading = (newline === -1 ? part : part.slice(0, newline)).trim();
+      const body = stripMdx(newline === -1 ? '' : part.slice(newline));
+      if (body.length < 30) return;
+      docs.push({
+        id: `anexo:${a.id}:${i}`,
+        source: 'anexo',
+        text: `${a.titulo} — ${heading || 'introducción'}. ${body}`,
+        meta: { anexoId: a.id, tipo: a.tipo, modulo: a.modulo, archivo: a.archivo, heading },
+      });
+    });
+  }
+  return docs;
+}
+
+/**
  * Builds the full retrievable corpus: one doc per module section, one per
- * quiz, one per bibliography entry. Server-only: module sources live on
- * the filesystem.
+ * quiz, one per bibliography entry, plus the annexes. Server-only:
+ * module sources live on the filesystem.
  */
 export function buildCorpus(): RagDoc[] {
   const docs: RagDoc[] = [];
@@ -115,5 +157,6 @@ export function buildCorpus(): RagDoc[] {
     docs.push(...quizToDocs(slug, order, source));
   }
   docs.push(...bibliographyToDocs());
+  docs.push(...anexosToDocs());
   return docs;
 }
