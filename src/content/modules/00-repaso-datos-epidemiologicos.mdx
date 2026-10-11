@@ -16,6 +16,7 @@ import { SasBlock } from '@/components/SasBlock'
 import { LabExercise } from '@/components/LabExercise'
 import { ToolCard } from '@/components/ToolCard'
 import { EpiCurveExplorer, ConfusionExplorer, DesignTree } from '@/components/EpiSims'
+import { DataQualityPanel } from '@/components/QualitySims'
 
 
 <Callout type="tip" title="Este repaso no repite la estadística descriptiva">
@@ -283,6 +284,37 @@ points(out, rep(1, length(out)), col = "red", pch = 19)`}
 
 → **Conecta con M12** (esos pacientes son las curvas de VALUNG) y **M19**
 (vigilancia: cuándo el atípico ES el hallazgo).
+
+## Las tres dimensiones de la calidad del dato
+
+Las secciones anteriores ya auditaron bases sin nombrar el esquema. La
+literatura de calidad de datos clínicos (Kahn y cols., 2016) ordena esos
+hallazgos en tres preguntas — el esquema que usarás como informe de
+calidad a lo largo del curso:
+
+- **Conformidad**: ¿los valores respetan el formato, el tipo y los
+  dominios declarados? `Prior` vale 0/10 y no 0/1; `week = 53` existe
+  como convención, no como semana.
+- **Completitud**: ¿qué falta, dónde y con qué patrón? Los `emp` vacíos
+  de RECID son estructurales — patrón de cola, alineado con el
+  desenlace — no faltantes de Rubin.
+- **Plausibilidad**: ¿los valores son creíbles clínica y temporalmente?
+  El 97% de `Kps` en múltiplos de 10 y los `SurvTime` de 999 son
+  hallazgos *verificados*, no errores.
+
+El panel siguiente computa la auditoría del archivo real al cargarlo:
+los hallazgos no están escritos a mano, salen del CSV. Tu trabajo es
+marcar cada uno — verificado, sospechoso o documentado — porque esa
+decisión, no el hallazgo, es el producto del informe:
+
+<DataQualityPanel
+  dataset="valung"
+  title={<>Auditoría en vivo: marca cada hallazgo del archivo real</>}
+/>
+
+→ **Conecta con M5/M6** (la calidad acota cuánta información hay para
+inferir) y con la Tabla 1 de **M7**, que es donde la exploración se
+convierte en diagnóstico de confusión.
 
 ## Lo marginal, lo condicional y lo conjunto
 

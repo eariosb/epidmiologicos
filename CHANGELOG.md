@@ -88,6 +88,29 @@ Primera versión completa del curso tras el plan de diez fases
   deriva de una de sus clases) y de la corrección del IC de
   Kleinbaum–Kupper con su tabla de cobertura.
 
+## [Sin versión] — Explorar antes de inferir (fase 10c)
+
+### Agregado
+
+- **`Table1Builder`** (`src/components/QualitySims.tsx`): construye la
+  Tabla 1 del CSV real en el navegador (RECID o VALUNG) con diferencias
+  estandarizadas — no valores p — y umbral |d| > 0.1 marcado. El
+  agrupador se elige en vivo: `fin` (aleatorizado → balance) vs.
+  `arrest` (desenlace → confusores encendidos).
+- **`DataQualityPanel`**: auditoría en vivo del archivo con el esquema
+  Kahn 2016 — conformidad, completitud, plausibilidad — con hallazgos
+  computados (Prior ∈ {0,10}, 97.1% Kps múltiplos de 10, 12 atípicos
+  reales, emp vacío solo tras el arresto, week = 53, prio
+  sobredispersión 2.8×) que el estudiante marca: verificado /
+  sospechoso / documentado.
+- **M0**: sección "Las tres dimensiones de la calidad del dato" que
+  formaliza el esquema C1 y embebe el panel de auditoría.
+- **M7**: sección "La Tabla 1 como diagnóstico" — diferencias
+  estandarizadas frente a valores p, selección, información
+  diferencial — + callout de la falacia de la Tabla 2 (Westreich y
+  Greenland 2013) + `Table1Builder` con la demo fin-vs-arrest.
+- Snapshots regenerados (declarados): M0 y M7 en escritorio y móvil.
+
 ## [Sin versión] — Conducir el estudio (fase 10b)
 
 ### Agregado
