@@ -88,6 +88,37 @@ Primera versión completa del curso tras el plan de diez fases
   deriva de una de sus clases) y de la corrección del IC de
   Kleinbaum–Kupper con su tabla de cobertura.
 
+## [Sin versión] — Datos del mundo real (fase 10d)
+
+### Agregado
+
+- **`WorldSims.tsx`**: tres simuladores del análisis en condiciones
+  reales:
+  - `MissingDataLab` — induce MCAR/MAR/MNAR sobre el Kps completo de
+    VALUNG (verdad conocida, semilla fija) y compara casos completos,
+    imputación por la media e imputación por regresión sobre la edad.
+  - `EValueCalculator` — E-value del estimador y del límite del IC
+    (VanderWeele & Ding 2017), interpretado en la escala del efecto.
+  - `BiasAnalysis2x2` — corrección del OR por sensibilidad y
+    especificidad asumidas de la clasificación de la exposición.
+- **M1 — ética aplicada a datos**: Resolución 8430 (clasificación de
+  riesgo), Ley 1581 y Decreto 1377 (datos sensibles), datos secundarios
+  sin consentimiento, ética del estudio subpotenciado + quiz.
+- **M7 — Cornfield y E-value**: las condiciones de Cornfield (1959) del
+  debate tabaco–cáncer y su formalización como E-value.
+- **M13 — covariable dependiente del tiempo**: RCell que reestructura
+  `emp1`–`emp52` de RECID a formato largo y compara tasas de arresto
+  por 1 000 personas-semana según el empleo vigente.
+- **M14 — análisis de sesgo cuantitativo**: corrección por Se/Sp,
+  diferencial vs no diferencial + `BiasAnalysis2x2`.
+- **M16 — faltantes y pocos eventos**: mecanismos de Rubin con
+  `MissingDataLab`, imputación múltiple, regla de 10 EPV (Peduzzi),
+  regresión de Firth y separación como diagnóstico.
+- **M17 — robustez y reporte**: `EValueCalculator` + sección
+  STROBE/RECORD.
+- **Glosario**: evalue, cornfield, mala_clasificacion,
+  imputacion_multiple, eventos_por_variable, STROBE.
+
 ## [Sin versión] — Explorar antes de inferir (fase 10c)
 
 ### Agregado

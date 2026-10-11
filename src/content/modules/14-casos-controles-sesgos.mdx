@@ -269,6 +269,37 @@ estima algo poblacional es la exposición **de los controles**: si se
 seleccionaron bien, su proporción de vacunación ≈ la de la población
 fuente que produjo los casos.
 
+## De "podría haber sesgo" a un número: el análisis de sesgo cuantitativo
+
+Los sesgos de la tabla anterior se listan como advertencias; el
+paso siguiente de la práctica es cuantificar la dirección y el
+tamaño que **tendría** el hallazgo bajo un escenario de sesgo
+plausible. La forma más simple: la
+<Term k="mala_clasificacion">mala clasificación</Term> de la
+exposición. Si la exposición se midió con sensibilidad Se y
+especificidad Sp, la prevalencia observada en cada fila corrige con
+
+```
+P_real = (P_obs + Sp − 1) / (Se + Sp − 1)
+```
+
+y con las prevalencias corregidas se rehace la tabla y el OR. La
+mala clasificación *no diferencial* (misma Se/Sp en casos y
+controles) atenúa hacia 1 — lo que no se afirme, se demuestra:
+haga la corrección. El sesgo de recuerdo es *diferencial* y exige
+Se/Sp por fila; un análisis de sensibilidad serio recorre rangos
+plausibles, no un único valor.
+
+<BiasAnalysis2x2 />
+
+<Callout type="warning" title="El orden es: suponer, corregir, reportar">
+La corrección depende de Se/Sp **asumidos**, no estimados de estos
+datos — sin una fuente externa (un subestudio de validación), el
+análisis de sesgo es condicional: "si la medición fuera así de mala,
+el OR sería tanto". Reporte el rango recorrido, no el punto
+corregido.
+</Callout>
+
 ## Producto del módulo
 
 <Callout type="note" title="Entrega: guía de una página">

@@ -206,6 +206,67 @@ run;`} />
 
 <ToolCard task="glm" />
 
+## Cuando faltan datos en las covariables
+
+Un glm se ajusta con filas completas: el paciente sin `Age` desaparece
+del modelo, y con él parte de la muestra. Rubin (1976) ordenó las
+formas de faltar en tres mecanismos:
+
+- **MCAR** — faltar no depende de nada: los casos completos no sesgan,
+  solo pierden precisión.
+- **MAR** — faltar depende de lo *observado* (la edad explica quién
+  no reportó el Kps): los casos completos sesgan; una imputación que
+  use las variables observadas lo repara.
+- **MNAR** — faltar depende del propio valor que falta (no reportan
+  el Kps los que se sienten peor): ninguna imputación estándar lo
+  resuelve; se reporta el análisis base *más* un análisis de
+  sensibilidad bajo escenarios MNAR.
+
+El laboratorio induce los tres mecanismos sobre el Kps completo de
+VALUNG — donde la verdad se conoce — y deja comparar casos
+completos, imputación por la media e imputación por regresión:
+
+<MissingDataLab />
+
+La respuesta práctica, en orden:
+
+1. Describir *quién* falta y en qué variable — ya lo hace el panel de
+   calidad del módulo 0.
+2. Decidir el mecanismo plausible **con argumentos de medición**, no
+   con una prueba (el mecanismo no es testeable: MNAR y MAR pueden
+   dejar el mismo patrón observado).
+3. Bajo MCAR/MAR, <Term k="imputacion_multiple">imputación
+   múltiple</Term> (`mice` en R) con el desenlace dentro del modelo
+   de imputación.
+4. Bajo MNAR, análisis de sensibilidad — no hay técnica que lo
+   evite.
+5. Reportar el supuesto junto al estimador: "OR ajustado bajo MAR,
+   con imputación múltiple (m = 20)".
+
+## Cuando el modelo tiene más hambre que la muestra
+
+La regla práctica de Peduzzi (1996): al menos ~10
+<Term k="eventos_por_variable">eventos por variable</Term>. En
+`recid.csv` hay 114 arrestos para un modelo de 7 covariables — cómodo
+(≈16 EPV). Pero con 5 eventos y 3 covariables el estimador de
+máxima verosimilitud se sesga y el IC de Wald miente. Las salidas:
+
+- **Menos covariables, elegidas a priori** por la literatura, no por
+  la máquina.
+- **Regresión de Firth**: penaliza la verosimilitud y elimina el
+  sesgo de primer orden — la herramienta estándar para separación y
+  muestras pequeñas (`logistf` en R).
+- **Métodos exactos**: el log-rank exacto y el Fisher/Boschloo del
+  módulo 6 son el análogo para el 2×2.
+
+<Callout type="warning" title="La separación es un diagnóstico, no un error de R">
+Si un glm logístico devuelve un coeficiente gigante con error
+estándar enorme, probablemente hay **separación**: alguna categoría
+predice el desenlace por completo (cero eventos en una celda). El
+dato no es raro — es la muestra diciendo que la tabla es escasa en
+esa dirección. Firth, menos niveles, o más datos.
+</Callout>
+
 ## Producto del módulo
 
 <Callout type="note" title="Entrega: modelo multivariante con diagnóstico">
