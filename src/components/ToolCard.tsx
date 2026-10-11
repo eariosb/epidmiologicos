@@ -224,6 +224,19 @@ rma(yi = te, sei = se, method="REML")`,
 combine_effects(te, se, method_re="iterated")`,
     trap: 'Fijo vs aleatorios no es un detalle: el pooled de efectos fijos es sesgado ante heterogeneidad real.',
   },
+  eda: {
+    title: 'Exploración de una base epidemiológica',
+    task: 'Auditar una base antes de inferir: unidad de análisis, diccionario, faltantes, atípicos y descriptivos por grupo.',
+    r: `str(d); summary(d)
+boxplot(x ~ grupo, data = d)
+plot(ecdf(d$x))`,
+    sas: `proc contents data=d; run;
+proc univariate data=d plots; var x; run;
+proc sgplot data=d; vbox x / category=grupo; run;`,
+    py: `d.info(); d.describe()
+d.boxplot(column="x", by="grupo")`,
+    trap: 'Explorar no es un trámite: un faltante estructural leído como NA o un código mal entendido invalidan todo lo que sigue.',
+  },
 };
 
 /** Tarjeta de herramientas lista para insertar en un módulo. */

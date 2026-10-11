@@ -18,7 +18,7 @@ export const moduleMetaSchema = z.object({
   title: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/),
   objective: z.string().min(1),
-  order: z.number().int().min(1).max(19),
+  order: z.number().int().min(0).max(19),
   datasets: z.array(z.string()).default([]),
   duration: z.number().int().positive().optional(),
   prerequisites: z.array(z.string()).default([]),
@@ -33,6 +33,7 @@ export interface ModuleEntry {
 
 /** Bloques temáticos del curso (agrupan los módulos en el sidebar). */
 export const COURSE_BLOCKS = [
+  { id: '0', title: 'Antes de empezar: repaso', from: 0, to: 0 },
   { id: 'I', title: 'Diseño, medidas e inferencia en la tabla 2×2', from: 1, to: 6 },
   { id: 'II', title: 'Confusión e interacción', from: 7, to: 10 },
   { id: 'III', title: 'Cohortes y supervivencia', from: 11, to: 13 },

@@ -54,7 +54,10 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
         <article className="min-w-0 max-w-3xl flex-1">
           <header className="mb-8 border-b border-ink-200 pb-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
-              Bloque {block.id} · {block.title} · Módulo {entry.meta.order} de {modules.length}
+              Bloque {block.id} · {block.title} ·{' '}
+              {entry.meta.order === 0
+                ? 'Repaso'
+                : `Módulo ${entry.meta.order} de ${modules.filter((m) => m.meta.order > 0).length}`}
             </p>
             <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight text-ink-900">
               {entry.meta.title.replace(/^\d+\.\s*/, '')}
@@ -90,7 +93,8 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
                 href={`/cursos/${prev.meta.slug}`}
                 className="rounded border border-ink-200 bg-white px-4 py-2.5 text-sm text-ink-700 shadow-sm transition-all hover:border-brand-300 hover:shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               >
-                ← {prev.meta.order}. {prev.meta.title.replace(/^\d+\.\s*/, '')}
+                ← {prev.meta.order === 0 ? 'Repaso' : `${prev.meta.order}.`}{' '}
+                {prev.meta.title.replace(/^\d+\.\s*/, '')}
               </Link>
             ) : (
               <span />
@@ -100,7 +104,8 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
                 href={`/cursos/${next.meta.slug}`}
                 className="rounded border border-ink-200 bg-white px-4 py-2.5 text-right text-sm text-ink-700 shadow-sm transition-all hover:border-brand-300 hover:shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               >
-                {next.meta.order}. {next.meta.title.replace(/^\d+\.\s*/, '')} →
+                {next.meta.order === 0 ? 'Repaso' : `${next.meta.order}.`}{' '}
+                {next.meta.title.replace(/^\d+\.\s*/, '')} →
               </Link>
             )}
           </nav>

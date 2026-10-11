@@ -1,0 +1,4 @@
+log-rank terapia: p = 0.93 nlog-rank celula:  p = 1.3e-05 n
+           adeno large small squamous
+  standard     9    15    30       15
+  test        18    12    18       20

@@ -68,7 +68,8 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
                             : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900'
                         )}
                       >
-                        {mod.meta.order}. {mod.meta.title.replace(/^\d+\.\s*/, '')}
+                        {mod.meta.order === 0 ? 'Repaso' : `${mod.meta.order}.`}{' '}
+                        {mod.meta.title.replace(/^\d+\.\s*/, '')}
                       </Link>
                     </li>
                   );

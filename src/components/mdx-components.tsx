@@ -26,6 +26,7 @@ import {
   BerksonExplorer,
   RocExplorer,
   MetaExplorer,
+  EpiCurveExplorer,
 } from '@/components/EpiSims';
 import {
   ExactTestExplorer,
@@ -128,6 +129,7 @@ export const mdxComponents: MDXComponents = {
   BerksonExplorer: withReset(BerksonExplorer),
   RocExplorer: withReset(RocExplorer),
   MetaExplorer: withReset(MetaExplorer),
+  EpiCurveExplorer: withReset(EpiCurveExplorer),
   ExactTestExplorer: withReset(ExactTestExplorer),
   ExactPowerExplorer: withReset(ExactPowerExplorer),
   CorrectionExplorer: withReset(CorrectionExplorer),

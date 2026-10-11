@@ -1,0 +1,608 @@
+---
+title: "Repaso: leer los datos antes de analizarlos"
+slug: "00-repaso-datos-epidemiologicos"
+objective: "Aprender a mirar una base epidemiológica con criterio antes de inferir: qué cuenta cada fila, qué dice el diccionario, qué es un faltante real y qué no, y cuándo un número raro es señal."
+order: 0
+datasets: ["valung.csv", "recid.csv", "bcg_matching.csv", "caso_control_11.csv", "ddimer.csv", "leucemia.txt"]
+duration: 120
+prerequisites: []
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { Flashcard, Flashcards } from '@/components/Flashcard'
+import { RCell } from '@/components/RCell'
+import { SasBlock } from '@/components/SasBlock'
+import { LabExercise } from '@/components/LabExercise'
+import { ToolCard } from '@/components/ToolCard'
+import { EpiCurveExplorer, ConfusionExplorer, DesignTree } from '@/components/EpiSims'
+
+
+<Callout type="tip" title="Este repaso no repite la estadística descriptiva">
+Ya viste medias, medianas y desviaciones estándar. Aquí la pregunta es otra:
+**¿qué está mirando cuando abre un archivo epidemiológico?** Cada base del
+curso esconde decisiones de diseño: qué cuenta una fila, qué significa un
+código, por qué una celda está vacía. Quien lee eso primero evita errores que
+ninguna prueba de hipótesis corrige después. Cada sección cierra señalando el
+módulo donde el concepto se vuelve inferencia.
+</Callout>
+
+## De la población al archivo
+
+Toda base es la sombra de una población bajo un diseño. La clase 2 definió
+población, unidad, muestra y parámetro; aquí aparece la primera idea nueva:
+la <Term k="unidad_analisis">unidad de análisis</Term> — lo que cuenta cada
+fila — **cambia con el diseño**.
+
+Mira las seis bases del curso:
+
+| Base | Una fila es… | Filas |
+|---|---|---|
+| `valung.csv` | una persona del ensayo VA de cáncer de pulmón | 137 |
+| `caso_control_11.csv` | una **pareja** caso–control (clase 22) | 50 |
+| `bcg_matching.csv` | un miembro de un conjunto 1 caso + 5 controles | 666 |
+| `ddimer.csv` | un miembro de un conjunto pareado de tamaño variable | 135 |
+| `recid.csv` | una persona seguida hasta 52 semanas, con su historia de empleo | 432 |
+| `leucemia.txt` | una persona del ensayo de Freireich | 42 |
+
+Un mismo fenómeno produce conteos distintos según la unidad: RECID suma
+20 127 personas-semana de observación sobre 432 personas; BCG tiene 111
+conjuntos de 6, no 666 "individuos independientes". Analizar 666 filas de BCG
+como si fueran independientes inventa una precisión que el diseño no entregó.
+
+<RCell
+  id="00/unidades"
+  title="¿Cuántas filas? ¿Y cuántas unidades de verdad?"
+  code={`# Las seis bases del curso: filas vs. unidades de analisis.
+info <- data.frame(
+  base   = c("valung", "caso_control_11", "bcg", "ddimer", "recid", "leucemia"),
+  filas  = c(nrow(read.csv("valung.csv")),
+             nrow(read.csv("caso_control_11.csv")),
+             nrow(read.csv("bcg_matching.csv")),
+             nrow(read.csv("ddimer.csv")),
+             nrow(read.csv("recid.csv")),
+             nrow(read.table("leucemia.txt", header = TRUE))),
+  unidad = c("persona", "pareja", "conjunto 1:5", "conjunto 1:c",
+             "persona (52 semanas)", "persona"))
+print(info)
+
+# En BCG las filas no son independientes: los sets son la unidad.
+bcg <- read.csv("bcg_matching.csv")
+cat("filas:", nrow(bcg), " | sets (la unidad real):", length(unique(bcg$ID)), "\n")
+
+par(mar = c(4, 8, 1, 1))
+barplot(info$filas, names.arg = info$base, horiz = TRUE, las = 1,
+        col = "steelblue", xlab = "filas del archivo")
+title(main = "Filas por base (la unidad de analisis puede ser otra)")`}
+/>
+
+→ **Conecta con M2** (el diseño decide la unidad), **M13** (persona-semana) y
+**M15** (conjuntos pareados).
+
+## Variables, escalas y diccionario de datos
+
+Un nombre de columna no es un diccionario. Las escalas de la clase 2 (nominal,
+ordinal, intervalo, razón) deciden qué resúmenes y qué gráficos tienen
+sentido; el **diccionario de datos** dice qué significa cada código, y sin él
+todo lo demás es adivinanza.
+
+VALUNG lo ilustra con tres trampas documentadas:
+
+- `censor = 1` marca a los **9 censurados** de 137 — el script SAS del
+  profesor lo construye como `SurvTime < 0` (tiempo no observado). Quien lea
+  `1` como "evento" invierte la curva de supervivencia.
+- `Prior` vale **0 o 10**, no 0/1: es el código de terapia previa del
+  protocolo original, no un indicador.
+- `Treatment` (0/1) **repite** a `Therapy` (standard/test): la misma variable
+  codificada dos veces, una invitación a incluirla dos veces en un modelo.
+
+<RCell
+  id="00/diccionario"
+  title="El diccionario desenmascara tres trampas de VALUNG"
+  code={`va <- read.csv("valung.csv")
+
+# Trampa 1: censor = 1 es CENSURA, no evento.
+print(table(va$censor))
+cat("los '1' son censurados: sobrevivieron al seguimiento\n")
+
+# Trampa 2: Prior no es binario 0/1.
+print(table(va$Prior))
+
+# Trampa 3: Treatment es Therapy recodificada.
+print(table(Therapy = va$Therapy, Treatment = va$Treatment))
+
+par(mar = c(4, 6, 1, 1), mfrow = c(1, 2))
+barplot(table(va$censor), names.arg = c("evento (0)", "censurado (1)"),
+        col = c("steelblue", "gray70"), ylab = "pacientes")
+barplot(table(va$Therapy), col = c("steelblue", "darkorange"),
+        ylab = "pacientes")`}
+/>
+
+<SasBlock code={`/* El diccionario en SAS empieza por PROC CONTENTS */
+proc import datafile="valung.csv" out=va dbms=csv replace;
+proc contents data=va; run;
+proc freq data=va;
+  tables censor Prior Therapy*Treatment / nocol norow nopercent;
+run;`} />
+
+<Quiz
+  question="En VALUNG, `censor = 1` aparece en 9 filas. ¿Qué significa y cómo lo verificarías?"
+  options={[
+    "Que esos 9 pacientes murieron; lo verificas mirando SurvTime grande",
+    "Que esos 9 pacientes se censuraron (vivos al cierre o perdidos); lo verificas con el script del profesor: `censor = (SurvTime < 0)` y porque 999 es un tiempo de seguimiento, no un error",
+    "Que la variable está invertida y hay que recodificarla antes de cualquier análisis"
+  ]}
+  correctIndex={1}
+  explanation="El código viene del SAS del curso: los tiempos negativos del archivo original marcan censura. Confundir evento con censura invierte cada curva de supervivencia del módulo 12."
+/>
+
+→ **Conecta con M12**, donde esta misma variable decide si la curva de
+Kaplan–Meier sube o baja.
+
+## Distribuciones y resúmenes que no mienten
+
+La forma de la distribución decide qué resumen es honesto. En `SurvTime` la
+media (121.6) queda lejos de la mediana (80) porque la cola derecha estira el
+promedio: reportar solo la media exagera el pronóstico típico. Para datos así
+la mediana, los cuantiles y la <Term k="ECDF">distribución empírica</Term>
+(ECDF) cuentan la historia completa; la <Term k="MAD">desviación absoluta
+mediana</Term> (MAD) mide la dispersión sin que los extremos la infle.
+
+Dos hallazgos más que solo se ven mirando:
+
+- En `Kps`, el 97.1% de los valores son múltiplos de 10 (más 75, 85 y un
+  99): <Term k="preferencia_digito">preferencia de dígito</Term> — el
+  Karnofsky se anotaba redondeado, una huella de cómo se midió.
+- En `prio` (arrestos previos, RECID) la varianza es 2.8 veces la media:
+  <Term k="sobredispersion">sobredispersión</Term> frente al modelo Poisson,
+  un dato que importará cuando esa variable entre a un modelo de conteos.
+
+<RCell
+  id="00/distribuciones"
+  title="Media vs mediana, ECDF y huellas de medición"
+  code={`va <- read.csv("valung.csv")
+cat("SurvTime: media", round(mean(va$SurvTime),1),
+    " mediana", median(va$SurvTime),
+    " MAD", round(mad(va$SurvTime),1), "\n")
+
+# Preferencia de digito en Kps.
+k <- va$Kps
+cat("% multiplos de 10:", round(mean(k %% 10 == 0) * 100, 1),
+    " | otros valores:", paste(sort(unique(k[k %% 10 != 0])), collapse = ", "), "\n")
+
+# Sobre-dispersion en arrestos previos (RECID).
+r <- read.csv("recid.csv")
+cat("prio: media", round(mean(r$prio),2),
+    " varianza", round(var(r$prio),2),
+    " var/media", round(var(r$prio)/mean(r$prio),2), "\n")
+
+par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+hist(va$SurvTime, breaks = 20, col = "steelblue", main = "SurvTime (dias)",
+     xlab = "", ylab = "pacientes")
+abline(v = c(mean(va$SurvTime), median(va$SurvTime)),
+       col = c("red", "darkgreen"), lty = c(2, 1), lwd = 2)
+legend("topright", c("media", "mediana"), col = c("red", "darkgreen"),
+       lty = c(2, 1), bty = "n")
+plot(ecdf(va$SurvTime), main = "ECDF de SurvTime",
+     xlab = "dias", ylab = "proporcion acumulada")`}
+/>
+
+→ **Conecta con M3** (la medida correcta para cada cantidad) y **M16**
+(sobredispersión en modelos de conteo).
+
+## Faltantes: estructurales o aleatorios
+
+No toda celda vacía es un dato perdido. RECID registra el empleo semanal en
+`emp1`–`emp52`, pero después del arresto (o de la semana 52) las columnas
+quedan vacías porque **no hubo más seguimiento que observar**: son
+<Term k="faltante_estructural">faltantes estructurales</Term>, no NA en el
+sentido de <Term k="MCAR">MCAR</Term>/<Term k="MAR">MAR</Term>/
+<Term k="MNAR">MNAR</Term>. Tratarlos como datos faltantes inventaría un
+problema de imputación que no existe.
+
+La convención del archivo confirma la lectura: las 318 personas nunca
+arrestadas tienen `week = 53` — una etiqueta de "sobrevivió las 52 semanas",
+no una semana 53 real.
+
+<RCell
+  id="00/faltantes"
+  title="RECID: vacíos que son estructura, no pérdida"
+  code={`r <- read.csv("recid.csv")
+emp <- r[, paste0("emp", 1:52)]
+
+# Si el vacio es estructural, debe terminar exactamente en 'week':
+# emp1..emp_w observados, el resto NA.
+ok <- sapply(1:nrow(r), function(i) {
+  w <- min(r$week[i], 52)
+  e <- as.numeric(emp[i, ])
+  all(!is.na(e[1:w])) && (w == 52 || all(is.na(e[(w + 1):52])))
+})
+cat("filas donde los NA empiezan justo tras 'week':", sum(ok), "de", nrow(r), "\n")
+
+# Los 318 no arrestados: week = 53 significa 'completo el seguimiento'.
+cat("week de los no arrestados:", paste(unique(r$week[r$arrest == 0]), collapse = ", "), "\n")
+
+par(mar = c(4, 4, 2, 1))
+pct <- colMeans(!is.na(emp)) * 100
+plot(1:52, pct, type = "s", lwd = 2, col = "steelblue",
+     xlab = "semana", ylab = "% con empleo observado",
+     main = "Cobertura de emp1-emp52 cae con el tiempo en riesgo")
+abline(v = 52, lty = 2, col = "gray50")`}
+/>
+
+<SasBlock code={`/* De ancho a largo: la forma que el analisis longitudinal pide */
+proc import datafile="recid.csv" out=r dbms=csv replace;
+proc transpose data=r out=rlong prefix=emp name=sem_src;
+  by week arrest fin age race wexp mar paro prio educ;
+  var emp1-emp52;
+run;`} />
+
+→ **Conecta con M11** (seguimiento y pérdidas) y **M13** (la covariable
+empleo dependiente del tiempo en formato largo).
+
+## ¿Atípico o señal?
+
+El boxplot marca candidatos, no verdades. `boxplot.stats` señala 12 tiempos
+de VALUNG — entre ellos 999 y 991 — pero esos pacientes existen en el ensayo
+original: son seguimientos larguísimos, no errores de digitación. La regla es
+**verificar contra la fuente antes de borrar**: un atípico real borrado
+silenciosamente es un sesgo que nadie declara.
+
+El caso contrario también existe: en vigilancia (clase 2B) la semana
+"atípica" de la curva epidémica puede ser el brote que el sistema busca. La
+misma regla del boxplot que protege de errores puede cegar ante la señal si
+se aplica como borrado automático.
+
+<RCell
+  id="00/atipicos"
+  title="Los 12 'atípicos' de SurvTime son pacientes reales"
+  code={`va <- read.csv("valung.csv")
+out <- boxplot.stats(va$SurvTime)$out
+cat("boxplot marca", length(out), "valores:", paste(sort(out), collapse = ", "), "\n")
+
+# Son reales: el ensayo VA registro seguimientos de hasta 999 dias.
+# Un '9' o '99' de digitacion no produciria una cola continua 340-999.
+print(quantile(va$SurvTime, c(0.5, 0.75, 0.9, 0.95, 1)))
+
+par(mar = c(4, 4, 2, 1))
+boxplot(va$SurvTime, horizontal = TRUE, col = "steelblue",
+        xlab = "dias de seguimiento", main = "SurvTime: cola real, no errores")
+points(out, rep(1, length(out)), col = "red", pch = 19)`}
+/>
+
+<Quiz
+  question="El boxplot marca SurvTime = 999 como atípico. ¿Lo borras antes del análisis de supervivencia?"
+  options={[
+    "Sí: un tiempo tan extremo distorsiona la media y el ajuste",
+    "No: 999 es un seguimiento real del ensayo (verificable en la fuente); borrarlo sería censurar información verdadera sin declararlo. Se reporta y se analiza con métodos robustos a la cola",
+    "Depende: se borra si el modelo lo marca como influyente"
+  ]}
+  correctIndex={1}
+  explanation="El boxplot marca, no decide. La verificación contra la fuente muestra que la cola es real; borrarla cambiaría todas las curvas de supervivencia sin ninguna justificación clínica."
+/>
+
+→ **Conecta con M12** (esos pacientes son las curvas de VALUNG) y **M19**
+(vigilancia: cuándo el atípico ES el hallazgo).
+
+## Lo marginal, lo condicional y lo conjunto
+
+Una tabla resume asociaciones a tres niveles que conviene no confundir:
+**marginal** (el efecto global), **condicional** (dentro de cada estrato) y
+**conjunto** (la distribución de las variables juntas). P(A | B) se lee
+directo de una tabla cruzada, pero la pregunta inferencial decide cuál de los
+tres niveles responde.
+
+VALUNG da el ejemplo más limpio del curso: por terapia, el log-rank da
+p = 0.93 (nada); por tipo celular, p = 1.3×10⁻⁵ (todo). La terapia dentro de
+cada tipo celular se puede dibujar como gráfico de interacción. Y la propia
+tabla conjunta revela el azar de la aleatorización: 30 pacientes de células
+pequeñas cayeron en standard contra 18 en test — el desbalance que una
+asignación honesta produce sin trampas.
+
+<RCell
+  id="00/marginal"
+  title="Tres lecturas de la misma base"
+  code={`va <- read.csv("valung.csv")
+library(survival)
+
+# Marginal: log-rank global por cada variable.
+s_t <- survdiff(Surv(SurvTime, 1 - censor) ~ Therapy, data = va)
+s_c <- survdiff(Surv(SurvTime, 1 - censor) ~ Cell, data = va)
+cat("log-rank terapia: p =", format.pval(1 - pchisq(s_t$chisq, 1), digits = 2), "\n")
+cat("log-rank celula:  p =", format.pval(1 - pchisq(s_c$chisq, 3), digits = 2), "\n")
+
+# Conjunta: el azar del ensayo dejo 30 vs 18 celulas pequenas.
+print(table(va$Therapy, va$Cell))
+
+par(mar = c(4, 4, 2, 1))
+plot(survfit(Surv(SurvTime, 1 - censor) ~ Cell, data = va),
+     col = 1:4, lwd = 2, xlab = "dias", ylab = "S(t)",
+     main = "La celula separa; la terapia no (p = 0.93)")
+legend("topright", levels(factor(va$Cell)), col = 1:4, lwd = 2, bty = "n")`}
+/>
+
+<ConfusionExplorer title="Lo marginal vs lo condicional: el confusor que invierte el signo" />
+
+→ **Conecta con M8** (estratificar), **M10** (interacción) y **M12**
+(supervivencia).
+
+## P(E | D) no es P(D | E)
+
+La inversión de probabilidades es el error más caro de la epidemiología:
+P(expuesto | enfermo) y P(enfermo | expuesto) responden preguntas distintas.
+El diseño de casos y controles **elige la fracción de casos**, así que solo
+una de las dos es estimable: en BCG la fracción de casos es exactamente 1/6
+porque cada conjunto trajo 1 caso y 5 controles — un número que el
+investigador fijó, no una característica de la población.
+
+De ahí nace la regla que gobernará los módulos 14–15: en casos y controles se
+estima P(vacunado | caso) y su contraparte en controles, y el odds ratio las
+combina; P(caso | vacunado) no existe en estos datos.
+
+<RCell
+  id="00/inversion"
+  title="BCG: la fracción de casos la fijó el diseño"
+  code={`bcg <- read.csv("bcg_matching.csv")
+bcg$caso <- as.integer(bcg$Case_control == "Case")
+
+# 1/6 de casos por construccion: no es la incidencia de nada.
+cat("fraccion de casos en el archivo:", round(mean(bcg$caso), 3), "\n")
+
+# Estimable: P(vacunado | caso) y P(vacunado | control).
+t <- table(bcg$caso, bcg$Bcg_Status)
+print(t)
+cat("P(vacunado | caso)   =", round(t[2, 2] / sum(t[2, ]), 3), "\n")
+cat("P(vacunado | control)=", round(t[1, 2] / sum(t[1, ]), 3), "\n")
+
+par(mar = c(4, 4, 2, 1))
+barplot(c(caso = t[2, 2] / sum(t[2, ]), control = t[1, 2] / sum(t[1, ])),
+        col = c("steelblue", "gray70"), ylim = c(0, 1),
+        ylab = "P(vacunado | condicion)",
+        main = "Lo que BCG permite estimar (y lo que no)")`}
+/>
+
+<Quiz
+  question="En BCG cada set tiene 1 caso y 5 controles. ¿Por qué no se puede estimar P(caso | vacunado) con este archivo?"
+  options={[
+    "Porque faltan las edades de los participantes para ajustar la estimación",
+    "Porque la fracción de casos (1/6) la eligió el diseño: el denominador de vacunados de la población no está en el archivo; solo el OR de exposición es estimable",
+    "Porque la vacuna BCG es demasiado efectiva y todos los casos estarían en no vacunados"
+  ]}
+  correctIndex={1}
+  explanation="En casos y controles la columna 'enfermedad' está fijada por muestreo: P(caso|cualquier cosa) requiere incidencia poblacional que el diseño no recoge. El OR sobrevive porque los denominadores se cancelan."
+/>
+
+→ **Conecta con M4** (por qué el OR y no el RR), **M14** y **M15** (casos y
+controles pareado).
+
+## Comparar grupos con gráficos
+
+Antes de la primera prueba, los grupos se comparan a la vista: boxplots lado
+a lado para localización y dispersión, ECDF superpuestas para toda la
+distribución, gráficos de mosaico para categóricas y pequeños múltiplos
+cuando hay estratos. La gráfica correcta muestra **cuánto** se parecen los
+grupos; la prueba solo resume si esa diferencia podría ser azar.
+
+<RCell
+  id="00/grupos"
+  title="Edad y antecedentes por arresto; Karnofsky por tipo celular"
+  code={`r <- read.csv("recid.csv")
+va <- read.csv("valung.csv")
+
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+boxplot(age ~ arrest, data = r, col = c("gray70", "steelblue"),
+        names = c("no arrestado", "arrestado"), main = "Edad (RECID)")
+boxplot(prio ~ arrest, data = r, col = c("gray70", "steelblue"),
+        names = c("no arrestado", "arrestado"), main = "Arrestos previos")
+boxplot(Kps ~ Cell, data = va, col = 2:5, las = 2,
+        main = "Karnofsky por celula")`}
+/>
+
+→ **Conecta con M7** (el desbalance que se ve en la tabla 1) y **M16**
+(la comparación antes del modelo).
+
+## El mapa de distribuciones del curso
+
+Cada medida del curso vive bajo una distribución concreta. Saber cuál — y por
+qué — convierte fórmulas posteriores en consecuencias, no en magia:
+
+- **Binomial**: riesgos y la tabla 2×2 (casos entre expuestos).
+- **Hipergeométrica**: el test exacto de Fisher — la tabla con márgenes
+  fijos.
+- **Poisson**: tasas de incidencia, persona-tiempo y la SMR.
+- **Exponencial y gamma**: tiempos de supervivencia y duración de la
+  infección.
+- **Normal y log-normal**: Wald y el log-OR de casi todo IC del curso.
+- **Beta**: el prior de Jeffreys y la assurance del módulo 17.
+- **χ²**: las pruebas de homogeneidad y de bondad de ajuste.
+
+<RCell
+  id="00/mapa-dist"
+  title="Cuatro caras que se repetirán todo el curso"
+  code={`par(mfrow = c(2, 2), mar = c(4, 4, 2, 1))
+x <- 0:30
+plot(x, dbinom(x, 50, 0.3), type = "h", lwd = 2, col = "steelblue",
+     main = "Binomial(50, 0.3): riesgo de 50 expuestos", xlab = "casos", ylab = "")
+plot(x, dhyper(x, 20, 30, 15), type = "h", lwd = 2, col = "darkorange",
+     main = "Hipergeometrica: el universo de Fisher", xlab = "casos exp.", ylab = "")
+plot(x, dpois(x, 10), type = "h", lwd = 2, col = "darkgreen",
+     main = "Poisson(10): conteos por persona-tiempo", xlab = "casos", ylab = "")
+plot(seq(0, 15, 0.1), dchisq(seq(0, 15, 0.1), 4), type = "l", lwd = 2,
+     col = "purple", main = "Chi-cuadrado(4): pruebas de homogeneidad",
+     xlab = "estadistico", ylab = "")`}
+/>
+
+<Flashcard
+  title="El mapa en tarjetas"
+  items={[
+    { front: 'Riesgo en un grupo de n expuestos', back: 'Binomial(n, p): cuántos casos de n personas con riesgo p. La tabla 2×2 son dos binomiales.' },
+    { front: 'Tabla 2×2 con márgenes fijos', back: 'Hipergeométrica: repartir los casos entre expuestos y no expuestos como en un sorteo sin reposición. Es el test exacto de Fisher.' },
+    { front: 'Casos por persona-tiempo', back: 'Poisson(λ): conteos en tiempo de exposición; base de tasas, SMR y modelos de regresión de Poisson.' },
+    { front: 'Tiempo hasta el evento', back: 'Exponencial (tasa constante) y gamma/Weibull (tasa variable): el lenguaje de supervivencia.' },
+    { front: 'IC del log-OR, log-RR, log-tasa', back: 'Normal sobre el logaritmo del estimador: los IC95% del curso son Wald en escala log.' },
+    { front: 'Incertidumbre sobre una proporción', back: 'Beta(α, β): el prior de Jeffreys (½, ½) y la distribución de la assurance.' },
+    { front: 'Homogeneidad entre estratos o estudios', back: 'χ² con k−1 grados de libertad: Breslow–Day, Cochran Q del meta-análisis.' },
+  ]}
+/>
+
+→ **Conecta con M3–M16**: cada módulo adopta una fila de este mapa.
+
+## Una idea, tres veces: condicionar
+
+Condicionar es la operación que el curso repite bajo tres disfraces:
+condicionar en los **márgenes** (Fisher fija totales y cuenta las tablas
+posibles), en los **estratos** (Mantel–Haenszel resume dentro de cada capa) y
+en los **conjuntos pareados** (la verosimilitud condicional solo usa sets con
+discordancia). Es la misma idea — quedarse con la parte del azar que el
+diseño no controla — aplicada a tres geometrías.
+
+<RCell
+  id="00/condicionar"
+  title="La misma operación en parejas y en sets 1:5"
+  code={`cc <- read.csv("caso_control_11.csv")
+bcg <- read.csv("bcg_matching.csv")
+bcg$caso <- as.integer(bcg$Case_control == "Case")
+
+# Parejas 1:1 (clase 22): solo las discordantes informan.
+print(table(caso = cc$caso, control = cc$control))
+
+# Sets 1:5 (BCG): el MH dentro de cada set usa solo sets
+# con variacion interna en la exposicion.
+info <- tapply(bcg$Bcg_Status, bcg$ID, function(x) length(unique(x)) > 1)
+cat("sets informativos:", sum(info), "de", length(info), "\n")
+
+par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+barplot(c(discordantes = sum(cc$caso != cc$control),
+          concordantes = sum(cc$caso == cc$control)),
+        col = c("steelblue", "gray70"), ylab = "parejas",
+        main = "Parejas 1:1: solo la discordancia informa")
+barplot(c(informativos = sum(info), homogeneos = sum(!info)),
+        col = c("steelblue", "gray70"), ylab = "sets",
+        main = "Sets 1:5: igual regla, otra geometria")`}
+/>
+
+→ **Conecta con M6** (condicionar en márgenes), **M8** (en estratos) y
+**M15** (en conjuntos pareados).
+
+## Muestreo y sesgos a la vista
+
+El esquema de muestreo deja huellas medibles en los datos, y compararlas con
+una referencia es la primera detección de sesgo. La cohorte muestrea por
+exposición; el caso-control, por desenlace; el pareado, por el confusor del
+matching. En BCG la fracción de casos (1/6) no se parece a ninguna
+incidencia: es la firma del diseño. Cuando los números no coinciden con lo
+que la población debería dar, antes de culpar al dato hay que preguntar cómo
+llegó al archivo.
+
+<DesignTree title="El diseño como árbol de decisiones: cada rama decide qué se muestrea" />
+
+→ **Conecta con M2** (el árbol de diseños) y **M14** (los sesgos de la
+selección de controles).
+
+## Vigilancia y curva epidémica
+
+La <Term k="curva_epidemica">curva epidémica</Term> — casos por semana — es el
+gráfico de la vigilancia, y tiene dos trampas de lectura: el **ancho de la
+barra** cambia la forma (casos diarios ruidosos se vuelven tendencia limpia
+al agrupar por semana) y las últimas barras **siempre** están incompletas por
+el <Term k="retraso_notificacion">retraso de notificación</Term>: los casos
+recientes aún no llegaron al registro. Interpretar esa cola como descenso
+real es el error más común de los boletines.
+
+El modelo SIR de la clase 2B — susceptibles que pasan a infectados (β) y
+luego a recuperados (γ) — genera la forma de referencia; sobre ella montamos
+el ruido de conteos (Poisson) y el retraso, que es exactamente lo que llega a
+la mesa de un departamento de salud.
+
+<EpiCurveExplorer title="Curva epidémica SIR: incidencia real, ruido y retraso de notificación" />
+
+<RCell
+  id="00/vigilancia"
+  title="El SIR en 15 líneas: la curva que la vigilancia intenta ver"
+  code={`# SIR deterministico (Euler semanal) + ruido Poisson.
+set.seed(7)
+N <- 10000; S <- N - 10; I <- 10; beta <- 0.45; gamma <- 0.2
+inc <- numeric(52)
+for (w in 1:52) {
+  nueva <- beta * S * I / N
+  S <- S - nueva; I <- I + nueva - gamma * I
+  inc[w] <- nueva
+}
+obs <- rpois(52, inc)
+
+par(mar = c(4, 4, 2, 1))
+barplot(obs, col = "steelblue", xlab = "semana", ylab = "casos",
+        names.arg = ifelse(1:52 %% 4 == 0, 1:52, ""),
+        main = "Notificado (barras) vs. incidencia verdadera (linea)")
+lines(1:52 - 0.5, inc, col = "red", lwd = 2, lty = 2)`}
+/>
+
+→ **Conecta con M3** (medición de la incidencia) y con la lectura de
+boletines reales de vigilancia.
+
+## Disciplina exploratoria
+
+Todo lo anterior es generación de hipótesis, no su prueba. Tukey lo separó en
+1962: el análisis exploratorio **descubre** qué preguntar; el confirmatorio
+**responde** con error controlado. Mezclarlos — explorar hasta encontrar
+algo "significativo" — es el jardín de los senderos que se bifurcan: cada
+decisión tomada mirando los datos multiplica las rutas al falso positivo. La
+vacuna disciplinaria es declarar el plan de análisis antes de mirar, y hacer
+la exploración **reproducible**: script, semilla y datos versionados, no
+clics irrepetibles.
+
+<RCell
+  id="00/disciplina"
+  title="Reproducibilidad: la misma semilla, el mismo hallazgo"
+  code={`# Sin semilla ni script, el hallazgo 'exploratorio' no se puede repetir.
+set.seed(42)
+muestra <- rnorm(200, mean = 10, sd = 3)
+cat("media reproducible:", round(mean(muestra), 3), "\n")
+
+# Quien repita set.seed(42) + este codigo obtiene el MISMO histograma:
+par(mar = c(4, 4, 2, 1))
+hist(muestra, breaks = 15, col = "steelblue", main = "Explorar con semilla fija",
+     xlab = "valor", ylab = "frecuencia")`}
+/>
+
+<LabExercise
+  id="lab-00-ficha-exploratoria"
+  title="Ficha exploratoria: VALUNG o RECID, tu elección"
+  code={`# Elige UNA base y construye su ficha exploratoria.
+# Modelo con VALUNG; cambia el archivo y las variables si eliges RECID.
+va <- read.csv("valung.csv")
+
+# 1. Unidad de analisis y dimension.
+cat("filas:", nrow(va), " | columnas:", ncol(va), "\n")
+
+# 2. Diccionario en borrador: nombre, escala, codigos raros.
+str(va)
+
+# 3. Problemas detectados y su verificacion (ej.: censor, Prior, duplicadas).
+cat("Prior unicos:", paste(unique(va$Prior), collapse = ", "), "\n")
+cat("Treatment == Therapy recodificada:",
+    all((va$Therapy == "test") == (va$Treatment == 1)), "\n")
+
+# 4. Tres graficos que cuenten algo.
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+hist(va$Age, breaks = 12, col = "steelblue", main = "Edad", xlab = "")
+boxplot(SurvTime ~ Therapy, data = va, col = c("gray70", "darkorange"),
+        main = "Seguimiento por brazo")
+plot(ecdf(va$Kps), main = "ECDF de Karnofsky", xlab = "Kps", ylab = "")`}
+  tasks={[
+    "Redacta la ficha: unidad de análisis, diccionario de 5 variables clave, 2 problemas detectados con su verificación, 3 gráficos y 3 hipótesis que un módulo posterior debería responder.",
+    "Explica por qué cada problema encontrado es o no es un faltante estructural / un atípico real / un error de codificación.",
+    "Sin valores p: la ficha es exploración. Escribe las hipótesis como preguntas inferenciales para después.",
+  ]}
+  hint="RECID: revisa la estructura emp1-emp52 contra `week` y la mezcla de escalas en `educ`/`prio`."
+/>
+
+<ToolCard task="eda" />
+
+<Callout type="note" title="Cierre del repaso">
+La exploración termina donde empieza la inferencia. Lo que sigue — módulos
+1 a 19 — convierte estas lecturas en estimandos, diseños, pruebas e
+intervalos. Cuando un resultado suene extraño en cualquier módulo, la
+pregunta correcta será la de este repaso: *¿ya miré el dato antes de creerle
+al modelo?*
+</Callout>

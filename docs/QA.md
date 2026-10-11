@@ -8,7 +8,7 @@ Línea base registrada en `docs/baseline/` (typecheck, test, build).
 | Tipos | `pnpm typecheck` | Errores TypeScript nuevos |
 | Build | `pnpm build` | Compilación de producción |
 | Tests | `pnpm test` | Lógica (`exact2x2`, `precision`, prompts, componentes) |
-| MDX | `pnpm check:mdx` | Los 19 módulos compilan con el pipeline real |
+| MDX | `pnpm check:mdx` | Los 20 archivos MDX (repaso + 19 módulos) compilan con el pipeline real |
 | Salidas R | `pnpm check:r` | Cada `RCell`/`LabExercise` produce la salida de `tests/r-snapshots/` |
 | Capturas | `pnpm test:visual` | Píxeles idénticos a `tests/visual/__snapshots__/` en claro, 1280×800 y 390×844 |
 
