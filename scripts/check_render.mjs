@@ -26,7 +26,7 @@ const components = {
   InteractionExplorer: stub, CohortGantt: stub, BerksonExplorer: stub,
   RocExplorer: stub, MetaExplorer: stub, LangTabs: stub, SasBlock: stub, ToolCard: stub,
   DecisionPanel: stub, DecisionCard: stub,
-  EpiTable: stub, BradfordHill: stub, Claim: stub,
+  EpiTable: stub, BradfordHill: stub, Claim: stub, Anexo: stub,
   ExactTestExplorer: stub, ExactPowerExplorer: stub, CorrectionExplorer: stub,
   CIMethodsExplorer: stub, PrecisionSampleSizeExplorer: stub,
   SampleSizeExplorer: stub,
