@@ -131,6 +131,15 @@ objetos `style`). Las escalas literales (`accent`, `ink`, `positive`)
 siguen definidas para el paquete `blackboard`. Tipografía: Inter (texto)
 + Lora (display editorial, `font-display`).
 
+### Movimiento
+
+Sistema contenido de micro-interacciones: transiciones de 150–300 ms
+sobre `transform`/`opacity` con curva ease-out (`fade-in`, `slide-in`,
+`fade-rise` en `tailwind.config.ts`), fade de entrada en resultados
+asíncronos del worker exacto y feedback sutil en controles. Todo
+desactivado bajo `prefers-reduced-motion: reduce` (`globals.css`);
+ninguna información se transmite solo mediante animación.
+
 ## Stack
 
 Next.js 15.5 (App Router) · React 19 · TypeScript · Tailwind CSS +

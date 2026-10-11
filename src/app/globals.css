@@ -90,6 +90,22 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Movimiento: todo lo animado usa transform/opacity con la curva
+ * out-expo (ver tailwind.config). Con prefers-reduced-motion se
+ * neutraliza toda animación/transición y el scroll suave. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 body {
   background-color: rgb(var(--bg));
   color: rgb(var(--fg));
