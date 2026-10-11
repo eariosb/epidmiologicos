@@ -139,6 +139,15 @@ const config: Config = {
       borderRadius: {
         DEFAULT: '0.5rem',
       },
+      /* ----------------------------------------------------------
+       * Movimiento (fase 7): una sola curva ease-out tipo "expo"
+       * para todo lo interactivo; duraciones cortas (150–250ms) y
+       * solo transform/opacity. prefers-reduced-motion se respeta
+       * en globals.css.
+       * ---------------------------------------------------------- */
+      transitionTimingFunction: {
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+      },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
         'slide-in': {
@@ -147,8 +156,8 @@ const config: Config = {
         },
       },
       animation: {
-        'fade-in': 'fade-in 0.3s ease-out',
-        'slide-in': 'slide-in 0.25s ease-out',
+        'fade-in': 'fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        'slide-in': 'slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },

@@ -101,7 +101,12 @@ export function TableOfContents({ headings: propHeadings }: TableOfContentsProps
                 e.preventDefault();
                 const el = document.getElementById(h.id);
                 if (el) {
-                  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  el.scrollIntoView({
+                    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                      ? 'auto'
+                      : 'smooth',
+                    block: 'start',
+                  });
                   setActiveId(h.id);
                 }
               }}

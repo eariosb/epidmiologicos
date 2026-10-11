@@ -305,7 +305,7 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
 
         <div>
           {ts && maskF && maskU && (
-            <>
+            <div className="animate-fade-in">
               <svg viewBox={`0 0 ${W + 60} ${H + 34}`} className="w-full" role="img"
                 aria-label="Mapa de decisiones sobre el espacio de tablas">
                 {Array.from({ length: t.n1 + 1 }, (_, x1) =>
@@ -351,7 +351,7 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
                   marca tu tabla observada.
                 </p>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -471,7 +471,7 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
             <p className="py-6 text-center text-xs text-ink-400">Calculando…</p>
           )}
           {tsN && masks && sizeCurves && (
-            <>
+            <div className="animate-fade-in">
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="border-b border-ink-200 text-left text-ink-500">
@@ -514,7 +514,7 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
             hline={{ y: alpha, label: 'α' }}
             height={170}
           />
-            </>
+            </div>
           )}
           <p className="mt-1 text-[11px] text-ink-500">
             Probabilidad de rechazar bajo H₀ como función del valor común p. Las curvas
@@ -685,6 +685,7 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
 
         <div>
           {curve && (
+            <div className="animate-fade-in">
             <LinePlot
               series={[
                 { x: curve.cs, y: curve.bias2, color: tokens.chart.bias },
@@ -697,6 +698,7 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
               xTicks={[0, 0.5, 1, 1.5, 2]}
               height={200}
             />
+            </div>
           )}
           <SimLegend
             className="mt-1"
@@ -826,7 +828,7 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
             </div>
           </div>
           {exact ? (
-            <>
+            <div className="animate-fade-in">
             <p className="mt-2 rounded bg-ink-50/60 px-2 py-1.5 text-[11px] leading-snug text-ink-600">
               {exact.fisherA >= targetPower ? (
                 <>Con n={nAdj} por grupo, Fisher entrega {fmt(exact.fisherA * 100, 1)}%:
@@ -867,7 +869,7 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
             <p className="mt-1 text-[10px] text-ink-400">
               Verde: alcanza la potencia deseada ({fmt(targetPower * 100, 0)}%); rojo: queda por debajo.
             </p>
-            </>
+            </div>
           ) : (
             <p className="mt-2 text-[11px] text-ink-500">
               La verificación exacta por enumeración se muestra cuando n ≤ 80 por grupo.
