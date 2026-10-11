@@ -10,18 +10,20 @@ export default function HomePage() {
         <p className="text-sm font-semibold uppercase tracking-wider text-brand-600">
           Universidad Nacional de Colombia · Sede Medellín
         </p>
-        <h1 className="mt-2 text-4xl font-bold leading-tight text-ink-900">
+        <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight text-ink-900">
           Análisis Estadístico de Datos Epidemiológicos
         </h1>
-        <p className="mt-3 text-lg text-ink-600">
-          Ccinco bloques: desde la tabla 2×2 al meta-análisis,
-          más un módulo transversal de herramientas (R, SAS y Python) y un breve 
-          repaso por algunos proyectos y conceptos interesantes de estudi 
-          actualmente en epidemiología.
+        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ink-600">
+          Cinco bloques: desde la tabla 2×2 al meta-análisis, más un módulo
+          transversal de herramientas (R, SAS y Python) y un repaso de proyectos
+          y conceptos de estudio vigentes en epidemiología.
         </p>
-        <blockquote className="mt-5 border-l-4 border-brand-400 pl-4 text-ink-700 italic">
-          &ldquo;Somos propensos a sobrestimar lo que entendemos del mundo y a 
-          subestimar el papel del azar en los acontecimientos.&rdquo;  Daniel Kahneman, <em>Epidemiology</em> (2014)
+        <blockquote className="mt-6 border-l-2 border-brand-400 pl-5 font-display text-lg italic leading-relaxed text-ink-700">
+          &ldquo;Somos propensos a sobrestimar lo que entendemos del mundo y a
+          subestimar el papel del azar en los acontecimientos.&rdquo;
+          <footer className="mt-1 font-sans text-sm not-italic text-ink-500">
+            Daniel Kahneman, <em>Epidemiology</em> (2014)
+          </footer>
         </blockquote>
       </header>
 
