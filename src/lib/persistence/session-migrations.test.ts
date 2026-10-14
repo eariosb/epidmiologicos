@@ -23,7 +23,26 @@ describe('session V1 -> V2', () => {
     expect(session.status).toBe('active');
     expect(session.questions).toEqual([]);
     expect(session.visitedSections).toEqual([]);
+    expect(session.sceneVisits).toEqual([]);
     expect(session.captureIds).toEqual(['cap-1']);
+  });
+
+  it('migrates a V2 session adding the scene-visit journey', () => {
+    const v2 = {
+      version: 2,
+      id: 'session-2',
+      title: 'Clase',
+      startedAt: 1000,
+      updatedAt: 1000,
+      status: 'active',
+      visitedSections: [],
+      captureIds: [],
+      questions: [],
+    };
+    const { session, migrated } = migrateSession(v2);
+    expect(migrated).toBe(true);
+    expect(session.version).toBe(SCHEMA_VERSIONS.session);
+    expect(session.sceneVisits).toEqual([]);
   });
 
   it('is idempotent on current-version sessions', () => {
@@ -35,6 +54,7 @@ describe('session V1 -> V2', () => {
       status: 'active',
       updatedAt: 1,
       visitedSections: [],
+      sceneVisits: [],
       captureIds: [],
       questions: [],
     } as Session);

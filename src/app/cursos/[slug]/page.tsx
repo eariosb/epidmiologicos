@@ -12,6 +12,8 @@ import {
   getAdjacentModules,
   blockForOrder,
 } from '@/lib/modules';
+import { remarkModuleRefs } from '@/lib/remark-module-refs';
+import { remarkAutoTerms } from '@/lib/remark-auto-terms';
 import { mdxComponents } from '@/components/mdx-components';
 import { TableOfContents } from '@/components/TableOfContents';
 import { AppLayout } from '@/components/AppLayout';
@@ -80,7 +82,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
                 // los MDX (props de CodeBlock, Quiz, DataTable, etc.).
                 blockJS: false,
                 mdxOptions: {
-                  remarkPlugins: [remarkMath, remarkGfm],
+                  remarkPlugins: [remarkMath, remarkGfm, remarkModuleRefs, remarkAutoTerms],
                   rehypePlugins: [rehypeKatex, rehypeSlug],
                 },
               }}

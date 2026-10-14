@@ -120,6 +120,9 @@ export function computeClaims(): Record<string, number> {
       num += w * rd;
       den += w;
     }
+    // Magnitud del exceso de mortalidad (rd tratamiento−control > 0 = daño).
+    // El DecisionPanel usa la convención ARR = control−tratamiento = −rd;
+    // aquí se guarda la magnitud porque la prosa la enuncia ("mata a ~2.9").
     c['m5.lidocaina.rd'] = num / den;
     c['m5.lidocaina.nnh'] = den / num;
   }

@@ -20,6 +20,7 @@ import {
   CorrectionExplorer,
   CIMethodsExplorer,
 } from '@/components/ExactSims'
+import { MultinomCIExplorer } from '@/components/AuditSims'
 
 
 <Callout type="tip" title="Exacto describe el cómputo, no la adecuación">
@@ -370,6 +371,75 @@ cat(sprintf("Cobertura minima en p: Wald = %.2f   Wilson = %.2f (nominal .95)\\n
 # Wilson oscila cerca de .95; Wald cae muy por debajo en p extremos. La
 # cobertura nominal es un promedio esperado, no una garantia puntual.`}
 />
+
+## De una proporción a cuatro serotipos: la multinomial
+
+En vigilancia la pregunta rara vez es una sola proporción. Un
+laboratorio que tipifica muestras de dengue reporta cuatro números
+a la vez: la fracción de DENV-1, DENV-2, DENV-3 y DENV-4
+circulando. La pregunta inferencial cambia de forma: ya no es
+"¿dónde está p?" sino "¿dónde está el vector π completo?". Y ahí
+aparece la primera trampa: construir un IC del 95% por serotipo
+**no** produce cuatro intervalos simultáneos al 95%. La
+probabilidad de que los cuatro cubran a la vez es, en el mejor de
+los casos, del orden de $0.95^4 \approx 0.81$ — y peor en la
+práctica, porque los conteos de una multinomial no son
+independientes.
+
+La literatura ofrece métodos genuinamente simultáneos. El estudio
+de González, Correa &amp; Vélez (2015), en la *Revista de la
+Facultad de Ciencias* de la UNAL, comparó trece de ellos por
+simulación —nivel real frente a nominal, longitud, y un índice que
+combina ambos— con dos hallazgos que interesan aquí: los intervalos
+basados directamente en el TCL rinden mal, y los métodos
+recomendables (los basados en la F de Leemis, la verosimilitud
+relativa y Quesenberry–Hurst) mantienen la cobertura incluso cuando
+hay celdas con poca masa. La segunda trampa es exactamente esa:
+cuando la distribución de serotipos se desequilibra —una variante
+dominante y otra rara con conteos cercanos a cero— la entropía de
+π cae y con ella la cobertura real de los métodos que confían en
+la normalidad.
+
+<MultinomCIExplorer title={<>Vigilancia de serotipos: cobertura simultánea bajo desequilibrio</>} />
+
+<RCell
+  id="06/ic-multinomial"
+  title="ICs simultáneos multinomiales en R base"
+  code={`# Vigilancia de serotipos: n aislamientos tipificados en k
+# categorias. X ~ Multinomial(n, pi). IC simultaneo = los k
+# intervalos cubren el vector pi COMPLETO a la vez.
+x <- c(34, 12, 10, 4); n <- sum(x); k <- length(x)
+
+# TCL por celda (la version ingenua: no es simultanea)
+z  <- qnorm(0.975)
+ph <- x / n
+ci_tcl <- ph + outer(c(-1, 1), z * sqrt(ph * (1 - ph) / n))
+
+# Quesenberry-Hurst (1964): forma cuadratica con B = chi2_{k-1}
+quad <- function(x, n, B) {
+  d <- sqrt(B * (B + 4 * x * (n - x) / n))
+  rbind(lo = (B + 2 * x - d) / (2 * (n + B)),
+        hi = (B + 2 * x + d) / (2 * (n + B)))
+}
+ci_qh <- quad(x, n, qchisq(0.95, k - 1))
+
+# Goodman (1965): misma forma con B = z^2_{1-a/(2k)} (Bonferroni)
+ci_go <- quad(x, n, qnorm(1 - 0.05 / (2 * k))^2)
+
+round(rbind(TCL = ci_tcl, QH = ci_qh, Goodman = ci_go), 3)
+# Interpretacion: QH y Goodman garantizan cobertura SIMULTANEA;
+# el TCL por celda no promete nada sobre el vector completo.`}
+/>
+
+<Callout type="warning" title="La celda rara manda">
+Con una variante casi ausente el problema no es estimar su π —el
+método de Clopper–Pearson del módulo anterior ya muestra cómo
+intervalar un cero observado— sino que la cobertura *simultánea*
+del conjunto se degrada: un solo intervalo que falle rompe el
+vector. La auditoría del simulador lo cuantifica: a igual n, el
+desequilibrio de π (medido por la entropía $H = -\sum \pi_j \ln
+\pi_j$) es el factor que más separa nominal de empírico.
+</Callout>
 
 ## Potencia prospectiva, potencia observada y la dimensión ética
 

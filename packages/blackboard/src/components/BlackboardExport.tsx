@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { useBlackboardContext } from '../lib/context';
+import { copyText } from '../lib/clipboard';
 
 interface BlackboardExportProps {
   onClose?: () => void;
@@ -40,9 +41,10 @@ export function BlackboardExport({ onClose, canvasRef }: BlackboardExportProps) 
   };
 
   const handleCopy = async (text: string, key: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 1500);
+    if (await copyText(text)) {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 1500);
+    }
   };
 
   const lastLatex = extractLastBlock(state.llmMessages, '$$', '$$');

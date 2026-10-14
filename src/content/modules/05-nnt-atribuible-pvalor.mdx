@@ -34,8 +34,9 @@ El <Term k="NNT">NNT</Term> (number needed to treat) invierte la
 diferencia de riesgos: $NNT = 1/RD$, el número de pacientes que hay que
 tratar para evitar un evento. Es la traducción clínica directa del <Term k="RD">RD</Term>.
 
-<Callout type="tip" title="El mismo RR, dos mundos clínicos (Molinero)">
-Compara dos escenarios. En el primero, el 4% de los pacientes abandona el
+<Callout type="tip" title="El mismo RR, dos mundos clínicos (Molinero, otro ejemplo)">
+Este es otro ejemplo del texto de Molinero — distinto del del módulo 4
+(infarto × exposición). Compara dos escenarios. En el primero, el 4% de los pacientes abandona el
 tratamiento estándar y el 3% abandona el nuevo: el <Term k="RR">RR</Term> es 4/3 = 1.33.
 En el segundo, el abandono es 20% vs. 15%: el RR también es 20/15 = 1.33.
 Los dos escenarios producen **el mismo número**.
@@ -71,7 +72,7 @@ de clase sobre tabaquismo materno y bajo peso al nacer lo ilustra. El
 script calcula riesgos, RR y OR, y deriva PRA, PRAP y NNH a partir de la
 prevalencia de exposición observada en la propia tabla — ahora con su
 incertidumbre: el principio 4 exige IC también para estas medidas. Como la
-exposición es dañina, el inverso del RD es **NNH** (number needed to harm),
+exposición es dañina, el inverso del RD es <Term k="NNH">**NNH**</Term> (number needed to harm),
 no NNT. El PRAP tiene IC según el diseño: en cohorte se usa el de Walter
 (la función `attributable()` del curso); en casos y controles, donde no
 hay riesgos, el de Kleinbaum–Kupper sobre el OR — aquí con el factor
@@ -383,25 +384,28 @@ paso a paso, y produce el resultado que ningún ensayo individual mostró.
 <RCell
   id="05/decision-lidocaina"
   title="El exceso de mortalidad que nadie vio por separado"
-  code={`# Hine et al. (1989), Tabla I de Normand (1999): RD por ensayo.
+  code={`# Hine et al. (1989), Tabla I de Normand (1999): ARR por ensayo.
+# Convencion del curso: ARR = riesgo_control - riesgo_tratamiento
+# (ARR > 0 = beneficio; ARR < 0 = danio). Misma convencion del NNT.
 a <- c(2,4,6,7,7,11);  n1 <- c(39,44,107,103,110,154)   # muertes lidocaina
 c <- c(1,4,4,5,3,4);   n2 <- c(43,44,110,100,106,146)  # muertes control
 
-rd_k <- a/n1 - c/n2                        # RD de cada ensayo
-v_k  <- a*(n1-a)/n1^3 + c*(n2-c)/n2^3      # varianza del RD
+arr_k <- c/n2 - a/n1                       # ARR de cada ensayo
+v_k  <- a*(n1-a)/n1^3 + c*(n2-c)/n2^3      # varianza (identica al RD)
 w    <- 1/v_k                              # peso inverso-varianza
-RD   <- sum(w*rd_k)/sum(w);  se <- sqrt(1/sum(w))
+ARR  <- sum(w*arr_k)/sum(w);  se <- sqrt(1/sum(w))
 
-cat(sprintf("RD combinado = %+.2f pp  IC95%% (%.2f, %.2f) pp\\n",
-            100*RD, 100*(RD-1.96*se), 100*(RD+1.96*se)))
-cat(sprintf("La lidocaina AUMENTA mortalidad: NNH = %.0f (IC %.0f a %.0f)\\n",
-            1/RD, 1/(RD+1.96*se), 1/(RD-1.96*se)))
+cat(sprintf("ARR combinada = %+.2f pp  IC95%% (%.2f, %.2f) pp\\n",
+            100*ARR, 100*(ARR-1.96*se), 100*(ARR+1.96*se)))
+cat(sprintf("ARR < 0: la lidocaina DANA. NNH = %.0f (IC %.0f a %.0f)\\n",
+            -1/ARR, -1/(ARR-1.96*se), -1/(ARR+1.96*se)))
 cat("Ningun ensayo solo era significativo; el acumulado si.\\n")`}
 />
 
-<SasBlock code={`data hine;
+<SasBlock code={`/* Misma convencion: ARR = control - tratamiento */
+data hine;
   input a n1 c n2;
-  rd = a/n1 - c/n2;
+  arr = c/n2 - a/n1;
   v  = a*(n1-a)/n1**3 + c*(n2-c)/n2**3;
   w  = 1/v;
   datalines;
@@ -413,8 +417,8 @@ cat("Ningun ensayo solo era significativo; el acumulado si.\\n")`}
 11 154 4 146
 ;
 proc sql;
-  select sum(w*rd)/sum(w)*100 as RD_pp format=8.2,
-         1/calculated RD_pp *100 as NNH format=8.0
+  select sum(w*arr)/sum(w)*100 as ARR_pp format=8.2,
+         -100/calculated ARR_pp as NNH format=8.0
   from hine;
 quit;`} />
 

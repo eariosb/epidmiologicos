@@ -27,6 +27,19 @@ export interface BoardEvent {
   kind: BoardEventKind;
   message: string;
   data?: Record<string, unknown>;
+  /** Active class session when the event fired; lets diagnostics answer
+   *  "what happened in THIS class". Null outside a session context. */
+  sessionId?: string;
+}
+
+/**
+ * The active class session, set by the session store whenever the pointer
+ * moves. Events logged afterwards carry it until it changes.
+ */
+let currentSessionId: string | null = null;
+
+export function setEventSession(id: string | null): void {
+  currentSessionId = id;
 }
 
 export interface EventLog {
@@ -59,7 +72,13 @@ export async function logEvent(
   message: string,
   data?: Record<string, unknown>,
 ): Promise<void> {
-  const ev: BoardEvent = { ts: Date.now(), kind, message, ...(data ? { data } : {}) };
+  const ev: BoardEvent = {
+    ts: Date.now(),
+    kind,
+    message,
+    ...(data ? { data } : {}),
+    ...(currentSessionId ? { sessionId: currentSessionId } : {}),
+  };
   if (!store) {
     memory.push(ev);
     if (memory.length > MAX_EVENTS) memory = memory.slice(-MAX_EVENTS);

@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { Sparkles, Search, Play, ChartColumn, Download, RotateCcw, Maximize2, X, Settings } from 'lucide-react';
+import { useState, type MouseEvent } from 'react';
+import { createPortal } from 'react-dom';
+import { Sparkles, Search, Play, ChartColumn, Calculator, Download, RotateCcw, Maximize2, X, Settings } from 'lucide-react';
 import { useBlackboardContext } from '../lib/context';
 import { useBlackboardLLM } from '../hooks/useBlackboardLLM';
 import type { AssistantMode } from '../types/blackboard';
+import { BlackboardCalculator } from './BlackboardCalculator';
 import { BlackboardExport } from './BlackboardExport';
 import { BlackboardSettingsPanel } from './BlackboardSettingsPanel';
 
@@ -17,8 +19,23 @@ interface BlackboardToolbarProps {
 export function BlackboardToolbar({ canvasRef, vertical }: Readonly<BlackboardToolbarProps>) {
   const { state, dispatch } = useBlackboardContext();
   const { ask } = useBlackboardLLM();
-  const [showExport, setShowExport] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  // Popovers render in a portal anchored to the trigger: the vertical rail
+  // has overflow-y-auto (clips horizontal popovers) and the canvas creates
+  // its own stacking context, so absolute-inside-toolbar popovers get
+  // clipped or painted under the canvas.
+  const [popover, setPopover] = useState<{
+    kind: 'calc' | 'export' | 'settings';
+    rect: DOMRect;
+  } | null>(null);
+
+  const togglePopover =
+    (kind: 'calc' | 'export' | 'settings') =>
+    (e: MouseEvent<HTMLElement>) => {
+      // Capture the rect synchronously: e.currentTarget is null by the time
+      // React runs a deferred state updater.
+      const rect = e.currentTarget.getBoundingClientRect();
+      setPopover((p) => (p?.kind === kind ? null : { kind, rect }));
+    };
 
   const handleAsk = async (mode: AssistantMode) => {
     const imageBlob = await canvasRef?.current?.getImage?.();
@@ -53,7 +70,10 @@ export function BlackboardToolbar({ canvasRef, vertical }: Readonly<BlackboardTo
         <ChartColumn aria-hidden className="h-4 w-4" />
       </ToolbarButton>
       <div className={vertical ? 'my-0.5 h-px w-6 bg-ink-300' : 'mx-1 h-4 w-px bg-ink-300'} />
-      <ToolbarButton onClick={() => setShowExport((v) => !v)} title="Exportar">
+      <ToolbarButton onClick={togglePopover('calc')} title="Calculadora">
+        <Calculator aria-hidden className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton onClick={togglePopover('export')} title="Exportar">
         <Download aria-hidden className="h-4 w-4" />
       </ToolbarButton>
       <ToolbarButton onClick={handleClear} title="Limpiar lienzo">
@@ -74,22 +94,44 @@ export function BlackboardToolbar({ canvasRef, vertical }: Readonly<BlackboardTo
       </ToolbarButton>
 
       <ToolbarButton
-        onClick={() => setShowSettings((v) => !v)}
+        onClick={togglePopover('settings')}
         title="Configuración"
       >
         <Settings aria-hidden className="h-4 w-4" />
       </ToolbarButton>
 
-      {showExport && (
-        <div className={`absolute z-50 ${vertical ? 'right-full top-0 mr-1' : 'right-0 top-full'}`}>
-          <BlackboardExport onClose={() => setShowExport(false)} canvasRef={canvasRef} />
-        </div>
-      )}
-      {showSettings && (
-        <div className={`absolute z-50 ${vertical ? 'right-full top-0 mr-1' : 'right-0 top-full'}`}>
-          <BlackboardSettingsPanel onClose={() => setShowSettings(false)} />
-        </div>
-      )}
+      {popover &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed z-[70]"
+            style={
+              vertical
+                ? {
+                    top: popover.rect.top,
+                    right: window.innerWidth - popover.rect.left + 6,
+                  }
+                : {
+                    top: popover.rect.bottom + 4,
+                    right: window.innerWidth - popover.rect.right,
+                  }
+            }
+          >
+            {popover.kind === 'calc' && (
+              <BlackboardCalculator onClose={() => setPopover(null)} />
+            )}
+            {popover.kind === 'export' && (
+              <BlackboardExport
+                onClose={() => setPopover(null)}
+                canvasRef={canvasRef}
+              />
+            )}
+            {popover.kind === 'settings' && (
+              <BlackboardSettingsPanel onClose={() => setPopover(null)} />
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -100,7 +142,7 @@ function ToolbarButton({
   title,
 }: Readonly<{
   children: React.ReactNode;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLElement>) => void;
   title?: string;
 }>) {
   return (

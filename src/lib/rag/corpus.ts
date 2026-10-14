@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { getAllModules, getModuleSource } from '@/lib/modules';
 import { bibliographyToDocs } from '@/lib/rag/bibliography';
 import { ANEXOS } from '@/lib/anexos';
+import { GLOSSARY_SECTIONS } from '@/lib/glossary';
 import type { RagDoc } from '@cursos/blackboard/rag';
 
 export function stripMdx(text: string): string {
@@ -158,5 +159,21 @@ export function buildCorpus(): RagDoc[] {
   }
   docs.push(...bibliographyToDocs());
   docs.push(...anexosToDocs());
+  docs.push(...glossaryToDocs());
   return docs;
+}
+
+/**
+ * Glossary docs: one doc per section so a "qué es X" query retrieves the
+ * definition together with its neighboring terms.
+ */
+function glossaryToDocs(): RagDoc[] {
+  return GLOSSARY_SECTIONS.map((s, i) => ({
+    id: `glosario:${i}`,
+    source: 'anexo' as const,
+    text: `Glosario — ${s.titulo}. ${Object.entries(s.entradas)
+      .map(([k, def]) => `${k}: ${def}`)
+      .join(' ')}`,
+    meta: { heading: s.titulo, archivo: 'glosario' },
+  }));
 }

@@ -10,13 +10,19 @@ export interface QuizProps {
   options: string[];
   correctIndex: number;
   explanation: string;
+  /**
+   * Nota opcional por opción (mismo orden que `options`): se muestra bajo
+   * cada opción tras enviar, para explicar también por qué falla cada
+   * distractor — no solo por qué acierta la correcta.
+   */
+  optionNotes?: (string | undefined)[];
 }
 
 /**
  * Pregunta de opción múltiple con retroalimentación inmediata y explicación.
  * Cierre metacognitivo estándar de cada módulo.
  */
-export function Quiz({ question, options, correctIndex, explanation }: QuizProps) {
+export function Quiz({ question, options, correctIndex, explanation, optionNotes }: QuizProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
@@ -48,7 +54,14 @@ export function Quiz({ question, options, correctIndex, explanation }: QuizProps
               onChange={() => setSelected(i)}
               className="mt-0.5 accent-brand-600"
             />
-            <span className="text-ink-700"><MathText text={opt} /></span>
+            <span className="text-ink-700">
+              <MathText text={opt} />
+              {submitted && optionNotes?.[i] && (
+                <span className="mt-0.5 block text-xs text-ink-500">
+                  <MathText text={optionNotes[i]!} />
+                </span>
+              )}
+            </span>
           </label>
         ))}
       </fieldset>

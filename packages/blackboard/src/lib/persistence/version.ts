@@ -4,7 +4,7 @@
  */
 export const SCHEMA_VERSIONS = {
   scene: 3,
-  session: 2,
+  session: 3,
   capture: 2,
   settings: 1,
   chat: 1,

@@ -75,6 +75,58 @@ export const LECTURAS: SeccionLecturas[] = [
     ],
   },
   {
+    titulo: 'Los clásicos de la disciplina',
+    nota: 'Los casos y textos que la narrativa de los módulos usa como anclas históricas.',
+    entradas: [
+      {
+        cita: 'Snow J. On the Mode of Communication of Cholera. 2.ª ed. London: John Churchill; 1855.',
+        nota: 'El análisis de la bomba de Broad Street; punto de partida del módulo 1.',
+      },
+      {
+        cita: 'Doll R, Hill AB. Smoking and carcinoma of the lung: preliminary report. BMJ. 1950;2(4682):739–748; y Doll R, Hill AB. The mortality of doctors in relation to their smoking habits: a preliminary report. BMJ. 1954;1(4877):1451–1455.',
+        doi: '10.1136/bmj.2.4682.739',
+        nota: 'El caso-control y la cohorte que fundaron la epidemiología moderna.',
+      },
+      {
+        cita: 'Hill AB. The environment and disease: association or causation? Proc R Soc Med. 1965;58(5):295–300.',
+        doi: '10.1177/003591576505800503',
+        nota: 'Las consideraciones causales que el curso trata como argumento, no checklist.',
+      },
+      {
+        cita: 'Sackett DL. Bias in analytic research. J Chronic Dis. 1979;32(1-2):51–63.',
+        doi: '10.1016/0021-9681(79)90012-2',
+        nota: 'El catálogo de sesgos del módulo 14.',
+      },
+      {
+        cita: 'Mantel N, Haenszel W. Statistical aspects of the analysis of data from retrospective studies of disease. J Natl Cancer Inst. 1959;22(4):719–748.',
+        doi: '10.1093/jnci/22.4.719',
+        nota: 'Estratificación y el estimador retrospectivo de los módulos 8 y 15.',
+      },
+      {
+        cita: 'Breslow NE, Day NE. Statistical Methods in Cancer Research. Vol. I: The Analysis of Case-Control Studies. Lyon: IARC; 1980.',
+        nota: 'El test de homogeneidad del módulo 10 y la referencia técnica del diseño.',
+      },
+      {
+        cita: 'Centers for Disease Control and Prevention. Principles of Epidemiology in Public Health Practice. 3.ª ed. Atlanta: CDC; 2006 (SS1978).',
+        nota: 'El ejemplo de Oswego y la tasa de ataque del módulo 3.',
+      },
+      {
+        cita: 'Molinero (2001), citado en Woodward: OR vs. RR bajo los tres diseños (infarto × tabaquismo), n = 728.',
+        nota: 'El ejemplo ancla del módulo 4; la comparación de potencia entre diseños.',
+      },
+      {
+        cita: 'Kaufman DW, Helmrich SP, Rosenberg L, Miettinen OS, Shapiro S. Nicotine and carbon monoxide content of cigarette smoke and the risk of myocardial infarction in young men. N Engl J Med. 1983;308(8):409–413.',
+        doi: '10.1056/NEJM198302173080701',
+        nota: 'El ejemplo de ajuste multivariante del módulo 16.',
+      },
+      {
+        cita: 'Yepes López D. Epidemiología Aplicada. Zenodo; 2025.',
+        doi: '10.5281/zenodo.18078247',
+        nota: 'El texto latinoamericano abierto que cierra el módulo 19.',
+      },
+    ],
+  },
+  {
     titulo: 'Datos longitudinales y exposiciones que cambian en el tiempo',
     entradas: [
       {
@@ -254,6 +306,70 @@ export const LECTURAS: SeccionLecturas[] = [
         cita: 'Wasserstein RL, Lazar NA. The ASA statement on p-values. Am Stat. 2016;70(2):129–133.',
         doi: '10.1080/00031305.2016.1154108',
       },
+      {
+        cita: 'Wilkinson MD, Dumontier M, Aalbersberg IJ, et al. The FAIR Guiding Principles for scientific data management and stewardship. Sci Data. 2016;3:160018.',
+        doi: '10.1038/sdata.2016.18',
+        nota: 'El estándar de datos encontrables y reutilizables del módulo 18.',
+      },
+    ],
+  },
+  {
+    titulo: 'Inferencia exacta y auditoría por simulación',
+    nota: 'El andamiaje del módulo 6 y de los auditores del curso: el nivel real de un procedimiento contra el nivel que promete.',
+    entradas: [
+      {
+        cita: 'Fisher RA. The Design of Experiments. Edinburgh: Oliver & Boyd; 1935.',
+        nota: 'La justificación original del condicionamiento sobre los márgenes.',
+      },
+      {
+        cita: 'Boschloo RD. Raised conditional level of significance for the 2×2-table when testing the equality of two probabilities. Stat Neerl. 1970;24(1):1–35.',
+        nota: 'El test incondicional ordenado por el valor p de Fisher.',
+      },
+      {
+        cita: 'Berger RL, Boos DD. P values maximized over a confidence set for the nuisance parameter. J Am Stat Assoc. 1994;89(427):1012–1016.',
+        doi: '10.1080/01621459.1994.10476836',
+      },
+      {
+        cita: 'Mehrotra DV, Chan ISF, Berger RL. A cautionary note on exact unconditional inference for a difference between two independent binomial proportions. Biometrics. 2003;59(2):441–450.',
+        doi: '10.1111/1541-0420.00051',
+        nota: 'La comparación técnica de los incondicionales del mapa de procedimientos.',
+      },
+      {
+        cita: 'Coscrato V, Izbicki R, Stern RB. Agnostic tests can control the type I and type II errors simultaneously. Stat Sin. 2019;29(1):163–173.',
+        nota: 'La tercera respuesta honesta: "la muestra no decide".',
+      },
+      {
+        cita: 'Brown LD, Cai TT, DasGupta A. Interval estimation for a binomial proportion. Stat Sci. 2001;16(2):101–133.',
+        doi: '10.1214/ss/1009213286',
+        nota: 'Por qué Wald falla aun con n moderado; la base de la comparación de métodos de IC.',
+      },
+      {
+        cita: 'Correa JC, Sierra E. Intervalos de confianza para el parámetro de la distribución binomial. Rev Colomb Estad. 2001;24(1):59–72; e Intervalos de confianza para la comparación de dos proporciones. Rev Colomb Estad. 2003;26(1):61–75.',
+        nota: 'Cobertura real vs. nominal auditada por simulación; cita del módulo 4.',
+      },
+      {
+        cita: 'Cepeda-Cuervo E, Núñez-Antón V, Rodríguez D. Intervalos de confianza e intervalos de credibilidad para una proporción. Rev Colomb Estad. 2008;31(2):211–228.',
+        nota: 'Wald contra sus alternativas frecuentistas y bayesianas.',
+      },
+      {
+        cita: 'Quesenberry CP, Hurst DC. Large sample simultaneous confidence intervals for multinomial proportions. Technometrics. 1964;6(2):191–195; y Goodman LA. On simultaneous confidence intervals for multinomial proportions. Technometrics. 1965;7(2):247–254.',
+        doi: '10.1080/00401706.1964.10490163',
+        nota: 'Los dos métodos clásicos de IC simultáneo del módulo 6.',
+      },
+      {
+        cita: 'Sison CP, Glaz J. Simultaneous confidence intervals and sample size determination for multinomial proportions. J Am Stat Assoc. 1995;90(429):366–369.',
+        doi: '10.1080/01621459.1995.10476521',
+      },
+      {
+        cita: 'González-Gómez D, Correa JC, Vélez JI. Comparación de 13 intervalos de confianza para los parámetros de la distribución multinomial. Rev Fac Cienc (UNAL). 2015;4(2):150–163.',
+        doi: '10.15446/rev.fac.cienc.v4n2.51911',
+        nota: 'El estudio de simulación tras el laboratorio de serotipos del módulo 6.',
+      },
+      {
+        cita: 'Vélez JI, Correa JC. Inferencia para datos agrupados vía bootstrap. Rev Fac Cienc (UNAL). 2015;4(2).',
+        doi: '10.15446/rev.fac.cienc.v4n2.54254',
+        nota: 'Bootstrap como herramienta de inferencia; contexto de la prueba de estrés del módulo 14.',
+      },
     ],
   },
   {
@@ -343,6 +459,49 @@ export const LECTURAS: SeccionLecturas[] = [
         cita: 'Morris TP, White IR, Crowther MJ. Using simulation studies to evaluate statistical methods. Stat Med. 2019;38(11):2074–2102.',
         doi: '10.1002/sim.8086',
         nota: 'Las buenas prácticas del laboratorio de verdad conocida.',
+      },
+    ],
+  },
+  {
+    titulo: 'Síntesis de evidencia y decisiones',
+    nota: 'El bloque del módulo 17: meta-análisis, incertidumbre cuantificada y garantías de diseño.',
+    entradas: [
+      {
+        cita: 'Normand S-LT. Meta-analysis: formulating, evaluating, combining, and reporting. Stat Med. 1999;18(3):321–359.',
+        nota: 'El tutorial clásico con el que se contrasta la tabla de software del módulo 18.',
+      },
+      {
+        cita: 'DerSimonian R, Laird N. Meta-analysis in clinical trials. Control Clin Trials. 1986;7(3):177–188.',
+        doi: '10.1016/0197-2456(86)90046-2',
+        nota: 'El estimador de momentos de τ² —y el origen de su falla de admisibilidad.',
+      },
+      {
+        cita: 'Paule RC, Mandel J. Consensus values and weighting factors. J Res Natl Bur Stand. 1982;87(5):377–385.',
+        doi: '10.6028/jres.087.022',
+        nota: 'La alternativa iterativa de τ² que el auditor del módulo 17 compara.',
+      },
+      {
+        cita: 'Hartung J, Knapp G. A refined method for the meta-analysis of controlled clinical trials with binary outcome. Stat Med. 2001;20(24):3875–3889.',
+        doi: '10.1002/sim.1009',
+        nota: 'El IC del combinado que corrige la subcobertura con k chico.',
+      },
+      {
+        cita: 'Langan D, Higgins JPT, Jackson D, et al. A comparison of heterogeneity variance estimators in simulated random-effects meta-analyses. Res Synth Methods. 2019;10(1):83–98.',
+        doi: '10.1002/jrsm.1316',
+      },
+      {
+        cita: 'Veroniki AA, Jackson D, Viechtbauer W, et al. Methods to estimate the between-study variance and its uncertainty in meta-analysis. Res Synth Methods. 2016;7(1):55–79.',
+        doi: '10.1002/jrsm.1164',
+        nota: 'Las revisiones que documentan a escala la fragilidad de τ̂² con pocos estudios.',
+      },
+      {
+        cita: 'O’Hagan A, Stevens JW, Campbell MJ. Assurance in clinical trial design. Pharm Stat. 2005;4(3):187–201.',
+        doi: '10.1002/pst.175',
+        nota: 'La garantía promedio que cierra el ciclo del diseño.',
+      },
+      {
+        cita: 'Izbicki R. Machine Learning Beyond Point Predictions: Uncertainty Quantification. 2025.',
+        nota: 'El marco de UQ del módulo 17; predicción conforme sin supuestos distribucionales.',
       },
     ],
   },
@@ -464,6 +623,31 @@ export const ENLACES: { titulo: string; items: Enlace[] }[] = [
         nombre: 'webR',
         url: 'https://docs.r-wasm.org/webr/latest/',
         nota: 'R compilado a WebAssembly: así corre R en tu navegador.',
+      },
+    ],
+  },
+  {
+    titulo: 'Manuales y datos abiertos',
+    items: [
+      {
+        nombre: 'The Epidemiologist R Handbook',
+        url: 'https://epirhandbook.com',
+        nota: 'Manual abierto de epidemiología aplicada con R; complemento de los ejercicios de campo.',
+      },
+      {
+        nombre: 'ColOpenData',
+        url: 'https://epiverse-trace.github.io/ColOpenData/',
+        nota: 'Datos sociodemográficos, geográficos y climáticos de Colombia, empaquetados para R.',
+      },
+      {
+        nombre: 'EpiNow2',
+        url: 'https://epiforecasts.io/EpiNow2/',
+        nota: 'Estimación de Rt y nowcasting; la frontera de vigilancia del módulo 19.',
+      },
+      {
+        nombre: 'Epiverse-TRACE',
+        url: 'https://epiverse-trace.github.io',
+        nota: 'El ecosistema de herramientas abiertas para análisis de brotes.',
       },
     ],
   },

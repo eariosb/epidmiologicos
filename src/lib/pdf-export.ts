@@ -24,10 +24,13 @@ function fitImage(
 }
 
 function addCover(doc: jsPDF, session: Awaited<ReturnType<typeof getActiveSession>>, margin: number) {
+  const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFontSize(22);
-  doc.text(session?.title ?? 'Reporte de sesión', margin, 30);
+  // Long titles must wrap, not overflow the page edge.
+  const titleLines = doc.splitTextToSize(session?.title ?? 'Reporte de sesión', pageWidth - margin * 2);
+  doc.text(titleLines, margin, 30);
   doc.setFontSize(12);
-  let y = 40;
+  let y = 32 + titleLines.length * 8;
   doc.text(`Generado: ${new Date().toLocaleString()}`, margin, y);
   y += 8;
   if (session?.courseId) {
@@ -49,9 +52,10 @@ function addSections(
   pageHeight: number,
   margin: number,
 ) {
+  if (sections.length === 0) return;
   doc.addPage();
   doc.setFontSize(16);
-  doc.text('Secciones navegadas', margin, 20);
+  doc.text('Recorrido de la clase', margin, 20);
   doc.setFontSize(10);
   let y = 30;
   for (const section of sections) {
@@ -59,7 +63,7 @@ function addSections(
       doc.addPage();
       y = 20;
     }
-    doc.text(`• ${section.title} (${section.slug})`, margin, y);
+    doc.text(`• ${section.title} (${section.slug}) · ${new Date(section.timestamp).toLocaleTimeString()}`, margin, y);
     y += 6;
   }
 }
@@ -109,7 +113,9 @@ async function addCaptures(
   doc.text('Capturas', margin, 20);
   let y = 30;
   for (const { cap, img } of images) {
-    if (y > pageHeight - 60) {
+    // Break BEFORE the block overflows: compute its real height first.
+    const imgH = img ? fitImage(img, pageWidth - margin * 2, 80).height + 10 : 6;
+    if (y + 12 + imgH > pageHeight - 15) {
       doc.addPage();
       y = 20;
     }
@@ -134,7 +140,8 @@ function addQuestions(
       doc.addPage();
       y = 20;
     }
-    const mark = q.resolved ? '✓' : '•';
+    // WinAnsi has no U+2713: an ASCII mark prints correctly, a glyph doesn't.
+    const mark = q.resolved ? '[x]' : '[ ]';
     doc.text(`${mark} ${q.text}  (${new Date(q.timestamp).toLocaleTimeString()})`, margin, y);
     y += 6;
   }

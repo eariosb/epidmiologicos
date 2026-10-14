@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import katex from 'katex';
 import clsx from 'clsx';
 import { latexToDataUrl } from '@/lib/latex-image';
+import { copyText } from '@/lib/clipboard';
 import type { BlackboardCanvasRef } from '@cursos/blackboard';
 
 type MatrixType = 'CS' | 'AR1' | 'UN' | 'TOEP' | 'ARH1' | 'custom';
@@ -176,11 +177,11 @@ export function MatrixBuilder({ initialSize = 4, canvasRef, initialValues, editE
   }, [canvasRef, generated, latex, editElementId, onDone]);
 
   const handleCopyR = async () => {
-    await navigator.clipboard.writeText(rCode);
+    await copyText(rCode);
   };
 
   const handleCopyLaTeX = async () => {
-    await navigator.clipboard.writeText(latex);
+    await copyText(latex);
   };
 
   return (

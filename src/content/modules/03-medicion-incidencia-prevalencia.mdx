@@ -11,7 +11,7 @@ prerequisites: ["Módulo 2: Diseños"]
 import { Callout } from '@/components/Callout'
 import { Quiz } from '@/components/Quiz'
 import { Flashcard } from '@/components/Flashcard'
-import { PrevalenceExplorer } from '@/components/EpiSims'
+import { PrevalenceExplorer, DiagnosticTestExplorer } from '@/components/EpiSims'
 import { RCell } from '@/components/RCell'
 import { LabExercise } from '@/components/LabExercise'
 import { SasBlock } from '@/components/SasBlock'
@@ -406,6 +406,61 @@ mezcla "tener la enfermedad" con "vivir mucho con ella".
 → **Conecta con M9** (la estandarización corrige comparaciones de
 prevalencias entre poblaciones) y **M17** (meta-análisis de
 prevalencias).
+
+## La prevalencia también calibra la prueba diagnóstica
+
+La prevalencia no solo se mide: decide cuánto vale un resultado
+positivo. Una prueba se describe con <Term k="Se">**sensibilidad**</Term>
+$Se = P(T^+ \mid E)$ —detecta al enfermo— y <Term k="Sp">**especificidad**</Term>
+$Sp = P(T^- \mid S)$ —descarta al sano—, ambas propiedades del
+instrumento. Pero lo que el paciente pregunta es la probabilidad en el
+otro sentido: el <Term k="VPP">**valor predictivo positivo**</Term> $VPP = P(E \mid T^+)$,
+que por el teorema de Bayes depende de la prevalencia:
+
+$$VPP = \frac{Se \cdot prev}{Se \cdot prev + (1 - Sp)(1 - prev)}$$
+
+Mueve los tres controles y mira qué manda: en enfermedad rara ni Se ni
+Sp rescatan el VPP — los falsos positivos vienen del mar de sanos.
+
+<DiagnosticTestExplorer
+  title={<>Tamización en población de bajo riesgo: Se, Sp y prevalencia → VPP</>}
+/>
+
+Para decisiones la medida útil es la <Term k="LR">**razón de verosimilitud**</Term>:
+$LR^+ = Se/(1 - Sp)$ cuánto multiplica el resultado positivo los odds
+de enfermedad, y $LR^- = (1 - Se)/Sp$ lo mismo para el negativo — ambas
+independientes de la prevalencia (esa es su ventaja sobre el VPP):
+
+<RCell
+  id="03/prueba-diagnostica"
+  title="De Se/Sp a VPP y razones de verosimilitud"
+  code={`# Se = 0.95, Sp = 0.95: la misma prueba, tres prevalencias.
+Se <- 0.95; Sp <- 0.95
+prev <- c(0.005, 0.02, 0.20)          # tamizaje, poblacional, consulta
+VPP  <- Se*prev / (Se*prev + (1-Sp)*(1-prev))
+VPN  <- Sp*(1-prev) / (Sp*(1-prev) + (1-Se)*prev)
+print(round(data.frame(prev, VPP, VPN), 3))
+
+# Las razones de verosimilitud no dependen de prev:
+LR_pos <- Se / (1 - Sp)               # cuanto multiplica los odds si +
+LR_neg <- (1 - Se) / Sp               # cuanto multiplica los odds si -
+cat(sprintf("LR+ = %.1f   LR- = %.3f\\n", LR_pos, LR_neg))
+
+# odds_post = odds_prev * LR: verifica que con prev=2% un positivo
+# solo lleva los odds de 0.0204 a 0.388 -> VPP = 0.388/1.388 = 0.28
+odds <- prev[2] / (1 - prev[2])
+cat("VPP via odds*LR+ =", round(odds*LR_pos / (1 + odds*LR_pos), 3), "\\n")`}
+/>
+
+<Callout type="note" title="Por eso la tamización se decide con números">
+El VPP no es propiedad de la prueba sino de **prueba × población**: la
+misma Se/Sp produce un VPP del 1% en tamización masiva y del 83% en
+consulta de alto riesgo. Quien reporta una prueba sin declarar la
+prevalencia del escenario deja la decisión a medias. → **Conecta con
+M16** (la curva ROC resume Se/Sp sobre todos los umbrales de un modelo)
+y con el análisis de sesgo de **M14** (Se/Sp mal medidas distorsionan
+el OR).
+</Callout>
 
 ## Producto del módulo
 

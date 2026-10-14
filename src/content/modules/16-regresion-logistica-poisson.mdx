@@ -204,6 +204,56 @@ proc logistic data=dat descending;
   model D = E sexo;
 run;`} />
 
+### La tercera vía: ajustar con pesos (<Term k="IPTW">IPTW</Term>)
+
+Estratificar (módulo 8) y modelar (este) son dos caras del mismo ajuste.
+La tercera —la que el módulo 2 prometió al hablar de emular el ensayo
+objetivo— es **reponderar la muestra**: el propensity score
+El <Term k="PS">propensity score</Term> $PS = P(E = 1 \mid C)$ estima con qué probabilidad cada sujeto recibió
+la exposición; pesar por $1/PS$ construye una *pseudopoblación* donde
+la exposición ya no depende del confusor — la asignación del ensayo,
+emulada.
+
+<RCell
+  id="16/iptw"
+  title="IPTW: la misma cohorte, ajustada por pesos"
+  code={`# Via 3 sobre los datos del lab: E confundido por sexo.
+set.seed(3); n <- 3000
+sexo <- rbinom(n, 1, 0.5)
+E    <- rbinom(n, 1, plogis(-0.5 + 0.9*sexo))
+D    <- rbinom(n, 1, plogis(-2 + 0.8*E + 1.2*sexo))
+dat  <- data.frame(E, D, sexo)
+
+# Propensity score P(E|C) y pesos estabilizados sw = P(E)/P(E|C):
+ps <- glm(E ~ sexo, data = dat, family = binomial)$fitted
+sw <- ifelse(E == 1, mean(E)/ps, (1-mean(E))/(1-ps))
+
+# Balance: en la pseudopoblacion, sexo ya no predice la exposicion
+cat("P(sexo=1 | brazo), sin peso:",
+    round(mean(sexo[E==1]),3), "vs", round(mean(sexo[E==0]),3), "\\n")
+cat("P(sexo=1 | brazo), con peso:",
+    round(weighted.mean(sexo[E==1], sw[E==1]),3), "vs",
+    round(weighted.mean(sexo[E==0], sw[E==0]),3), "\\n\\n")
+
+# Tres respuestas a la misma pregunta
+cat(sprintf("OR crudo     = %.2f (confundido)\\n",
+    exp(coef(glm(D ~ E,        data = dat, family = binomial))["E"])))
+cat(sprintf("OR regresion = %.2f\\n",
+    exp(coef(glm(D ~ E + sexo, data = dat, family = binomial))["E"])))
+cat(sprintf("OR IPTW      = %.2f\\n",
+    exp(coef(glm(D ~ E,        data = dat, family = binomial,
+                 weights = sw))["E"])))
+cat(sprintf("OR verdadero = %.2f (e^0.8: el mecanismo que genero los datos)\\n",
+    exp(0.8)))`}
+/>
+
+Regresión e IPTW responden la misma pregunta por caminos distintos:
+uno modela $E[D \mid E, C]$, el otro modela $E[E \mid C]$ y olvida el
+desenlace en el paso del ajuste. Con un solo confusor binario coinciden;
+con muchos confusores continuos el propensity score escala mejor — y su
+diagnóstico es otro: las tablas de balance (módulo 7) reemplazan al
+$R^2$.
+
 <ToolCard task="glm" />
 
 ## Cuando faltan datos en las covariables
@@ -248,7 +298,7 @@ La respuesta práctica, en orden:
 La regla práctica de Peduzzi (1996): al menos ~10
 <Term k="eventos_por_variable">eventos por variable</Term>. En
 `recid.csv` hay 114 arrestos para un modelo de 7 covariables — cómodo
-(≈16 EPV). Pero con 5 eventos y 3 covariables el estimador de
+(≈16 <Term k="EPV">EPV</Term>). Pero con 5 eventos y 3 covariables el estimador de
 máxima verosimilitud se sesga y el IC de Wald miente. Las salidas:
 
 - **Menos covariables, elegidas a priori** por la literatura, no por
@@ -279,4 +329,4 @@ coeficientes con OR/IRR + IC, comparación crudo vs ajustado, diagnóstico
 
 - **Woodward (2014), caps. 10–11**: regresión logística y Poisson en <Term k="SHHS">SHHS</Term>.
 - **Kaufman (1983)**: tabaco e infarto del miocardio con ajuste multivariante.
-- **Notas de clase (Salazar), clases 19–20**: glm en R y SAS.
+- **Notas de clase (Salazar), módulo 16**: glm en R y SAS.

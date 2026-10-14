@@ -1,12 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { History, X } from 'lucide-react';
+import { History, Route, X } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
+import { SessionReplay } from './SessionReplay';
+import type { Session } from '@/lib/session-store';
+import type { BlackboardCanvasRef } from '@cursos/blackboard';
 
-export function SessionManager() {
-  const { session, allSessions, loading, switchSession, removeSession } = useSession();
+interface SessionManagerProps {
+  canvasRef?: React.RefObject<BlackboardCanvasRef | null>;
+}
+
+export function SessionManager({ canvasRef }: Readonly<SessionManagerProps>) {
+  const { session, allSessions, loading, error, switchSession, removeSession } = useSession();
   const [open, setOpen] = useState(false);
+  const [replaySession, setReplaySession] = useState<Session | null>(null);
 
   return (
     <>
@@ -33,6 +41,8 @@ export function SessionManager() {
             </div>
             {loading ? (
               <p className="text-xs text-ink-500">Cargando…</p>
+            ) : error ? (
+              <p className="text-xs text-danger-600">{error}</p>
             ) : allSessions.length === 0 ? (
               <p className="text-xs text-ink-500">No hay sesiones guardadas.</p>
             ) : (
@@ -53,6 +63,15 @@ export function SessionManager() {
                       </p>
                     </div>
                     <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setReplaySession(s)}
+                        className="inline-flex items-center gap-1 rounded border border-ink-200 px-2 py-1 text-[10px] font-medium text-ink-600 hover:bg-ink-100"
+                        title="Recorrer la sesión paso a paso"
+                      >
+                        <Route aria-hidden className="h-3 w-3" />
+                        Recorrer
+                      </button>
                       {s.id !== session?.id && (
                         <button
                           type="button"
@@ -64,7 +83,12 @@ export function SessionManager() {
                       )}
                       <button
                         type="button"
-                        onClick={() => removeSession(s.id)}
+                        onClick={() => {
+                          // Deletes the session's captures and chat too.
+                          if (confirm(`¿Borrar «${s.title}»? Se eliminarán también sus capturas y el chat.`)) {
+                            void removeSession(s.id);
+                          }
+                        }}
                         className="rounded border border-danger-200 px-2 py-1 text-[10px] font-medium text-danger-500 hover:bg-danger-50"
                       >
                         Borrar
@@ -76,6 +100,14 @@ export function SessionManager() {
             )}
           </div>
         </div>
+      )}
+      {replaySession && (
+        <SessionReplay
+          session={replaySession}
+          isActive={replaySession.id === session?.id}
+          canvasRef={canvasRef}
+          onClose={() => setReplaySession(null)}
+        />
       )}
     </>
   );

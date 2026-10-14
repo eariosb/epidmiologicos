@@ -1,0 +1,3 @@
+Bajo H0 (delta=0):   rechaza 4.1% - tamano real vs 5% nominal
+Efecto 0.5 DE:       rechaza 26.4% - potencia empirica
+Efecto 1.0 DE:       rechaza 75.0% - potencia empirica

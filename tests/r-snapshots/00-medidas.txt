@@ -1,0 +1,7 @@
+pacientes recaidas semanas proporcion tasa_100s odds
+placebo        21       21     182      1.000     11.54  Inf
+6-MP           21        9     359      0.429      2.51 0.75
+
+RR  (razon de proporciones) = 0.43
+IRR (razon de tasas)        = 0.22
+OR  (razon de odds): no existe; el odds del placebo es infinito (21 de 21)

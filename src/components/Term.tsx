@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { GLOSSARY } from '@/lib/glossary';
+import Link from 'next/link';
+import { GLOSSARY, glossaryAnchor } from '@/lib/glossary';
 
 interface TermProps {
   /** Clave del glosario de siglas (src/lib/glossary.ts). */
@@ -12,17 +13,18 @@ interface TermProps {
 /**
  * Término con tooltip en hover/focus: subrayado punteado discreto en el
  * texto y, al pasar el cursor, la expansión de la sigla o el recorderis
- * historiográfico. CSS puro — sin estado, funciona en SSR y en lectores
- * de pantalla vía el sr-only y el tabIndex.
+ * historiográfico. Cuando la clave existe en el glosario el término
+ * además enlaza a /glosario#clave — el tooltip refresca y el clic lleva
+ * a la entrada completa, tejiendo el grafo interno del curso.
+ * CSS puro — sin estado, funciona en SSR y en lectores de pantalla vía
+ * el sr-only y el focus.
  */
 export function Term({ k, tip, children }: TermProps) {
   const text = tip ?? (k ? GLOSSARY[k] : undefined);
   const label = children ?? k;
-  return (
-    <span
-      tabIndex={0}
-      className="group relative inline cursor-help border-b border-dotted border-brand-600 decoration-1"
-    >
+  const href = k && k in GLOSSARY ? `/glosario#${glossaryAnchor(k)}` : null;
+  const inner = (
+    <>
       {label}
       {text && (
         <>
@@ -36,6 +38,23 @@ export function Term({ k, tip, children }: TermProps) {
           </span>
         </>
       )}
+    </>
+  );
+  const className =
+    'group relative inline cursor-help border-b border-dotted border-brand-600 decoration-1';
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={`${className} text-inherit no-underline hover:text-inherit focus-visible:text-inherit`}
+      >
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <span tabIndex={0} className={className}>
+      {inner}
     </span>
   );
 }

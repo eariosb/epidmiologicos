@@ -22,7 +22,7 @@ export default function HomePage() {
           &ldquo;Somos propensos a sobrestimar lo que entendemos del mundo y a
           subestimar el papel del azar en los acontecimientos.&rdquo;
           <footer className="mt-1 font-sans text-sm not-italic text-ink-500">
-            Daniel Kahneman, <em>Epidemiology</em> (2014)
+            Daniel Kahneman.
           </footer>
         </blockquote>
       </header>

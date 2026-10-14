@@ -21,7 +21,7 @@ export type { StoreName } from './lib/persistence/version';
 export { migrateRecord, MigrationError } from './lib/persistence/migrate';
 export type { MigrationChain, MigrationResult } from './lib/persistence/migrate';
 export { readScene, writeScene, sceneMigrations } from './lib/persistence/scene';
-export { logEvent, listEvents, clearEvents, onEventsChanged } from './lib/events';
+export { logEvent, listEvents, clearEvents, onEventsChanged, setEventSession } from './lib/events';
 export type { BoardEvent, BoardEventKind } from './lib/events';
 
 // Provider and hooks

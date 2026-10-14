@@ -12,6 +12,7 @@ import { Callout } from '@/components/Callout'
 import { Quiz } from '@/components/Quiz'
 import { Flashcard } from '@/components/Flashcard'
 import { MetaExplorer } from '@/components/EpiSims'
+import { Tau2Audit } from '@/components/AuditSims'
 import { RCell } from '@/components/RCell'
 import { LabExercise } from '@/components/LabExercise'
 import { SasBlock } from '@/components/SasBlock'
@@ -56,6 +57,38 @@ significativos tienden a no publicarse. El funnel plot (precisión frente
 a estimación) lo detecta: simetría en embudo si no hay sesgo, y un hueco
 en la esquina de los estudios pequeños negativos si hubo archivo en el
 cajón.
+</Callout>
+
+## El estimador de la heterogeneidad también falla
+
+Todo lo anterior toma τ² como si se conociera. No se conoce: se estima,
+y la forma más común de estimarlo —el método de momentos de
+DerSimonian–Laird, $\hat\tau^2 = \max\{0, (Q-(k-1))/c\}$— tiene un
+defecto que se ve en la propia fórmula: el estimador sin truncar puede
+dar una varianza **negativa**. La corrección `max(0, ·)` no arregla el
+problema, lo esconde: fuerza al estimador de vuelta al espacio
+paramétrico, sesgándolo hacia arriba en promedio y concentrando masa en
+el borde. Es el caso canónico de **estimación inadmisible**: el
+resultado crudo puede salir de lo que el parámetro permite.
+
+¿Y qué cuesta en la práctica? Cuando k es pequeño (meta-análisis de
+4–10 estudios, lo típico en Cochrane) o τ² es realmente cercano a cero,
+la estimación de τ² es tan ruidosa que el IC del efecto combinado
+subcubre: promete 95% y entrega menos. Las revisiones metodológicas de
+Langan et al. (2019) y Veroniki et al. (2016) lo documentan a escala;
+aquí lo puedes ver en vivo: el auditor inventa meta-análisis enteros
+bajo un τ² conocido y cuenta cuántas veces el intervalo combinado
+cubre μ.
+
+<Tau2Audit title={<>Auditoría de τ²: DerSimonian–Laird vs. Paule–Mandel bajo estrés</>} />
+
+<Callout type="note" title="Reportar el estimador, no solo I²">
+I² se calcula de Q y no depende del estimador de τ² — por eso dos
+meta-análisis con el mismo I² pueden tener combinados distintos. El
+reporte honesto declara: estimador de τ² (<Term k="DL">DL</Term>, Paule–Mandel, REML),
+valor de τ̂² y su intervalo si existe, y el método del IC del
+combinado (Wald vs. Hartung–Knapp, que corrige exactamente este
+problema de subcobertura con k chico).
 </Callout>
 
 ## Incertidumbre cuantificada, no escondida
@@ -238,6 +271,18 @@ depender de una única suposición y se convierte en assurance
 creemos saber. Es la aplicación más honesta del principio 5 de
 Woodward: la evidencia previa no solo estima, también dimensiona.
 </Callout>
+
+El assurance es, en el fondo, una **función de utilidad**: pesa el
+costo de quedarse corto contra lo que creemos plausible. Cuando
+además se declara el beneficio del acierto, el diseño entero se
+vuelve un problema de maximización de utilidad esperada — el umbral
+de Sinclair del módulo 5 era una función de pérdida escalarizada
+sin llamarla así, y el diseño óptimo bayesiano la formaliza para
+modelos no lineales (Cardona &amp; Correa, *Comunicaciones en
+Estadística*, diseños D-óptimos para farmacocinética). No hace
+falta adoptar el marco completo para aprender la lección: un plan
+de análisis que no declara qué se gana y qué se pierde con cada
+veredicto deja la decisión a la convención del α.
 
 ## Robustez frente a lo no medido: el E-value
 

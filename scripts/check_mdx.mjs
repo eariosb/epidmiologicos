@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import { compileMDX } from 'next-mdx-remote/rsc';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
+import { remarkModuleRefs } from '../src/lib/remark-module-refs.ts';
+import { remarkAutoTerms } from '../src/lib/remark-auto-terms.ts';
 
 const files = process.argv[2]
   ? [process.argv[2]]
@@ -12,7 +14,7 @@ const files = process.argv[2]
 
 const opts = {
   blockJS: false,
-  mdxOptions: { remarkPlugins: [remarkMath, remarkGfm], rehypePlugins: [] },
+  mdxOptions: { remarkPlugins: [remarkMath, remarkGfm, remarkModuleRefs, remarkAutoTerms], rehypePlugins: [] },
 };
 
 let failures = 0;

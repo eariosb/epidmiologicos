@@ -22,9 +22,18 @@ const sessionV1toV2 = (prev: Record<string, unknown>): Record<string, unknown> =
   captureIds: Array.isArray(prev.captureIds) ? prev.captureIds : [],
 });
 
+/**
+ * V2 -> V3: sessions saved before `sceneVisits` (board-page journey for
+ * session replay) existed.
+ */
+const sessionV2toV3 = (prev: Record<string, unknown>): Record<string, unknown> => ({
+  ...prev,
+  sceneVisits: Array.isArray(prev.sceneVisits) ? prev.sceneVisits : [],
+});
+
 export const sessionMigrations: MigrationChain = {
   target: SCHEMA_VERSIONS.session,
-  steps: { 2: sessionV1toV2 },
+  steps: { 2: sessionV1toV2, 3: sessionV2toV3 },
 };
 
 /* ---------------------------------- capture ---------------------------------- */
@@ -52,6 +61,7 @@ export function assertSession(v: unknown): asserts v is Session {
   if (typeof v.startedAt !== 'number') throw bad('startedAt');
   if (v.status !== 'active' && v.status !== 'ended') throw bad('status');
   if (!Array.isArray(v.visitedSections)) throw bad('visitedSections');
+  if (!Array.isArray(v.sceneVisits)) throw bad('sceneVisits');
   if (!Array.isArray(v.captureIds)) throw bad('captureIds');
   if (!Array.isArray(v.questions)) throw bad('questions');
   if (v.version !== SCHEMA_VERSIONS.session) throw bad('version');

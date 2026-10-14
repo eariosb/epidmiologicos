@@ -1,0 +1,149 @@
+/**
+ * Plugin remark: envuelve automáticamente la PRIMERA aparición de cada
+ * término del glosario en <Term k="...">…</Term>, sin editar los MDX.
+ * Cobertura máxima con coste editorial cero: una entrada nueva en
+ * src/lib/glossary.ts queda enlazada sola en todos los módulos.
+ *
+ * Reglas:
+ * - Solo la primera aparición por módulo: el tooltip refresca la memoria,
+ *   no debe convertir el texto en un campo de subrayados.
+ * - No se duplica: si el autor ya escribió <Term k="X"> a mano, esa clave
+ *   queda marcada y no se vuelve a envolver.
+ * - Solo claves "sigla-like" (empiezan en mayúscula/dígito o están en
+ *   EXTRA_KEYS): las claves en minúsculas son palabras comunes
+ *   ('potencia', 'cobertura') y autoenlazarlas sería incorrecto.
+ * - 'Se' queda excluida: el pronombre reflexivo encabezaría falsos
+ *   positivos al inicio de oración ("Se observa que…").
+ * - Solo toca nodos `text` fuera de código, matemática, enlaces y
+ *   encabezados — mismo contrato que remark-module-refs.
+ */
+
+import { GLOSSARY } from './glossary';
+
+interface MdastNode {
+  type: string;
+  value?: string;
+  name?: string | null;
+  attributes?: Array<{ type?: string; name?: string; value?: unknown }>;
+  children?: MdastNode[];
+  [key: string]: unknown;
+}
+
+// Contextos donde una sigla NO debe convertirse en Term.
+const SKIP_TYPES = new Set([
+  'code',
+  'inlineCode',
+  'html',
+  'link',
+  'linkReference',
+  'definition',
+  'heading',
+  'inlineMath',
+  'math',
+  'mdxTextExpression',
+  'mdxFlowExpression',
+  'yaml',
+]);
+
+// Identificadores/siglas válidos aunque no empiecen en mayúscula.
+const EXTRA_KEYS = new Set([
+  'χ²',
+  'mid-p',
+  'log-rank',
+  'berger-boos',
+  'clogit',
+  'epiR',
+  'CMHtest',
+]);
+
+// Claves de mayúscula que son también palabras válidas del español.
+const SKIP_KEYS = new Set(['Se']);
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+const AUTO_KEYS = Object.keys(GLOSSARY)
+  .filter((k) => !SKIP_KEYS.has(k) && (/^[A-Z0-9]/.test(k) || EXTRA_KEYS.has(k)))
+  .sort((a, b) => b.length - a.length);
+
+// Frontera de "palabra de sigla": ni letra/dígito ni guion a los lados —
+// evita partir compuestos como "OR-MH" o "I-squared".
+const TERM_RE = new RegExp(
+  `(?<![\\p{L}\\p{N}-])(${AUTO_KEYS.map(escapeRe).join('|')})(?![\\p{L}\\p{N}-])`,
+  'gu',
+);
+
+function collectManualKeys(node: MdastNode, seen: Set<string>): void {
+  if (!node) return;
+  if (
+    (node.type === 'mdxJsxTextElement' || node.type === 'mdxJsxFlowElement') &&
+    node.name === 'Term'
+  ) {
+    const k = node.attributes?.find((a) => a.name === 'k')?.value;
+    if (typeof k === 'string' && k) seen.add(k);
+    return; // no envolver dentro de un Term existente
+  }
+  node.children?.forEach((c) => collectManualKeys(c, seen));
+}
+
+function splitTextNode(node: MdastNode, seen: Set<string>): MdastNode[] | null {
+  const text = node.value ?? '';
+  const parts: MdastNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  TERM_RE.lastIndex = 0;
+  while ((match = TERM_RE.exec(text)) !== null) {
+    const k = match[1];
+    if (seen.has(k)) continue;
+    seen.add(k);
+    if (match.index > last) {
+      parts.push({ type: 'text', value: text.slice(last, match.index) });
+    }
+    parts.push({
+      type: 'mdxJsxTextElement',
+      name: 'Term',
+      attributes: [{ type: 'mdxJsxAttribute', name: 'k', value: k }],
+      children: [{ type: 'text', value: match[0] }],
+    });
+    last = match.index + match[0].length;
+  }
+  if (parts.length === 0) return null;
+  if (last < text.length) {
+    parts.push({ type: 'text', value: text.slice(last) });
+  }
+  return parts;
+}
+
+function walk(node: MdastNode, seen: Set<string>): void {
+  if (!node || SKIP_TYPES.has(node.type)) return;
+  if (
+    (node.type === 'mdxJsxTextElement' || node.type === 'mdxJsxFlowElement') &&
+    node.name === 'Term'
+  ) {
+    return;
+  }
+  const children = node.children;
+  if (!children) return;
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+    if (child.type === 'text' && child.value && TERM_RE.test(child.value)) {
+      TERM_RE.lastIndex = 0;
+      const parts = splitTextNode(child, seen);
+      if (parts) {
+        children.splice(i, 1, ...parts);
+        i += parts.length - 1;
+        continue;
+      }
+    }
+    walk(child, seen);
+  }
+}
+
+export function remarkAutoTerms() {
+  return (tree: MdastNode) => {
+    const seen = new Set<string>();
+    collectManualKeys(tree, seen);
+    walk(tree, seen);
+  };
+}

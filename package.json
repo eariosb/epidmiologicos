@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "description": "Análisis Estadístico de Datos Epidemiológicos: curso interactivo con R en el navegador (webR), basado en Woodward y el material del profesor Juan Carlos Salazar Uribe. Universidad Nacional de Colombia, sede Medellín.",
+  "author": "Esneider Ríos",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check:mdx": "node scripts/check_mdx.mjs",
+    "check:mdx": "tsx scripts/check_mdx.mjs",
     "check:r": "python scripts/run_all_r.py --check",
     "check:r:update": "python scripts/run_all_r.py --update",
     "test:visual": "playwright test",

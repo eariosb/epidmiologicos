@@ -140,7 +140,7 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
             Finalizar
           </button>
         )}
-        <SessionManager />
+        <SessionManager canvasRef={canvasRef} />
         <button
           type="button"
           onClick={() => setCalibrating(true)}

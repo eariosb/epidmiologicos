@@ -384,7 +384,7 @@ export const BlackboardCanvas = forwardRef<BlackboardCanvasRef, BlackboardCanvas
     return (
       <div
         ref={canvasRootRef}
-        className={`relative flex-1 overflow-hidden ${toolsMinimized ? 'bb-min-tools' : ''} ${propsMinimized ? 'bb-min-props' : ''}`}
+        className={`relative isolate flex-1 overflow-hidden ${toolsMinimized ? 'bb-min-tools' : ''} ${propsMinimized ? 'bb-min-props' : ''}`}
         style={{ minHeight: 200 }}
         onDragOver={handleDragOver}
         onDrop={handleDrop}

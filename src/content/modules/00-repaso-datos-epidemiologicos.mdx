@@ -1,5 +1,5 @@
 ---
-title: "Repaso: leer los datos antes de analizarlos"
+title: "Leer los datos antes de analizarlos"
 slug: "00-repaso-datos-epidemiologicos"
 objective: "Aprender a mirar una base epidemiológica con criterio antes de inferir: qué cuenta cada fila, qué dice el diccionario, qué es un faltante real y qué no, y cuándo un número raro es señal."
 order: 0
@@ -19,28 +19,49 @@ import { EpiCurveExplorer, ConfusionExplorer, DesignTree } from '@/components/Ep
 import { DataQualityPanel } from '@/components/QualitySims'
 
 
-<Callout type="tip" title="Este repaso no repite la estadística descriptiva">
-Ya viste medias, medianas y desviaciones estándar. Aquí la pregunta es otra:
-**¿qué está mirando cuando abre un archivo epidemiológico?** Cada base del
-curso esconde decisiones de diseño: qué cuenta una fila, qué significa un
-código, por qué una celda está vacía. Quien lee eso primero evita errores que
-ninguna prueba de hipótesis corrige después. Cada sección cierra señalando el
-módulo donde el concepto se vuelve inferencia.
+<Callout type="tip" title="Antes de abrir el primer archivo">
+El recorrido académico dejó claras las herramientas: probabilidad,
+estimación, inferencia, regresión. Este curso las pone a trabajar sobre una
+pregunta anterior a cualquier modelo: **¿qué estudiamos cuando abrimos un
+archivo epidemiológico?**
+
+Cada base esconde decisiones de diseño:
+
+- **Qué cuenta una fila:** una persona, una pareja, un conjunto pareado o una semana de seguimiento.
+- **Qué significa un código** y quién lo decidió.
+- **Por qué una celda está vacía:** porque el dato se perdió, o porque no había nada que observar.
+- **Qué mide un número:** incidencia o prevalencia, y cuál de las dos permite el diseño.
+- **Qué es una comparación:** una razón de riesgos, de tasas o de odds.
+
+La incidencia ocupa el centro del curso porque es la única medida que respeta
+el tiempo: cuenta casos nuevos en quienes estaban en riesgo, y sin esa
+secuencia no hay comparación causal posible. La prevalencia, en cambio, mezcla
+cuántos enferman con cuánto dura la enfermedad, y lo que significa depende del
+estudio que la produjo. Y el odds ratio es, literalmente, una razón de
+razones: cada odds ya es una razón, p/(1 − p).
+
+Las respuestas —y el límite de las preguntas— están en cómo se obtuvieron los datos,
+durante cuánto tiempo, bajo qué condiciones y campo de acción.
+Por eso, más que un fin en sí mismo, el razonamiento estadístico es el medio
+dentro de una metodología de investigación al servicio de preguntas de salud 
+de orden mayor. Este repaso entrena el primer enfoque que exige: 
+**mirar el dato con criterio, entorno al objetivo de estudio, en el contexto
+de conocimiento específico.**
 </Callout>
 
 ## De la población al archivo
 
-Toda base es la sombra de una población bajo un diseño. La clase 2 definió
-población, unidad, muestra y parámetro; aquí aparece la primera idea nueva:
-la <Term k="unidad_analisis">unidad de análisis</Term> — lo que cuenta cada
-fila — **cambia con el diseño**.
+Toda base es la sombra de una población bajo un diseño. Población, unidad,
+muestra y parámetro ya los conoces; aquí aparece la primera idea nueva:
+la <Term k="unidad_analisis">unidad de análisis</Term>, lo que cuenta cada
+fila, **cambia con el diseño**.
 
 Mira las seis bases del curso:
 
 | Base | Una fila es… | Filas |
 |---|---|---|
 | `valung.csv` | una persona del ensayo VA de cáncer de pulmón | 137 |
-| `caso_control_11.csv` | una **pareja** caso–control (clase 22) | 50 |
+| `caso_control_11.csv` | una **pareja** caso–control (módulo 15) | 50 |
 | `bcg_matching.csv` | un miembro de un conjunto 1 caso + 5 controles | 666 |
 | `ddimer.csv` | un miembro de un conjunto pareado de tamaño variable | 135 |
 | `recid.csv` | una persona seguida hasta 52 semanas, con su historia de empleo | 432 |
@@ -82,16 +103,17 @@ title(main = "Filas por base (la unidad de analisis puede ser otra)")`}
 
 ## Variables, escalas y diccionario de datos
 
-Un nombre de columna no es un diccionario. Las escalas de la clase 2 (nominal,
-ordinal, intervalo, razón) deciden qué resúmenes y qué gráficos tienen
-sentido; el **diccionario de datos** dice qué significa cada código, y sin él
-todo lo demás es adivinanza.
+Un nombre de columna no es un diccionario. Las escalas de medición —nominal,
+ordinal, intervalo, razón— deciden qué resúmenes y qué gráficos tienen
+sentido; el **diccionario de datos** dice qué significa cada código y le da
+sentido a todo.
 
 VALUNG lo ilustra con tres trampas documentadas:
 
-- `censor = 1` marca a los **9 censurados** de 137 — el script SAS del
-  profesor lo construye como `SurvTime < 0` (tiempo no observado). Quien lea
-  `1` como "evento" invierte la curva de supervivencia.
+- `censor = 1` marca a los **9 censurados** de 137 — en el SAS original el
+  flag se construía como `SurvTime < 0`; en este CSV ya viene calculado
+  (`sum(va$censor == 1)` lo verifica). Quien lea `1` como "evento" invierte
+  la curva de supervivencia.
 - `Prior` vale **0 o 10**, no 0/1: es el código de terapia previa del
   protocolo original, no un indicador.
 - `Treatment` (0/1) **repite** a `Therapy` (standard/test): la misma variable
@@ -130,11 +152,16 @@ run;`} />
   question="En VALUNG, `censor = 1` aparece en 9 filas. ¿Qué significa y cómo lo verificarías?"
   options={[
     "Que esos 9 pacientes murieron; lo verificas mirando SurvTime grande",
-    "Que esos 9 pacientes se censuraron (vivos al cierre o perdidos); lo verificas con el script del profesor: `censor = (SurvTime < 0)` y porque 999 es un tiempo de seguimiento, no un error",
+    "Que esos 9 pacientes se censuraron (vivos al cierre o perdidos); lo verificas en el propio CSV: `sum(va$censor == 1)` da 9, y el 999 en SurvTime es un tiempo de seguimiento, no un error",
     "Que la variable está invertida y hay que recodificarla antes de cualquier análisis"
   ]}
   correctIndex={1}
-  explanation="El código viene del SAS del curso: los tiempos negativos del archivo original marcan censura. Confundir evento con censura invierte cada curva de supervivencia del módulo 12."
+  explanation="`censor` ya llega como flag en el CSV del curso — en el SAS original se construía con `SurvTime < 0`, que aquí no aplica porque todos los tiempos son positivos. Confundir evento con censura invierte cada curva de supervivencia del módulo 12."
+  optionNotes={[
+    "Incorrecta: un `SurvTime` grande dice cuánto se observó, no si terminó en evento — un paciente con 999 puede estar censurado.",
+    undefined,
+    "Incorrecta: el flag está bien orientado; `sum(va$censor == 1)` confirma los 9 censurados. La trampa no es el código sino leer 1 como 'evento'.",
+  ]}
 />
 
 → **Conecta con M12**, donde esta misma variable decide si la curva de
@@ -152,7 +179,7 @@ mediana</Term> (MAD) mide la dispersión sin que los extremos la infle.
 Dos hallazgos más que solo se ven mirando:
 
 - En `Kps`, el 97.1% de los valores son múltiplos de 10 (más 75, 85 y un
-  99): <Term k="preferencia_digito">preferencia de dígito</Term> — el
+  99): <Term k="preferencia_digito">preferencia de dígito</Term>, el
   Karnofsky se anotaba redondeado, una huella de cómo se midió.
 - En `prio` (arrestos previos, RECID) la varianza es 2.8 veces la media:
   <Term k="sobredispersion">sobredispersión</Term> frente al modelo Poisson,
@@ -202,7 +229,7 @@ sentido de <Term k="MCAR">MCAR</Term>/<Term k="MAR">MAR</Term>/
 problema de imputación que no existe.
 
 La convención del archivo confirma la lectura: las 318 personas nunca
-arrestadas tienen `week = 53` — una etiqueta de "sobrevivió las 52 semanas",
+arrestadas tienen `week = 53`, una etiqueta de "sobrevivió las 52 semanas",
 no una semana 53 real.
 
 <RCell
@@ -244,12 +271,12 @@ empleo dependiente del tiempo en formato largo).
 ## ¿Atípico o señal?
 
 El boxplot marca candidatos, no verdades. `boxplot.stats` señala 12 tiempos
-de VALUNG — entre ellos 999 y 991 — pero esos pacientes existen en el ensayo
+de VALUNG, entre ellos 999 y 991, pero esos pacientes existen en el ensayo
 original: son seguimientos larguísimos, no errores de digitación. La regla es
 **verificar contra la fuente antes de borrar**: un atípico real borrado
 silenciosamente es un sesgo que nadie declara.
 
-El caso contrario también existe: en vigilancia (clase 2B) la semana
+El caso contrario también existe: en vigilancia epidemiológica la semana
 "atípica" de la curva epidémica puede ser el brote que el sistema busca. La
 misma regla del boxplot que protege de errores puede cegar ante la señal si
 se aplica como borrado automático.
@@ -280,6 +307,11 @@ points(out, rep(1, length(out)), col = "red", pch = 19)`}
   ]}
   correctIndex={1}
   explanation="El boxplot marca, no decide. La verificación contra la fuente muestra que la cola es real; borrarla cambiaría todas las curvas de supervivencia sin ninguna justificación clínica."
+  optionNotes={[
+    "Incorrecta: la media no se usa en Kaplan–Meier, y 'extremo' según un boxplot univariado no es 'error' — la cola es seguimiento real.",
+    undefined,
+    "Incorrecta: 'influyente' en un diagnóstico de modelo tampoco es criterio de borrado — se reporta la sensibilidad del resultado, no se elimina el dato.",
+  ]}
 />
 
 → **Conecta con M12** (esos pacientes son las curvas de VALUNG) y **M19**
@@ -289,23 +321,23 @@ points(out, rep(1, length(out)), col = "red", pch = 19)`}
 
 Las secciones anteriores ya auditaron bases sin nombrar el esquema. La
 literatura de calidad de datos clínicos (Kahn y cols., 2016) ordena esos
-hallazgos en tres preguntas — el esquema que usarás como informe de
+hallazgos en tres preguntas, el esquema que usarás como informe de
 calidad a lo largo del curso:
 
 - **Conformidad**: ¿los valores respetan el formato, el tipo y los
   dominios declarados? `Prior` vale 0/10 y no 0/1; `week = 53` existe
-  como convención, no como semana.
+  para ilustrar precisamente.
 - **Completitud**: ¿qué falta, dónde y con qué patrón? Los `emp` vacíos
-  de RECID son estructurales — patrón de cola, alineado con el
-  desenlace — no faltantes de Rubin.
+  de RECID son estructurales, patrón de cola, alineado con el
+  desenlace.
 - **Plausibilidad**: ¿los valores son creíbles clínica y temporalmente?
   El 97% de `Kps` en múltiplos de 10 y los `SurvTime` de 999 son
-  hallazgos *verificados*, no errores.
+  hallazgos *verificados*.
 
 El panel siguiente computa la auditoría del archivo real al cargarlo:
 los hallazgos no están escritos a mano, salen del CSV. Tu trabajo es
-marcar cada uno — verificado, sospechoso o documentado — porque esa
-decisión, no el hallazgo, es el producto del informe:
+marcar cada uno; verificado, sospechoso o documentado, lo cual es 
+el producto del informe:
 
 <DataQualityPanel
   dataset="valung"
@@ -328,7 +360,7 @@ VALUNG da el ejemplo más limpio del curso: por terapia, el log-rank da
 p = 0.93 (nada); por tipo celular, p = 1.3×10⁻⁵ (todo). La terapia dentro de
 cada tipo celular se puede dibujar como gráfico de interacción. Y la propia
 tabla conjunta revela el azar de la aleatorización: 30 pacientes de células
-pequeñas cayeron en standard contra 18 en test — el desbalance que una
+pequeñas cayeron en standard contra 18 en test, el desbalance que una
 asignación honesta produce sin trampas.
 
 <RCell
@@ -364,7 +396,7 @@ La inversión de probabilidades es el error más caro de la epidemiología:
 P(expuesto | enfermo) y P(enfermo | expuesto) responden preguntas distintas.
 El diseño de casos y controles **elige la fracción de casos**, así que solo
 una de las dos es estimable: en BCG la fracción de casos es exactamente 1/6
-porque cada conjunto trajo 1 caso y 5 controles — un número que el
+porque cada conjunto trajo 1 caso y 5 controles, un número que el
 investigador fijó, no una característica de la población.
 
 De ahí nace la regla que gobernará los módulos 14–15: en casos y controles se
@@ -402,6 +434,11 @@ barplot(c(caso = t[2, 2] / sum(t[2, ]), control = t[1, 2] / sum(t[1, ])),
   ]}
   correctIndex={1}
   explanation="En casos y controles la columna 'enfermedad' está fijada por muestreo: P(caso|cualquier cosa) requiere incidencia poblacional que el diseño no recoge. El OR sobrevive porque los denominadores se cancelan."
+  optionNotes={[
+    "Incorrecta: la edad está en el archivo (`bcg_matching.csv`); lo que falta no es una covariable sino el denominador poblacional.",
+    undefined,
+    "Incorrecta: aunque fuera así, la estimabilidad no depende de qué tan efectiva sea la vacuna sino de quién fijó los totales de la tabla.",
+  ]}
 />
 
 → **Conecta con M4** (por qué el OR y no el RR), **M14** y **M15** (casos y
@@ -435,11 +472,11 @@ boxplot(Kps ~ Cell, data = va, col = 2:5, las = 2,
 
 ## El mapa de distribuciones del curso
 
-Cada medida del curso vive bajo una distribución concreta. Saber cuál — y por
-qué — convierte fórmulas posteriores en consecuencias, no en magia:
+Cada medida del curso vive bajo una distribución concreta. Saber cuál y por
+qué, convierte fórmulas posteriores en consecuencias, no en magia:
 
 - **Binomial**: riesgos y la tabla 2×2 (casos entre expuestos).
-- **Hipergeométrica**: el test exacto de Fisher — la tabla con márgenes
+- **Hipergeométrica**: el test exacto de Fisher, la tabla con márgenes
   fijos.
 - **Poisson**: tasas de incidencia, persona-tiempo y la SMR.
 - **Exponencial y gamma**: tiempos de supervivencia y duración de la
@@ -485,8 +522,8 @@ Condicionar es la operación que el curso repite bajo tres disfraces:
 condicionar en los **márgenes** (Fisher fija totales y cuenta las tablas
 posibles), en los **estratos** (Mantel–Haenszel resume dentro de cada capa) y
 en los **conjuntos pareados** (la verosimilitud condicional solo usa sets con
-discordancia). Es la misma idea — quedarse con la parte del azar que el
-diseño no controla — aplicada a tres geometrías.
+discordancia). Es la misma idea, quedarse con la parte del azar que el
+diseño no controla, aplicada a tres geometrías.
 
 <RCell
   id="00/condicionar"
@@ -533,7 +570,7 @@ selección de controles).
 
 ## Vigilancia y curva epidémica
 
-La <Term k="curva_epidemica">curva epidémica</Term> — casos por semana — es el
+La <Term k="curva_epidemica">curva epidémica</Term>, casos por semana, es el
 gráfico de la vigilancia, y tiene dos trampas de lectura: el **ancho de la
 barra** cambia la forma (casos diarios ruidosos se vuelven tendencia limpia
 al agrupar por semana) y las últimas barras **siempre** están incompletas por
@@ -541,8 +578,8 @@ el <Term k="retraso_notificacion">retraso de notificación</Term>: los casos
 recientes aún no llegaron al registro. Interpretar esa cola como descenso
 real es el error más común de los boletines.
 
-El modelo SIR de la clase 2B — susceptibles que pasan a infectados (β) y
-luego a recuperados (γ) — genera la forma de referencia; sobre ella montamos
+El modelo SIR de la clase 2B, susceptibles que pasan a infectados (β) y
+luego a recuperados (γ), genera la forma de referencia; sobre ella montamos
 el ruido de conteos (Poisson) y el retraso, que es exactamente lo que llega a
 la mesa de un departamento de salud.
 
@@ -572,12 +609,283 @@ lines(1:52 - 0.5, inc, col = "red", lwd = 2, lty = 2)`}
 → **Conecta con M3** (medición de la incidencia) y con la lectura de
 boletines reales de vigilancia.
 
+## El test estadístico: cómo se decide con datos
+
+Todo lo que este repaso hizo fue **describir y sospechar**. En algún punto
+la epidemiología tiene que **decidir**: ¿la diferencia observada es
+compatible con el azar, o hay algo que explicar? El test estadístico es el
+instrumento de esa decisión, y tiene una anatomía precisa:
+
+1. **La hipótesis nula (H₀)** es un *modelo concreto del mundo*, no una
+   frase: "los dos brazos del ensayo tienen el mismo riesgo" es un modelo
+   bajo el cual se pueden simular datos.
+2. **El estadístico de prueba** resume los datos en un número que mide
+   cuánto se alejan de ese modelo (una diferencia, una razón, un χ²).
+3. **La distribución bajo H₀** dice qué valores del estadístico serían
+   normales si el mundo nulo fuera real; es la regla con que se mide.
+4. **El <Term k="p">valor p</Term>** es la probabilidad de observar un
+   estadístico al menos tan extremo como el que salió, *suponiendo que H₀
+   es verdadero*.
+
+La frase que hay que llevarse es la última parte: **el valor p mide la
+viabilidad del modelo nulo a la luz de la evidencia**. Un p pequeño dice
+"estos datos serían raros si H₀ fuera cierto", es evidencia *contra* el
+modelo nulo, no evidencia *a favor* de una alternativa concreta. Por eso
+la inferencia honesta habla de **rechazar** o **no rechazar** H₀:
+
+- **Rechazar** = la evidencia es incompatible con el modelo nulo.
+- **No rechazar** = los datos no alcanzaron para descartarlo. **No es lo
+  mismo que aceptarlo**: con una muestra pequeña casi ninguna hipótesis se
+  rechaza, y eso no la hace cierta. La ausencia de evidencia no es
+  evidencia de ausencia, un IC ancho lo dice sin eufemismos.
+
+### Las dos formas de equivocarse
+
+Decidir bajo incertidumbre tiene dos errores posibles, y toda la
+disciplina del test consiste en controlarlos:
+
+| | H₀ verdadera | H₀ falsa |
+|---|---|---|
+| **Rechazar** | <Term k="error_tipo_i">error tipo I</Term> (falso positivo), α | decisión correcta, <Term k="potencia">potencia</Term> |
+| **No rechazar** | correcto | <Term k="error_tipo_ii">error tipo II</Term> (falso negativo), β |
+
+- **α (significancia)**: la tasa de falsos positivos que el estudio
+  tolera *por diseño*. El 5% no es ley de la naturaleza: es una
+  convención que se declara y se justifica.
+- **β**: la tasa de falsos negativos. La **potencia = 1 − β** es la
+  probabilidad de detectar el efecto *si existe*, depende del tamaño
+  del efecto, de n y de α.
+- **Una cola vs. dos**: definir "extremo" es una decisión previa al
+  análisis. Una cola cuenta solo los resultados en la dirección
+  esperada (más potencia si la dirección se acertó, ciega al efecto
+  contrario); dos colas cuenta ambos extremos (la opción por defecto
+  cuando la dirección no está justificada a priori).
+- **Significancia real vs. nominal**: el α declarado es el nominal; el
+  real es la tasa de rechazo que el test efectivamente produce. Con
+  datos discretos y muestras chicas difieren, el módulo 6 lo muestra
+  midiendo el tamaño real de Fisher y de Boschloo: declarar 5% no
+  garantiza tener 5%.
+
+### La potencia también se puede contar
+
+La potencia no es solo una fórmula: es una frecuencia que se puede
+**simular**. Si se conoce el mecanismo alternativo, basta generar muchos
+datasets bajo él y contar en cuántos el test rechaza, es la
+*potencia empírica*, el mismo principio con que el módulo 6 mide el
+comportamiento de los tests exactos:
+
+<RCell
+  id="00/test-potencia"
+  title="Tamaño y potencia empíricos de un test en 4 líneas"
+  code={`# Test: comparacion de dos medias (t.test), n=15 por grupo.
+set.seed(2024)
+rechazos <- function(delta, reps = 2000) {
+  mean(replicate(reps, {
+    x <- rnorm(15, mean = delta)
+    y <- rnorm(15, mean = 0)
+    t.test(x, y)$p.value < 0.05
+  }))
+}
+# Bajo H0 (delta=0): la tasa de rechazo es el TAMANO real del test.
+cat(sprintf("Bajo H0 (delta=0):   rechaza %.1f%% - tamano real vs 5%% nominal\\n",
+            100 * rechazos(0)))
+# Bajo alternativas: la tasa de rechazo es la POTENCIA empirica.
+cat(sprintf("Efecto 0.5 DE:       rechaza %.1f%% - potencia empirica\\n",
+            100 * rechazos(0.5)))
+cat(sprintf("Efecto 1.0 DE:       rechaza %.1f%% - potencia empirica\\n",
+            100 * rechazos(1.0)))`}
+/>
+
+La lectura es doble: bajo H₀ el test rechaza ≈5% de las veces, el
+tamaño real coincide con el nominal porque aquí el test está bien
+calibrado; bajo la alternativa, la potencia crece con el efecto. El
+mismo experimento con n chico o datos discretos muestra tamaños reales
+que no son 5%, y eso es un diagnóstico sobre el test, no sobre los
+datos: **la potencia y la significancia real son propiedades del
+instrumento**, tan auditables como los datos.
+
+### Significancia no es relevancia
+
+Un valor p pequeño puede acompañar un efecto clínicamente trivial (n
+enorme detecta cualquier cosa), y un p "no significativo" puede esconder
+un efecto relevante mal estimado (n chico). Por eso el curso insiste en
+el principio de Woodward: **estimar antes que contrastar**, primero el
+tamaño del efecto con su IC, después el veredicto. El valor p sin la
+magnitud es un número sin unidad epidemiológica.
+
+Del mismo modo, la zona de **valores borde** (p = 0.049 vs. 0.051) no
+cambia la evidencia: cambia solo de qué lado cayó respecto a una línea
+convencional. Reportar "p = 0.051" con el efecto y su IC es más honesto
+que "no significativo".
+
+<Quiz
+  question="Un estudio con n = 30 por grupo no rechaza H₀ (p = 0.21). ¿Cuál es la lectura correcta?"
+  options={[
+    "Se demostró que no hay efecto",
+    "Se acepta la hipótesis nula",
+    "La evidencia no alcanzó para descartar el modelo nulo, el estudio puede estar subpotenciado",
+    "El valor p indica que la hipótesis nula tiene 21% de probabilidad de ser cierta"
+  ]}
+  correctIndex={2}
+  explanation="No rechazar no es aceptar: con n chico la potencia es baja y el efecto puede existir sin ser detectable. El p tampoco es la probabilidad de que H₀ sea cierta, es la probabilidad de los datos suponiendo H₀."
+  optionNotes={[
+    "Incorrecta: 'no se demostró efecto' y 'se demostró que no hay' son afirmaciones opuestas; p = 0.21 solo dice que los datos son compatibles con H₀.",
+    "Incorrecta: en el procedimiento frecuentista nunca se 'acepta' H₀ — se deja de rechazar, que es una conclusión mucho más débil.",
+    undefined,
+    "Incorrecta: es la confusión clásica P(E|D) ≠ P(D|E) del repaso — el p mide los datos bajo H₀, no a H₀ dados los datos.",
+  ]}
+/>
+
+### El test también se diseña
+
+Elegir un test es configurar qué cuenta como evidencia: qué estadístico,
+qué referencia, qué colas, qué α. A veces el estudio exige una
+configuración a la medida; por ejemplo, decidir entre Fisher y Boschloo
+en una 2×2 pequeña es elegir qué significa "resultado extremo" (el
+ensayo técnico del módulo 6 lo desarrolla completo), y un test de
+permutaciones es literalmente un test construido sobre el mecanismo del
+propio estudio: se remezclan las etiquetas según lo que el diseño
+permite y se mide el observado contra esa distribución hecha a mano.
+
+### Los tests que el curso usa, y para qué
+
+El catálogo se ordena por **diseño**: lo que decide la
+fila es cómo se produjeron los datos (una muestra o dos, independientes o
+pareadas, conteos o mediciones, estratificados o no), no el nombre del
+test.
+
+**Una muestra, una medida**
+
+| Test | Estadístico/referencia | Caso de uso epidemiológico |
+|---|---|---|
+| Binomial exacta (Clopper–Pearson) | conteo ~ Bin(n, p) | una proporción: prevalencia, cobertura, letalidad |
+| Poisson exacta | conteo ~ Poisson | una tasa con persona-tiempo: «¿es 8.9/1 000 compatible con 5?» |
+| SMR | observados vs esperados, Poisson | mortalidad comparada con tasas de referencia (M9) |
+
+**Dos grupos independientes: conteos**
+
+| Test | Estadístico/referencia | Caso de uso epidemiológico |
+|---|---|---|
+| z de dos proporciones | diferencia ~ N | equivalente al χ² en una 2×2 holgada |
+| χ² de Pearson | Σ(O−E)²/E ~ χ² | 2×2 y tablas R×C con esperados holgados |
+| χ² con Yates | idem con corrección de continuidad | herencia histórica; hoy se discute por conservador |
+| **Fisher exacto** | hipergeométrica condicional | cualquier celda baja |
+| **Boschloo / mid-p / Barnard** | ordenamientos incondicionales | 2×2 chicas cuando Fisher es conservador (M6) |
+| Fisher–Freeman–Halton | hipergeométrica multivariada | R×C con celdas bajas |
+
+**Dos grupos independientes: mediciones**
+
+| Test | Estadístico/referencia | Caso de uso epidemiológico |
+|---|---|---|
+| t de Student | diferencia ~ t | medias, varianzas similares, n moderado |
+| t de Welch | t con grados ajustados | medias sin asumir varianzas iguales |
+| Wilcoxon rank-sum / Mann–Whitney | suma de rangos | muy asimétricas, ordinales |
+| Kolmogorov–Smirnov | máxima distancia entre ECDF | comparar las distribuciones completas |
+
+**Datos pareados: la unidad es el par**
+
+| Test | Estadístico/referencia | Caso de uso epidemiológico |
+|---|---|---|
+| <Term k="McNemar">McNemar</Term> | solo pares discordantes, χ² | pareado binario: caso-control 1:1, antes-después |
+| McNemar exacto | binomial condicional en discordantes | pocos discordantes (b+c ≲ 25) |
+| Stuart–Maxwell | homogeneidad marginal | pareado con más de dos categorías |
+| t pareada | diferencias ~ t | continua pareada (mismo sujeto, dos tiempos) |
+| Wilcoxon signed-rank | rangos de las diferencias | pareada muy asimétrica |
+| Cochran Q | generalización de McNemar | ≥3 mediciones binarias por unidad |
+| Friedman | rangos dentro de bloque | ≥3 mediciones repetidas, ordinal o asimétrica |
+| Kappa (κ) | concordancia observada vs esperada | acuerdo entre observadores o pruebas |
+
+**Estratificados: confusión, homogeneidad y tendencia**
+
+| Test | Estadístico/referencia | Caso de uso epidemiológico |
+|---|---|---|
+| <Term k="CMHtest">CMH / Mantel–Haenszel</Term> | χ² dentro de estratos | asociación ajustada por un confusor (M8) |
+| <Term k="BD">Breslow–Day</Term> / Tarone / Woolf | χ² de homogeneidad, k−1 gl | ¿el OR es el mismo en todos los estratos? Valida si un **resumen común** de Mantel–Haenszel tiene sentido |
+| Cochran–Armitage / extensión de Mantel | χ² de tendencia, 1 gl | exposición ordinal: la pregunta de dosis-respuesta |
+
+Aquí vive la corrección más fina del catálogo: **Breslow–Day precede al
+resumen de Mantel–Haenszel, no a McNemar**. Pregunta si el OR puede
+resumirse en un solo número (homogeneidad) antes de reportarlo; si los
+OR difieren entre estratos, lo que hay es interacción y se reportan por
+estrato (M10). El guardián de McNemar es otro: el conteo de pares
+discordantes, que decide entre la versión asintótica y la exacta.
+
+**Tiempo al evento y comparación de tasas**
+
+| Test | Estadístico/referencia | Caso de uso epidemiológico |
+|---|---|---|
+| Log-rank | eventos observados − esperados por tiempo | curvas de supervivencia (M12) |
+| Gehan–Breslow / Peto | log-rank ponderado | más peso a los eventos tempranos |
+| Exacta de Poisson para tasas | binomial condicional en los eventos | dos tasas persona-tiempo (M13) |
+
+**Dentro de los modelos**
+
+| Test | Estadístico/referencia | Caso de uso epidemiológico |
+|---|---|---|
+| Wald / score / LRT | z o χ² del coeficiente | coeficientes de un glm (M16) |
+| Hosmer–Lemeshow | χ² por deciles de riesgo | calibración del modelo logístico |
+
+**El test que diagnostica al test**
+
+¿Cómo se elige la fila? También con tests — las *pruebas de supuestos*:
+
+| Test | Qué examina | Advertencia |
+|---|---|---|
+| Shapiro–Wilk | normalidad | sirve para **diagnosticar**, no para decidir |
+| Levene / F | igualdad de varianzas | igual |
+| Bartlett | varianzas en k grupos | sensible a la no normalidad |
+
+La advertencia es la tesis de este módulo aplicada un nivel más arriba:
+**los tests de supuestos también tienen potencia y tamaño**. Con n chico
+no detectan violaciones reales y dan falsa tranquilidad; con n grande
+detectan desviaciones triviales y dan falsa alarma. La decisión la toma
+el diseño y la plausibilidad, no el p de un segundo test — se usan para
+entender los datos, no para delegarles la elección del instrumento.
+
+**Cuando el objetivo es demostrar similitud**
+
+| Test | Estadístico/referencia | Caso de uso epidemiológico |
+|---|---|---|
+| <Term k="TOST">TOST</Term> / equivalencia | dos tests unilaterales dentro de ±Δ | no inferioridad, bioequivalencia: el instrumento honesto cuando lo que se quiere es *evidencia a favor de* la igualdad |
+
+El test de equivalencia cierra el argumento del módulo: como no
+rechazar no prueba H₀, quien quiera «aceptar» debe invertir el juego —
+declarar como hipótesis nula una *diferencia relevante* y buscar
+evidencia de que los datos la descartan.
+
+La tabla no es un menú neutral: cada fila incorpora supuestos sobre los
+datos — independencia, escalas, tamaño muestral, pareamiento,
+estratificación — y elegir mal la fila invalida la decisión, aunque el
+cálculo sea correcto.
+
+<Quiz
+  question="En el ensayo de Perondi (7/34 vs 1/34), Fisher da p = 0.0544 y Boschloo p = 0.0385, ambos a α = 5%. ¿Qué ilustra la discrepancia?"
+  options={[
+    "Uno de los dos tests está mal calculado",
+    "Qué cuenta como 'extremo' es una decisión del test: procedimientos distintos pueden dar veredictos distintos sobre los mismos datos",
+    "Boschloo siempre da p menores",
+    "El valor p correcto es el promedio de ambos"
+  ]}
+  correctIndex={1}
+  explanation="Los dos tests ordenan el espacio de tablas de forma distinta: la significancia es una propiedad del instrumento, no solo del dato. El módulo 6 explora exactamente esta decisión."
+  optionNotes={[
+    "Incorrecta: ambos están bien calculados — cada uno implementa una definición distinta de 'más extremo'; esa es la lección.",
+    undefined,
+    "Incorrecta: Boschloo es más potente en regiones específicas del espacio de tablas, no universalmente; en otras regiones pueden invertirse.",
+    "Incorrecta: los p-valores no se promedian — la discrepancia exige declarar el procedimiento, no fundir las respuestas.",
+  ]}
+/>
+
+→ **Conecta con M5** (significancia y potencia como conceptos), **M6**
+(la calibración real de los tests en 2×2) y **M16** (los tests dentro de
+los modelos).
+
 ## Disciplina exploratoria
 
 Todo lo anterior es generación de hipótesis, no su prueba. Tukey lo separó en
 1962: el análisis exploratorio **descubre** qué preguntar; el confirmatorio
-**responde** con error controlado. Mezclarlos — explorar hasta encontrar
-algo "significativo" — es el jardín de los senderos que se bifurcan: cada
+**responde** con error controlado. Mezclarlos, explorar hasta encontrar
+algo "significativo", es el jardín de los senderos que se bifurcan: cada
 decisión tomada mirando los datos multiplica las rutas al falso positivo. La
 vacuna disciplinaria es declarar el plan de análisis antes de mirar, y hacer
 la exploración **reproducible**: script, semilla y datos versionados, no
@@ -632,8 +940,8 @@ plot(ecdf(va$Kps), main = "ECDF de Karnofsky", xlab = "Kps", ylab = "")`}
 <ToolCard task="eda" />
 
 <Callout type="note" title="Cierre del repaso">
-La exploración termina donde empieza la inferencia. Lo que sigue — módulos
-1 a 19 — convierte estas lecturas en estimandos, diseños, pruebas e
+La exploración termina donde empieza la inferencia. Lo que sigue, módulos
+1 a 19, convierte estas lecturas en estimandos, diseños, pruebas e
 intervalos. Cuando un resultado suene extraño en cualquier módulo, la
 pregunta correcta será la de este repaso: *¿ya miré el dato antes de creerle
 al modelo?*

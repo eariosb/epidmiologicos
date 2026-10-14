@@ -48,7 +48,6 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
       await saveCapture({
         name: title ? `Código R: ${title}` : `Código R (${id})`,
         dataUrl,
-        thumbnail: dataUrl,
         type: 'code',
         tags: [],
         code,

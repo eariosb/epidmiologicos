@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useBlackboardContext } from '../lib/context';
 import { useBlackboardLLM } from '../hooks/useBlackboardLLM';
+import { copyText } from '../lib/clipboard';
 import type { AssistantMode, LLMMessage } from '../types/blackboard';
 
 interface BlackboardAssistantProps {
@@ -180,9 +181,10 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    if (await copyText(text)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
   };
 
   return (

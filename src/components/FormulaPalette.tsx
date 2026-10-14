@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { sendToBlackboard } from '@/lib/send-to-blackboard';
 import { latexToDataUrl } from '@/lib/latex-image';
+import { copyText } from '@/lib/clipboard';
 
 interface FormulaItem {
   id: string;
@@ -117,7 +118,7 @@ export function FormulaPalette() {
   const filtered = formulas.filter((f) => f.category === activeCategory);
 
   const handleCopy = (item: FormulaItem, what: 'rCode' | 'latex') => {
-    void navigator.clipboard.writeText(what === 'rCode' ? item.rCode : item.latex);
+    void copyText(what === 'rCode' ? item.rCode : item.latex);
     setCopiedId(`${item.id}-${what}`);
     setTimeout(() => setCopiedId(null), 2000);
   };

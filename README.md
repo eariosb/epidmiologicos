@@ -23,47 +23,51 @@ analítico.
 
 0. Leer los datos antes de analizarlos: unidad de análisis, diccionario,
    faltantes estructurales, atípicos, tres lecturas de una tabla,
-   muestreo y vigilancia — todo anclado en las bases reales del curso
-   (`valung`, `recid`, `bcg`, parejas 1:1, `ddimer`, leucemia) y con el
-   simulador `EpiCurveExplorer` (SIR + ruido Poisson + retraso de
-   notificación). Sin renumerar: es lectura previa recomendada, no
-   cuenta en el "de 19".
+   muestreo, distribuciones, vigilancia y **anatomía del test
+   estadístico** (estadístico de prueba, distribución bajo H₀, valor p,
+   α/β, potencia real y empírica, significancia vs. relevancia,
+   catálogo de tests epidemiológicos) — todo anclado en las bases
+   reales del curso (`valung`, `recid`, `bcg`, parejas 1:1, `ddimer`,
+   leucemia), con el simulador `EpiCurveExplorer` y la auditoría
+   `DataQualityPanel` (conformidad/completitud/plausibilidad, que
+   califica el veredicto del estudiante). Sin renumerar: es lectura
+   previa recomendada, no cuenta en el "de 19".
 
 **Bloque I — Diseño, medidas e inferencia en la tabla 2×2 (módulos 1–6)**
 
-1. ¿Qué es la epidemiología cuantitativa? Historia, ética y el caso fundacional (Snow, Tuskegee, Belmont)
-2. El mapa de los diseños y la pregunta causal (árbol interactivo, Bradford Hill)
-3. Medición de la enfermedad: incidencia, prevalencia y tasas (P = I × D)
+1. ¿Qué es la epidemiología cuantitativa? Historia, ética y el caso fundacional (Snow, Tuskegee, Belmont) + normativa colombiana aplicada a datos (Res. 8430, Ley 1581)
+2. El mapa de los diseños y la pregunta causal (árbol interactivo, Bradford Hill, emulación del ensayo objetivo) + **Simépolis**: ciudad de 20 000 habitantes con verdad conocida (`CityLab`), muestreable con cuatro diseños para ver emerger confusión y sesgo de Berkson
+3. Medición de la enfermedad: incidencia, prevalencia y tasas (P = I × D), encuestas con estratos/conglomerados/pesos y OR→RP según prevalencia
 4. Medidas de asociación I: RR, OR y RD (laboratorio 2×2, Molinero)
 5. Medidas de asociación II: NNT, riesgo atribuible, ICs y valores p; tamaño muestral por fórmula, calibración exacta y la longitud del IC como variable aleatoria con garantía P(L ≤ L₀)
-6. Inferencia exacta y calibración en muestras pequeñas: Fisher vs. procedimientos incondicionales (Boschloo, z agrupada, Berger–Boos, mid-p), potencia exacta, correcciones con celdas en cero y comparativa de métodos de IC para una proporción (caso Perondi)
+6. Inferencia exacta y calibración en muestras pequeñas: Fisher vs. procedimientos incondicionales (Boschloo, z agrupada, Berger–Boos, mid-p), potencia exacta, correcciones con celdas en cero, comparativa de métodos de IC para una proporción (caso Perondi) e **ICs simultáneos multinomiales** para vigilancia de serotipos (`MultinomCIExplorer`: TCL vs. Quesenberry–Hurst, Goodman y Sison–Glaz bajo desequilibrio)
 
 **Bloque II — Confusión e interacción (módulos 7–10)**
 
-7. Confusión: definición, criterios y DAGs
+7. Confusión: definición, criterios y DAGs; la Tabla 1 como diagnóstico (diferencias estandarizadas, `Table1Builder`) y las condiciones de Cornfield
 8. Estratificación y Mantel–Haenszel
 9. Estandarización y tasas ajustadas (Glasgow, SMR)
 10. Interacción, modificación de efecto y paradoja de Simpson
 
 **Bloque III — Cohortes y supervivencia (módulos 11–13)**
 
-11. Diseño de cohortes y tablas de vida (Gantt de seguimiento)
+11. Diseño de cohortes y tablas de vida (Gantt de seguimiento); tiempo cero, tiempo inmortal y usuarios nuevos sobre RECID
 12. Kaplan–Meier y log-rank (leucemia, VALUNG)
-13. Persona-tiempo, SMR y aproximación a Cox (RECID)
+13. Persona-tiempo, SMR y aproximación a Cox (RECID); covariables dependientes del tiempo (`emp1`–`emp52` a formato largo)
 
 **Bloque IV — Casos y controles (módulos 14–15)**
 
-14. Diseño de casos y controles: sesgos y selección (Berkson, Sackett)
-15. Matching, McNemar y clogit (BCG, DDIMER; la equivalencia McNemar ⇔ CMH)
+14. Diseño de casos y controles: población fuente, controles hospitalarios, sesgos y selección (Berkson, Sackett) + análisis de sesgo cuantitativo (Se/Sp, `BiasAnalysis2x2`) + **prueba de estrés con n chico**: el IC del OR auditado por simulación, Woolf vs. bootstrap (`BootstrapStress`)
+15. Matching, McNemar y clogit (BCG, DDIMER; la equivalencia McNemar ⇔ CMH); sets de tamaño variable y análisis condicional obligatorio
 
 **Bloque V — Modelación y síntesis (módulos 16–17)**
 
-16. Regresión logística y Poisson multivariante (ROC/AUC)
-17. Síntesis: causalidad acumulativa, meta-análisis, UQ y decisiones informadas
+16. Regresión logística y Poisson multivariante (ROC/AUC); datos faltantes MCAR/MAR/MNAR (`MissingDataLab`), regla 10 EPV y Firth
+17. Síntesis: causalidad acumulativa, meta-análisis, UQ y decisiones informadas; **auditoría del estimador de τ²** (DerSimonian–Laird vs. Paule–Mandel, `Tau2Audit`), E-value (`EValueCalculator`) y guías STROBE/RECORD
 
 **Bloque VI — Herramientas y fronteras (transversal)**
 
-18. Herramientas computacionales: R, SAS y Python para epidemiología (traductor de estimandos, paquetes esenciales, depuración y reproducibilidad)
+18. Herramientas computacionales: R, SAS y Python para epidemiología (traductor de estimandos, paquetes esenciales, depuración y reproducibilidad) + **"la máquina también miente"**: la misma "prueba exacta bilateral" cambia de veredicto según la definición que implementa cada paquete (minlike vs. central) y el desempate de empates en punto flotante
 19. Fronteras abiertas: avances verificados, repositorios de datos, referentes y casos de brote en Colombia y el mundo
 
 ## Principios rectores (Woodward)
@@ -78,29 +82,60 @@ analítico.
 
 - **Módulos MDX** con KaTeX (`remark-math` + `rehype-katex`), citas
   `<Term>` con glosario, quizzes, flashcards y ejercicios de laboratorio.
-- **Simuladores interactivos** (`EpiSims`, `ExactSims`): laboratorio 2×2,
-  mapa de decisiones de cinco procedimientos exactos, potencia y tamaño
-  reales por enumeración, correcciones con celdas en cero, cobertura de
-  ICs, ROC, DAGs interactivos, etc.
+- **Simuladores interactivos** (`EpiSims`, `ExactSims`, `AuditSims`):
+  laboratorio 2×2, mapa de decisiones de cinco procedimientos exactos,
+  potencia y tamaño reales por enumeración, correcciones con celdas en
+  cero, cobertura de ICs, ROC, DAGs interactivos, y la **capa de
+  auditoría**: cobertura simultánea multinomial, estrés del IC del OR con
+  n chico y la estimación de τ² — cada auditor reporta nivel nominal vs.
+  empírico con su error Monte Carlo.
+- **Capa de práctica** (`ConductStudy`, `QualitySims`, `WorldSims`): el
+  hilo "la investigación como se hace" — conducción del estudio en 7
+  pasos por diseño, Tabla 1 con diferencias estandarizadas
+  (`Table1Builder`), auditoría de calidad del dato calificada
+  (`DataQualityPanel`), datos faltantes MCAR/MAR/MNAR con verdad
+  conocida (`MissingDataLab`), E-value (`EValueCalculator`), corrección
+  de medición por Se/Sp (`BiasAnalysis2x2`) y la ciudad simulada con
+  verdad conocida (`CityLab`). Cada componente lee los CSV reales de
+  `public/data/` en el navegador, sin dependencias nuevas.
 - **Celdas R ejecutables** (`RCell`): WebR en el navegador; `survival`
   bajo demanda; los datasets de `public/data/` se copian al FS virtual.
 - **Cifras verificadas** (`<Claim>`): 39 valores de la narrativa de los
   módulos 5 y 6 se generan desde `src/lib/exact2x2.ts` /
   `src/lib/precision.ts` vía `scripts/build-claims.ts` →
   `src/content/claims.json`. Si el cómputo cambia, el texto lo refleja.
+  Las cifras del resto de módulos que aparecen en prosa salen de la celda
+  ejecutable adyacente — sus salidas están congeladas en
+  `tests/r-snapshots/` (69 archivos) y `pnpm check:r` las audita.
 - **Anexos** (`/anexos`): manifiesto validado con Zod (`src/lib/anexos.ts`)
   con el ensayo técnico del test exacto de Fisher (MD + PDF), los scripts
-  R originales, resultados y seis figuras.
+  R originales, resultados, seis figuras y `ciudad_simulada.R` (el
+  generador de Simépolis con verdad conocida, en paridad con el código
+  TypeScript de `CityLab`).
 - **Bibliografía** (`/bibliografia`): apéndice curado (`src/lib/lecturas.ts`)
-  de ~60 referencias por tema —textos base, faltantes, muestras pequeñas,
-  sesgos, ética y normativa colombiana— con enlaces DOI y recursos
-  institucionales (STROBE, EQUATOR, Belmont, Helsinki, Ley 1581, DAGitty).
+  de 100 referencias organizadas por tema —textos base, clásicos de la
+  disciplina, inferencia exacta y auditoría por simulación, faltantes,
+  muestras pequeñas, sesgos, síntesis de evidencia, ética y normativa
+  colombiana— con enlaces DOI y recursos abiertos (STROBE, EQUATOR,
+  Belmont, Helsinki, Ley 1581, DAGitty, Epi Handbook, ColOpenData,
+  EpiNow2).
 - **Asistente IA con RAG**: corpus propio (`src/lib/rag/corpus.ts`) de
   ~170 documentos (secciones de módulos, quizzes, bibliografía, anexos),
   recuperación BM25 local, perfil pedagógico del curso inyectado al
   prompt del paquete `@cursos/blackboard`.
 - **Pizarra digital** (paquete `packages/blackboard`, Excalidraw):
   panel acoplable, captura de elementos del módulo, modo presentación.
+- **La sesión de clase como objeto central** (`src/lib/session-store.ts`,
+  `useSession`): cada clase es un registro con ciclo de vida completo
+  en IndexedDB — se crea, registra el recorrido cronológico (módulos
+  visitados, páginas de pizarra, capturas, preguntas, chat del asistente),
+  se cierra y se puede **recorrer** con el reproductor
+  (`SessionReplay`): una línea de tiempo que navega de vuelta a cada
+  módulo y página. Integridad garantizada: mutaciones serializadas con
+  mutex, sesiones cerradas inmutables, borrado en cascada (capturas +
+  chat), tolerancia a registros corruptos, esquema versionado con
+  migraciones y sincronización entre pestañas. Exportable a PDF
+  (con páginas de la pizarra embebidas) y a Markdown.
 - **Progreso del curso**: `useProgress` persiste lecciones completadas
   en `localStorage`.
 
@@ -112,8 +147,9 @@ src/
   components/             Simuladores, RCell, Callout, Quiz, mdx-components…
   content/modules/        repaso (00) + 19 módulos MDX + claims.json generado
   hooks/                  useExactTask, useProgress, useWebR, useBroadcast…
-  lib/                    exact2x2, precision, exactTasks, exactRunner,
-                          tokens, claims, anexos, rag/, modules, glossary…
+  lib/                    exact2x2, precision, multinomial, exactTasks,
+                          exactRunner, tokens, claims, anexos, lecturas,
+                          rag/, modules, glossary…
   workers/exact.worker.ts Web Worker de cálculo exacto
 packages/blackboard/      Pizarra digital + asistente LLM (workspace)
 public/anexos/            Ensayo técnico, scripts R, figuras del anexo
@@ -166,7 +202,7 @@ Playwright · pnpm workspaces.
 ```bash
 pnpm install          # instala deps (lockfile congelado en CI)
 pnpm dev              # http://localhost:3000
-pnpm build            # build de producción (27 rutas estáticas)
+pnpm build            # build de producción (29 páginas generadas)
 pnpm start            # sirve el build
 ```
 
@@ -175,9 +211,9 @@ pnpm start            # sirve el build
 | Comando | Qué verifica |
 |---|---|
 | `pnpm typecheck` | `tsc --noEmit` sin errores |
-| `pnpm test` | 215 tests Vitest (exact2x2, precision, tasks, claims, RAG, hooks, componentes) |
+| `pnpm test` | 221 tests Vitest (exact2x2, precision, multinomial, tasks, claims, RAG, hooks, componentes) |
 | `pnpm check:mdx` | Los 20 archivos MDX (repaso + 19 módulos) compilan con next-mdx-remote |
-| `pnpm check:r` | Las salidas de las celdas R coinciden con los snapshots de `tests/r-snapshots` |
+| `pnpm check:r` | Las salidas de las 66 celdas R coinciden con los snapshots de `tests/r-snapshots` |
 | `pnpm test:visual` | 46 capturas Playwright (20 páginas de módulo + home + anexos + bibliografía × escritorio/móvil) |
 
 Otras utilidades: `python scripts/run_all_r.py --update` regenera los
@@ -233,7 +269,14 @@ una celda los referencia por nombre.
 - Módulo 6 (inferencia exacta): Fisher (1935), Barnard (1945), Boschloo (1970), Berger & Boos (1994), Mehrotra–Chan–Berger (2003), Hoenig & Heisey (2001), Halpern et al. (2002), O'Hagan et al. (2005), y el ensayo técnico del repositorio (`test_exacto_fisher_3`, disponible en `/anexos`) con el caso Perondi et al. (2004).
 - Hilo de precisión (módulos 5, 6, 9, 13, 17): Brown, Cai & DasGupta (2001), Cepeda-Cuervo et al. (2008, *Revista Colombiana de Estadística*), Rothman & Greenland (2018) y el seminario de precisión y tamaños muestrales de Correa (`modulo_precision`), portado y auditado en `src/lib/precision.ts`.
 
-## Licencia
+## Titularidad y licencias
 
-Contenido del curso bajo [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
-Esneider Rios · Universidad Nacional de Colombia · Sede Medellín · 2026.
+- **Plataforma (código):** That_Board © 2026 Esneider Ríos. Todos los
+  derechos reservados. Proyecto personal e independiente. Ver `LICENSE`.
+- **Contenido del curso:** basado en las notas de clase, scripts y datos del
+  curso ADEI del profesor Juan Carlos Salazar Uribe (Escuela de Estadística,
+  UNAL Medellín), con adaptación y texto interactivo de Esneider Ríos. Las
+  condiciones de uso y publicación del contenido se fijan por acuerdo escrito
+  con su autor.
+- **Textos de terceros** (Woodward y demás bibliografía): se citan; no se
+  alojan ni se redistribuyen.

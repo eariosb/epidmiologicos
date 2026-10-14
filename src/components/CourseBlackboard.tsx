@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Camera, ChevronDown, ChevronRight, GraduationCap, Presentation, Sparkles, X } from 'lucide-react';
 import {
   BlackboardPanel,
@@ -26,7 +26,7 @@ import { PageNav } from './PageNav';
 import { useChatPersistence } from '@/hooks/useChatPersistence';
 import { useBroadcast } from '@/hooks/useBroadcast';
 import { drainPendingInserts, type SendToBlackboardDetail } from '@/lib/send-to-blackboard';
-import { getActiveSession, setSessionActiveScene } from '@/lib/session-store';
+import { getActiveSession, onActiveSessionChanged, setSessionActiveScene, ACTIVE_SESSION_KEY } from '@/lib/session-store';
 
 const AUX_PANELS_KEY = 'bb-aux-panels';
 
@@ -161,27 +161,46 @@ export function CourseBlackboard({
     void setSessionActiveScene(state.activeSceneId);
   }, [state.activeSceneId]);
 
-  // On mount, resume the board page recorded in the session — but only when
-  // it belongs to the current module (never jump to another module's page).
+  // Resume the board page recorded in the session — but only when it
+  // belongs to the current module (never jump to another module's page).
+  // Runs on mount and again whenever the active session is switched, so
+  // loading a session from the manager also restores its board page.
+  const restoreSessionScene = useCallback(async () => {
+    try {
+      const session = await getActiveSession();
+      const target = session?.activeSceneId;
+      if (!target || target === state.activeSceneId) return;
+      const slug = state.moduleContext?.slug;
+      if (slug && !target.startsWith(`blackboard/${slug}`)) return;
+      await loadScene(target);
+      dispatch({ type: 'SELECT_SCENE', id: target });
+    } catch (err) {
+      console.error('[blackboard] session scene restore failed', err);
+    }
+  }, [state.activeSceneId, state.moduleContext?.slug, loadScene, dispatch]);
+
   const restoredSceneRef = useRef(false);
   useEffect(() => {
     if (restoredSceneRef.current) return;
     restoredSceneRef.current = true;
-    void (async () => {
-      try {
-        const session = await getActiveSession();
-        const target = session?.activeSceneId;
-        if (!target || target === state.activeSceneId) return;
-        const slug = state.moduleContext?.slug;
-        if (slug && !target.startsWith(`blackboard/${slug}`)) return;
-        await loadScene(target);
-        dispatch({ type: 'SELECT_SCENE', id: target });
-      } catch (err) {
-        console.error('[blackboard] session scene restore failed', err);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void restoreSessionScene();
+  }, [restoreSessionScene]);
+
+  useEffect(() => {
+    return onActiveSessionChanged(() => {
+      void restoreSessionScene();
+    });
+  }, [restoreSessionScene]);
+
+  // Cross-tab: the active-session pointer lives in localStorage, so a
+  // session switch in another tab restores that session's board page here.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === ACTIVE_SESSION_KEY) void restoreSessionScene();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [restoreSessionScene]);
 
   // Presentation keyboard controls. Arrow keys override Excalidraw's nudge
   // only while presenting; typing inside inputs/editors is never hijacked.

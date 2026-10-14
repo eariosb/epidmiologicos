@@ -177,6 +177,17 @@ const RAW_ANEXOS: unknown[] = [
     permiso: 'autor-curso',
   },
   {
+    id: 'notacion',
+    titulo: 'Apéndice de notación — símbolos del curso',
+    descripcion:
+      'Tabla de símbolos y convenciones usados en los módulos: la tabla 2×2 (a, b, c, d) y su convención de orientación, medidas (RR, OR, RD, ARR, NNT/NNH), pruebas diagnósticas (Se, Sp, VPP, LR±), interacción aditiva (RERI, AP, S), supervivencia (S(t), λ, censura), inferencia exacta (x₁, n₁, π) y DAGs (E, D, C, M).',
+    tipo: 'documento',
+    archivo: 'notacion.md',
+    autores: 'Ríos, E.',
+    anio: 2026,
+    permiso: 'autor-curso',
+  },
+  {
     id: 'ciudad-simulada',
     titulo: 'ciudad_simulada.R — la ciudad de Simépolis con verdad conocida',
     descripcion:

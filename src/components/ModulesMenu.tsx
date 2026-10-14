@@ -116,6 +116,14 @@ export function ModulesMenu({ modules, blocks }: ModulesMenuProps) {
               Anexos del curso
             </Link>
             <Link
+              href="/glosario"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block truncate px-3 py-1.5 text-xs font-medium text-ink-600 transition-colors hover:bg-ink-50 dark:text-ink-300 dark:hover:bg-ink-700"
+            >
+              Glosario
+            </Link>
+            <Link
               href="/bibliografia"
               role="menuitem"
               onClick={() => setOpen(false)}

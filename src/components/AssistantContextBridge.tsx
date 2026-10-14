@@ -76,7 +76,7 @@ export function AssistantContextBridge({
       if (active && session) {
         dispatch({
           type: 'SET_VISITED_SECTIONS',
-          sections: session.visitedSections.map((s) => s.slug),
+          sections: [...new Set(session.visitedSections.map((s) => s.slug))],
         });
       }
     };

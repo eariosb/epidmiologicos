@@ -36,6 +36,12 @@ import {
   CIMethodsExplorer,
   PrecisionSampleSizeExplorer,
 } from '@/components/ExactSims';
+import {
+  AuditCard,
+  MultinomCIExplorer,
+  Tau2Audit,
+  BootstrapStress,
+} from '@/components/AuditSims';
 import { LangTabs } from '@/components/LangTabs';
 import { SasBlock } from '@/components/SasBlock';
 import { DecisionPanel } from '@/components/DecisionPanel';
@@ -44,6 +50,7 @@ import { SimReset } from '@/components/SimReset';
 import { ToolCard } from '@/components/ToolCard';
 import { FormulaPalette } from '@/components/FormulaPalette';
 import { Term } from '@/components/Term';
+import { MRef } from '@/components/MRef';
 import { BradfordHill, EpiTable } from '@/components/CourseBlocks';
 import { ConductStudy, ConductStep } from '@/components/ConductStudy';
 import { Table1Builder, DataQualityPanel } from '@/components/QualitySims';
@@ -139,6 +146,10 @@ export const mdxComponents: MDXComponents = {
   SampleSizeExplorer: withReset(SampleSizeExplorer),
   CIMethodsExplorer: withReset(CIMethodsExplorer),
   PrecisionSampleSizeExplorer: withReset(PrecisionSampleSizeExplorer),
+  AuditCard,
+  MultinomCIExplorer: withReset(MultinomCIExplorer),
+  Tau2Audit: withReset(Tau2Audit),
+  BootstrapStress: withReset(BootstrapStress),
   LangTabs,
   ToolCard,
   SasBlock,
@@ -146,6 +157,7 @@ export const mdxComponents: MDXComponents = {
   DecisionCard,
   FormulaPalette,
   Term,
+  MRef,
   EpiTable,
   BradfordHill,
   ConductStudy,

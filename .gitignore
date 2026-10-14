@@ -7,6 +7,10 @@ next-env.d.ts
 *.log
 .vercel
 
+/scripts
+/_respaldo_titularidad_20261013
+/docs
+
 test-results/
 playwright-report/
 public/data/Rplots.pdf

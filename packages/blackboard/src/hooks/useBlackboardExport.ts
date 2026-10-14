@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import { useBlackboardContext } from '../lib/context';
+import { copyText } from '../lib/clipboard';
 
 export function useBlackboardExport() {
   const { state } = useBlackboardContext();
@@ -16,7 +17,7 @@ export function useBlackboardExport() {
   }, []);
 
   const copyToClipboard = useCallback(async (text: string) => {
-    await navigator.clipboard.writeText(text);
+    await copyText(text);
   }, []);
 
   return {

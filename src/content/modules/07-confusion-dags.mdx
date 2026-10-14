@@ -55,13 +55,33 @@ colisionador empeora la estimación: el DAG decide qué ajustar, no la
 disponibilidad de la variable ni un p-valor de "asociación con E".
 </Callout>
 
+### El criterio formal: qué conjunto ajustar
+
+"Abrir" y "cerrar" caminos tiene una regla exacta: el **criterio de
+puerta trasera** (Pearl). Un conjunto de variables $Z$ es suficiente
+para estimar el efecto de $E$ sobre $D$ si cumple dos condiciones:
+
+1. **$Z$ cierra todo camino de $E$ a $D$ que empiece con flecha hacia
+   $E$** ($E \leftarrow \cdots$). Esos caminos son asociación espuria
+   que hay que bloquear — por estratificación, regresión o pareamiento
+   sobre $Z$ (módulos 8 y 15).
+2. **Ninguna variable de $Z$ es descendiente de $E$**. Ajustar un
+   descendiente corta el propio efecto o abre caminos que estaban
+   cerrados (el colisionador es el caso límite: hijo común de $E$ y de
+   $D$).
+
+Con el criterio, "ajusta el confusor" deja de ser intuición: se enuncia
+el conjunto $Z$ y se verifica que cierra todas las puertas traseras sin
+abrir otras. Es exactamente lo que DAGitty automatiza como *adjustment
+sets*: los conjuntos mínimos que cumplen las dos condiciones.
+
 ## Confusión que fabrica y confusión que enmascara
 
 Los dos regímenes extremos no son simétricos en consecuencia: uno
 **inventa** una asociación inexistente; el otro **esconde** una real.
-Las tablas de la clase 8 los muestran con números — y en ambos casos la
-señal del problema es idéntica: el OR agrupado no se parece a ningún OR
-de estrato.
+Las tablas del ejercicio de clase los muestran con números — y en ambos
+casos la señal del problema es idéntica: el OR agrupado no se parece a
+ningún OR de estrato.
 
 <EpiTable
   title="Fabricación: los estratos no tienen asociación"

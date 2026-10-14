@@ -1,0 +1,5 @@
+exp
+grupo     si no
+  caso     7  5
+  control  6 18
+OR = 3.88  IC95% Woolf+0.5 = 0.94 16.02 nIC95% bootstrap percentil = 1.01 19.13 n

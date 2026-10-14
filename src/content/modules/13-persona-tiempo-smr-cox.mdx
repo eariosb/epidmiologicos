@@ -142,7 +142,7 @@ sola covariable binaria, el test del score de Cox **es** el log-rank del
 módulo anterior.
 
 El ajuste siguiente usa `coxph` sobre recid.csv (semanas hasta re-arresto
-en 432 exconvictos): estima el HR de cada covariable y verifica el
+en 432 exconvictos): estima el <Term k="HR">HR</Term> de cada covariable y verifica el
 supuesto de riesgos proporcionales con `cox.zph`.
 
 <RCell
@@ -184,7 +184,8 @@ HR es constante en el tiempo. Con <code>cox.zph(fit)</code> se contrasta;
 un HR que cambia con t exige estratificar el tiempo o un modelo con
 interacción temporal. En este ajuste el chequeo **sí** detecta
 violaciones: <code>age</code> (p ≈ 0.015), <code>wexp</code> (p ≈ 0.040)
-y el test global (p ≈ 0.013). En un reporte real no basta interpretar los
+y el test global (p ≈ 0.013) — los valores de la celda anterior, que
+puedes reproducir ejecutándola. En un reporte real no basta interpretar los
 HR: habría que estratificar por edad o añadir una interacción con el
 tiempo antes de sacar conclusiones causales.
 </Callout>

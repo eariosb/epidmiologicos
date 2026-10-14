@@ -13,6 +13,7 @@ const session: Session = {
   status: 'ended',
   updatedAt: 1700003600000,
   visitedSections: [{ slug: 'lmm-intro', title: 'Introducción', timestamp: 1700000100000 }],
+  sceneVisits: [],
   captureIds: ['c1'],
   questions: [{ id: 'q1', text: '¿Por qué efectos aleatorios?', timestamp: 1700000200000, resolved: true }],
 };

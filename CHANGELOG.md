@@ -88,6 +88,34 @@ Primera versión completa del curso tras el plan de diez fases
   deriva de una de sus clases) y de la corrección del IC de
   Kleinbaum–Kupper con su tabla de cobertura.
 
+## [Sin versión] — Test estadístico en el repaso + auditoría calificada
+
+### Agregado
+
+- **M0 — "El test estadístico: cómo se decide con datos"**: anatomía
+  completa de la prueba de hipótesis en lenguaje de aprendiz — H₀ como
+  modelo concreto, estadístico de prueba, distribución bajo H₀, valor p
+  como viabilidad del modelo nulo (rechazar ≠ aceptar), errores tipo I
+  y II, una cola vs. dos, significancia real vs. nominal, potencia y
+  **potencia empírica** (RCell `00/test-potencia`: tamaño real 4.1 % y
+  potencias 26.4 %/75.0 % simuladas con `t.test`), significancia vs.
+  relevancia epidemiológica, valores borde, tests configurados al
+  estudio (Fisher vs. Boschloo como elección de "qué es extremo";
+  permutaciones como test hecho a mano) y catálogo de los tests de uso
+  epidemiológico con caso de uso y referencia. 2 quizzes nuevos.
+- **Glosario**: error_tipo_i, error_tipo_ii, potencia, significancia,
+  test_estadistico, distribucion_nula, cola, valor_borde,
+  relevancia_clinica, calibracion, significancia_real.
+
+### Corregido
+
+- **`DataQualityPanel` ahora califica el veredicto del estudiante**:
+  cada hallazgo declara su veredicto esperado con justificación
+  (verificado/documentado/sospechoso), el panel compara la selección y
+  muestra retroalimentación (✓/⚠) con el veredicto esperado y la razón,
+  más contador de aciertos. Enseña la distinción clave: «sospechoso»
+  solo aplica mientras la verificación está pendiente.
+
 ## [Sin versión] — Ciudad simulada (fase 10e)
 
 ### Agregado

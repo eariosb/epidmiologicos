@@ -7,6 +7,7 @@ import {
   onEventsChanged,
   type BoardEvent,
 } from '@cursos/blackboard';
+import { useSession } from '@/hooks/useSession';
 
 const KIND_COLOR: Record<string, string> = {
   'save-missed': 'text-danger-600',
@@ -29,6 +30,8 @@ const KIND_COLOR: Record<string, string> = {
  */
 export function DiagnosticsPanel() {
   const [events, setEvents] = useState<BoardEvent[]>([]);
+  const [onlySession, setOnlySession] = useState(false);
+  const { session } = useSession();
 
   useEffect(() => {
     void listEvents().then(setEvents);
@@ -37,7 +40,10 @@ export function DiagnosticsPanel() {
     });
   }, []);
 
-  const recent = [...events].reverse().slice(0, 100);
+  const recent = [...events]
+    .filter((ev) => !onlySession || (session != null && ev.sessionId === session.id))
+    .reverse()
+    .slice(0, 100);
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded border border-ink-200 bg-white">
@@ -45,13 +51,23 @@ export function DiagnosticsPanel() {
         <span className="text-xs font-semibold text-ink-700">
           Diagnóstico: {events.length} eventos (anillo, máx. 500)
         </span>
-        <button
-          type="button"
-          onClick={() => void clearEvents()}
-          className="text-[11px] text-ink-500 hover:text-danger-600"
-        >
-          Limpiar
-        </button>
+        <span className="flex items-center gap-3">
+          <label className="flex items-center gap-1 text-[11px] text-ink-500">
+            <input
+              type="checkbox"
+              checked={onlySession}
+              onChange={(e) => setOnlySession(e.target.checked)}
+            />
+            Solo esta sesión
+          </label>
+          <button
+            type="button"
+            onClick={() => void clearEvents()}
+            className="text-[11px] text-ink-500 hover:text-danger-600"
+          >
+            Limpiar
+          </button>
+        </span>
       </div>
       <div className="flex-1 overflow-y-auto p-2 font-mono text-[10px] leading-4">
         {recent.length === 0 && (

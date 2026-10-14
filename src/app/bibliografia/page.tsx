@@ -26,7 +26,22 @@ export default function BibliografiaPage() {
             teórico (Woodward, Rothman &amp; Greenland, Hernán &amp; Robins) y las
             lecturas que soportan la columna práctica —conducir el estudio,
             explorar antes de inferir, datos del mundo real e intuición
-            cuantitativa—. Cada cita indica para qué la usa el curso.
+            cuantitativa—. Cada cita indica para qué la usa el curso. Los
+            documentos técnicos, PDFs y scripts del curso están en los{' '}
+            <a
+              href="/anexos"
+              className="font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-500"
+            >
+              anexos
+            </a>{' '}
+            y las siglas en el{' '}
+            <a
+              href="/glosario"
+              className="font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:decoration-brand-500"
+            >
+              glosario
+            </a>
+            .
           </p>
           <p className="mt-3 rounded border border-warning-200 bg-warning-50 px-3 py-2 text-sm text-warning-800">
             Las referencias se verifican contra la fuente antes de cada

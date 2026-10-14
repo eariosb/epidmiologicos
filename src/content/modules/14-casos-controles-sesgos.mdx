@@ -11,6 +11,7 @@ prerequisites: ["Módulo 4: Medidas de asociación", "Módulo 7: Confusión"]
 import { Callout } from '@/components/Callout'
 import { Quiz } from '@/components/Quiz'
 import { BerksonExplorer } from '@/components/EpiSims'
+import { BootstrapStress } from '@/components/AuditSims'
 import { LabExercise } from '@/components/LabExercise'
 import { SasBlock } from '@/components/SasBlock'
 import { ToolCard } from '@/components/ToolCard'
@@ -298,6 +299,70 @@ datos — sin una fuente externa (un subestudio de validación), el
 análisis de sesgo es condicional: "si la medición fuera así de mala,
 el OR sería tanto". Reporte el rango recorrido, no el punto
 corregido.
+</Callout>
+
+## Cuando el hospital solo te da doce casos
+
+El diseño caso-control existe porque la enfermedad es rara — y esa
+misma rareza fija el precio estadístico: los casos se agotan. Un
+estudio de enfermedad de Kawasaki, de fibrodisplasia o de un
+desenlace raro tras una vacuna puede terminar con 8–15 casos contra
+30 controles. En ese terreno, dos preguntas del módulo 6 vuelven
+con otra ropa: ¿el IC log-OR de Woolf sigue cubriendo lo que
+promete? y ¿qué ocurre cuando una celda queda en cero?
+
+La respuesta honesta se obtiene por **auditoría Monte Carlo**:
+inventar el escenario, repetir el estudio cientos de veces y contar
+cuántos intervalos cubren el OR verdadero. El bootstrap aparece
+aquí como el remedio habitual cuando la asintótica se duda — pero
+el ejercicio muestra su límite: remuestrear una tabla de n = 10
+produce réplicas que se parecen demasiado entre sí, y la cobertura
+sigue por debajo del nominal. El remedio parcial existe (la
+corrección de Haldane–Anscombe que ya usaste), el remedio total no:
+**con n muy chico la precisión la fija la información, no el
+método**.
+
+<BootstrapStress title={<>Prueba de estrés: el IC del OR con n chico por grupo</>} />
+
+<RCell
+  id="14/bootstrap-or"
+  title="IC bootstrap para el OR en una tabla chica"
+  code={`# Caso-control mini: 12 casos, 24 controles, exposicion
+# dicotomica. Convencion Woodward: filas = grupo, cols = exposicion.
+tab <- matrix(c(7, 5, 6, 18), nrow = 2, byrow = TRUE,
+              dimnames = list(grupo = c("caso", "control"),
+                              exp  = c("si", "no")))
+tab
+# OR de Woolf con correccion de Haldane para la celda en 5:
+a <- tab[1,1]+0.5; b <- tab[1,2]+0.5; c <- tab[2,1]+0.5; d <- tab[2,2]+0.5
+lor <- log(a*d/(b*c)); se <- sqrt(1/a + 1/b + 1/c + 1/d)
+cat("OR =", round(exp(lor),2), " IC95% Woolf+0.5 =",
+    round(exp(lor + c(-1,1)*1.96*se), 2), "\n")
+
+# Bootstrap: remuestrear dentro de cada grupo
+set.seed(2026); B <- 2000
+n1 <- sum(tab[1,]); n0 <- sum(tab[2,])
+ors <- replicate(B, {
+  x1 <- rbinom(1, n1, tab[1,1]/n1)
+  x0 <- rbinom(1, n0, tab[2,1]/n0)
+  A <- x1+0.5; Bc <- n1-x1+0.5; Cc <- x0+0.5; Dd <- n0-x0+0.5
+  log(A*Dd/(Bc*Cc))
+})
+cat("IC95% bootstrap percentil =", round(exp(quantile(ors, c(.025,.975))), 2), "\n")
+# Pregunta para el escrito: el bootstrap arregla la varianza, pero
+# la tabla solo tiene 12 casos — de donde puede salir mas
+# informacion? Respuesta honesta: de mas casos, o de un estudio
+# multicentrico. Eso se decide en el protocolo, no en la consola.`}
+/>
+
+<Callout type="warning" title="La auditoría tiene dos capas y no se mezclan">
+El **bootstrap** (B remuestras de *tu* tabla) aproxima la
+distribución muestral del estimador. El **estudio de simulación**
+(R réplicas del estudio completo) audita si el procedimiento cumple
+su promesa. Son dos Monte Carlo distintos: el primero trabaja sobre
+los datos que tienes; el segundo sobre datos que podrías haber
+tenido. Reportar un bootstrap sin auditarlo es repetir el error del
+TCL con herramienta nueva.
 </Callout>
 
 ## Producto del módulo

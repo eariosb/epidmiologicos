@@ -48,7 +48,9 @@ export function useBlackboardScene() {
 
   const createScene = useCallback(
     (moduleSlug: string, id?: string) => {
-      const sceneId = id ?? `${moduleSlug}/${Date.now()}`;
+      // Single id format `blackboard/{slug}/{ts}`: the session resume
+      // guard and the PDF page ordering rely on this prefix convention.
+      const sceneId = id ?? `blackboard/${moduleSlug}/${Date.now()}`;
       const scene: BlackboardScene = {
         version: SCHEMA_VERSIONS.scene,
         id: sceneId,

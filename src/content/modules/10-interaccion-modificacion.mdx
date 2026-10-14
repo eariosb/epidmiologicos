@@ -46,6 +46,50 @@ epidemiología de salud pública privilegia la aditiva (importa el exceso
 absoluto de casos); la analítica clásica reporta la multiplicativa (los
 RR u <Term k="OR">OR</Term> entre estratos).
 
+### Interacción aditiva con número: el <Term k="RERI">RERI</Term>
+
+"La escala aditiva es la de salud pública" se vuelve operativo con un
+índice: el **exceso relativo de riesgo por interacción**. Con dos
+factores E y F y riesgo basal $R_{00}$ (ninguno presente):
+
+$$RERI = RR_{11} - RR_{10} - RR_{01} + 1$$
+
+Un RERI nulo es aditividad exacta; positivo, sinergia (los dos juntos
+suman más que sus partes); negativo, antagonismo. Sus derivados cuentan la
+historia a decisión: <Term k="AP">$AP = RERI/RR_{11}$</Term> es la fracción del riesgo
+conjunto atribuible a la interacción, y el índice de sinergia
+$S = (RR_{11}-1)/\big[(RR_{10}-1)+(RR_{01}-1)\big]$.
+
+<RCell
+  id="10/reri"
+  title="RERI con IC bootstrap (Andersson et al., 2005)"
+  code={`# Dos factores E y F en una cohorte: riesgos por celda.
+r <- c(r00 = 0.01, r10 = 0.03, r01 = 0.02, r11 = 0.08)
+n <- c(r00 = 4000, r10 = 4000, r01 = 4000, r11 = 4000)
+
+RR   <- r / r["r00"]
+reri <- RR["r11"] - RR["r10"] - RR["r01"] + 1
+cat(sprintf("RR = (%.0f, %.0f, %.0f)   RERI = %.2f (>0: sinergia aditiva)\\n",
+            RR["r10"], RR["r01"], RR["r11"], reri))
+cat(sprintf("AP = %.2f (mitad del riesgo conjunto es interaccion)   S = %.2f\\n",
+            reri / RR["r11"],
+            (RR["r11"] - 1) / ((RR["r10"] - 1) + (RR["r01"] - 1))))
+
+# IC bootstrap: remuestrear los casos binomiales de cada celda.
+set.seed(7); B <- 5000
+boot <- replicate(B, {
+  x <- rbinom(4, n, r)
+  if (x[1] == 0) return(NA)
+  rr <- (x / n) / (x[1] / n[1])
+  rr[4] - rr[2] - rr[3] + 1
+})
+cat(sprintf("IC95%% bootstrap del RERI = (%.2f, %.2f)\\n",
+            quantile(boot, .025, na.rm = TRUE),
+            quantile(boot, .975, na.rm = TRUE)))
+# Conclusion: RERI > 0 con IC que excluye 0 -> la intervencion que quita
+# un factor en presencia del otro evita mas casos que la suma de partes.`}
+/>
+
 ## El test de homogeneidad de Breslow–Day
 
 $$
@@ -169,5 +213,5 @@ escalas, aditiva y multiplicativa.
 ## Lecturas
 
 - **Woodward (2014), caps. 4.7–4.9**: modificación de efecto, Ejemplos 4.13–4.14, la cuestión de la escala.
-- **<Term k="BD">Breslow &amp; Day (1980)</Term>**, vol. I: el test de homogeneidad.
+- **Breslow &amp; Day (1980)**, vol. I: el test de homogeneidad.
 - **Coscrato, Izbicki &amp; Stern (2018)**: pruebas agnósticas; anticipo del módulo 17.
