@@ -121,7 +121,7 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
                         )}
                       >
                         {numerar}{' '}
-                        {mod.meta.title.replace(/^\d+\.\s*/, '')}
+                        {mod.meta.title.replace(/^(?:\d+|II-\d+)\.\s*/, '')}
                         {mod.meta.level === 'transversal' && (
                           <span className="ml-1 text-[10px] font-normal uppercase tracking-wide text-ink-400">transversal</span>
                         )}
