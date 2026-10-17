@@ -102,14 +102,14 @@ distribuciones; el detalle de sus coberturas es el tema del módulo 6.
   title="Prevalencia y tasa con sus intervalos de confianza"
   code={`# Prevalencia puntual con IC95% exacto (Clopper-Pearson, binomial):
 x <- 45; n <- 400
-print(binom.test(x, n))
-# -> p ~ 0.113; el IC95% va aprox. de 0.083 a 0.147.
+ic_p <- binom.test(x, n)$conf.int   # solo el IC: el p de binom.test prueba p = 0.5
+cat(sprintf("prevalencia = %.4f, IC95%% (%.3f, %.3f)\\n", x / n, ic_p[1], ic_p[2]))
+# 4 decimales: 0.1125 es un empate y "%.3f" lo redondea distinto segun el sistema.
 # Cambia n a 40 conservando x/n y observa como el ancho explota.
 
 # Tasa de incidencia con IC95% exacto (Poisson sobre el conteo):
 casos <- 12; pt <- 8500          # persona-anos
-res <- poisson.test(casos, pt)
-print(res)
+res <- poisson.test(casos, pt)        # tampoco interesa su p (prueba tasa = 1)
 cat(sprintf("tasa = %.2f por 1000 p-a, IC95%% (%.2f, %.2f)\\n",
             res$estimate * 1000, res$conf.int[1] * 1000,
             res$conf.int[2] * 1000))
@@ -129,13 +129,19 @@ cuyo consumo separa mejor enfermos de sanos es el vehículo sospechoso.
 <RCell
   id="03/tasa-ataque"
   title="Tasa de ataque por alimento (Oswego, 1940)"
-  code={`# Oswego 1940 (ejemplo canonico): helado de vainilla.
-#    comieron: 43 enfermos / 54 ;  no comieron: 3 enfermos / 65
-ta_si <- 43/54; ta_no <- 3/65
+  code={`# Oswego 1940 (CDC, caso de entrenamiento EIS): helado de vainilla.
+#    comieron: 43 enfermos de 54 ; no comieron: 3 enfermos de 21
+ta_si <- 43/54; ta_no <- 3/21
 cat(sprintf("tasa de ataque si comio   = %.1f%%\\n", 100*ta_si))
 cat(sprintf("tasa de ataque no comio   = %.1f%%\\n", 100*ta_no))
 cat(sprintf("razon de tasas de ataque  = %.1f\\n", ta_si/ta_no))
-# Una razon alta y una diferencia grande senalan al vehiculo.
+cat(sprintf("diferencia                = %.1f puntos\\n", 100*(ta_si - ta_no)))
+# Con 3 enfermos entre los no expuestos, la razon es imprecisa:
+se <- sqrt(1/43 - 1/54 + 1/3 - 1/21)
+ic <- exp(log(ta_si/ta_no) + c(-1.96, 1.96) * se)
+cat(sprintf("IC95%% (log-normal) de la razon: %.1f a %.1f\\n", ic[1], ic[2]))
+# Una razon alta y una diferencia grande senalan al vehiculo; 3 de los 46
+# enfermos no comieron helado (error de memoria o contagio secundario).
 # La practica real repite la tabla para cada alimento del menu.`}
 />
 
@@ -161,6 +167,12 @@ prevalencia de una enfermedad crónica puede subir precisamente *porque* el
 tratamiento mejora.
 
 <PrevalenceExplorer title={<>P ≈ I × D en vivo: 300 personas, flujo mensual</>} />
+
+**Para explorar**
+
+1. Fija I = 0.05 y simula con D = 2 y luego con D = 10. ¿Cuánto cambia la prevalencia si la incidencia es la misma?
+2. Con I = 0.30 y D = 10, la aproximación P ≈ I·D daría 300 %. Compara con la línea teórica, P = ID/(1+ID) = 75 %, y con lo que marca la simulación.
+3. Observa cuánto tarda la curva roja en alcanzar la línea punteada. ¿Por qué el tiempo hasta el equilibrio crece con D?
 
 <Callout type="warning" title="Cuándo falla la aproximación">
 P = I × D exige tres condiciones: (1) población estacionaria, sin
@@ -197,11 +209,19 @@ cat(sprintf("riesgo 5-anos      = %.3f (probabilidad)\\n", riesgo))
 cat(sprintf("persona-anos       = %.0f\\n", pt))
 cat(sprintf("tasa de incidencia = %.2f por 1000 p-a\\n", tasa * 1000))
 cat(sprintf("\\nEl riesgo usa n=1000; la tasa usa pt=%.0f.\\n", pt))
-cat("Con seguimiento variable, solo la tasa es honesta.\\n")
+
+# El riesgo ingenuo supone que ningun perdido enfermo. Dos estimaciones
+# que si cuentan el seguimiento incompleto:
+r_act <- casos / (n - perdidos / 2)          # actuarial: perdidos a mitad
+r_exp <- 1 - exp(-tasa * 5)                  # desde la tasa, si es constante
+cat(sprintf("riesgo actuarial = %.4f | desde la tasa = %.4f | ingenuo = %.4f\\n",
+            r_act, r_exp, riesgo))
+cat("Con seguimiento incompleto, el riesgo se estima; no basta dividir.\\n")
 
 # P = I x D: hipertension, I = 3%/ano, D = 25 anos (cronica)
 I <- 0.03; D <- 25
-cat(sprintf("\\nP aprox = %.1f%%   P exacta = %.1f%%\\n",
+# P/(1-P) = I x D en estado estacionario; P = I x D solo si P es pequena.
+cat(sprintf("\\nP aprox = %.1f%%   P en estado estacionario = %.1f%%\\n",
             100 * I * D, 100 * (I * D) / (1 + I * D)))`}
 />
 
@@ -211,10 +231,13 @@ cat(sprintf("\\nP aprox = %.1f%%   P exacta = %.1f%%\\n",
   /* persona-anos: sanos 5, perdidos y casos 2.5 */
   pt = (n - perdidos - casos)*5 + (perdidos + casos)*2.5;
   tasa1000 = casos / pt * 1000;
-  /* P = I x D, hipertension cronica */
+  /* riesgo que si cuenta los perdidos */
+  r_actuarial = casos / (n - perdidos/2);
+  r_desde_tasa = 1 - exp(-(casos/pt) * 5);
+  /* P = I x D, hipertension cronica; P/(1-P) = I x D en estado estacionario */
   I = 0.03; D = 25;
   p_aprox  = 100 * I * D;
-  p_exacta = 100 * (I * D) / (1 + I * D);
+  p_estacionaria = 100 * (I * D) / (1 + I * D);
 run;
 proc print data=medidas noobs; run;`} />
 
@@ -373,7 +396,7 @@ print(escenarios)
 # directamente: glm(D ~ E, family = poisson) con varianza robusta,
 # o glm(D ~ E, family = binomial("log")).
 cat("Con prevalencia 30%, OR =", round(escenarios$OR[3], 2),
-    "pero la asociacion real es RP = 2\n")`}
+    "mientras la razon de prevalencias es 2\\n")`}
 />
 
 <SasBlock code={`/* En una encuesta con pesos y conglomerados, PROC SURVEYFREQ
@@ -385,11 +408,15 @@ proc surveyfreq data=encuesta;
   tables exposicion * desenlace / row risk;
 run;
 
-/* Razon de prevalencias: Poisson con varianza robusta */
+/* Razon de prevalencias: Poisson con varianza robusta.
+   Pesos y EE robusto por conglomerado (correlacion de trabajo
+   independiente); los estratos no entran en este calculo. */
 proc genmod data=encuesta;
-  class id;
+  class manzana;
+  weight peso;
   model desenlace = exposicion / dist=poisson link=log;
-  repeated subject=id;   /* EE robusto (GEE/exchangeable) */
+  repeated subject=manzana / type=ind;
+  estimate "RP" exposicion 1 / exp;
 run;`} />
 
 <Callout type="warning" title="Los errores estándar ingenuos son incorrectos">
@@ -425,6 +452,12 @@ Sp rescatan el VPP — los falsos positivos vienen del mar de sanos.
 <DiagnosticTestExplorer
   title={<>Tamización en población de bajo riesgo: Se, Sp y prevalencia → VPP</>}
 />
+
+**Para explorar**
+
+1. Con prevalencia 2 % y Se = Sp = 95 % el VPP ronda el 28 %. Sube solo la especificidad: ¿a cuánto debe llegar para que el VPP pase del 80 %? (hace falta Sp ≈ 99.5 %).
+2. Vuelve a Sp = 95 % y sube la sensibilidad al máximo: el VPP casi no cambia. Explica por qué en una frase.
+3. Lleva la prevalencia a 20 %: la misma prueba da un VPP cercano al 83 %. La calidad de la prueba no cambió; cambió la población en que se aplica.
 
 Para decisiones la medida útil es la <Term k="LR">**razón de verosimilitud**</Term>:
 $LR^+ = Se/(1 - Sp)$ cuánto multiplica el resultado positivo los odds

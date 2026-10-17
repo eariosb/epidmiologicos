@@ -1,0 +1,2 @@
+OR: estrato 0 = 9.0 | estrato 1 = 9.0 | crudo = 4.7
+RR: estrato 0 = 5.00 | estrato 1 = 1.55 | crudo = 2.04 (entre ambos)

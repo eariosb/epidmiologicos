@@ -20,6 +20,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
     titulo: 'Medidas de asociación e impacto',
     entradas: {
       RR: 'Riesgo relativo (relative risk, risk ratio): la razón entre el riesgo en expuestos y en no expuestos; solo calculable en diseños que observan incidencia.',
+      odds: 'Odds (razón de apuestas): la parte contra el resto, p/(1−p) = f/(N−f); va de 0 a ∞ y coincide con el riesgo cuando el evento es raro.',
       OR: 'Razón de odds (odds ratio): la razón de odds de exposición en casos vs. controles; aproxima al RR cuando la enfermedad es rara.',
       RD: 'Riesgo diferencial o diferencia de riesgos (risk difference): R_exp − R_nexp; el exceso absoluto atribuible a la exposición.',
       ARR: 'Reducción absoluta de riesgo (absolute risk reduction): riesgo_control − riesgo_tratamiento; positiva es beneficio, negativa es daño. Convención del curso.',
@@ -100,12 +101,33 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'E-value (VanderWeele & Ding, 2017): qué tan fuerte tendría que ser un confusor no medido —asociado con exposición y desenlace— para anular por completo el RR observado. E = RR + √(RR(RR−1)).',
       PS: 'Propensity score (Rosenbaum & Rubin 1983): la probabilidad de recibir la exposición dados los confusores observados, P(E=1|C); resume el vector de confusores en un número.',
       IPTW: 'Ponderación por el inverso de la probabilidad de tratamiento (inverse probability of treatment weighting): pesar cada sujeto por 1/PS crea una pseudopoblación sin confusión medida; estima el efecto marginal.',
+      confusion:
+        'Confusión: sesgo que distorsiona la asociación cuando una tercera variable se asocia con la exposición y con el desenlace; se elimina estratificando, estandarizando o modelando.',
+      colapsabilidad:
+        'Colapsabilidad: propiedad de una medida cuyo valor crudo es un promedio ponderado de los de estrato en ausencia de confusión. El RR y la RD la tienen; el OR y el HR no.',
+    },
+  },
+  {
+    titulo: 'Interacción y modificación de efecto',
+    entradas: {
+      interaccion:
+        'Interacción o modificación de efecto: el efecto de una exposición depende del nivel de otra; es un fenómeno causal que se describe, no un sesgo que se elimina.',
+      paralelismo:
+        'Paralelismo: ausencia de interacción en la escala elegida —efectos iguales entre estratos; cada exposición completa sus causas suficientes por vías independientes.',
+      sinergismo:
+        'Sinergismo: el efecto conjunto supera lo esperado en la escala elegida; en la aditiva significa componentes compartidos de una misma causa suficiente.',
+      antagonismo:
+        'Antagonismo: el efecto conjunto queda por debajo de lo esperado; una exposición mitiga o bloquea a la otra. Si invierte el signo es antagonismo cualitativo (cruce).',
+      unilateralismo:
+        'Unilateralismo: una exposición no tiene efecto por sí sola pero es necesaria para el efecto de la otra —componente necesario de una causa suficiente—; no depende de la escala.',
     },
   },
   {
     titulo: 'Métodos de estratificación y contraste',
     entradas: {
       MH: 'Mantel–Haenszel (1959): el estimador y test estratificado que resume tablas 2×2×K pesando por el inverso de la varianza; controla un confusor categórico.',
+      estandarizacion:
+        'Estandarización: ajuste que pondera las medidas de cada estrato con una población estándar común; con OR difiere del MH por la no colapsabilidad.',
       CMH: 'Cochran–Mantel–Haenszel: la familia de tests que incluye al MH clásico; en pareamiento 1:1 equivale exactamente a McNemar.',
       BD: 'Breslow–Day (1980): el test de homogeneidad de odds ratios entre estratos; si los OR difieren hay interacción y no debe resumirse.',
       McNemar:
@@ -137,6 +159,28 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       EMV: 'Estimador de máxima verosimilitud (maximum likelihood estimator): el valor del parámetro que hace los datos observados más probables; base de glm, coxph y la mayoría de tests asintóticos.',
       ECM: 'Error cuadrático medio (mean squared error): varianza + sesgo²; el criterio que compara estimadores cuando la corrección de ceros introduce sesgo a cambio de finitud.',
       Wald: 'Método de Wald: estimador ± z·EE, y el test asociado; el estándar por defecto de todo software y el que falla primero con muestras chicas.',
+      'α':
+        'Nivel de significación: la probabilidad de error tipo I que se tolera, fijada antes de ver los datos; en un IC, 1 − α es la confianza nominal.',
+      Poisson:
+        'Distribución de Poisson: conteos de eventos independientes en un tiempo o espacio dado; media = varianza = λ. Base de tasas, SMR y regresión de conteos.',
+      TCL:
+        'Teorema central del límite: la media (o suma) estandarizada tiende a la normal al crecer n; la velocidad depende de la asimetría, y con proporciones extremas la aproximación falla.',
+      LRT:
+        'Test de razón de verosimilitudes (likelihood ratio test): compara la log-verosimilitud de dos modelos anidados; 2·Δlog L ~ χ² con gl = parámetros de diferencia.',
+      GLM:
+        'Modelo lineal generalizado (generalized linear model): respuesta de la familia exponencial con función de enlace; la logística y la Poisson son sus casos del curso.',
+      GEE:
+        'Ecuaciones de estimación generalizadas (generalized estimating equations): GLM para datos correlacionados (medidas repetidas, conglomerados) con varianza robusta.',
+      MCMC:
+        'Monte Carlo por cadenas de Markov: algoritmos que muestrean la posterior bayesiana cuando no tiene forma cerrada.',
+      'Δ-equivalencia':
+        'Δ: margen de equivalencia o no inferioridad; la diferencia máxima que se declara clínicamente irrelevante, fijada antes del estudio.',
+      'β-precisión':
+        'β en la garantía de precisión (Correa): probabilidad tolerada de que la longitud observada del IC supere el máximo L₀; el diseño exige P(L ≤ L₀) ≥ 1 − β.',
+      'L₀':
+        'L₀: longitud máxima tolerada del IC en el diseño por precisión; la garantía exige que la longitud observada no la supere con probabilidad 1 − β.',
+      'β-coef':
+        'β: coeficiente de regresión; en la logística e^β es el OR ajustado, en Cox e^β es el HR.',
     },
   },
   {
@@ -177,6 +221,12 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'Intervalo de Wald para una proporción: p̂ ± z·√(p̂q̂/n). Cobertura errática y persistente (Brown et al., 2001), límites inadmisibles fuera de [0,1] y colapso a punto cuando p̂ = 0 o 1.',
       'garantia-precision':
         'Garantía de precisión 1 − β: probabilidad de que la longitud observada del IC no exceda el máximo tolerado L₀; dimensionar n exige controlar α (cobertura) y β (longitud) simultáneamente.',
+      'θ-tabla':
+        'θ: el parámetro de interés de la tabla 2×2 (la asociación, p. ej. el OR); los márgenes no aportan información sobre él según la lectura de Fisher.',
+      'γ-BB':
+        'γ en Berger–Boos: el nivel del IC del parámetro de estorbo; el supremo se toma solo dentro de ese IC y se suma γ al valor p (típicamente 0.001).',
+      'π-multinomial':
+        'π: vector de probabilidades de una multinomial (p. ej. la fracción de cada serotipo); se infiere completo, no componente por componente.',
     },
   },
   {
@@ -191,6 +241,24 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       CQR: 'Conformalized quantile regression: predicción conforme sobre cuantiles; bandas con cobertura garantizada que se adaptan a la heterocedasticidad.',
       PIT: 'Probability integral transform: histograma de los valores predictivos acumulados; uniforme indica modelo bien calibrado; herramienta de diagnóstico en UQ.',
       ML: 'Machine learning: aprendizaje automático; en el módulo 17 como herramienta de vigilancia, no como oráculo.',
+      'τ²':
+        'τ²: varianza entre estudios de los efectos verdaderos en el modelo de efectos aleatorios; τ² = 0 reduce el modelo al de efecto fijo.',
+      'θ-meta':
+        'θ: el efecto verdadero que estima un estudio; en efecto fijo es común a todos, en efectos aleatorios cada estudio tiene su θ_k.',
+      'μ-meta':
+        'μ: la media de los efectos verdaderos θ_k en el modelo de efectos aleatorios; el parámetro que estima el efecto combinado.',
+      REML:
+        'Máxima verosimilitud restringida (restricted maximum likelihood): estimador de componentes de varianza, como τ², que corrige el sesgo de la MV ordinaria.',
+      IA:
+        'Inteligencia artificial.',
+      LLM:
+        'Modelo grande de lenguaje (large language model): redes entrenadas sobre texto masivo; en vigilancia, para extraer eventos de reportes no estructurados.',
+      GNN:
+        'Red neuronal de grafos (graph neural network): aprende sobre nodos y aristas, p. ej. redes de comorbilidad o de contactos.',
+      GVAE:
+        'Autocodificador variacional de grafos (graph variational autoencoder): genera representaciones latentes de grafos; usado para multimorbilidad.',
+      SEANN:
+        'Redes neuronales que incorporan el conocimiento epidemiológico acumulado como prior (PLOS ONE 2025).',
     },
   },
   {
@@ -218,6 +286,14 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       eventos_por_variable:
         'Eventos por variable (EPV, Peduzzi 1996): cuántos eventos hay por parámetro del modelo; con pocos eventos por variable la estimación se sesga y la regresión de Firth o menos covariables preespecificadas ayudan.',
       EPV: 'Eventos por variable: sigla del criterio de Peduzzi — ver «eventos por variable».',
+      SIR:
+        'Modelo compartimental SIR: susceptibles → infectados (tasa de contagio β) → recuperados (tasa de recuperación γ); genera la curva epidémica de referencia, con R₀ = β/γ.',
+      'β-SIR':
+        'β en el modelo SIR: tasa de contagio; contactos efectivos por infectado y unidad de tiempo que producen nuevas infecciones.',
+      'γ-SIR':
+        'γ en el modelo SIR: tasa de recuperación; 1/γ es la duración media de la infecciosidad.',
+      nowcasting:
+        'Nowcasting: estimar los casos ya ocurridos pero aún no notificados, corrigiendo la cola de la curva por la distribución del retraso de notificación.',
     },
   },
   {
@@ -238,6 +314,60 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       VIH: 'Virus de inmunodeficiencia humana (HIV).',
       BCG: 'Bacilo de Calmette-Guérin: la vacuna contra la tuberculosis; el caso de matching 1:1 del curso compara niños vacunados vs. no vacunados.',
       R0: 'Número reproductivo básico: casos secundarios medios por caso en población susceptible; R₀ > 1 implica crecimiento epidémico.',
+      RECORD:
+        'RECORD (2015): extensión de STROBE para estudios con datos recolectados de rutina (registros, historias clínicas, bases administrativas).',
+      ENDS:
+        'Encuesta Nacional de Demografía y Salud (Colombia): encuesta transversal periódica; estima prevalencias, no incidencias.',
+      EPS:
+        'Entidad Promotora de Salud: aseguradora del sistema de salud colombiano; custodia buena parte de los datos clínicos y administrativos.',
+      MSPS:
+        'Ministerio de Salud y Protección Social de Colombia.',
+      BES:
+        'Boletín Epidemiológico Semanal del INS: publica las cifras de SIVIGILA por evento y semana epidemiológica.',
+      CNPV:
+        'Censo Nacional de Población y Vivienda (DANE, 2018): la fuente de denominadores poblacionales de Colombia.',
+      IDEAM:
+        'Instituto de Hidrología, Meteorología y Estudios Ambientales de Colombia: datos de clima y ambiente.',
+      UNAL:
+        'Universidad Nacional de Colombia.',
+      CDC:
+        'Centers for Disease Control and Prevention (EE. UU.): la agencia federal de salud pública; forma epidemiólogos de campo (EIS) y publica el MMWR.',
+      MMWR:
+        'Morbidity and Mortality Weekly Report: el boletín semanal de los CDC; allí se reportaron en 1981 los primeros casos de SIDA.',
+      EID:
+        'Emerging Infectious Diseases: la revista de los CDC sobre enfermedades infecciosas emergentes.',
+      OMS:
+        'Organización Mundial de la Salud (WHO).',
+      WHO:
+        'World Health Organization: la OMS en sigla internacional.',
+      OPS:
+        'Organización Panamericana de la Salud (PAHO): la oficina regional de la OMS para las Américas.',
+      DON:
+        'Disease Outbreak News: los comunicados oficiales de brotes de la OMS.',
+      NIH:
+        'National Institutes of Health (EE. UU.): la agencia federal de investigación biomédica.',
+      NCI:
+        'National Cancer Institute: el instituto de cáncer de los NIH.',
+      BRFSS:
+        'Behavioral Risk Factor Surveillance System: la encuesta telefónica anual de factores de riesgo de los CDC.',
+      ASA:
+        'American Statistical Association; su declaración de 2016 (Wasserstein y Lazar) fija seis principios sobre el uso e interpretación del valor p.',
+      CRO:
+        'Contract research organization: empresa que ejecuta ensayos clínicos por encargo de la industria farmacéutica.',
+      CHD:
+        'Enfermedad coronaria (coronary heart disease).',
+      ACV:
+        'Accidente cerebrovascular (stroke).',
+      HTA:
+        'Hipertensión arterial.',
+      IMC:
+        'Índice de masa corporal: peso (kg) / talla² (m²).',
+      TB:
+        'Tuberculosis.',
+      ICEMAN:
+        'Instrument for assessing the Credibility of Effect Modification ANalyses (Schandelmaier et al. 2020): criterios para juzgar la credibilidad de un efecto de subgrupo.',
+      EBCTCG:
+        'Early Breast Cancer Trialists\' Collaborative Group: el consorcio de Oxford que meta-analiza los ensayos de cáncer de mama temprano con datos individuales.',
     },
   },
   {
@@ -252,6 +382,20 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       CMHtest:
         'Función de vcdExtra: la familia de tests Cochran–Mantel–Haenszel por estratos; incluye el test de confusión.',
       epiR: 'Paquete de R para epidemiología: epi.2by2 calcula RR, OR, tasas y riesgos atribuibles con ICs desde una tabla 2×2.',
+      SAS:
+        'SAS (Statistical Analysis System): el software estándar de la industria farmacéutica y regulatoria; el curso replica en él los análisis de R.',
+      ODS:
+        'Output Delivery System de SAS: controla y exporta las tablas y gráficos de los PROC (p. ej. ODS GRAPHICS).',
+      CRAN:
+        'Comprehensive R Archive Network: el repositorio oficial de paquetes de R.',
+      CSV:
+        'Valores separados por comas (comma-separated values): el formato de texto plano de los datasets del curso.',
+      IDE:
+        'Entorno de desarrollo integrado (integrated development environment), p. ej. RStudio o SAS Studio.',
+      API:
+        'Interfaz de programación de aplicaciones (application programming interface): el punto de acceso programático a un servicio de datos.',
+      VA:
+        'Veterans Administration (EE. UU.): de su ensayo de cáncer de pulmón proviene el dataset VALUNG.',
     },
   },
   {
@@ -273,6 +417,24 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
     },
   },
 ];
+
+/**
+ * Variantes tipográficas o de número que apuntan a una entrada canónica:
+ * el texto conserva su forma (H₀, I², ICs) y el tooltip usa la definición
+ * de la clave. Las usa remark-auto-terms para el enlazado automático.
+ */
+export const GLOSSARY_ALIASES: Record<string, string> = {
+  'H₀': 'H0',
+  'I²': 'I2',
+  'R₀': 'R0',
+  IC95: 'IC',
+  ICs: 'IC',
+  DAGs: 'DAG',
+  GLMs: 'GLM',
+  LLMs: 'LLM',
+  DONs: 'DON',
+  CSM: 'csm',
+};
 
 /** Mapa plano clave → definición, derivado de las secciones. */
 export const GLOSSARY: Record<string, string> = Object.fromEntries(

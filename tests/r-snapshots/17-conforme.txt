@@ -1,1 +1,2 @@
-cobertura conforme empirica: 90.0% (objetivo 90%)
+conforme: cobertura media 90.2%, 90% de las calibraciones entre 84.0% y 94.6%
+residuos de entrenamiento (fijo): 89.4%, sin garantia

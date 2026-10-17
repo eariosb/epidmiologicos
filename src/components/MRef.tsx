@@ -33,7 +33,7 @@ export function MRef({ n, children }: MRefProps) {
       <span className="sr-only"> ({tip})</span>
       <span
         role="note"
-        className="invisible pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 w-64 max-w-[80vw] -translate-x-1/2 rounded-md bg-ink-900 px-3 py-2 text-left text-xs font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+        className="hidden pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 w-64 max-w-[80vw] -translate-x-1/2 rounded-md bg-ink-900 px-3 py-2 text-left text-xs font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:block group-hover:opacity-100 group-focus-within:block group-focus-within:opacity-100"
       >
         {tip} · Ir al módulo →
         <span className="absolute left-1/2 top-full -translate-x-1/2 border-[5px] border-transparent border-t-ink-900" />

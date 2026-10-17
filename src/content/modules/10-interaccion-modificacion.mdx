@@ -1,113 +1,266 @@
 ---
 title: "Interacción, modificación de efecto y paradoja de Simpson"
 slug: "10-interaccion-modificacion"
-objective: "Distinguir confusión de interacción, clasificar la interacción en sinergismo/antagonismo/unilateralismo, y evaluarla con el test de Breslow–Day en las escalas aditiva y multiplicativa."
+objective: "Distinguir confusión de interacción como dos preguntas independientes, caracterizar paralelismo, sinergismo, antagonismo y unilateralismo en las escalas aditiva y multiplicativa con ejemplos reales, y juzgar si una interacción observada es señal o ruido."
 order: 10
 datasets: []
-duration: 90
+duration: 100
 prerequisites: ["Módulo 8: Estratificación"]
 ---
 
 import { Callout } from '@/components/Callout'
 import { Quiz } from '@/components/Quiz'
-import { InteractionExplorer } from '@/components/EpiSims'
+import { InteractionExplorer, InteractionNoiseLab } from '@/components/EpiSims'
 import { RCell } from '@/components/RCell'
 import { SasBlock } from '@/components/SasBlock'
 import { ToolCard } from '@/components/ToolCard'
 
 
-<Callout type="tip" title="La interacción no es un sesgo, es un hallazgo">
-Confusión: el agregado miente y hay que corregirlo. Interacción: los
-estratos difieren *de verdad* y hay que describirlo. La modificación de
-efecto dice que el efecto de $E$ sobre $D$ **cambia según el nivel de otro
-factor**; no se corrige, se reporta por estrato.
+<Callout type="tip" title="Dos preguntas, no una">
+**Confusión** pregunta si la comparación es justa: ¿los grupos difieren en
+algo más que la exposición? Es un sesgo, depende del diseño y del DAG, y
+**se corrige** (estratificando, ajustando, aleatorizando).
+
+**Interacción** pregunta si el efecto es el mismo para todos: ¿cambia el
+efecto de $E$ según el nivel de otro factor $M$? Es un rasgo del mundo,
+no un error, y **se reporta** por estrato. Además depende de la escala en
+que se mida el efecto.
+
+Una no implica la otra. Un mismo factor puede confundir, modificar el
+efecto, hacer ambas cosas o ninguna.
 </Callout>
 
-## Los tres tipos de interacción (Woodward, Fig. 4.7)
+## Confusión e interacción son independientes
 
-- **Sinergismo**: mismo signo y magnitud amplificada; el efecto conjunto
-  supera lo que cada factor haría solo.
-- **Antagonismo**: el efecto cambia de signo entre estratos. El ejemplo
-  canónico del <Term k="SHHS">SHHS</Term> (Ejemplo 4.13): el <Term k="RR">RR</Term> de tabaquismo para CHD es
-  **2.40** en personas sin infarto previo pero **0.64** en quienes ya lo
-  tuvieron (los infartados que sobrevivieron forman un grupo seleccionado
-  resistente, o cambiaron de hábito).
-- **Unilateralismo**: el efecto existe solo en presencia del segundo
-  factor: RR distinto de 1 en un estrato, exactamente 1 en el otro.
+Con dos estratos de $M$ hay cuatro situaciones posibles, y cada una tiene
+un caso real en el curso:
 
-<InteractionExplorer title={<>El diagrama R₀₀–R₁₁: dos estratos, una historia por escala</>} />
+| | **Efecto igual en los estratos** | **Efecto distinto en los estratos** |
+|---|---|---|
+| **Sin confusión** | Ensayo aleatorizado con efecto homogéneo: crudo, estratos y MH coinciden | Tamoxifeno en ensayos aleatorizados: reduce la recurrencia en tumores con receptor de estrógeno (RR 0.53) y casi nada sin él. La aleatorización elimina la confusión; la diferencia es real |
+| **Con confusión** | Edad en el módulo 8: OR 6 en ambos estratos, crudo 9.6. Se corrige con MH = 6 | Cálculos renales (módulo 8): OR 2.1 y 1.2 por estrato, crudo 0.75. Y el enmascaramiento del módulo 7: estratos 2.9 y 32.8, crudo 1.0 |
 
-## La escala importa
+El diagnóstico tiene un orden que importa:
 
-Woodward (Ch. 4.8.3): el test de interacción **depende de la escala**.
-Puede haber interacción multiplicativa (los RR difieren) sin interacción
-aditiva (las diferencias de riesgo son iguales), y viceversa. La
-epidemiología de salud pública privilegia la aditiva (importa el exceso
-absoluto de casos); la analítica clásica reporta la multiplicativa (los
-RR u <Term k="OR">OR</Term> entre estratos).
+1. **Primero, la interacción**: ¿los efectos por estrato son compatibles
+   entre sí en la escala elegida? Si no lo son, no hay un efecto común que
+   resumir, y la pregunta por la confusión del resumen pierde sentido.
+2. **Después, la confusión**: si los estratos son compatibles, se compara
+   el resumen ajustado (MH) con el crudo.
+
+Hay dos trampas en ese orden. La primera es la **no colapsabilidad del
+OR** (módulo 7): el crudo puede diferir de estratos idénticos sin ningún
+confusor. La segunda es la **escala**: los mismos datos del módulo 7, con
+OR 9 en ambos estratos, tienen RR de 5.0 y 1.55. Paralelismo en una escala,
+interacción en la otra. La celda siguiente recorre los cuatro casos.
+
+<RCell
+  id="10/cuatro-cuadrantes"
+  title="Cuatro escenarios: crudo, estratos y Mantel–Haenszel"
+  code={`# Tablas esperadas (sin azar) para aislar la estructura.
+# Cada estrato: n expuestos y n no expuestos con riesgos (r1, r0).
+estrato <- function(r1, r0, n1, n0)
+  matrix(c(r1 * n1, (1 - r1) * n1, r0 * n0, (1 - r0) * n0), 2, byrow = TRUE)
+RR <- function(t) (t[1, 1] / sum(t[1, ])) / (t[2, 1] / sum(t[2, ]))
+RRmh <- function(a) {                       # RR de Mantel-Haenszel
+  num <- sum(apply(a, 3, function(t) t[1, 1] * sum(t[2, ]) / sum(t)))
+  den <- sum(apply(a, 3, function(t) t[2, 1] * sum(t[1, ]) / sum(t)))
+  num / den
+}
+escenario <- function(nombre, s0, s1) {
+  a <- array(c(s0, s1), c(2, 2, 2))
+  cat(sprintf("%-26s RR estratos = %.2f y %.2f | crudo = %.2f | MH = %.2f\\n",
+              nombre, RR(s0), RR(s1), RR(s0 + s1), RRmh(a)))
+}
+# M cambia el riesgo base (5% vs 20%). La confusion aparece cuando M
+# ademas cambia quien se expone (n1 distinto de n0 dentro del estrato).
+escenario("ni confusion ni interaccion", estrato(.10, .05, 500, 500), estrato(.40, .20, 500, 500))
+escenario("solo confusion",              estrato(.10, .05, 200, 800), estrato(.40, .20, 800, 200))
+escenario("solo interaccion",            estrato(.05, .05, 500, 500), estrato(.40, .20, 500, 500))
+escenario("confusion e interaccion",     estrato(.05, .05, 200, 800), estrato(.40, .20, 800, 200))
+# Se usa el RR (colapsable): sin confusion, el crudo queda entre los estratos
+# y coincide con MH cuando el efecto es comun. Con confusion, el crudo se va.`}
+/>
+
+## Los patrones: cómo se ve cada uno
+
+Woodward clasifica la interacción por lo que le pasa al efecto de $E$
+cuando aparece $M$. Agregamos el paralelismo, que es el punto de
+referencia, y separamos el antagonismo que atenúa del que invierte:
+
+| Patrón | Qué le pasa al efecto de E | Firma con dos estratos | Cómo se ve | Ejemplo real |
+|---|---|---|---|---|
+| **Paralelismo** | Nada: es el mismo con o sin M | Efectos iguales en la escala elegida | Líneas paralelas | Asbesto × tabaco en escala multiplicativa: RR 5.2 por asbesto y 10.9 por tabaco; juntos 53.2 ≈ 5.2 × 10.9 |
+| **Sinergismo** | Se amplifica | Mismo signo, mayor magnitud con M | Líneas que se abren | Factor V Leiden × anticonceptivos: OR 3.7 y 6.9 por separado, 34.7 juntos |
+| **Antagonismo** | Se atenúa | Mismo signo, menor magnitud con M | Líneas que se cierran | Presión arterial × edad: el efecto relativo sobre la muerte por ACV a los 80–89 años es la mitad de extremo que a los 40–49 |
+| **Antagonismo cualitativo (cruce)** | Cambia de signo | Signos opuestos | Líneas que se cruzan | SHHS (Woodward, Ej. 4.13): tabaco → CHD con RR 2.40 sin infarto previo y 0.64 con infarto previo |
+| **Unilateralismo** | Existe solo en un nivel de M | Nulo en un estrato, presente en el otro | Una línea plana | Tamoxifeno × receptor de estrógeno: RR de recurrencia 0.53 en tumores RE+, «poco o ningún efecto» en RE− |
+
+Dos lecturas de esa tabla evitan la mitad de los errores:
+
+- **La etiqueta depende de la escala.** El asbesto con el tabaco es
+  paralelismo multiplicativo y, a la vez, sinergia aditiva enorme. La
+  presión arterial con la edad es antagonismo multiplicativo y sinergia
+  aditiva: el efecto relativo se achica con la edad, pero las muertes
+  adicionales crecen, porque el riesgo base de un anciano es muy alto.
+- **El cruce y el unilateralismo no dependen de la escala**: un cambio de
+  signo, o un efecto nulo en un estrato, es el mismo en cualquier escala.
+  Por eso son la evidencia más fuerte de modificación de efecto, y la que
+  más cambia decisiones (a quién dar tamoxifeno).
+
+Los patrones tienen suelo causal en el modelo de **causas suficientes**
+de Rothman: una enfermedad llega cuando se completa cualquiera de varios
+ramos de componentes. En ese lenguaje, el <Term k="unilateralismo">unilateralismo</Term>
+es un componente necesario —el factor no produce nada solo, pero sin él la
+otra exposición no completa su causa suficiente— y el
+<Term k="paralelismo">paralelismo</Term> es la ausencia de interacción
+biológica: cada exposición completa sus propias causas suficientes por
+vías independientes. Es la razón profunda de que la escala aditiva sea la
+que habla de biología: sumar excesos pregunta si hay componentes
+compartidos, no si los logaritmos cuadran.
+
+<InteractionExplorer title={<>El mismo dato en dos escalas: elige un ejemplo real y compara los paneles</>} />
+
+**Para explorar**
+
+1. Para cada ejemplo real, predice la etiqueta en las dos escalas antes de mirar el panel. ¿En cuáles acertaste?
+2. Encuentra el ejemplo en que las dos escalas dan etiquetas opuestas y explica qué cambia la decisión clínica según cuál se use.
+
+## La escala decide la etiqueta
+
+Woodward (cap. 4.8.3) lo dice en una línea: la prueba de interacción
+**depende de la escala**. Puede haber interacción multiplicativa sin
+interacción aditiva, y viceversa. La salud pública mira la aditiva,
+porque decide cuántos casos se evitan; la epidemiología analítica suele
+reportar la multiplicativa, porque es la de los modelos logísticos y de
+Cox. La recomendación actual es no elegir: reportar ambas (Knol y
+VanderWeele, 2012).
+
+El caso más instructivo es el de los aisladores de asbesto:
+
+<RCell
+  id="10/asbesto-escala"
+  title="Asbesto y tabaco: paralelismo multiplicativo, sinergia aditiva"
+  code={`# Hammond, Selikoff y Seidman (1979): muertes por cancer de pulmon
+# por 100 000 personas-ano, segun asbesto y tabaco.
+tasa <- c(ninguno = 11.3, asbesto = 58.4, tabaco = 122.6, ambos = 601.6)
+RR <- tasa / tasa["ninguno"]
+print(round(RR, 2))
+
+# Escala multiplicativa: el conjunto vs. el producto de los separados.
+cat(sprintf("Multiplicativa: RR conjunto = %.1f | producto = %.1f | razon = %.2f\\n",
+            RR["ambos"], RR["asbesto"] * RR["tabaco"],
+            RR["ambos"] / (RR["asbesto"] * RR["tabaco"])))
+# Escala aditiva: el exceso conjunto vs. la suma de excesos separados.
+exceso <- tasa - tasa["ninguno"]
+cat(sprintf("Aditiva: exceso conjunto = %.0f | suma de excesos = %.0f por 100 000\\n",
+            exceso["ambos"], exceso["asbesto"] + exceso["tabaco"]))
+cat(sprintf("RERI = %.1f | AP = %.2f | S = %.1f\\n",
+            RR["ambos"] - RR["asbesto"] - RR["tabaco"] + 1,
+            (RR["ambos"] - RR["asbesto"] - RR["tabaco"] + 1) / RR["ambos"],
+            (RR["ambos"] - 1) / ((RR["asbesto"] - 1) + (RR["tabaco"] - 1))))
+# Lectura: los riesgos relativos se multiplican casi exacto (razon ~0.95),
+# pero 7 de cada 10 muertes del grupo doblemente expuesto se deben a la
+# interaccion: dejar de fumar evita muchas mas muertes en un aislador.`}
+/>
+
+<Quiz
+  question="Con los datos del asbesto y el tabaco (RR 5.2, 10.9 y 53.2 juntos), ¿hay interacción?"
+  options={[
+    "No: 5.2 × 10.9 ≈ 56, así que los efectos son independientes",
+    "Sí: el riesgo conjunto es enorme",
+    "Depende de la escala: no hay interacción multiplicativa, pero sí una sinergia aditiva grande (RERI ≈ 38)",
+    "No se puede saber sin un valor p"
+  ]}
+  correctIndex={2}
+  explanation="Los RR se multiplican casi exacto (paralelismo en escala log), pero el exceso de muertes del grupo doblemente expuesto supera con mucho la suma de los excesos separados. Para decidir a quién intervenir importa la escala aditiva: la interacción sola aporta unas 432 muertes por 100 000, y dejar de fumar evita 543 muertes por 100 000 en un aislador frente a 111 en alguien sin asbesto."
+  optionNotes={[
+    "Incorrecta: eso solo descarta la interacción multiplicativa. 'Independientes' en la escala log no significa que los casos evitables se sumen.",
+    "Incorrecta: un riesgo conjunto grande es compatible con cualquier patrón; la pregunta es si supera lo esperado bajo una escala declarada.",
+    undefined,
+    "Incorrecta: primero hay que declarar qué significa 'no interacción'; el p viene después, y no cambia la escala.",
+  ]}
+/>
 
 ### Interacción aditiva con número: el <Term k="RERI">RERI</Term>
 
-"La escala aditiva es la de salud pública" se vuelve operativo con un
-índice: el **exceso relativo de riesgo por interacción**. Con dos
-factores E y F y riesgo basal $R_{00}$ (ninguno presente):
+La escala aditiva se vuelve operativa con el **exceso relativo de riesgo
+por interacción**. Con dos factores E y F y la celda sin ninguno como
+referencia:
 
 $$RERI = RR_{11} - RR_{10} - RR_{01} + 1$$
 
 Un RERI nulo es aditividad exacta; positivo, sinergia (los dos juntos
 suman más que sus partes); negativo, antagonismo. Sus derivados cuentan la
 historia a decisión: <Term k="AP">$AP = RERI/RR_{11}$</Term> es la fracción del riesgo
-conjunto atribuible a la interacción, y el índice de sinergia
-$S = (RR_{11}-1)/\big[(RR_{10}-1)+(RR_{01}-1)\big]$.
+conjunto atribuible a la interacción, y el índice de sinergia es
+$S = (RR_{11}-1)/\big[(RR_{10}-1)+(RR_{01}-1)\big]$. Con un desenlace raro,
+los OR de un estudio de casos y controles sirven en lugar de los RR.
 
 <RCell
   id="10/reri"
-  title="RERI con IC bootstrap (Andersson et al., 2005)"
-  code={`# Dos factores E y F en una cohorte: riesgos por celda.
-r <- c(r00 = 0.01, r10 = 0.03, r01 = 0.02, r11 = 0.08)
-n <- c(r00 = 4000, r10 = 4000, r01 = 4000, r11 = 4000)
+  title="Factor V Leiden y anticonceptivos: sinergia real, evidencia ruidosa"
+  code={`# Vandenbroucke et al. (1994), Lancet: trombosis venosa en mujeres.
+# Casos y controles segun anticonceptivo oral (ao) y factor V Leiden (fvl).
+d <- data.frame(ao  = c(0, 1, 0, 1),
+                fvl = c(0, 0, 1, 1),
+                casos = c(36, 84, 10, 25),
+                controles = c(100, 63, 4, 2))
+d$OR <- with(d, (casos / controles) / (casos[1] / controles[1]))
+print(d)
 
-RR   <- r / r["r00"]
-reri <- RR["r11"] - RR["r10"] - RR["r01"] + 1
-cat(sprintf("RR = (%.0f, %.0f, %.0f)   RERI = %.2f (>0: sinergia aditiva)\\n",
-            RR["r10"], RR["r01"], RR["r11"], reri))
-cat(sprintf("AP = %.2f (mitad del riesgo conjunto es interaccion)   S = %.2f\\n",
-            reri / RR["r11"],
-            (RR["r11"] - 1) / ((RR["r10"] - 1) + (RR["r01"] - 1))))
+# Modelo logistico con interaccion: la escala multiplicativa.
+m <- glm(cbind(casos, controles) ~ ao * fvl, family = binomial, data = d)
+b <- coef(m); V <- vcov(m)
+cat(sprintf("Razon de OR (multiplicativa) = %.2f, IC95%% %.2f a %.2f, p = %.2f\\n",
+            exp(b[4]), exp(b[4] - 1.96 * sqrt(V[4, 4])),
+            exp(b[4] + 1.96 * sqrt(V[4, 4])), summary(m)$coefficients[4, 4]))
 
-# IC bootstrap: remuestrear los casos binomiales de cada celda.
-set.seed(7); B <- 5000
-boot <- replicate(B, {
-  x <- rbinom(4, n, r)
-  if (x[1] == 0) return(NA)
-  rr <- (x / n) / (x[1] / n[1])
-  rr[4] - rr[2] - rr[3] + 1
-})
-cat(sprintf("IC95%% bootstrap del RERI = (%.2f, %.2f)\\n",
-            quantile(boot, .025, na.rm = TRUE),
-            quantile(boot, .975, na.rm = TRUE)))
-# Conclusion: RERI > 0 con IC que excluye 0 -> la intervencion que quita
-# un factor en presencia del otro evita mas casos que la suma de partes.`}
+# RERI con IC por el metodo delta (Hosmer y Lemeshow, 1992).
+or11 <- exp(b[2] + b[3] + b[4]); or10 <- exp(b[2]); or01 <- exp(b[3])
+reri <- or11 - or10 - or01 + 1
+grad <- c(0, or11 - or10, or11 - or01, or11)
+se <- sqrt(drop(t(grad) %*% V %*% grad))
+cat(sprintf("RERI = %.1f, IC95%% %.1f a %.1f\\n", reri, reri - 1.96 * se, reri + 1.96 * se))
+# Los puntos dicen sinergia fuerte en ambas escalas; los intervalos dicen
+# que este estudio, con 2 controles en la celda conjunta, no la demuestra.
+# La conclusion se sostuvo por la biologia y por la replicacion posterior.`}
 />
 
-## El test de homogeneidad de Breslow–Day
+<SasBlock code={`data fvl;
+  input ao fvl casos controles;
+  total = casos + controles;
+  datalines;
+0 0 36 100
+1 0 84 63
+0 1 10 4
+1 1 25 2
+;
+/* Interaccion multiplicativa: el termino ao*fvl del modelo logistico */
+proc logistic data=fvl;
+  model casos/total = ao fvl ao*fvl;
+  oddsratio ao / at(fvl=0 1);   /* OR del anticonceptivo en cada estrato */
+run;
+/* SAS no reporta el RERI directo: se calcula con las estimaciones
+   (ESTIMATE con exp) o con el metodo delta en PROC NLMIXED. */`} />
+
+## ¿Un solo OR o uno por estrato? Breslow–Day
 
 $$
-\chi^2_{BD} = \sum_k \frac{\left(\ln \widehat{OR}_k - \ln \widehat{OR}_{MH}\right)^2}
-{\mathrm{Var}(\ln \widehat{OR}_k)},
+\chi^2_{BD} = \sum_k \frac{\left(a_k - E[a_k \mid \widehat{OR}_{MH}]\right)^2}
+{\mathrm{Var}(a_k \mid \widehat{OR}_{MH})},
 \qquad \text{gl} = K - 1
 $$
 
-Si los OR por estrato difieren (BD significativo), no procede resumirlos
-con <Term k="MH">MH</Term>; hay que reportar el OR por estrato.
+Bajo un OR común, cada celda $a_k$ tiene un valor esperado; Breslow–Day
+mide cuánto se alejan las celdas observadas de esos esperados. Es una
+prueba de interacción **multiplicativa** (homogeneidad de OR).
 
 <RCell
   id="10/breslow-day"
-  title="¿Un solo OR o uno por estrato? (Breslow–Day)"
+  title="Homogeneidad, heterogeneidad y el caso que no decide"
   code={`# Homogeneidad de OR entre K estratos: Breslow-Day con correccion
-# de Tarone (en SAS: TABLES ... / CMH + opcion BDT).
-# Idea: bajo un OR comun psi (el de Mantel-Haenszel), cada celda 'a' tiene
-# un valor esperado que se resuelve numericamente; chi^2 = suma (a-E)^2/V.
+# de Tarone (en SAS: TABLES ... / CMH BDT).
 breslow_day <- function(arr) {
   K <- dim(arr)[3]
   num <- sum(apply(arr, 3, function(t) t[1,1]*t[2,2]/sum(t)))
@@ -124,48 +277,136 @@ breslow_day <- function(arr) {
     sa <- sa + t[1,1]; se <- se + ea; sv <- sv + v
   }
   tarone <- X - (sa - se)^2/sv                     # correccion de Tarone
-  list(ors = apply(arr, 3, function(t) t[1,1]*t[2,2]/(t[1,2]*t[2,1])),
-       or_mh = psi, BD = X, BD_Tarone = tarone,
-       p = pchisq(tarone, K - 1, lower.tail = FALSE))
+  c(OR_1 = arr[1,1,1]*arr[2,2,1]/(arr[1,2,1]*arr[2,1,1]),
+    OR_2 = arr[1,1,2]*arr[2,2,2]/(arr[1,2,2]*arr[2,1,2]),
+    OR_MH = psi, BD_Tarone = tarone,
+    p = pchisq(tarone, K - 1, lower.tail = FALSE))
 }
-
-# Caso A: estratos homogeneos (mismo OR): BD ~ 1.35, p ~ 0.25
-A <- array(c(40,60,20,180, 50,10,60,40), dim = c(2,2,2))
-print(breslow_day(A))
-
-# Caso B: estratos con OR distintos -> interaccion, no resumir:
-# BD ~ 135, p ~ 0: homogeneidad rechazada con claridad
+# A: homogeneo (los datos del modulo 8): OR 6 y 6
+A <- array(c(40,60,20,180, 90,30,10,20), dim = c(2,2,2))
+# B: heterogeneidad franca: OR 6 y 0.03 (cruce)
 B <- array(c(40,60,20,180, 10,90,80,20), dim = c(2,2,2))
-print(breslow_day(B))`}
+# C: OR 6 y 3.3, casi el doble, con estos tamanos
+C <- array(c(40,60,20,180, 50,10,60,40), dim = c(2,2,2))
+print(round(rbind(A = breslow_day(A), B = breslow_day(B), C = breslow_day(C)), 3))
+# C no rechaza (p ~ 0.25) aunque un OR casi duplica al otro:
+# 'no rechazar' no demuestra homogeneidad; con estos n, la prueba no decide.`}
 />
 
-<SasBlock code={`/* En SAS, Breslow-Day ya viene dentro del output de CMH */
-data A; input k $ e $ d $ n; datalines;
+<SasBlock code={`/* En SAS, Breslow-Day viene en la salida de CMH */
+data A; input k $ e $ d $ n @@; datalines;
 1 si si 40  1 si no 20  1 no si 60  1 no no 180
-2 si si 50  2 si no 60  2 no si 10  2 no no 40 ;
-data B; input k $ e $ d $ n; datalines;
+2 si si 90  2 si no 10  2 no si 30  2 no no 20
+;
+data C; input k $ e $ d $ n @@; datalines;
 1 si si 40  1 si no 20  1 no si 60  1 no no 180
-2 si si 10  2 si no 80  2 no si 90  2 no no 20 ;
-
+2 si si 50  2 si no 60  2 no si 10  2 no no 40
+;
 proc freq data=A order=data; weight n;
   tables k*e*d / cmh bdt;   /* BDT = correccion de Tarone */
 run;
-proc freq data=B order=data; weight n;
-  tables k*e*d / cmh bdt;
-run;
-/* Caso B: Breslow-Day significativo -> los OR difieren de verdad:
-   interaccion, reportar por estrato, no resumir con MH */`} />
+proc freq data=C order=data; weight n;
+  tables k*e*d / cmh bdt;   /* p ~ 0.25: la prueba no decide */
+run;`} />
 
 <Callout type="note" title="La corrección de Tarone (1985)">
 Cuando $\widehat{OR}_{MH}$ se estima de los mismos datos, el test de
-Breslow–Day sin corregir es ligeramente liberal: usa los grados de
-libertad K−1 como si el OR común fuera conocido, pero $\widehat{OR}_{MH}$
-se estimó de los mismos datos. Tarone resta el término
+Breslow–Day sin corregir es ligeramente liberal. Tarone resta el término
 $(\sum a_k - \sum E_k)^2/\sum V_k$, que nunca aumenta el estadístico
-($X_{BDT} \le X_{BD}$) y lo vuelve ligeramente más conservador; en SAS
-aparece como opción
-<code>BDT</code>. La conclusión cualitativa rara vez cambia, pero es el
-nombre que aparece en la literatura.
+($X_{BDT} \le X_{BD}$); en SAS aparece como opción <code>BDT</code>. La
+conclusión cualitativa rara vez cambia, pero es el nombre que aparece en
+la literatura.
+</Callout>
+
+## Percibir la interacción en medio del ruido
+
+La interacción es una **diferencia de diferencias**: compara dos
+estimaciones, cada una con su ruido, y el error de la comparación suma
+ambos. Por eso cuesta tanto verla:
+
+- Para detectar una interacción del mismo tamaño que el efecto principal
+  hace falta unas **cuatro veces** la muestra que basta para el efecto
+  principal (Brookes et al., 2004). Si la interacción es la mitad de
+  grande, el factor ronda 16.
+- **«Significativo en un estrato y no en el otro» no es interacción.** La
+  diferencia entre «significativo» y «no significativo» no es, en sí,
+  estadísticamente significativa (Gelman y Stern, 2006). Lo que se prueba
+  es la diferencia entre los efectos, no la lista de valores p.
+- **Buscar subgrupos fabrica hallazgos.** En ISIS-2 (1988), la aspirina
+  redujo la mortalidad vascular un 28% en todos los signos zodiacales…
+  salvo Géminis y Libra, donde la aumentó un 9% (no significativo). Los
+  autores lo publicaron a propósito, como vacuna: con suficientes
+  subgrupos, alguno sale distinto por azar.
+- **Una interacción real puede verse débil.** El factor V Leiden con
+  anticonceptivos es una sinergia hoy aceptada, pero en su estudio
+  original el IC del RERI iba de −26 a 77. La convencieron la biología y
+  la replicación, no un valor p.
+
+El laboratorio siguiente reproduce las cuatro situaciones con estudios
+simulados:
+
+<InteractionNoiseLab title={<>Interacción en medio del ruido: ¿cuántas veces la ves cuando existe, y cuántas cuando no?</>} />
+
+**Para explorar**
+
+1. Con «Paralelismo» y n = 100 por celda, mira cuántos estudios dicen «significativo en un estrato y no en el otro». Todos son falsas interacciones.
+2. Cambia a «Sinergismo» y sube n hasta que la prueba de interacción alcance 80 % de potencia. Compara ese n con el que necesita el efecto principal.
+3. Sube el número de subgrupos explorados a 10 y lee la probabilidad de encontrar al menos una interacción falsa.
+
+<RCell
+  id="10/ruido-potencia"
+  title="Potencia de la prueba de interacción frente a la del efecto principal"
+  code={`# Sinergismo verdadero: RR 2 en un estrato y 4 en el otro, riesgo base 10%.
+set.seed(10)
+sim <- function(n, B = 2000) {
+  r <- c(0.10, 0.20, 0.10, 0.40)            # E-M-, E+M-, E-M+, E+M+
+  res <- replicate(B, {
+    x <- rbinom(4, n, r); x[x == 0] <- 0.5
+    l0 <- log(x[2] / x[1]); v0 <- 1/x[2] + 1/x[1] - 2/n
+    l1 <- log(x[4] / x[3]); v1 <- 1/x[4] + 1/x[3] - 2/n
+    c(efecto = abs(l0 / sqrt(v0)) > 1.96,                 # efecto de E en M-
+      interaccion = abs((l1 - l0) / sqrt(v0 + v1)) > 1.96) # diferencia entre estratos
+  })
+  rowMeans(res)
+}
+pot <- sapply(c(50, 100, 200, 400, 800), sim)
+colnames(pot) <- paste0("n=", c(50, 100, 200, 400, 800))
+print(round(pot, 2))
+# El efecto dentro de un estrato llega a 0.8 de potencia con n ~ 200 por celda;
+# la interaccion, del mismo tamano relativo (RR x2), necesita n ~ 400.
+# Frente al efecto promedio, que usa ambos estratos, el factor ronda 4.`}
+/>
+
+<Callout type="warning" title="Cuándo creerle a una interacción">
+Los criterios de credibilidad de subgrupos (Sun et al., 2010; ICEMAN,
+Schandelmaier et al., 2020) se resumen en seis preguntas:
+
+1. ¿Se planteó antes de ver los datos, **con su dirección**?
+2. ¿Es una de pocas hipótesis, o una entre muchas?
+3. ¿La sostiene una **prueba de interacción**, y no la comparación de
+   valores p por subgrupo?
+4. ¿Es grande respecto a su incertidumbre?
+5. ¿Se repite en otros estudios o en desenlaces relacionados?
+6. ¿Hay un mecanismo plausible?
+
+El cruce de VALUNG del módulo 0 (p = 0.042 entre cuatro tipos celulares,
+sin hipótesis previa) falla la primera y la segunda: es una hipótesis
+para un estudio nuevo, no un hallazgo.
+</Callout>
+
+<Callout type="tip" title="La regla de decisión del bloque">
+1. **Declara la escala** y, si la hay, la hipótesis de modificación antes
+   de mirar los datos.
+2. **Estratifica** y mira los efectos por estrato con sus IC, no solo sus
+   valores p.
+3. **Interacción**: juzga la diferencia entre estratos por su magnitud, su
+   prueba formal (Breslow–Day o término de interacción) y su
+   credibilidad. Si es creíble, **reporta por estrato** y en ambas escalas:
+   efectos por estrato, razón de RR u OR, y RERI.
+4. **Confusión**: si los estratos son compatibles, compara el resumen (MH)
+   con el crudo; con OR, recuerda que el crudo puede diferir sin confusor.
+5. **No rechazar no es homogeneidad**: si los IC son anchos, dilo; la
+   respuesta honesta puede ser «los datos no deciden».
 </Callout>
 
 <Callout type="warning" title="La falacia del no-rechazo (tests agnósticos)">
@@ -178,40 +419,84 @@ pocos estratos o estratos pequeños, la respuesta honesta suele ser la
 tercera.
 </Callout>
 
-<Callout type="tip" title="La regla de decisión del bloque">
-1. Estratifica por el sospechoso.
-2. Si los OR por estrato difieren entre sí (Breslow–Day significativo) →
-   **interacción**: reporta cada estrato, no hay resumen honesto.
-3. Si son homogéneos pero difieren del crudo → **confusión**: reporta
-   $\widehat{OR}_{MH}$.
-4. Si todo coincide → no había problema.
-</Callout>
-
 <Quiz
   question="En el SHHS el RR de tabaco→CHD es 2.40 sin infarto previo y 0.64 con infarto previo. ¿Qué reportas?"
   options={[
     "OR-MH ≈ 1.5 como resumen del efecto del tabaco",
-    "Los dos RR por estrato: el antagonismo es el hallazgo y no se puede resumir",
+    "Los dos RR por estrato: el efecto cambia de signo y no se puede resumir",
     "Que el tabaco no tiene efecto porque el promedio da ~1.5",
     "Que hay error en los datos porque un RR no puede bajar de 1"
   ]}
   correctIndex={1}
-  explanation="Es antagonismo (Ejemplo 4.13 de Woodward): el efecto cambia de signo entre estratos. Resumirlo con MH produciría un número entre 0.64 y 2.40 que no representa a nadie. La regla: interacción real → reporte por estrato."
+  explanation="Es un antagonismo cualitativo (cruce): el efecto cambia de signo entre estratos, y eso no depende de la escala. Un resumen MH daría un número entre 0.64 y 2.40 que no representa a nadie. La explicación más probable no es que fumar proteja tras un infarto: quienes sobreviven y siguen fumando son un grupo seleccionado, o los fumadores enfermos dejan de fumar (causalidad inversa)."
+  optionNotes={[
+    "Incorrecta: con signos opuestos no hay un efecto común que resumir.",
+    undefined,
+    "Incorrecta: un promedio de efectos opuestos no es 'ningún efecto'; es dos efectos.",
+    "Incorrecta: un RR menor que 1 es perfectamente posible; lo que pide explicación es por qué cambia de signo.",
+  ]}
+/>
+
+<Quiz
+  question="Un ensayo reporta: en mujeres, RR = 0.70 (p = 0.03); en hombres, RR = 0.78 (p = 0.21). El autor concluye que el tratamiento solo funciona en mujeres. ¿Qué dices?"
+  options={[
+    "Tiene razón: el efecto es significativo solo en mujeres",
+    "Es un error: hay que probar la diferencia entre los dos RR; 0.70 y 0.78 son muy parecidos y casi seguro compatibles",
+    "Hay que repetir el análisis con un α más bajo",
+    "Es unilateralismo"
+  ]}
+  correctIndex={1}
+  explanation="Comparar valores p por subgrupo no prueba interacción (Gelman y Stern, 2006). Los dos RR apuntan al mismo lado y difieren poco; con el IC de su razón, lo más probable es que sean compatibles. Lo que cambió entre subgrupos fue la precisión, no el efecto."
+  optionNotes={[
+    "Incorrecta: 'significativo' y 'no significativo' pueden venir de efectos casi idénticos con distinta precisión.",
+    undefined,
+    "Incorrecta: cambiar α no responde la pregunta, que es si los efectos difieren.",
+    "Incorrecta: unilateralismo exige un efecto nulo en un estrato; 0.78 no es nulo, solo es impreciso.",
+  ]}
 />
 
 <ToolCard task="bdt" />
 
+## Tres fenómenos, tres oficios
+
+El módulo 7 separó confusión de no colapsabilidad; este módulo separó
+ambas de la interacción. La síntesis operativa:
+
+| | Qué es | Cómo se busca | Qué se hace con eso |
+|---|---|---|---|
+| **<Term k="confusion">Confusión</Term>** | Sesgo: $C$ se asocia con $E$ y con $D$ | Crudo vs ajustado —diagnóstico limpio solo con medidas colapsables (RR, RD)— | **Se elimina**: estratos, estandarización, modelo |
+| **No <Term k="colapsabilidad">colapsabilidad</Term>** | Propiedad del OR (y del HR): el ajustado difiere del crudo aun sin confusión | Estandarizado vs MH: dos ajustes legítimos discrepan | **Se entiende y se reporta**: OR marginal o condicional |
+| **<Term k="interaccion">Interacción</Term>** | Fenómeno causal: el efecto de $E$ depende de $M$ | Efectos heterogéneos entre estratos (Breslow–Day); RERI en la escala aditiva | **Se describe**: efecto por estrato, no un solo resumen |
+
+El <Term k="paralelismo">paralelismo</Term> es la referencia de la tercera
+fila: efectos homogéneos entre estratos significan que cada exposición
+actúa por su vía, y ahí un solo resumen ajustado es legítimo.
+
 ## Producto del módulo
 
 <Callout type="note" title="Entrega: análisis de interacción">
-Replica el Ejemplo 4.13 (o un dataset propio con dos estratos): diagrama
-de riesgos, test de Breslow–Day, clasificación del patrón (sinergismo /
-antagonismo / unilateralismo / ninguno) y decisión de reporte en ambas
-escalas, aditiva y multiplicativa.
+Con el Ejemplo 4.13, el factor V Leiden o un dataset propio de dos
+estratos: (1) gráfico de riesgos en ambas escalas; (2) efectos por estrato
+con IC, razón de RR u OR, y RERI con IC; (3) prueba de Breslow–Day o
+término de interacción; (4) clasificación del patrón (paralelismo,
+sinergismo, antagonismo, cruce o unilateralismo) **en cada escala**;
+(5) juicio de credibilidad con los seis criterios, y (6) decisión de
+reporte: ¿un resumen ajustado o efectos por estrato?
 </Callout>
 
 ## Lecturas
 
 - **Woodward (2014), caps. 4.7–4.9**: modificación de efecto, Ejemplos 4.13–4.14, la cuestión de la escala.
-- **Breslow &amp; Day (1980)**, vol. I: el test de homogeneidad.
-- **Coscrato, Izbicki &amp; Stern (2018)**: pruebas agnósticas; anticipo del módulo 17.
+- **Rothman, Greenland y Lash (2008), cap. 5**: interacción biológica y causas suficientes; por qué la escala aditiva es la de la interacción biológica.
+- **Knol y VanderWeele (2012)**, *Int J Epidemiol*: cómo reportar modificación de efecto e interacción.
+- **VanderWeele y Knol (2014)**, *Epidemiol Methods*: tutorial de interacción.
+- **Hammond, Selikoff y Seidman (1979)**, *Ann N Y Acad Sci*: asbesto, tabaco y cáncer de pulmón.
+- **Vandenbroucke et al. (1994)**, *Lancet*: factor V Leiden y anticonceptivos orales.
+- **EBCTCG (2011)**, *Lancet*: receptores hormonales y efecto del tamoxifeno.
+- **Prospective Studies Collaboration (2002)**, *Lancet*: presión arterial y mortalidad vascular por edad.
+- **ISIS-2 (1988)**, *Lancet*: aspirina, estreptoquinasa y el subgrupo zodiacal.
+- **Brookes et al. (2004)**, *J Clin Epidemiol*: potencia de los análisis de subgrupos.
+- **Gelman y Stern (2006)**, *Am Stat*: la diferencia entre significativo y no significativo.
+- **Sun et al. (2010)**, *BMJ*, y **Schandelmaier et al. (2020)**, *CMAJ* (ICEMAN): credibilidad de efectos de subgrupo.
+- **Breslow y Day (1980)**, vol. I: el test de homogeneidad.
+- **Coscrato, Izbicki y Stern (2018)**: pruebas agnósticas; anticipo del módulo 17.

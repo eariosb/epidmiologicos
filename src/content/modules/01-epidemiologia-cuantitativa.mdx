@@ -75,45 +75,50 @@ grupos comparados difieren solo en la exposición.
 
 ### Los números
 
-Snow reconstruyó los conteos casa por casa. A nivel poblacional, el
-cuadro histórico es:
+Snow rastreó, casa por casa, qué compañía abastecía a cada vivienda donde
+hubo una muerte por cólera, y usó como denominador las casas que cada
+compañía declaraba abastecer. Su tabla más citada cubre las siete semanas
+del 8 de julio al 26 de agosto de 1854:
 
 <EpiTable
-  title="Mortalidad por cólera según compañía de agua (Londres, 1854)"
+  title="Muertes por cólera según compañía de agua (Londres, 8 jul – 26 ago 1854)"
   rows={['Southwark & Vauxhall', 'Lambeth', 'Resto de Londres']}
-  cols={['Población', 'Muertes', 'Por 10 000']}
+  cols={['Casas abastecidas', 'Muertes', 'Por 10 000 casas']}
   data={[
-    ['167 654', '1 263', '75.3'],
-    ['17 348',  '98',    '56.5'],
-    ['2 228 173', '1 422', '6.4'],
+    ['40 046', '1 263', '315'],
+    ['26 107', '98', '37.5'],
+    ['256 423', '1 422', '55.5'],
   ]}
-  caption="Tabla clásica de Snow (1855). Las dos compañías tienen tasas
-  similares a escala poblacional: la comparación burda es débil."
+  caption="Snow (1855), tabla IX, con las tasas recalculadas de sus propios
+  conteos: Snow imprimió 37 y 59 en las dos últimas filas; la segunda no
+  cuadra con sus números. El denominador son casas, no personas: Snow
+  supuso una ocupación similar por vivienda en ambas compañías."
 />
 
-La razón de tasas poblacional es $75.3/56.5 \approx 1.33$: modesta. Pero
-ese número agrega territorios enteros donde la mayoría de las casas no
-estaba en la zona de mezcla. Cuando Snow restringe la comparación a los
-subdistritos donde ambas compañías repartían casa a casa y mide por
-**casas abastecidas**, el cuadro cambia:
+La razón es $315/37.5 \approx 8.4$: en las casas que recibían agua tomada río
+abajo murió de cólera entre ocho y nueve veces más gente que en las que
+la recibían río arriba. El resto de Londres, con otras fuentes y otra
+mezcla de barrios, queda en medio.
+
+El **factor 14** que repiten muchos textos sale del mismo denominador pero
+de otra ventana: las primeras cuatro semanas de la epidemia, hasta el 5 de
+agosto.
 
 <EpiTable
-  title="El gran experimento (subdistritos con tuberías entremezcladas)"
+  title="Primeras cuatro semanas de la epidemia (hasta el 5 de agosto de 1854)"
   rows={['Southwark & Vauxhall', 'Lambeth']}
-  cols={['Muertes por 10 000 casas']}
-  data={[['71'], ['5']]}
-  caption="Mortalidad por cada 10 000 casas abastecidas, calculada solo
-  en los subdistritos donde ambas compañías repartían casa a casa.
-  Razón ≈ 14."
+  cols={['Muertes', 'Por 10 000 casas']}
+  data={[['286', '71'], ['14', '5']]}
+  caption="Mismas casas abastecidas como denominador. Razón ≈ 13–14."
 />
 
-El **factor 14** que los textos citan no sale de la primera tabla; sale
-de la segunda. No es una cifra inflada: es la comparación hecha a la
-granulación correcta, donde casas contiguas, del mismo vecindario y del
-mismo ingreso, difieren solo en el agua que llega al grifo. Esta es la
-primera lección metodológica del curso: **una cifra citada de memoria
-suele colapsar una comparación más fina, y la fuerza de la evidencia
-vive en el denominador y el nivel de comparación, no en el titular**.
+Las dos cifras miden lo mismo en ventanas distintas, y ambas son
+enormes. La fuerza del argumento no está en el número, sino en la
+comparación: casas contiguas, del mismo vecindario y del mismo ingreso,
+que difieren en el agua que llega al grifo. Esta es la primera lección
+metodológica del curso: **una cifra citada sin su denominador ni su
+ventana de tiempo no se puede evaluar; la evidencia vive en cómo se
+construyó la comparación, no en el titular**.
 
 <Callout type="warning" title="La lección metodológica">
 Snow no tenía teoría microbiana, ni test estadístico, ni intervalo de
@@ -132,7 +137,7 @@ no cumple todos los criterios y que eso no invalida su conclusión:
 <BradfordHill
   title="¿Cumple Snow los criterios de Bradford Hill?"
   items={[
-    { criterion: 'Fuerza', status: 'si', note: 'El factor ~14 a nivel de casas es una asociación muy fuerte; el 1.33 poblacional es el mismo efecto diluido por agregación.' },
+    { criterion: 'Fuerza', status: 'si', note: 'Una razón de 8.4 en siete semanas (13–14 en las primeras cuatro) es una asociación muy fuerte, difícil de explicar solo por confusión.' },
     { criterion: 'Consistencia', status: 'parcial', note: 'Snow acumuló brotes anteriores (1848–49) con el mismo patrón; la replicación sistemática llegaría después.' },
     { criterion: 'Temporalidad', status: 'si', note: 'El suministro contaminado precedió a las muertes; el orden temporal está documentado.' },
     { criterion: 'Gradiente', status: 'si', note: 'Los subdistritos con mayor mezcla de fuentes contaminadas mostraban mortalidad intermedia.' },
@@ -272,64 +277,60 @@ mide con dos instrumentos:
 
 ## La comparación de Snow en R
 
-La comparación de Snow se reduce a una tabla 2×2 con denominadores. El
-código siguiente la construye con los datos históricos, calcula los dos
-riesgos acumulados, su razón y su intervalo de confianza por el método
-log-normal (Katz). Es la misma estructura que los módulos 4 y 5 usarán
-para <Term k="RR">RR</Term>, <Term k="OR">OR</Term>, <Term k="RD">RD</Term> y <Term k="NNT">NNT</Term>:
+La comparación de Snow se reduce a dos conteos con sus denominadores.
+Como el denominador son casas y no personas, la medida es una **tasa por
+casa** (una casa puede tener más de una muerte), y su comparación es una
+razón de tasas. El código siguiente la calcula con su intervalo exacto de
+Poisson y con la aproximación log-normal, la misma estructura que los
+módulos 4 y 5 usarán para <Term k="RR">RR</Term>, <Term k="OR">OR</Term>, <Term k="RD">RD</Term> y <Term k="NNT">NNT</Term>:
 
 <RCell
   id="01/snow-2x2"
-  title="El experimento de Snow como tabla 2×2"
-  code={`# Snow 1854: muertes por colera segun compania de agua.
-# Convencion del curso: filas = exposicion, columnas = desenlace.
-tabla <- matrix(
-  c(1263, 166391,   # Southwark: muertes, sobrevivientes
-      98,  17250),  # Lambeth:   muertes, sobrevivientes
-  nrow = 2, byrow = TRUE,
-  dimnames = list(
-    Agua      = c("Southwark", "Lambeth"),
-    Desenlace = c("Muerto", "Vivo")
-  )
-)
-print(tabla)
+  title="El experimento de Snow: razón de tasas por casa"
+  code={`# Snow (1855), tabla IX: muertes por colera del 8 de julio al 26 de agosto de 1854.
+# Denominador: casas abastecidas por cada compania (no personas).
+snow <- data.frame(
+  agua    = c("Southwark & Vauxhall", "Lambeth", "Resto de Londres"),
+  casas   = c(40046, 26107, 256423),
+  muertes = c(1263, 98, 1422))
+snow$por_10000 <- round(10000 * snow$muertes / snow$casas)
+print(snow)
 
-# Riesgos acumulados (muertes / clientes):
-r_s <- tabla[1,1] / sum(tabla[1,])
-r_l <- tabla[2,1] / sum(tabla[2,])
-cat(sprintf("\\nRiesgo Southwark: %.2f por 1000", r_s * 1000))
-cat(sprintf("\\nRiesgo Lambeth:   %.2f por 1000", r_l * 1000))
+# Razon de tasas S&V vs Lambeth: IC exacto (Poisson condicional) y log-normal.
+rt <- poisson.test(snow$muertes[1:2], snow$casas[1:2])
+se <- sqrt(1 / snow$muertes[1] + 1 / snow$muertes[2])
+ic_log <- exp(log(rt$estimate) + c(-1.96, 1.96) * se)
+cat(sprintf("\\nRazon de tasas = %.1f | IC95%% exacto [%.1f, %.1f] | log-normal [%.1f, %.1f]\\n",
+            rt$estimate, rt$conf.int[1], rt$conf.int[2], ic_log[1], ic_log[2]))
 
-# Razon de riesgos e IC95% log-normal (Katz):
-rr  <- r_s / r_l
-se  <- sqrt(1/tabla[1,1] - 1/sum(tabla[1,]) +
-            1/tabla[2,1] - 1/sum(tabla[2,]))
-ic  <- exp(log(rr) + c(-1.96, 1.96) * se)
-
-cat(sprintf("\\n\\nRR = %.2f,  IC95%% [%.2f, %.2f]\\n", rr, ic[1], ic[2]))
-cat("La mortalidad acumulada en clientes de Southwark fue ~33% mayor.\\n")
-cat("El factor 14 vive en la comparacion por casas, no en esta tabla.\\n")`}
+# Primeras cuatro semanas (hasta el 5 de agosto): 286 vs 14 muertes, mismas casas.
+r4 <- poisson.test(c(286, 14), snow$casas[1:2])
+cat(sprintf("Primeras 4 semanas: razon = %.1f | IC95%% exacto [%.1f, %.1f]\\n",
+            r4$estimate, r4$conf.int[1], r4$conf.int[2]))
+cat("Mismo denominador, distinta ventana: el 'factor 14' es el inicio de la epidemia.\\n")`}
 />
 
 <SasBlock code={`data snow;
   length agua $9;
-  input agua $ muertes clientes;
-  logpob = log(clientes);
+  input agua $ muertes casas;
+  logcasas = log(casas);
   datalines;
-Southwark 1263 167654
-Lambeth    98  17348
+Southwark 1263 40046
+Lambeth     98 26107
 ;
-/* Razon de mortalidades acumuladas via regresion de Poisson:
-   el offset logpob convierte conteos en tasas por cliente */
+/* Razon de tasas por casa via regresion de Poisson:
+   el offset logcasas convierte conteos en tasas por casa */
 proc genmod data=snow;
   class agua(ref="Lambeth");
-  model muertes = agua / dist=poisson link=log offset=logpob;
-  estimate "RR S&V vs Lambeth" agua 1 / exp;
+  model muertes = agua / dist=poisson link=log offset=logcasas;
+  /* niveles en orden alfabetico: Lambeth, Southwark */
+  estimate "Razon S&V vs Lambeth" agua -1 1 / exp;
 run;`} />
 
 <Callout type="tip" title="Qué acabas de hacer">
 Reconstruiste el análisis que fundó la epidemiología con la maquinaria
-que Snow no tuvo: tabla 2×2, razón de riesgos, intervalo de confianza.
+que Snow no tuvo: tasas con su denominador, razón de tasas, intervalo de
+confianza.
 En los módulos 4 y 5 usarás exactamente esta estructura para RR, OR, RD
 y NNT. Snow no es una anécdota: es el punto de partida del curso.
 </Callout>
@@ -356,7 +357,7 @@ extensión:
 ## Lecturas
 
 - **Woodward (2014), cap. 1.1–1.3**: la epidemiología como disciplina comparativa.
-- **Snow (1855)**, *On the Mode of Communication of Cholera*, 2ª ed.: las tablas originales por población y por casas.
+- **Snow (1855)**, *On the Mode of Communication of Cholera*, 2ª ed.: las tablas originales por casas abastecidas.
 - **Brandt (1978)**, *Racism and Research: The Case of the Tuskegee Syphilis Study*, Hastings Center Report.
 - **Informe Belmont (1979)**: respeto, beneficencia, justicia.
 - **Notas de clase (Salazar), clases 1–2**: historia, glosario de campo CDC.

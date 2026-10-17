@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, type JSX } from 'react';
+import { useMemo, useState, useRef, type JSX } from 'react';
 import { Play, Camera, Send, ChartColumn, FileText, ChevronDown, ChevronUp, Terminal } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
@@ -13,6 +13,7 @@ import { saveCapture } from '@/lib/session-store';
 import { sendToBlackboard } from '@/lib/send-to-blackboard';
 import { codeToDataUrl } from '@/lib/code-image';
 import type { RCellProps } from '@/types/course';
+import { precomputedFor } from '@/lib/precomputed';
 
 const rLanguage = StreamLanguage.define(rMode);
 
@@ -24,12 +25,18 @@ const rLanguage = StreamLanguage.define(rMode);
 export function RCell({ id, title, code: initialCode, defaultOpen = false }: Readonly<RCellProps>) {
   const [code, setCode] = useState(initialCode);
   const [open, setOpen] = useState(defaultOpen);
+  const [outOpen, setOutOpen] = useState(true);
   const { state, result, webRStatus, webRError, run } = useRCell();
   const cellRef = useRef<HTMLDivElement>(null);
   const [capturing, setCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
   const [sendingCode, setSendingCode] = useState(false);
   const [sendingPlots, setSendingPlots] = useState(false);
+
+  // Salida precalculada: visible mientras no haya una ejecución en vivo y el
+  // código siga siendo el original del módulo.
+  const pre = useMemo(() => precomputedFor(id, initialCode), [id, initialCode]);
+  const showPre = pre !== null && !result && code === initialCode && (pre.console !== '' || pre.plots.length > 0);
 
   const isRunning = state === 'running';
   const isBooting = webRStatus === 'loading' && isRunning;
@@ -185,7 +192,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
       <div className="flex items-center gap-2 border-t border-ink-200 bg-white px-3 py-2">
         <button
           type="button"
-          onClick={() => run(code)}
+          onClick={() => { setOutOpen(true); run(code); }}
           disabled={isRunning}
           className="inline-flex items-center gap-1.5 rounded bg-brand-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
@@ -263,15 +270,68 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
         </div>
       )}
 
+      {showPre && pre && (
+        <div className="border-t border-ink-200">
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-1.5 text-[11px] text-ink-500">
+            <span>Salida precalculada con R de escritorio</span>
+            <span className="inline-flex items-center gap-3">
+              {!open && (
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
+                  className="underline decoration-dotted hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                >
+                  ver el código y ejecutarlo en vivo
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setOutOpen((v) => !v)}
+                aria-expanded={outOpen}
+                className="inline-flex items-center gap-1 underline decoration-dotted hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+              >
+                {outOpen ? <ChevronUp aria-hidden className="h-3 w-3" /> : <ChevronDown aria-hidden className="h-3 w-3" />}
+                {outOpen ? 'ocultar salida' : 'mostrar salida'}
+              </button>
+            </span>
+          </div>
+          {outOpen && pre.console && <ConsoleOutput text={pre.console} />}
+          {outOpen && pre.plots.map((src, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={src}
+              src={src}
+              width={1000}
+              height={620}
+              loading="lazy"
+              alt={`Gráfico de la celda ${title ?? id} (precalculado, ${i + 1} de ${pre.plots.length})`}
+              className="mx-auto block h-auto max-w-full bg-white p-2"
+            />
+          ))}
+        </div>
+      )}
+
       {result && (
         <div className="animate-fade-in border-t border-ink-200">
-          {result.error && (
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-1.5 text-[11px] text-ink-500">
+            <span>Salida en vivo (webR)</span>
+            <button
+              type="button"
+              onClick={() => setOutOpen((v) => !v)}
+              aria-expanded={outOpen}
+              className="inline-flex items-center gap-1 underline decoration-dotted hover:text-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+            >
+              {outOpen ? <ChevronUp aria-hidden className="h-3 w-3" /> : <ChevronDown aria-hidden className="h-3 w-3" />}
+              {outOpen ? 'ocultar salida' : 'mostrar salida'}
+            </button>
+          </div>
+          {outOpen && result.error && (
             <div className="px-4 py-2 text-sm text-danger-700 bg-danger-50" role="alert">
               <strong>Error en R:</strong> {result.error}
             </div>
           )}
-          {result.text && <ConsoleOutput text={result.text} />}
-          {result.plots.map((src, i) => (
+          {outOpen && result.text && <ConsoleOutput text={result.text} />}
+          {outOpen && result.plots.map((src, i) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               key={src}

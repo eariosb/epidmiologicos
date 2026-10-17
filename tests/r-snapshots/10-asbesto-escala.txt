@@ -1,0 +1,5 @@
+ninguno asbesto  tabaco   ambos
+   1.00    5.17   10.85   53.24
+Multiplicativa: RR conjunto = 53.2 | producto = 56.1 | razon = 0.95
+Aditiva: exceso conjunto = 590 | suma de excesos = 158 por 100 000
+RERI = 38.2 | AP = 0.72 | S = 3.7

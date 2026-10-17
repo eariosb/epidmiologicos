@@ -66,20 +66,22 @@ produce respuestas numéricamente distintas si se ignora.
 
 <LangTabs
   title="La misma tabla en tres interfaces"
-  task="Datos del módulo 4 (Pool esquemático): fumadores 166/50 casos de EIC vs. no fumadores 1176/513. Fila 1 = expuestos, columna 1 = casos."
+  task="Datos del módulo 4 (Pool esquemático): 166 casos de EIC entre 1342 fumadores y 50 entre 563 no fumadores. Fila 1 = expuestos, columna 1 = casos. RR = 1.39, OR = 1.45."
   rCode={`# epiR exige: exposicion en FILAS, desenlace en COLUMNAS,
 # y el nivel + primero. table() ordena alfabetico -> invertir.
 library(epiR)
-tab <- matrix(c(166, 1176, 50, 513), nrow = 2,
+tab <- matrix(c(166, 50, 1176, 513), nrow = 2,   # se llena por columnas
               dimnames = list(Fuma = c("Si", "No"),
                               EIC  = c("Si", "No")))
+tab                                  # verificar antes de calcular
 epi.2by2(tab, method = "cohort.count")
 # -> cohort.count da RR, OR, RD, PRA con IC95%`}
   sasCode={`data pool;
-  input Fuma $ EIC $ n;   /* orden=data preserva categorias */
+  input Fuma $ EIC $ n @@;   /* @@: varios registros por linea */
   datalines;
 Si Si 166   Si No 1176
-No Si 50    No No 513 ;
+No Si 50    No No 513
+;
 proc freq data=pool order=data;
   weight n;
   tables Fuma*EIC / relrisk measures chisq;
@@ -180,9 +182,8 @@ La lección de Normand tiene una versión más incómoda: el problema no
 siempre es la elección del método —a veces el mismo nombre, "prueba
 exacta de Fisher bilateral", esconde **definiciones distintas según
 la implementación**. `fisher.test()` de R ordena las tablas por
-probabilidad (*minlike*); `exact2x2` usa por defecto el criterio
-*central* (la menor de las dos colas, duplicada); SciPy y SAS
-implementan ordenamientos propios. Con márgenes simétricos coinciden;
+probabilidad (*minlike*), igual que SAS y SciPy; `exact2x2` usa por
+defecto el criterio *central* (la menor de las dos colas, duplicada). Con márgenes simétricos coinciden;
 cerca del umbral de decisión pueden discrepar — y el mismo objeto
 `p.value` sale distinto de una función a otra sin que nada lo
 anuncie. En la <Anexo id="auditoria-perondi">auditoría del
@@ -191,14 +192,13 @@ curso</Anexo> documentamos el caso inverso: un "Boschloo bilateral
 sino una maximización detenida en un pico local — con n₁ = n₂,
 minlike y central dan exactamente lo mismo.
 
-Y hay un segundo nivel, más fino, que sí depende de la plataforma:
-dentro de *minlike*, dos tablas con probabilidad **exactamente igual**
-entran o no al conjunto "tan extremas como la observada" según cómo la
-aritmética de punto flotante desempate — y ese desempate puede variar
-entre compilaciones, bibliotecas BLAS y sistemas operativos. No es que
-Windows elija minlike y Linux central: es que la igualdad flotante
-`p ≤ p0` es un filo, y una tabla justo sobre el filo puede entrar en
-una máquina y quedar fuera en otra.
+Y hay un segundo nivel, más fino: dentro de *minlike*, dos tablas con
+probabilidad **matemáticamente igual** pueden salir distintas en el
+último dígito de punto flotante, y entonces la comparación `p ≤ p0`
+deja una dentro y otra fuera. R se protege con una tolerancia relativa
+(`p ≤ p0 · (1 + 10⁻⁷)`); otras implementaciones usan otra tolerancia o
+ninguna. La igualdad flotante es un filo, y una tabla justo sobre él
+puede entrar en un programa y quedar fuera en otro.
 
 La defensa no es desconfiar del software sino auditar el
 **procedimiento completo**: el test de Fisher bilateral no tiene una
@@ -217,17 +217,17 @@ xs <- max(0, m - n2):min(n1, m)          # soporte condicional
 pr <- dhyper(xs, n1, n2, m)
 p0 <- dhyper(a, n1, n2, m)               # P(tabla observada)
 
-# minlike: tablas con probabilidad <= P(obs)   [= fisher.test()]
-p_minlike <- sum(pr[pr <= p0 + 1e-12])
+# minlike: tablas con probabilidad <= P(obs), con la tolerancia
+# relativa de fisher.test()
+p_minlike <- sum(pr[pr <= p0 * (1 + 1e-7)])
 # central: el menor de las dos colas, duplicado y tope 1
 p_central <- min(1, 2 * min(sum(pr[xs <= a]), sum(pr[xs >= a])))
 
-cat(sprintf("tabla (%d,%d)/(%d,%d):  minlike = %.4f   central = %.4f\n",
+cat(sprintf("tabla (%d,%d)/(%d,%d):  minlike = %.4f   central = %.4f\\n",
             tab[1,1], tab[1,2], tab[2,1], tab[2,2], p_minlike, p_central))
 # Con esta tabla una definicion RECHAZA a alfa=0.05 y la otra no:
-# mismo datos, mismo "bilateral", veredictos opuestos. Y dentro de
-# minlike, el desempate de probabilidades iguales (pr <= p0 + 1e-12)
-# puede variar entre implementaciones en aritmetica de punto flotante.`}
+# mismos datos, mismo "bilateral", veredictos opuestos.
+cat("fisher.test():", round(fisher.test(tab)$p.value, 4), "\\n")`}
 />
 
 <Callout type="warning" title="Qué declarar para que el número sea verificable">
@@ -338,7 +338,7 @@ datos es una ciencia con métodos propios, no un apéndice del teorema.
 />
 
 <LabExercise
-  id="lab-17-traductor"
+  id="lab-18-traductor"
   title="Laboratorio: traducir preservando el estimando"
   code={`# Tabla canonica del curso (módulo 4): Pool, fumar x EIC
 tab <- matrix(c(166, 50, 1176, 513), nrow = 2,
@@ -367,18 +367,19 @@ chisq.test(tab, correct = FALSE)
     "Reporta en 3 líneas: ¿coinciden los tres? Si no, ¿qué convención difiere?",
   ]}
   hint="En statsmodels, Table2x2(tab) asume filas=exposición como epiR, pero pandas.crosstab puede reordenar. En SAS, ORDER=DATA fija la referencia."
-  solution="Los tres reportan OR ≈ 1.45 e IC solapados; las diferencias de decimales vienen del método de IC (Woolf vs exacto). El ejercicio demuestra que 'traducir' es preservar el estimando + la referencia, no copiar sintaxis."
+  solution="Con la misma orientación, los tres dan RR = 1.39 (1.03–1.88) y OR = 1.45 (1.04–2.02): PROC FREQ y Table2x2 usan por defecto el IC de Woolf, igual que el código. Si un decimal difiere, es porque se pidió otro IC (exacto en SAS, por ejemplo). Si el OR sale 0.69, se volteó una referencia. Traducir es preservar el estimando y la referencia, no copiar sintaxis."
 />
 
 <SasBlock code={`/* Intenta TU traduccion antes de abrir: este es el modelo */
 data pool;
-  input fuma $ eic $ n;
+  input fuma $ eic $ n @@;
   datalines;
 Si Si 166  Si No 1176
-No Si 50   No No 513 ;
+No Si 50   No No 513
+;
 proc freq data=pool order=data; weight n;
   tables fuma*eic / relrisk measures chisq;
-  /* RELRISK: OR ~2.88 + 'Cohort (Col1 Risk)' = RR;
+  /* RELRISK: OR = 1.45 + 'Cohort (Col1 Risk)' = RR = 1.39;
      ORDER=DATA fija la referencia como en epiR */
 run;`} />
 

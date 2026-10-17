@@ -32,6 +32,11 @@ la hoja a la que llega decide qué puede estimar.
 
 <DesignTree title={<>Qué permite estimar cada camino del árbol de diseños</>} />
 
+**Para explorar**
+
+1. Llega a cada una de las seis hojas y escribe, para cada diseño, una pregunta concreta que no puede responder.
+2. Ubica en el árbol las seis bases del curso (Tabla 1 del módulo 0). ¿Cuál cae en la rama de casos y controles pareados y cuál en la de ensayo?
+
 ### Las tres preguntas que clasifican cualquier estudio
 
 El árbol se recorre respondiendo tres preguntas en orden. Ninguna
@@ -93,7 +98,7 @@ pob <- data.frame(E, D)
 r1p <- mean(pob$D[pob$E==1]); r0p <- mean(pob$D[pob$E==0])
 cat(sprintf("Verdad poblacional: RR = %.2f  OR = %.2f\\n\\n",
             r1p/r0p, (r1p/(1-r1p))/(r0p/(1-r0p))))
-# RR = 3.98, OR = 4.72: con desenlace frecuente el OR se aleja del RR.
+# Con esta semilla: RR = 4.03, OR = 4.80; con desenlace frecuente el OR se aleja del RR.
 
 # 1) COHORTE: muestrear por exposicion (4000 expuestos, 4000 no).
 co <- rbind(pob[sample(which(pob$E==1), 4000), ],
@@ -196,6 +201,12 @@ donde hay daño. El laboratorio siguiente deja comprobarlo muestreando la
 misma ciudad con cuatro diseños:
 
 <CityLab />
+
+**Para explorar**
+
+1. Con «controles hospitalarios», lee en la nota qué fracción de los controles está expuesta y compárala con la de la población fuente. ¿Por qué el OR cae por debajo de 1 si la exposición triplica el riesgo?
+2. Cambia a controles de la población y compara el OR con el OR crudo de la ciudad (tarjeta del centro): coinciden porque el diseño es correcto, aunque los dos siguen confundidos por C.
+3. En la cohorte, mueve n de 200 a 5000. El RR muestral se estabiliza cerca del crudo, no del 3.00: más datos reducen el azar, no la confusión.
 
 <Callout type="warning" title="Lo que la ciudad enseña y lo que no">
 Simépolis enseña que el **mecanismo de muestreo** es tan decisivo como el

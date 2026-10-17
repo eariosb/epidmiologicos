@@ -3,4 +3,4 @@ A  1.5    9   45
 B  2.0   10   60
 
 cruda A = 9.80  cruda B = 6.82 (por 1000 p-a)
-Las especificas cuentan otra historia... (anticipo del mÃ³dulo 9)
+Las especificas cuentan otra historia... (anticipo del módulo 9)

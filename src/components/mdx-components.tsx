@@ -22,6 +22,7 @@ import {
   PrevalenceExplorer,
   StandardizationExplorer,
   InteractionExplorer,
+  InteractionNoiseLab,
   CohortGantt,
   BerksonExplorer,
   RocExplorer,
@@ -46,6 +47,7 @@ import { LangTabs } from '@/components/LangTabs';
 import { SasBlock } from '@/components/SasBlock';
 import { DecisionPanel } from '@/components/DecisionPanel';
 import { DecisionCard } from '@/components/DecisionCard';
+import { TestSelector, PValueLab } from '@/components/TestSims';
 import { SimReset } from '@/components/SimReset';
 import { ToolCard } from '@/components/ToolCard';
 import { FormulaPalette } from '@/components/FormulaPalette';
@@ -135,6 +137,9 @@ export const mdxComponents: MDXComponents = {
   PrevalenceExplorer: withReset(PrevalenceExplorer),
   StandardizationExplorer: withReset(StandardizationExplorer),
   InteractionExplorer: withReset(InteractionExplorer),
+  InteractionNoiseLab: withReset(InteractionNoiseLab),
+  TestSelector: withReset(TestSelector),
+  PValueLab: withReset(PValueLab),
   CohortGantt: withReset(CohortGantt),
   BerksonExplorer: withReset(BerksonExplorer),
   RocExplorer: withReset(RocExplorer),

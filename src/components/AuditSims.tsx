@@ -462,12 +462,13 @@ export function Tau2Audit({ title }: { title?: ReactNode }) {
             <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img"
               aria-label="Distribución Monte Carlo de tau² estimado">
               <line x1={40} x2={W - 6} y1={H - 20} y2={H - 20} stroke={tokens.chart.tick} />
-              <line x1={rnd(40 + (tau / 0.8) * (W - 50))} x2={rnd(40 + (tau / 0.8) * (W - 50))}
+              <line x1={rnd(40 + ((tau * tau) / 0.8) * (W - 50))} x2={rnd(40 + ((tau * tau) / 0.8) * (W - 50))}
                 y1={8} y2={H - 20} stroke={tokens.chart.tick} strokeDasharray="4 3" />
-              <text x={rnd(40 + (tau / 0.8) * (W - 50))} y={H - 6} textAnchor="middle"
+              <text x={rnd(40 + ((tau * tau) / 0.8) * (W - 50))} y={H - 6} textAnchor="middle"
                 fontSize={8} fill={tokens.chart.text}>
-                τ = {tau.toFixed(2)}
+                τ² = {(tau * tau).toFixed(3)}
               </text>
+              <text x={W - 6} y={H - 6} textAnchor="end" fontSize={8} fill={tokens.chart.text}>τ̂² →</text>
               {hist.dl.map((h, i) => (
                 <rect key={i} x={rnd(40 + i * bw)} y={rnd(H - 20 - (h / maxH) * (H - 36))}
                   width={Math.max(0.5, bw - 1)} height={rnd((h / maxH) * (H - 36))}
@@ -536,9 +537,10 @@ export function Tau2Audit({ title }: { title?: ReactNode }) {
       )}
 
       <p className={NOTE}>
-        DL trunca Q − (k − 1) a cero: un estimador por momentos que produce
-        una varianza negativa — el caso canónico de estimación inadmisible
-        resuelto a martillazos. Langan et al. (2019) y Veroniki et al. (2016)
+        Sin truncar, el estimador DL puede dar una varianza negativa y es
+        inadmisible: su parte positiva, max(0, ·), lo domina en error
+        cuadrático. Pero la truncación deja sesgo positivo cuando τ² es chico y
+        acumula masa exactamente en cero. Langan et al. (2019) y Veroniki et al. (2016)
         documentan que con k pequeño o τ² ≈ 0 los métodos frecuentistas
         subcubren el efecto combinado; el remedio práctico es reportar el
         estimador usado y el τ̂², no solo I².
@@ -668,7 +670,7 @@ export function BootstrapStress({ title }: { title?: ReactNode }) {
                 color: tokens.chart.alert,
                 nominal: 0.95,
                 estimate: res.covWoolf,
-                se: Math.sqrt(res.covWoolf * (1 - res.covWoolf) / reps),
+                se: Math.sqrt(res.covWoolf * (1 - res.covWoolf) / Math.max(1, reps * (1 - res.undefined))),
                 extra: `indefinido en ${(res.undefined * 100).toFixed(0)}% de las tablas (celda en 0)`,
               },
               {
@@ -690,11 +692,14 @@ export function BootstrapStress({ title }: { title?: ReactNode }) {
             ]}
           />
           <SimGuide>
-            Baja n hacia 10: primero aparecen tablas con celda en cero donde
-            Woolf no existe, y la cobertura de lo que sobrevive se cae del
-            nominal. El bootstrap responde mejor, pero tampoco es magia: con
-            n ≈ 10 y exposición rara ni él alcanza 0.95 — el límite está en
-            la información, no en la técnica.
+            Baja n hacia 10 con exposición rara (P = 0.10): Woolf estricto no
+            existe en una buena parte de las tablas (alguna celda en cero) y,
+            en las que sobreviven, cubre de más. Con +0.5 siempre existe y
+            cubre al menos el 95 %, a cambio de intervalos anchos. El bootstrap
+            percentil, que parece la opción moderna, es el que más falla: con
+            n = 10 cubre cerca del 80 %, porque una tabla tan chica produce
+            remuestras muy parecidas a ella misma. Sube n a 60 y los tres
+            convergen al nominal.
           </SimGuide>
         </div>
       ) : (

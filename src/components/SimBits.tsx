@@ -41,9 +41,9 @@ export function SimLegend({
 /* Guía de lectura: qué observar y cómo interpretar el interactivo.     */
 export function SimGuide({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-2 rounded-lg border border-warning-200 bg-warning-50/80 px-3 py-1.5 text-[11px] leading-snug text-warning-900">
+    <div className="mt-2 rounded-lg border border-warning-200 bg-warning-50/80 px-3 py-1.5 text-[11px] leading-snug text-warning-900 [&_ul]:mt-1 [&_ul]:list-disc [&_ul]:pl-4">
       <strong className="mr-1 font-semibold">Qué mirar:</strong>
       {children}
-    </p>
+    </div>
   );
 }

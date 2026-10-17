@@ -35,6 +35,11 @@ el explorador siguiente permite verificarlo sobre una población sintética.
 
 <ConfusionExplorer title={<>La confusión necesita dos flechas</>} />
 
+**Para explorar**
+
+1. Reproduce los cuatro ejemplos y explica, para cada uno, qué flecha del DAG produce la diferencia entre el crudo y el ajustado.
+2. Pon C→E = 1, C→D = 8 y E→D = 2.5. El crudo coincide con el estandarizado (2.19), pero el MH da 2.5. No es confusión: es la no colapsabilidad del OR, y por eso conviene distinguir el efecto en la población del efecto dentro de cada estrato.
+
 ## Dibujar el DAG antes de ajustar
 
 El <Term k="DAG">DAG</Term> (grafo acíclico dirigido) hace explícita la
@@ -129,6 +134,13 @@ cat("  estratos:", round(OR(enc[,,1]),2), "y", round(OR(enc[,,2]),2),
 # Senal de alarma: el OR agrupado esta FUERA del rango de los estratos.`}
 />
 
+Mira los estratos del enmascaramiento: 2.9 y 32.8 no son "el mismo efecto
+con ruido", difieren once veces. Ahí conviven dos fenómenos distintos: la
+**confusión** (el agrupado no representa a ningún estrato) y la
+**heterogeneidad** del efecto entre estratos, que es interacción. Son
+preguntas independientes, y el módulo 10 las separa: una se corrige, la
+otra se reporta.
+
 ### El procedimiento de decisión
 
 Ante una asociación cruda, la secuencia correcta es:
@@ -144,14 +156,50 @@ Ante una asociación cruda, la secuencia correcta es:
 
 <Callout type="warning" title="El OR no es colapsable">
 Un matiz que distingue confusión de mera aritmética: el OR agrupado
-puede diferir del OR por estrato **incluso sin confusión**, porque el
-odds ratio no es colapsable sobre estratos con riesgos basales
-distintos. La diferencia por colapsabilidad suele ser modesta; cuando el
-cambio es grande (o invierte el signo), hay estructura causal detrás.
+puede diferir del OR por estrato **incluso sin confusión**. Si $C$ predice
+el desenlace pero no está asociada con la exposición (por ejemplo, en un
+ensayo aleatorizado), los dos estratos pueden tener el mismo OR y el
+agrupado salir más cerca de 1. El RR y la RD no tienen ese problema: son
+<Term k="colapsabilidad">colapsables</Term>. Por eso "crudo ≠ ajustado"
+solo diagnostica confusión cuando la medida es colapsable, o cuando $C$
+además está asociada con $E$. Y el aviso simétrico: confusión y no
+colapsabilidad pueden *cancelarse* —un crudo casi igual al ajustado
+tampoco descarta confusión. La celda siguiente lo muestra sin ningún
+confusor.
 </Callout>
 
+<RCell
+  id="07/no-colapsable"
+  title="Crudo ≠ estratos sin confusión: el OR no es colapsable"
+  code={`# Ensayo aleatorizado: E se asigna 50/50 en cada estrato de C, asi que
+# C NO esta asociada con E (no puede confundir). C solo cambia el riesgo base.
+riesgos <- function(r0, OR) { o1 <- OR * r0 / (1 - r0); c(r1 = o1 / (1 + o1), r0 = r0) }
+c0 <- riesgos(0.10, OR = 9)          # estrato C = 0: riesgo base bajo
+c1 <- riesgos(0.60, OR = 9)          # estrato C = 1: riesgo base alto
+n <- 1000                            # por brazo y estrato (tabla esperada)
+tab <- function(r) matrix(c(r["r1"], 1 - r["r1"], r["r0"], 1 - r["r0"]) * n,
+                          2, byrow = TRUE)
+OR <- function(t) t[1, 1] * t[2, 2] / (t[1, 2] * t[2, 1])
+RR <- function(t) (t[1, 1] / sum(t[1, ])) / (t[2, 1] / sum(t[2, ]))
+t0 <- tab(c0); t1 <- tab(c1); tc <- t0 + t1
+cat(sprintf("OR: estrato 0 = %.1f | estrato 1 = %.1f | crudo = %.1f\\n", OR(t0), OR(t1), OR(tc)))
+cat(sprintf("RR: estrato 0 = %.2f | estrato 1 = %.2f | crudo = %.2f (entre ambos)\\n",
+            RR(t0), RR(t1), RR(tc)))
+# El OR crudo cae fuera de los estratos sin confusor alguno; el RR crudo
+# queda entre los RR de estrato, como corresponde a una medida colapsable.`}
+/>
+
+Conviene tener separadas las tres cosas que pueden mover el estimador
+entre el crudo y el ajustado: la **confusión** es un sesgo (se
+**elimina** estratificando, estandarizando o modelando), la
+<Term k="interaccion">interacción</Term> es un fenómeno real (se
+**describe**, módulo 10) y la **no colapsabilidad** es aritmética de la
+medida (se **entiende** y se **reporta**: OR marginal o condicional).
+Sesgo, fenómeno y propiedad — tres oficios distintos que el módulo 8
+aprende a separar con números.
+
 <LabExercise
-  id="lab-06-dag"
+  id="lab-07-dag"
   title="Laboratorio: el DAG de tu propio estudio"
   code={`# Ejercicio de papel y lapiz + R para verificar:
 # E = ejercicio, D = depresion, C = edad.
@@ -168,11 +216,11 @@ cat("OR crudo =", round(tab[1,1]*tab[2,2]/(tab[1,2]*tab[2,1]), 2), "\\n")
 # Ahora estratifica por edad: ¿que pasa con el OR?`}
   tasks={[
     "Dibuja el DAG con las tres flechas y marca el camino de confusión.",
-    "Corre el código: ¿qué OR crudo sale? ¿Es real o espurio?",
+    "Corre el código: ¿qué OR crudo sale? ¿En qué dirección empuja la confusión y por qué?",
     "Estratifica por edad y confirma que el OR colapsa a ~1.",
   ]}
   hint="table(E, D, edad) te da los dos estratos; calcula el OR dentro de cada uno."
-  solution="OR crudo ≈ 1.6–2.0 (espurio); dentro de cada estrato de edad, OR ≈ 1. La edad fabricó la asociación: confusión perfecta al estilo del Ejemplo 4.1 de Woodward."
+  solution="OR crudo ≈ 0.40: una asociación 'protectora' espuria. Los mayores se ejercitan menos (0.2 vs 0.7) y se deprimen más (0.5 vs 0.1), así que el ejercicio parece proteger. Dentro de cada estrato de edad el OR queda cerca de 1 (1.35 y 1.04 con esta semilla; la distancia a 1 es ruido de muestreo). La edad fabricó la asociación, en este caso hacia abajo: la confusión puede empujar en cualquier dirección, al estilo del Ejemplo 4.1 de Woodward."
 />
 
 <SasBlock code={`data conf;
@@ -185,7 +233,7 @@ cat("OR crudo =", round(tab[1,1]*tab[2,2]/(tab[1,2]*tab[2,1]), 2), "\\n")
   end;
 run;
 proc freq data=conf order=data;
-  tables E*D / measures;        /* OR crudo ~1.6-2.0 */
+  tables E*D / measures;        /* OR crudo ~0.4: espurio y 'protector' */
   tables edad*E*D / measures;   /* OR por estrato ~1 */
 run;`} />
 
@@ -232,11 +280,18 @@ misma base RECID:
   title={<>Tabla 1 de RECID: ¿dónde está la confusión?</>}
 />
 
+**Para explorar**
+
+1. Agrupa RECID por `fin` y cuenta las filas con |d| > 0.1: la aleatorización debería dejar casi ninguna.
+2. Agrupa por `arrest` y anota las variables que se encienden. Luego vuelve a agrupar por la exposición que te interese: solo las que se encienden en las dos tablas son candidatas a confundir.
+3. En VALUNG agrupa por `Therapy` y compara con lo que viste en la Figura 10 del módulo 0 (tipo celular desbalanceado).
+
 - Agrupando por `fin` — la ayuda financiera **aleatorizada** del
   experimento — casi ninguna fila supera |d| > 0.1: la aleatorización
   deja la Tabla 1 en silencio, que es exactamente su trabajo.
 - Agrupando por `arrest` — el desenlace — las filas que se encienden
-  son los confusores observados: edad, arrestos previos, trabajo
+  son predictores del desenlace; para confundir, además tendrían que
+  diferir entre los grupos de exposición. Son los candidatos: edad, arrestos previos, trabajo
   previo. La Tabla 1 anticipa lo que el análisis tendrá que ajustar.
 
 <Callout type="warning" title="La falacia de la Tabla 2">

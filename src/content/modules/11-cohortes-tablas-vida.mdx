@@ -68,7 +68,18 @@ resultados. Una pérdida diferencial del 10% puede invalidar lo que una
 muestra enorme ganó en precisión.
 </Callout>
 
+Cada fila del diagrama es una persona: entra en un mes distinto, aporta
+tiempo mientras se la sigue y sale por un evento (punto), por pérdida o
+por el cierre del estudio (marca). Mueve la fecha de cierre para ver
+cómo cambian a la vez los eventos y el denominador.
+
 <CohortGantt title={<>Entradas escalonadas y censura administrativa (diagrama de Gantt)</>} />
+
+**Para explorar**
+
+1. Mueve el cierre del mes 48 al 30: anota cuántos eventos pasan a ser censuras y cuánto baja el persona-tiempo.
+2. Compara la tasa en los dos cierres. ¿Por qué no cambia en proporción al número de eventos perdidos?
+3. Cuenta cuántas personas no alcanzan a ingresar con un cierre temprano: también ellas cambian el denominador.
 
 ## Conducir el estudio: la cohorte
 
@@ -129,30 +140,30 @@ archivo — se **reconstruye** mirándolo:
   id="11/recid-protocolo"
   title="¿Qué diseño dejó esta sombra?"
   code={`r <- read.csv("recid.csv")
-cat("personas:", nrow(r), "\n")
+cat("personas:", nrow(r), "\\n")
 cat("arrestados:", sum(r$arrest == 1),
-    " | no arrestados:", sum(r$arrest == 0), "\n\n")
+    " | no arrestados:", sum(r$arrest == 0), "\\n\\n")
 
 # Tiempo de seguimiento por grupo
 cat("semana del evento (arrestados): min", min(r$week[r$arrest == 1]),
-    " max", max(r$week[r$arrest == 1]), "\n")
-cat("week en no arrestados:", unique(r$week[r$arrest == 0]), "\n\n")
+    " max", max(r$week[r$arrest == 1]), "\\n")
+cat("week en no arrestados:", unique(r$week[r$arrest == 0]), "\\n\\n")
 
 # Hallazgo: los 318 no arrestados tienen week = 53
 # ¿Convencion del archivo o error del registro?
 # Pista: emp1-emp52 registran empleo solo hasta la semana 52.
 emp <- r[, paste0("emp", 1:52)]
-cat("NA en emp por grupo:\n")
-cat("  arrestados:", sum(is.na(emp[r$arrest == 1, ])), "celdas\n")
-cat("  no arrestados:", sum(is.na(emp[r$arrest == 0, ])), "celdas\n")
+cat("NA en emp por grupo:\\n")
+cat("  arrestados:", sum(is.na(emp[r$arrest == 1, ])), "celdas\\n")
+cat("  no arrestados:", sum(is.na(emp[r$arrest == 0, ])), "celdas\\n")
 
 # Personas-semana: el denominador que el diseno deja.
 # Sumar week tal cual cuenta la semana 53 como observada;
 # si es convencion, el seguimiento real toca en 52.
-cat("\npersonas-semana (week tal cual):  ", sum(r$week), "\n")
-cat("personas-semana (53 -> 52):        ", sum(pmin(r$week, 52)), "\n")
+cat("\\npersonas-semana (week tal cual):  ", sum(r$week), "\\n")
+cat("personas-semana (53 -> 52):        ", sum(pmin(r$week, 52)), "\\n")
 cat("la diferencia son", sum(r$week) - sum(pmin(r$week, 52)),
-    "semanas fantasma: una por cada no arrestado\n")`}
+    "semanas fantasma: una por cada no arrestado\\n")`}
 />
 
 La celda deja tres decisiones de protocolo explícitas: (a) el desenlace
@@ -247,7 +258,7 @@ vida llevada al límite donde cada intervalo tiene un solo evento.
 />
 
 <LabExercise
-  id="lab-10-cohorte"
+  id="lab-11-cohorte"
   title="Laboratorio: construir una tabla de vida completa"
   code={`# Datos crudos de seguimiento: 20 pacientes, tiempo y evento.
 tiempo  <- c(3,5,5,6,8,8,9,12,14,15,18,20,22,25,28,30,35,40,45,50)
@@ -262,11 +273,11 @@ print(table(k, evento))
     "Reporta S(50) y el riesgo acumulado a 50 semanas con su interpretación.",
   ]}
   hint="n_j = pacientes que llegan al inicio del intervalo; c_j cuenta a medio riesgo: n_eff = n − c/2."
-  solution="Itera los intervalos: para cada uno S *= (1 − d/(n − c/2)); reporta el producto acumulado. El módulo 12 muestra que KM hace lo mismo sin agrupar."
+  solution="Intervalos [0,10), [10,20), …: n = 20, 13, 9, 5, 3; d = 5, 2, 2, 1, 1; c = 2, 2, 2, 1, 1. S acumulada: 0.737, 0.614, 0.461, 0.358, 0.215. S(50) ≈ 0.21, riesgo acumulado ≈ 79% a 50 semanas. Ojo: en los últimos intervalos quedan 3 a 5 personas en riesgo, así que cada evento mueve S en decenas de puntos; esa cola es inestable y su IC (Greenwood) es muy ancho. El módulo 12 muestra que Kaplan–Meier hace lo mismo sin agrupar."
 />
 
 <SasBlock code={`data fup;
-  input tiempo evento;
+  input tiempo evento @@;
   datalines;
 3 1  5 0  5 1  6 1  8 0  8 1  9 1 12 0 14 1 15 1
 18 0 20 1 22 1 25 0 28 0 30 1 35 0 40 1 45 0 50 0

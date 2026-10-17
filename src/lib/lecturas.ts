@@ -68,6 +68,11 @@ export const LECTURAS: SeccionLecturas[] = [
         nota: 'El manual del oficio exploratorio.',
       },
       {
+        cita: 'Tukey JW. We need both exploratory and confirmatory. Am Stat. 1980;34(1):23–25.',
+        doi: '10.1080/00031305.1980.10482706',
+        nota: 'Explorar y confirmar como trabajos complementarios.',
+      },
+      {
         cita: 'Cornfield J, Haenszel W, Hammond EC, Lilienfeld AM, Shimkin MB, Wynder EL. Smoking and lung cancer: recent evidence and a discussion of some questions. J Natl Cancer Inst. 1959;22(1):173–203.',
         doi: '10.1093/jnci/22.1.173',
         nota: 'Las condiciones de Cornfield contra el confusor no medido.',
@@ -301,6 +306,26 @@ export const LECTURAS: SeccionLecturas[] = [
         cita: 'Gelman A, Loken E. The statistical crisis in science. Am Sci. 2014;102(6):460–465.',
         doi: '10.1511/2014.111.460',
         nota: 'El jardín de los senderos que se bifurcan.',
+      },
+      {
+        cita: 'Rothman KJ. No adjustments are needed for multiple comparisons. Epidemiology. 1990;1(1):43–46.',
+        doi: '10.1097/00001648-199001000-00010',
+        nota: 'La postura contraria a corregir siempre: reportar todo y dejar ver el denominador.',
+      },
+      {
+        cita: 'Gelman A, Hill J, Yajima M. Why we (usually) don’t have to worry about multiple comparisons. J Res Educ Eff. 2012;5(2):189–211.',
+        doi: '10.1080/19345747.2011.618213',
+        nota: 'Modelos jerárquicos como alternativa a la corrección.',
+      },
+      {
+        cita: 'Breiman L. Statistical modeling: the two cultures. Stat Sci. 2001;16(3):199–231.',
+        doi: '10.1214/ss/1009213726',
+        nota: 'Modelar para explicar frente a modelar para predecir.',
+      },
+      {
+        cita: 'Shmueli G. To explain or to predict? Stat Sci. 2010;25(3):289–310.',
+        doi: '10.1214/10-STS330',
+        nota: 'Por qué la validez inferencial y la predictiva se protegen distinto.',
       },
       {
         cita: 'Wasserstein RL, Lazar NA. The ASA statement on p-values. Am Stat. 2016;70(2):129–133.',

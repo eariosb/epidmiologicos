@@ -4,7 +4,6 @@ import './globals.css';
 import { Footer } from '@/components/Footer';
 import { WebRProvider } from '@/components/WebRProvider';
 import { BlackboardProvider } from '@cursos/blackboard';
-import { ThemeSync } from '@/components/ThemeSync';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const lora = Lora({ subsets: ['latin'], variable: '--font-display', style: ['normal', 'italic'], display: 'swap' });
@@ -21,7 +20,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans antialiased">
         <WebRProvider>
           <BlackboardProvider>
-            <ThemeSync />
             {children}
           </BlackboardProvider>
         </WebRProvider>

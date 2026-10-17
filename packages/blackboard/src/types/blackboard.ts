@@ -11,7 +11,7 @@ export type MatrixState = {
  * The PNG is the visual representation; `customData` is the source of truth
  * for re-editing (double-click → editor → regenerate the PNG).
  */
-export type BoardKind = 'math' | 'matrix' | 'code' | 'output' | 'capture' | 'plot';
+export type BoardKind = 'math' | 'matrix' | 'table' | 'code' | 'output' | 'capture' | 'plot';
 
 /** Contract stamped on `element.customData` for every technical insert. */
 export type BoardElementMeta = {

@@ -14,11 +14,16 @@
  *   ('potencia', 'cobertura') y autoenlazarlas sería incorrecto.
  * - 'Se' queda excluida: el pronombre reflexivo encabezaría falsos
  *   positivos al inicio de oración ("Se observa que…").
+ * - Alias (GLOSSARY_ALIASES): H₀, I², R₀, ICs… se enlazan a su clave
+ *   canónica y conservan su forma en el texto.
+ * - Símbolos griegos con varios sentidos (β, γ, θ…) NO se autoenlazan:
+ *   se marcan a mano con la clave del sentido (<Term k="β-SIR">β</Term>).
+ *   Solo los de sentido único en el curso (α, τ²) están en EXTRA_KEYS.
  * - Solo toca nodos `text` fuera de código, matemática, enlaces y
  *   encabezados — mismo contrato que remark-module-refs.
  */
 
-import { GLOSSARY } from './glossary';
+import { GLOSSARY, GLOSSARY_ALIASES } from './glossary';
 
 interface MdastNode {
   type: string;
@@ -48,6 +53,8 @@ const SKIP_TYPES = new Set([
 // Identificadores/siglas válidos aunque no empiecen en mayúscula.
 const EXTRA_KEYS = new Set([
   'χ²',
+  'α',
+  'τ²',
   'mid-p',
   'log-rank',
   'berger-boos',
@@ -63,14 +70,29 @@ function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const AUTO_KEYS = Object.keys(GLOSSARY)
-  .filter((k) => !SKIP_KEYS.has(k) && (/^[A-Z0-9]/.test(k) || EXTRA_KEYS.has(k)))
-  .sort((a, b) => b.length - a.length);
+// Claves autoenlazables: siglas del glosario + alias tipográficos.
+// Las claves con sufijo de sentido (β-SIR, θ-meta) quedan fuera: son
+// solo para marcado manual.
+const AUTO_KEYS = [
+  ...Object.keys(GLOSSARY).filter(
+    (k) =>
+      !SKIP_KEYS.has(k) &&
+      (/^[A-Z0-9]/.test(k) || EXTRA_KEYS.has(k)) &&
+      !/^[\p{Script=Greek}][^-]*-/u.test(k),
+  ),
+  ...Object.keys(GLOSSARY_ALIASES),
+].sort((a, b) => b.length - a.length);
 
-// Frontera de "palabra de sigla": ni letra/dígito ni guion a los lados —
-// evita partir compuestos como "OR-MH" o "I-squared".
+/** Forma escrita → clave canónica del glosario. */
+function canonical(form: string): string {
+  return GLOSSARY_ALIASES[form] ?? form;
+}
+
+// Frontera de "palabra de sigla": ni letra/dígito, guion ni subíndice
+// a los lados — evita partir compuestos como "OR-MH", "I-squared" o
+// "z_α", y que "α" capture el "α²" de otra cosa.
 const TERM_RE = new RegExp(
-  `(?<![\\p{L}\\p{N}-])(${AUTO_KEYS.map(escapeRe).join('|')})(?![\\p{L}\\p{N}-])`,
+  `(?<![\\p{L}\\p{N}_-])(${AUTO_KEYS.map(escapeRe).join('|')})(?![\\p{L}\\p{N}_²₀-₉-])`,
   'gu',
 );
 
@@ -94,7 +116,7 @@ function splitTextNode(node: MdastNode, seen: Set<string>): MdastNode[] | null {
   let match: RegExpExecArray | null;
   TERM_RE.lastIndex = 0;
   while ((match = TERM_RE.exec(text)) !== null) {
-    const k = match[1];
+    const k = canonical(match[1]);
     if (seen.has(k)) continue;
     seen.add(k);
     if (match.index > last) {

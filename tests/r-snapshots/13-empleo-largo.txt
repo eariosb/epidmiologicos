@@ -1,0 +1,9 @@
+Empleo de la MISMA semana:
+  x     n eventos tasa_por_1000
+1 0 10159      93          9.15
+2 1  9218      20          2.17
+
+Empleo de la semana ANTERIOR:
+  x     n eventos tasa_por_1000
+1 0 10284      83          8.07
+2 1  9093      30          3.30

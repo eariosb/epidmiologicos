@@ -100,4 +100,16 @@ describe('remarkAutoTerms', () => {
     remarkAutoTerms()(t);
     expect(termKeys(t)).toEqual(['SMR']);
   });
+  it('enlaza alias tipográficos a su clave canónica (H₀ → H0, ICs → IC)', () => {
+    const t = tree(para(text('Bajo H₀ los ICs del SIR cubren; R₀ = β/γ.')));
+    remarkAutoTerms()(t);
+    expect(termKeys(t)).toEqual(['H0', 'IC', 'SIR', 'R0']);
+  });
+
+  it('no autoenlaza símbolos griegos ambiguos y respeta subíndices', () => {
+    const t = tree(para(text('Con β y γ fijos, z_α no es α; τ² mide heterogeneidad.')));
+    remarkAutoTerms()(t);
+    // β y γ quedan para marcado manual por sentido; z_α no se parte.
+    expect(termKeys(t)).toEqual(['α', 'τ²']);
+  });
 });

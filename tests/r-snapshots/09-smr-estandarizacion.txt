@@ -1,8 +1,9 @@
 esperadas = 18.4  SMR = 1.630
-IC exacto:  (1.100, 2.328)
-IC Byar:    (1.100, 2.328)
-SMR > 1 con IC que no toca 1: exceso de mortalidad real.
+IC exacto (Poisson): (1.100, 2.328)
+IC de Byar:          (1.100, 2.328)
+Con O = 3, E = 1.5: exacto (0.41, 5.84) | Byar (0.40, 5.84)
+SMR > 1 con IC que no toca 1: el exceso no se explica por azar;
+falta descartar el efecto del trabajador sano y la confusion residual.
 
-razon de tasas ajustadas:
-  estandar joven: 1.60   estandar viejo: 1.44
-Mismo dato, dos estandares, dos respuestas: hay que declarar cual.
+razon de tasas por edad: 2 1.5 1.4
+razon de tasas ajustadas: estandar joven 1.60 | estandar viejo 1.44

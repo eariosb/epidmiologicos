@@ -1,0 +1,10 @@
+P(sexo=1 | brazo), sin peso: 0.645 vs 0.399
+P(sexo=1 | brazo), con peso: 0.519 vs 0.519
+
+OR crudo     = 2.57 (confundido)
+OR regresion = 2.03
+OR IPTW      = 1.93
+
+OR condicional verdadero = 2.23 (e^0.8, dentro de cada sexo)
+OR marginal verdadero    = 2.11 (poblacion entera, sexo promediado)
+DR marginal verdadera    = 0.153

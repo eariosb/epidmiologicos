@@ -259,7 +259,8 @@ function normCdf(z: number): number {
  */
 const CONF_PRESETS = [
   { name: 'Asociación espuria (Woodward 4.1)', orCE: 6, orCD: 6, orED: 1, prevC: 0.5 },
-  { name: 'Efecto enmascarado (Woodward 4.2)', orCE: 5, orCD: 5, orED: 2.45, prevC: 0.5 },
+  { name: 'Efecto exagerado', orCE: 5, orCD: 5, orED: 2.45, prevC: 0.5 },
+  { name: 'Efecto enmascarado (Woodward 4.2)', orCE: 5, orCD: 0.25, orED: 2.45, prevC: 0.5 },
   { name: 'SHHS real (Woodward 4.9)', orCE: 2, orCD: 2.5, orED: 1.3, prevC: 0.55 },
 ];
 
@@ -304,29 +305,38 @@ export function ConfusionExplorer({ title }: { title?: ReactNode }) {
       n: t.c / (t.c + t.d),
     });
     const r1 = risk(s1), r0 = risk(s0), rC = risk(crude);
-    return { s1, s0, crude, or1: orOf(s1), or0: orOf(s0), orCrude: orOf(crude), orMH: mhNum / mhDen, r1, r0, rC };
+    // Estandarizado (marginal): toda la población expuesta vs. toda sin exponer,
+    // con la distribución de C de la población. Sin confusión, crudo = estandarizado.
+    const p1 = prevC * pD(1, 1) + (1 - prevC) * pD(1, 0);
+    const p0 = prevC * pD(0, 1) + (1 - prevC) * pD(0, 0);
+    const orStd = (p1 / (1 - p1)) / (p0 / (1 - p0));
+    return { s1, s0, crude, or1: orOf(s1), or0: orOf(s0), orCrude: orOf(crude), orMH: mhNum / mhDen, orStd, r1, r0, rC };
   }, [orCE, orCD, orED, prevC]);
 
-  const biased = Math.abs(Math.log(res.orCrude) - Math.log(res.orMH)) > 0.08;
+  // Confusión: crudo frente al estandarizado (mismo blanco marginal).
+  // No colapsabilidad: estandarizado (marginal) frente a MH (condicional).
+  const biased = Math.abs(Math.log(res.orCrude) - Math.log(res.orStd)) > 0.05;
+  const noColapsa = Math.abs(Math.log(res.orStd) - Math.log(res.orMH)) > 0.05;
   // Paradoja de Simpson: el signo de la diferencia de riesgos del agregado
   // difiere del signo dentro de los estratos.
   const sgn = (x: number) => (x > 0.0005 ? 1 : x < -0.0005 ? -1 : 0);
+  // Simpson: los dos estratos van en la misma dirección (no nula) y el
+  // agregado va en la contraria.
+  const sE = sgn(res.r1.e - res.r1.n);
   const simpson =
-    sgn(res.rC.e - res.rC.n) !== 0 &&
-    sgn(res.rC.e - res.rC.n) !== sgn(res.r1.e - res.r1.n) &&
-    sgn(res.rC.e - res.rC.n) !== sgn(res.r0.e - res.r0.n);
+    sE !== 0 && sE === sgn(res.r0.e - res.r0.n) && sgn(res.rC.e - res.rC.n) === -sE;
 
   const SliderRow = ({ label, value, min, max, step, set, color }:
     { label: ReactNode; value: number; min: number; max: number; step: number; set: (v: number) => void; color?: string }) => (
     <label className="block text-[11px] text-ink-600">
-      {label}: <strong style={{ color }}>{value.toFixed(1)}</strong>
+      {label}: <strong style={{ color }}>{value.toFixed(2)}</strong>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => set(Number(e.target.value))} className={SLIDER} />
     </label>
   );
 
   const bar = (v: number, max = 8) => (
-    <svg width={120} height={10} className="inline-block align-middle">
+    <svg viewBox="0 0 120 10" className="inline-block h-2.5 w-[84px] align-middle sm:w-[120px]">
       <rect x={0} y={0} width={120} height={10} fill={tokens.chart.gridSoft} rx={2} />
       <rect x={0} y={0} width={rnd(Math.min(120, (Math.log(Math.max(v, 0.05)) + 3) / (Math.log(max) + 3) * 120))}
         height={10} fill={v > 1.3 || v < 0.7 ? EXP_COLOR : GRAY} rx={2} />
@@ -348,13 +358,13 @@ export function ConfusionExplorer({ title }: { title?: ReactNode }) {
         ))}
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-1.5">
-          <SliderRow label="OR del confusor → exposición (C→E)" value={orCE} min={1} max={8} step={0.5} set={setOrCE} color={EXP_COLOR} />
-          <SliderRow label="OR del confusor → desenlace (C→D)" value={orCD} min={1} max={8} step={0.5} set={setOrCD} color={EXP_COLOR} />
+        <div className="min-w-0 space-y-1.5">
+          <SliderRow label="OR del confusor → exposición (C→E)" value={orCE} min={0.25} max={8} step={0.25} set={setOrCE} color={EXP_COLOR} />
+          <SliderRow label="OR del confusor → desenlace (C→D)" value={orCD} min={0.25} max={8} step={0.25} set={setOrCD} color={EXP_COLOR} />
           <SliderRow label="OR verdadero exposición → desenlace (E→D)" value={orED} min={0.25} max={4} step={0.25} set={setOrED} color={tokens.ui.ink} />
           <SliderRow label="prevalencia del confusor" value={prevC} min={0.1} max={0.9} step={0.05} set={setPrevC} />
         </div>
-        <div className="text-xs">
+        <div className="min-w-0 text-xs">
           <table className="w-full border-collapse">
             <thead>
               <tr className="text-left text-ink-500">
@@ -370,14 +380,18 @@ export function ConfusionExplorer({ title }: { title?: ReactNode }) {
                 <td className="py-0.5">crudo (ignorando C)</td><td className="text-danger-700">{fmt(res.orCrude, 2)}</td><td>{bar(res.orCrude)}</td></tr>
               <tr className="font-semibold">
                 <td className="py-0.5">Mantel–Haenszel</td><td className="text-info-700">{fmt(res.orMH, 2)}</td><td>{bar(res.orMH)}</td></tr>
+              <tr className="text-ink-500">
+                <td className="py-0.5">estandarizado (marginal)</td><td>{fmt(res.orStd, 2)}</td><td>{bar(res.orStd)}</td></tr>
             </tbody>
           </table>
           <p className={`mt-2 rounded px-2 py-1 text-[11px] font-medium ${biased ? 'bg-danger-50 text-danger-800' : 'bg-success-50 text-success-800'}`}>
             {simpson
               ? `¡Paradoja de Simpson! El crudo invierte el signo: la exposición parece ${res.rC.e > res.rC.n ? 'dañina' : 'protectora'} agregada pero es ${res.r1.e > res.r1.n ? 'dañina' : 'protectora'} en cada estrato.`
               : biased
-                ? `Confusión: el OR crudo (${fmt(res.orCrude, 2)}) no coincide con el ajustado (${fmt(res.orMH, 2)}).`
-                : `Sin confusión neta: crudo ≈ ajustado (${fmt(res.orCrude, 2)} vs ${fmt(res.orMH, 2)}).`}
+                ? `Confusión: el OR crudo (${fmt(res.orCrude, 2)}) no coincide con el estandarizado (${fmt(res.orStd, 2)}), que compara la misma población expuesta y sin exponer.`
+                : noColapsa
+                  ? `Sin confusión: crudo = estandarizado (${fmt(res.orCrude, 2)}). Que el MH dé ${fmt(res.orMH, 2)} es la no colapsabilidad del OR (módulo 7): el efecto dentro de cada estrato es mayor que el promedio poblacional, aunque C no confunda.`
+                  : `Sin confusión neta: crudo ≈ ajustado (${fmt(res.orCrude, 2)} vs ${fmt(res.orMH, 2)}).`}
           </p>
 
           {/* Riesgos por brazo dentro de cada estrato: la inversión se ve */}
@@ -418,14 +432,18 @@ export function ConfusionExplorer({ title }: { title?: ReactNode }) {
         { color: tokens.ui.ink, label: 'OR = 1 (referencia)' },
       ]} className="mt-2" />
       <SimGuide>
-        La confusión solo aparece si C→E y C→D existen a la vez: pon cualquiera
-        de los dos sliders en 1 y el OR crudo se pega al de Mantel–Haenszel.
-        Cambia el OR verdadero y verifica que el ajustado lo recupera.
+        La confusión necesita las dos flechas: pon C→E en 1 y el crudo coincide
+        con el estandarizado, haya o no efecto. Con C→E = 1, C→D alto y un efecto
+        real (prueba E→D = 2.5) verás que el MH sigue siendo mayor que el crudo:
+        eso no es confusión sino no colapsabilidad del OR. El MH recupera el OR
+        verdadero de cada estrato; el estandarizado, el efecto promedio en la
+        población.
       </SimGuide>
       <p className={NOTE}>
         Modelo exacto sobre probabilidades (no simulación): las tablas son las
-        esperadas con N grande. Si los OR por estrato difieren entre sí, no hay
-        resumen válido: eso es interacción, no confusión (test de Breslow–Day).
+        esperadas con N grande, y el OR verdadero es el mismo en ambos
+        estratos. Si los OR por estrato difirieran entre sí no habría un resumen
+        único: eso sería interacción (módulo 10).
       </p>
     </div>
   );
@@ -517,10 +535,11 @@ export function PvalueVsEffect({ title }: { title?: ReactNode }) {
         Con OR = 1 el histograma es uniforme: el 5% cae bajo la línea por azar
         (error tipo I). Con OR = 3 y n = 40 solo ~60% de las réplicas detecta el
         efecto aunque sea grande: efecto real sin "significancia" por falta de
-        datos. Con OR ≈ 1.25 y n = 1500 ~72% de las réplicas sale "significativa"
-        con un efecto clínicamente trivial: el valor
-        p mezcla tamaño del efecto y tamaño muestral; por eso Woodward exige
-        reportar el IC antes que el p.
+        datos. Con OR ≈ 1.25 y n = 1500, ~72% de las réplicas sale
+        "significativa" con un efecto pequeño (unos 4 puntos sobre un riesgo de
+        20 %), que puede importar o no clínicamente. El valor p mezcla tamaño
+        del efecto y tamaño muestral; por eso se reporta primero el efecto con
+        su IC.
       </SimGuide>
       <p className={NOTE}>
         {R} réplicas por configuración: en cada una se genera una tabla 2×2 con
@@ -696,13 +715,24 @@ export function KaplanMeierSim({ title }: { title?: ReactNode }) {
  * b = caso expuesto / control no, c = caso no / control expuesto.
  */
 export function McNemarCmhDemo({ title }: { title?: ReactNode }) {
-  const [b, setB] = useState(29);
-  const [c, setC] = useState(8);
-  const aConc = 14; // ambos expuestos
-  const dConc = 13; // ninguno expuesto
+  // Valores iniciales: las 50 parejas de caso_control_11.csv (módulo 15).
+  const [b, setB] = useState(20);
+  const [c, setC] = useState(7);
+  const aConc = 3;  // ambos expuestos
+  const dConc = 20; // ninguno expuesto
 
   const mcn = Math.pow(b - c, 2) / (b + c);
   const pMcN = chi2P1(mcn);
+  // McNemar exacto: b ~ Binomial(b + c, 1/2) bajo H0, bilateral.
+  const pExact = (() => {
+    const n = b + c, k = Math.min(b, c);
+    let lp = 0, acc = 0;
+    for (let i = 0; i <= n; i++) {
+      lp = i === 0 ? n * Math.log(0.5) : lp + Math.log((n - i + 1) / i);
+      if (i <= k) acc += Math.exp(lp);
+    }
+    return Math.min(1, 2 * acc);
+  })();
   // En pareamiento 1:1, el OR de CMH colapsa a b/c.
   const orMH = c > 0 ? b / c : NaN;
   const orLo = c > 0 ? Math.exp(Math.log(b / c) - 1.96 * Math.sqrt(1 / b + 1 / c)) : NaN;
@@ -758,7 +788,7 @@ export function McNemarCmhDemo({ title }: { title?: ReactNode }) {
             <div>χ² McNemar = (b−c)²/(b+c) = <strong>{fmt(mcn, 2)}</strong></div>
             <div>χ² CMH (1:1) = <strong>{fmt(mcn, 2)}</strong>: idéntico</div>
             <div>OR<sub>MH</sub> = b/c = <strong>{fmt(orMH, 2)}</strong> ({fmt(orLo, 2)}–{fmt(orHi, 2)})</div>
-            <div>p = {fmt(pMcN, 4)}</div>
+            <div>p (χ²) = {fmt(pMcN, 4)} · p exacto = {fmt(pExact, 4)}</div>
           </div>
         </div>
       </div>
@@ -770,13 +800,14 @@ export function McNemarCmhDemo({ title }: { title?: ReactNode }) {
       <SimGuide>
         Mueve b y c: los concordantes nunca entran a la fórmula. Con b = c el χ²
         colapsa a 0 aunque haya miles de parejas; la evidencia está solo en el
-        desbalance discordante. La igualdad χ²<sub>McNemar</sub> = χ²<sub>CMH</sub>
-        es la equivalencia que Salazar demuestra en clase con los datos BCG.
+        desbalance discordante. Baja b y c a valores chicos (por ejemplo 6 y 1)
+        y compara el p del χ² con el exacto: con pocas discordantes el χ² ya no
+        es confiable.
       </SimGuide>
       <p className={NOTE}>
-        Ejemplo de clase: BCG y meningitis, b = 29, c = 8 → OR = 3.6. En
-        pareamiento 1:1 cada estrato es una pareja, y el estimador de
-        Mantel–Haenszel se reduce exactamente a b/c.
+        Valores iniciales: las 50 parejas de <code>caso_control_11.csv</code>
+        (b = 20, c = 7, OR = 2.86). En pareamiento 1:1 cada estrato es una
+        pareja, y el estimador de Mantel–Haenszel se reduce exactamente a b/c.
       </p>
     </div>
   );
@@ -822,10 +853,10 @@ export function DiagnosticTestExplorer({ title }: { title?: ReactNode }) {
       <div className="grid gap-3 md:grid-cols-[auto_1fr]">
         <div className="space-y-1.5 text-[11px] text-ink-600">
           <label className="block">sensibilidad Se = {(se * 100).toFixed(0)}%
-            <input type="range" min={0.5} max={0.999} step={0.005} value={se}
+            <input type="range" min={0.5} max={0.995} step={0.005} value={se}
               onChange={(e) => setSe(Number(e.target.value))} className={SLIDER} /></label>
           <label className="block">especificidad Sp = {(sp * 100).toFixed(0)}%
-            <input type="range" min={0.5} max={0.999} step={0.005} value={sp}
+            <input type="range" min={0.5} max={0.995} step={0.005} value={sp}
               onChange={(e) => setSp(Number(e.target.value))} className={SLIDER} /></label>
           <label className="block">prevalencia = {(prev * 100).toFixed(1)}%
             <input type="range" min={0.002} max={0.3} step={0.002} value={prev}
@@ -912,7 +943,7 @@ const TREE: Record<string, DesignNode> = {
     leaf: {
       name: 'Ensayo clínico (ECA)',
       estima: 'RR, RD, NNT, tasas; la aleatorización equilibra confusores',
-      noEstima: 'Nada queda fuera: es el diseño más completo',
+      noEstima: 'Exposiciones que no se pueden asignar (por ética o factibilidad), desenlaces raros o muy tardíos; su población puede no representar a la real',
       ejemplo: 'Freireich 1963: 6-MP vs. placebo en leucemia',
     },
   },
@@ -931,7 +962,7 @@ const TREE: Record<string, DesignNode> = {
       name: 'Casos y controles pareados',
       estima: 'OR (McNemar / CMH / clogit); el matching controla confusores por diseño',
       noEstima: 'Riesgo, tasas, prevalencia de exposición poblacional',
-      ejemplo: 'BCG y meningitis: pares 1:1, OR = b/c',
+      ejemplo: 'Parejas 1:1 de caso_control_11 (OR = b/c) y sets 1:5 de BCG (clogit)',
     },
   },
   ccu: {
@@ -956,7 +987,7 @@ const TREE: Record<string, DesignNode> = {
     },
   },
   cross: {
-    q: '¿La unidad de análisis es el individuo o el grupo?',
+    q: '¿La unidad de análisis es el individuo (y no un grupo, como un país o un municipio)?',
     yes: 'xs',
     no: 'eco',
   },
@@ -1128,14 +1159,14 @@ export function PrevalenceExplorer({ title }: { title?: ReactNode }) {
       ]} className="mt-2" />
       <SimGuide>
         P ≈ I × D vale en estado estacionario con enfermedad rara. Sube la
-        duración y la prevalencia crece aunque la incidencia no cambie; por
-        eso una enfermedad puede ser "común" (alta P) sin ser "frecuente"
-        (baja I). La fórmula exacta es P = ID/(1+ID); la aproximación falla
-        cuando P deja de ser pequeña.
+        duración y la prevalencia crece aunque la incidencia no cambie: una
+        enfermedad crónica puede tener muchos casos en un momento dado con muy
+        pocos casos nuevos al año. La fórmula exacta es P = ID/(1+ID); la
+        aproximación P ≈ ID falla cuando P deja de ser pequeña.
       </SimGuide>
       <p className={NOTE}>
-        Cada tick es un mes; los puntos rojos permanecen enfermos en promedio
-        D años. La relación P = I × D exige población estacionaria;
+        Cada tick es un mes; cada persona que enferma permanece enferma D años
+        y luego vuelve a ser susceptible. La relación P = I × D exige población estacionaria;
         migraciones o cambios de letalidad la rompen (Woodward, Ch. 2).
       </p>
     </div>
@@ -1244,103 +1275,316 @@ export function StandardizationExplorer({ title }: { title?: ReactNode }) {
 }
 
 /* ================================================================== */
-/* 9. InteractionExplorer: el diagrama R00/R10/R01/R11                  */
+/* 9. InteractionExplorer: el mismo dato en dos escalas                 */
 /* ================================================================== */
 
-const INT_PRESETS = [
-  { name: 'Sin interacción', r: [0.05, 0.10, 0.08, 0.16] },
-  { name: 'Sinergismo', r: [0.05, 0.10, 0.08, 0.30] },
-  { name: 'Antagonismo (SHHS 4.13)', r: [0.10, 0.24, 0.25, 0.16] },
-  { name: 'Unilateralismo', r: [0.05, 0.05, 0.05, 0.20] },
+interface IntPreset {
+  name: string;
+  /** [E−M−, E+M−, E−M+, E+M+] en la unidad del preset. */
+  r: [number, number, number, number];
+  unit: string;
+  eLabel: string;
+  mLabel: string;
+  max: number;
+  note: string;
+}
+
+const INT_PRESETS: IntPreset[] = [
+  {
+    name: 'Paralelismo aditivo', r: [5, 10, 15, 20], unit: 'riesgo por 100', eLabel: 'E', mLabel: 'M', max: 50,
+    note: 'Sintético: la exposición suma 5 puntos en ambos estratos. En la escala log las líneas se cierran: RR 2.0 frente a 1.33.',
+  },
+  {
+    name: 'Paralelismo multiplicativo', r: [5, 10, 15, 30], unit: 'riesgo por 100', eLabel: 'E', mLabel: 'M', max: 50,
+    note: 'Sintético: la exposición duplica el riesgo en ambos estratos. En la escala lineal las líneas se abren: +5 frente a +15 puntos.',
+  },
+  {
+    name: 'Asbesto × tabaco (1979)', r: [11.3, 58.4, 122.6, 601.6], unit: 'muertes por 100 000', eLabel: 'asbesto', mLabel: 'fuma', max: 700,
+    note: 'Hammond, Selikoff y Seidman (1979): cáncer de pulmón en aisladores. Casi paralelo en escala log (53.2 observado frente a 5.2 × 10.9 = 56.1); sinergia aditiva enorme (RERI = 38).',
+  },
+  {
+    name: 'Factor V Leiden × AO (1994)', r: [1, 3.7, 6.9, 34.7], unit: 'veces el riesgo de referencia (OR)', eLabel: 'anticonceptivo', mLabel: 'factor V Leiden', max: 40,
+    note: 'Vandenbroucke et al. (1994), casos y controles de trombosis venosa: OR 3.7 y 6.9 por separado, 34.7 juntos. Sinergia en ambas escalas, pero con solo 6 portadoras entre los 169 controles (2 de ellas en la celda conjunta) la incertidumbre es enorme.',
+  },
+  {
+    name: 'Tamoxifeno × receptor de estrógeno', r: [100, 100, 100, 53], unit: 'recurrencia relativa al basal del estrato (×100)', eLabel: 'tamoxifeno', mLabel: 'RE positivo', max: 120,
+    note: 'EBCTCG (2011): RR de recurrencia 0.53 en tumores RE+ (años 0–4), "poco o ningún efecto" en RE−. Unilateralismo: el efecto existe solo con el modificador. Esquemático: cada estrato se normaliza a su propio basal.',
+  },
+  {
+    name: 'Presión arterial × edad', r: [0.2, 0.6, 10, 17.3], unit: 'muertes por ACV por 1000 al año (esquemático)', eLabel: 'presión alta', mLabel: '80–89 años', max: 20,
+    note: 'Proporciones del Prospective Studies Collaboration (2002): el efecto relativo a los 80–89 años es la mitad de extremo (en log) que a los 40–49, pero la diferencia absoluta es mucho mayor. Antagonismo multiplicativo, sinergia aditiva.',
+  },
+  {
+    name: 'Cruce (SHHS, Ej. 4.13)', r: [10, 24, 25, 16], unit: 'riesgo por 100 (ilustrativo)', eLabel: 'fuma', mLabel: 'infarto previo', max: 40,
+    note: 'Riesgos ilustrativos con los RR del Ejemplo 4.13 de Woodward: tabaco → CHD con RR 2.40 sin infarto previo y 0.64 con infarto previo. El efecto cambia de signo: antagonismo cualitativo.',
+  },
 ];
 
-/**
- * R_ij = riesgo con exposición E=i y modificador M=j. En la escala
- * aditiva, "no interacción" es R11 - R10 = R01 - R00; en la
- * multiplicativa, R11/R10 = R01/R00.
- */
+type Patron = { label: string; detail: string };
+
+/** Clasifica el patrón de interacción comparando el efecto de E en M− (e0) y en M+ (e1),
+ *  ya expresados en la escala elegida (diferencia de riesgos o log RR). */
+function clasificaPatron(e0: number, e1: number): Patron {
+  const ref = Math.max(Math.abs(e0), Math.abs(e1));
+  if (!Number.isFinite(ref) || ref < 1e-9) return { label: 'sin efecto', detail: 'la exposición no actúa en ningún estrato' };
+  const nulo0 = Math.abs(e0) < 0.1 * ref;
+  const nulo1 = Math.abs(e1) < 0.1 * ref;
+  if (nulo0 !== nulo1)
+    return { label: 'unilateralismo', detail: nulo0 ? 'E actúa solo cuando M está presente' : 'E actúa solo cuando M está ausente' };
+  if (Math.sign(e0) !== Math.sign(e1))
+    return { label: 'antagonismo cualitativo (cruce)', detail: 'el efecto cambia de signo entre estratos' };
+  const ratio = Math.abs(e1) / Math.abs(e0);
+  if (ratio > 1 / 1.15 && ratio < 1.15) return { label: 'paralelismo', detail: 'el mismo efecto en ambos estratos' };
+  return ratio > 1
+    ? { label: 'sinergismo', detail: `M amplifica el efecto de E (×${ratio.toFixed(2)})` }
+    : { label: 'antagonismo', detail: `M atenúa el efecto de E (×${ratio.toFixed(2)})` };
+}
+
 export function InteractionExplorer({ title }: { title?: ReactNode }) {
-  const [risks, setRisks] = useState([0.05, 0.10, 0.08, 0.16]);
-  const [r00, r10, r01, r11] = risks; // E=0/1 × M=0/1
+  const [preset, setPreset] = useState(0);
+  const [vals, setVals] = useState<number[]>(INT_PRESETS[0].r.slice());
+  const P = INT_PRESETS[preset];
+  const [r00, r10, r01, r11] = vals;
 
-  const rdE_M0 = r10 - r00;
-  const rdE_M1 = r11 - r01;
-  const rrE_M0 = r00 > 0 ? r10 / r00 : NaN;
-  const rrE_M1 = r01 > 0 ? r11 / r01 : NaN;
-  const additiva = Math.abs(rdE_M1 - rdE_M0) > 0.01;
-  const multiplicativa = Math.abs(rrE_M1 - rrE_M0) > 0.08;
-  const tipo =
-    Math.sign(rdE_M0) !== Math.sign(rdE_M1) && Math.abs(rdE_M0) > 0.005 && Math.abs(rdE_M1) > 0.005
-      ? 'antagonismo (el efecto cambia de signo)'
-      : Math.abs(rdE_M0) < 0.005 && Math.abs(rdE_M1) > 0.005
-        ? 'unilateralismo (efecto solo con M=1)'
-        : Math.abs(rdE_M1) > 1.5 * Math.abs(rdE_M0) && rdE_M1 > 0
-          ? 'sinergismo'
-          : 'sin patrón claro / no interacción fuerte';
+  const choose = (i: number) => { setPreset(i); setVals(INT_PRESETS[i].r.slice()); };
 
-  const W = 380;
-  const H = 170;
-  const maxR = Math.max(...risks, 0.01);
-  const y = (v: number) => rnd(H - 30 - (v / (maxR * 1.15)) * (H - 50));
-  const xs = [70, 160, 230, 320];
-  const labs = ['E− M−', 'E+ M−', 'E− M+', 'E+ M+'];
+  // Efecto de E dentro de cada estrato de M, en las dos escalas.
+  const rd0 = r10 - r00, rd1 = r11 - r01;
+  const lrr0 = Math.log(r10 / r00), lrr1 = Math.log(r11 / r01);
+  const add = clasificaPatron(rd0, rd1);
+  const mult = clasificaPatron(lrr0, lrr1);
+  // Índices con la celda E−M− como referencia común.
+  const RR10 = r10 / r00, RR01 = r01 / r00, RR11 = r11 / r00;
+  const reri = RR11 - RR10 - RR01 + 1;
+  const ratioRR = RR11 / (RR10 * RR01);
 
-  const setR = (i: number) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setRisks((s) => s.map((v, j) => (j === i ? Number(e.target.value) : v)));
+  const W = 260, H = 190, X0 = 50, X1 = 210, TOP = 18, BOT = H - 34;
+  const maxV = Math.max(...vals) * 1.12;
+  const minPos = Math.max(Math.min(...vals) / 1.5, 1e-6);
+  const yLin = (v: number) => rnd(BOT - (v / maxV) * (BOT - TOP));
+  const yLog = (v: number) => rnd(BOT - ((Math.log(v) - Math.log(minPos)) / (Math.log(maxV) - Math.log(minPos))) * (BOT - TOP));
+
+  const panel = (kind: 'lin' | 'log') => {
+    const y = kind === 'lin' ? yLin : yLog;
+    const pat = kind === 'lin' ? add : mult;
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img"
+        aria-label={`Riesgos en escala ${kind === 'lin' ? 'lineal' : 'logarítmica'}: patrón ${pat.label}`}>
+        <text x={W / 2} y={11} textAnchor="middle" fontSize={10} fontWeight="bold" fill={tokens.chart.title}>
+          {kind === 'lin' ? 'Escala aditiva (lineal)' : 'Escala multiplicativa (log)'}
+        </text>
+        <line x1={X0 - 12} x2={X0 - 12} y1={TOP} y2={BOT} stroke={GRAY} strokeWidth={1} />
+        <line x1={X0 - 12} x2={X1 + 12} y1={BOT} y2={BOT} stroke={GRAY} strokeWidth={1} />
+        <line x1={X0} x2={X1} y1={y(r00)} y2={y(r10)} stroke={UNEXP_COLOR} strokeWidth={2.4} />
+        <line x1={X0} x2={X1} y1={y(r01)} y2={y(r11)} stroke={EXP_COLOR} strokeWidth={2.4} />
+        {[[X0, r00, UNEXP_COLOR], [X1, r10, UNEXP_COLOR], [X0, r01, EXP_COLOR], [X1, r11, EXP_COLOR]].map(([x, v, c], i) => (
+          <g key={i}>
+            <circle cx={x as number} cy={y(v as number)} r={4.5} fill={c as string} />
+            <text x={(x as number) + (i % 2 === 0 ? -8 : 8)} y={y(v as number) + 3} fontSize={8.5}
+              textAnchor={i % 2 === 0 ? 'end' : 'start'} fill={c as string}>{fmt(v as number, (v as number) < 10 ? 1 : 0)}</text>
+          </g>
+        ))}
+        <text x={X0} y={BOT + 13} textAnchor="middle" fontSize={8.5} fill={GRAY}>sin {P.eLabel}</text>
+        <text x={X1} y={BOT + 13} textAnchor="middle" fontSize={8.5} fill={GRAY}>con {P.eLabel}</text>
+        <text x={W / 2} y={H - 4} textAnchor="middle" fontSize={9.5} fontWeight="bold" fill={tokens.chart.deep}>{pat.label}</text>
+      </svg>
+    );
+  };
+
+  const setV = (i: number) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setVals((s) => s.map((v, j) => (j === i ? Math.max(Number(e.target.value), P.max / 1000) : v)));
+  const cellLabels = [`sin ${P.eLabel}, sin ${P.mLabel}`, `con ${P.eLabel}, sin ${P.mLabel}`,
+    `sin ${P.eLabel}, con ${P.mLabel}`, `con ${P.eLabel}, con ${P.mLabel}`];
 
   return (
     <div className={FIG}>
-      <div className={CAPTION}>{title ?? 'El diagrama de interacción: dos estratos, una historia'}</div>
+      <div className={CAPTION}>{title ?? 'El mismo dato en dos escalas'}</div>
       <div className="mb-2 flex flex-wrap gap-1.5">
-        {INT_PRESETS.map((p) => (
-          <button key={p.name} type="button" className={BTN_GHOST}
-            onClick={() => setRisks(p.r.slice())}>
+        {INT_PRESETS.map((p, i) => (
+          <button key={p.name} type="button" onClick={() => choose(i)}
+            className={`${BTN_GHOST} ${i === preset ? 'border-brand-500 bg-brand-50 text-brand-700' : ''}`}>
             {p.name}
           </button>
         ))}
       </div>
-      <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-lg" role="img" aria-label="Diagrama de riesgos por combinación E×M">
-          <line x1={xs[0]} x2={xs[1]} y1={y(r00)} y2={y(r10)} stroke={UNEXP_COLOR} strokeWidth={2.2} />
-          <line x1={xs[2]} x2={xs[3]} y1={y(r01)} y2={y(r11)} stroke={EXP_COLOR} strokeWidth={2.2} />
-          {[r00, r10, r01, r11].map((v, i) => (
-            <g key={i}>
-              <circle cx={xs[i]} cy={y(v)} r={5.5} fill={i < 2 ? UNEXP_COLOR : EXP_COLOR} />
-              <text x={xs[i]} y={y(v) - 9} textAnchor="middle" fontSize={9} fontWeight="bold"
-                fill={i < 2 ? UNEXP_COLOR : EXP_COLOR}>{v.toFixed(2)}</text>
-              <text x={xs[i]} y={H - 14} textAnchor="middle" fontSize={9} fill={GRAY}>{labs[i]}</text>
-            </g>
-          ))}
-          <text x={xs[0] - 14} y={y(r00)} textAnchor="end" fontSize={8} fill={GRAY}>estrato M−</text>
-          <text x={xs[2] - 14} y={y(r01)} textAnchor="end" fontSize={8} fill={GRAY}>estrato M+</text>
-        </svg>
-        <div className="w-52 space-y-1 text-[11px] text-ink-600">
-          {labs.map((l, i) => (
-            <label key={l} className="block">{l}: {risks[i].toFixed(2)}
-              <input type="range" min={0.01} max={0.5} step={0.01} value={risks[i]}
-                onChange={setR(i)} className={SLIDER} /></label>
-          ))}
-        </div>
+      <div className="grid gap-2 sm:grid-cols-2">{panel('lin')}{panel('log')}</div>
+      <div className="mt-2 grid gap-x-4 gap-y-1 text-[11px] text-ink-600 sm:grid-cols-2">
+        {cellLabels.map((l, i) => (
+          <label key={l} className="block">
+            <span className={i < 2 ? 'text-ink-600' : 'text-ink-800'}>{l}: {fmt(vals[i], vals[i] < 10 ? 2 : 1)}</span>
+            <input type="range" min={P.max / 1000} max={P.max} step={P.max / 1000} value={vals[i]}
+              onChange={setV(i)} className={SLIDER} />
+          </label>
+        ))}
       </div>
+      <p className="mt-1 text-[11px] text-ink-500">Unidad: {P.unit}.</p>
       <div className="mt-2 grid gap-1 rounded bg-ink-50 p-2 font-mono text-[11px] md:grid-cols-2">
-        <div>RD(E)|M− = {rdE_M0.toFixed(2)} · RD(E)|M+ = {rdE_M1.toFixed(2)} → {additiva ? 'interacción aditiva' : 'sin interacción aditiva'}</div>
-        <div>RR(E)|M− = {fmt(rrE_M0, 2)} · RR(E)|M+ = {fmt(rrE_M1, 2)} → {multiplicativa ? 'interacción multiplicativa' : 'sin interacción multiplicativa'}</div>
-        <div className="font-semibold text-ink-800 md:col-span-2">Patrón: {tipo}</div>
+        <div>Efecto aditivo de {P.eLabel}: {fmt(rd0, 2)} sin {P.mLabel} · {fmt(rd1, 2)} con {P.mLabel}</div>
+        <div>RR de {P.eLabel}: {fmt(r10 / r00, 2)} sin {P.mLabel} · {fmt(r11 / r01, 2)} con {P.mLabel}</div>
+        <div>Aditiva: <b>{add.label}</b> ({add.detail}) · RERI = {fmt(reri, 2)}</div>
+        <div>Multiplicativa: <b>{mult.label}</b> ({mult.detail}) · RR₁₁/(RR₁₀·RR₀₁) = {fmt(ratioRR, 2)}</div>
       </div>
       <SimLegend items={[
-        { color: UNEXP_COLOR, label: 'riesgo vs. exposición en el estrato M−' },
-        { color: EXP_COLOR, label: 'riesgo vs. exposición en el estrato M+' },
+        { color: UNEXP_COLOR, label: `estrato sin ${P.mLabel}` },
+        { color: EXP_COLOR, label: `estrato con ${P.mLabel}` },
       ]} className="mt-2" />
       <SimGuide>
-        Líneas paralelas = no interacción en la escala aditiva. El preset
-        SHHS reproduce el Ejemplo 4.13 de Woodward: fumar tiene RR = 2.4 en
-        quienes no tuvieron infarto, pero 0.64 en quienes sí: antagonismo.
-        El mismo patrón puede ser interacción en una escala y no en la otra.
+        Líneas paralelas en el panel izquierdo significan que la exposición suma lo mismo en
+        ambos estratos; en el derecho, que multiplica lo mismo. Compara los dos paneles con el
+        asbesto o con la presión arterial: el mismo dato es paralelo en una escala y no en la
+        otra. La pregunta «¿hay interacción?» no tiene respuesta hasta declarar la escala.
+      </SimGuide>
+      <p className={NOTE}>{P.note} Las etiquetas usan una tolerancia de ±15% entre efectos y
+        tratan como nulo un efecto menor al 10% del mayor: describen el patrón de los puntos,
+        no prueban nada sobre la población (eso lo hace el laboratorio de ruido).</p>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/* 9b. InteractionNoiseLab: percibir la interacción en medio del ruido */
+/* ================================================================== */
+
+/** Binomial: exacta por ensayos si n·p es chico; aproximación normal si es grande. */
+function binomDraw(rng: () => number, n: number, p: number): number {
+  if (n * p > 40 && n * (1 - p) > 40) {
+    const u = Math.max(rng(), 1e-12), v = rng();
+    const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    return Math.min(n, Math.max(0, Math.round(n * p + Math.sqrt(n * p * (1 - p)) * z)));
+  }
+  return binom(rng, n, p);
+}
+
+const NOISE_TRUTH: { name: string; r: [number, number, number, number] }[] = [
+  { name: 'Paralelismo (RR 2 y 2)', r: [0.10, 0.20, 0.10, 0.20] },
+  { name: 'Sinergismo (RR 2 y 4)', r: [0.10, 0.20, 0.10, 0.40] },
+  { name: 'Unilateralismo (RR 1 y 2.5)', r: [0.10, 0.10, 0.10, 0.25] },
+  { name: 'Cruce (RR 2 y 0.5)', r: [0.10, 0.20, 0.20, 0.10] },
+];
+
+interface Estudio { rr0: number; lo0: number; hi0: number; p0: number; rr1: number; lo1: number; hi1: number; p1: number; rint: number; pint: number }
+
+function simulaEstudio(rng: () => number, n: number, r: number[]): Estudio {
+  const x = r.map((p) => binomDraw(rng, n, p));
+  const lr = (a: number, b: number) => {
+    const aa = a === 0 ? 0.5 : a, bb = b === 0 ? 0.5 : b;
+    return { l: Math.log(aa / bb), v: 1 / aa - 1 / n + 1 / bb - 1 / n };
+  };
+  const s0 = lr(x[1], x[0]), s1 = lr(x[3], x[2]);
+  const ci = (s: { l: number; v: number }) => [Math.exp(s.l), Math.exp(s.l - 1.96 * Math.sqrt(s.v)), Math.exp(s.l + 1.96 * Math.sqrt(s.v))];
+  const pv = (z: number) => 2 * (1 - normCdf(Math.abs(z)));
+  const [rr0, lo0, hi0] = ci(s0), [rr1, lo1, hi1] = ci(s1);
+  const d = s1.l - s0.l, se = Math.sqrt(s0.v + s1.v);
+  return {
+    rr0, lo0, hi0, p0: pv(s0.l / Math.sqrt(s0.v)), rr1, lo1, hi1, p1: pv(s1.l / Math.sqrt(s1.v)),
+    rint: Math.exp(d), pint: pv(d / se),
+  };
+}
+
+export function InteractionNoiseLab({ title }: { title?: ReactNode }) {
+  const [truth, setTruth] = useState(0);
+  const [nIdx, setNIdx] = useState(2);
+  const [seed, setSeed] = useState(11);
+  const [K, setK] = useState(1);
+  const NS = [25, 50, 100, 200, 400, 800, 1600];
+  const n = NS[nIdx];
+  const r = NOISE_TRUTH[truth].r;
+
+  const uno = useMemo(() => simulaEstudio(mulberry(seed * 7919 + truth * 31 + nIdx), n, r), [seed, truth, nIdx, n, r]);
+  const resumen = useMemo(() => {
+    const rng = mulberry(4242 + truth * 101 + nIdx * 7);
+    const B = 1000;
+    let detecta = 0, falacia = 0;
+    for (let b = 0; b < B; b++) {
+      const e = simulaEstudio(rng, n, r);
+      if (e.pint < 0.05) detecta++;
+      if ((e.p0 < 0.05) !== (e.p1 < 0.05)) falacia++;
+    }
+    return { detecta: detecta / B, falacia: falacia / B };
+  }, [truth, nIdx, n, r]);
+
+  const hayInteraccion = truth !== 0;
+  const pFishing = 1 - Math.pow(0.95, K);
+
+  // Mini forest plot en escala log.
+  const W = 460, H = 92, L = 120, R = 400;
+  const lo = Math.log(0.2), hi = Math.log(10);
+  const x = (v: number) => rnd(L + ((Math.log(Math.min(Math.max(v, 0.2), 10)) - lo) / (hi - lo)) * (R - L));
+  const filas = [
+    { lab: 'RR estrato M−', rr: uno.rr0, a: uno.lo0, b: uno.hi0, c: UNEXP_COLOR, p: uno.p0 },
+    { lab: 'RR estrato M+', rr: uno.rr1, a: uno.lo1, b: uno.hi1, c: EXP_COLOR, p: uno.p1 },
+  ];
+
+  return (
+    <div className={FIG}>
+      <div className={CAPTION}>{title ?? 'Interacción en medio del ruido'}</div>
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        {NOISE_TRUTH.map((t, i) => (
+          <button key={t.name} type="button" onClick={() => setTruth(i)}
+            className={`${BTN_GHOST} ${i === truth ? 'border-brand-500 bg-brand-50 text-brand-700' : ''}`}>
+            {t.name}
+          </button>
+        ))}
+      </div>
+      <div className="grid gap-x-4 gap-y-1 text-[11px] text-ink-600 sm:grid-cols-2">
+        <label className="flex items-center gap-2">
+          <span className="w-44 shrink-0">personas por celda: n = {n}</span>
+          <input type="range" min={0} max={NS.length - 1} step={1} value={nIdx}
+            onChange={(e) => setNIdx(+e.target.value)} className={SLIDER} />
+        </label>
+        <div className="flex items-center gap-2">
+          <button type="button" className={BTN_MAIN} onClick={() => setSeed((s) => s + 1)}>Otro estudio</button>
+          <span>riesgo basal 10%; cuatro celdas de n personas</span>
+        </div>
+      </div>
+
+      <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full max-w-xl" role="img"
+        aria-label="RR por estrato con intervalos de confianza al 95% en escala logarítmica">
+        <line x1={x(1)} x2={x(1)} y1={6} y2={H - 18} stroke={GRAY} strokeDasharray="3 3" />
+        {[0.25, 0.5, 1, 2, 4, 8].map((t) => (
+          <text key={t} x={x(t)} y={H - 4} textAnchor="middle" fontSize={8} fill={GRAY}>{t}</text>
+        ))}
+        {filas.map((f, i) => {
+          const yy = 22 + i * 28;
+          return (
+            <g key={f.lab}>
+              <text x={6} y={yy + 3} fontSize={9} fill={f.c}>{f.lab}</text>
+              <line x1={x(f.a)} x2={x(f.b)} y1={yy} y2={yy} stroke={f.c} strokeWidth={2} />
+              <circle cx={x(f.rr)} cy={yy} r={4} fill={f.c} />
+              <text x={R + 4} y={yy + 3} fontSize={8} fill={GRAY}>{f.p < 0.05 ? 'p<.05' : 'n.s.'}</text>
+            </g>
+          );
+        })}
+      </svg>
+
+      <div className="mt-1 grid gap-1 rounded bg-ink-50 p-2 font-mono text-[11px]">
+        <div>Este estudio: RR {fmt(uno.rr0, 2)} y {fmt(uno.rr1, 2)} · razón de RR = {fmt(uno.rint, 2)} · prueba de interacción p = {fmt(uno.pint, 3)}</div>
+        <div>En 1000 estudios iguales: la prueba de interacción da p &lt; 0.05 en {(100 * resumen.detecta).toFixed(1)}%
+          {hayInteraccion ? ' (potencia para detectar la interacción real)' : ' (falsos positivos: no hay interacción)'}</div>
+        <div>«Significativo en un estrato y no en el otro» ocurre en {(100 * resumen.falacia).toFixed(1)}% de los estudios
+          {hayInteraccion ? '' : ', aunque el efecto es idéntico en ambos'}</div>
+      </div>
+
+      <div className="mt-2 rounded border border-ink-100 p-2 text-[11px] text-ink-600">
+        <label className="flex items-center gap-2">
+          <span className="w-64 shrink-0">Buscar interacción en K subgrupos sin hipótesis previa: K = {K}</span>
+          <input type="range" min={1} max={30} step={1} value={K} onChange={(e) => setK(+e.target.value)} className={SLIDER} />
+        </label>
+        <div className="mt-1 font-mono">Si no hay interacción en ninguno, P(al menos un p &lt; 0.05) = 1 − 0.95^{K} = {(100 * pFishing).toFixed(0)}%</div>
+      </div>
+
+      <SimGuide>
+        Empieza con paralelismo y n = 100: pulsa «Otro estudio» varias veces y mira cuántas
+        veces un estrato sale «significativo» y el otro no, aunque el efecto es idéntico. Luego
+        pasa a sinergismo: con n = 100 la interacción real casi nunca se detecta; súbelo hasta
+        que la potencia pase de 80%. La prueba de interacción compara dos estimaciones ruidosas
+        entre sí: necesita mucha más información que estimar un efecto.
       </SimGuide>
       <p className={NOTE}>
-        Woodward advierte (Ch. 4.8.3): la interacción depende de la escala.
-        La epidemiología de salud pública privilegia la aditiva (importa el
-        exceso absoluto); la analítica clásica reporta la multiplicativa.
+        Cada estudio: cuatro celdas binomiales de n personas, RR por estrato con IC log (Katz) y
+        prueba de interacción multiplicativa z = (log RR₁ − log RR₀)/EE. Las proporciones de
+        1000 estudios tienen un error Monte Carlo de hasta ±1.6 puntos. La celda de búsqueda en
+        K subgrupos supone pruebas independientes.
       </p>
     </div>
   );
@@ -1524,10 +1768,13 @@ export function BerksonExplorer({ title }: { title?: ReactNode }) {
         { color: GRAY, label: 'OR = 1 (sin asociación)', dash: true },
       ]} className="mt-2" />
       <SimGuide>
-        Aunque E y D sean independientes, ambos llevan gente al hospital:
-        entre hospitalizados la exposición queda sobrerrepresentada en los
-        "sanos". Es el sesgo de Sackett (1979), el ejemplo del curso con
-        n = 2784 donde cambiar la fuente de controles cambia la conclusión.
+        En la población E y D son independientes (OR = 1). Como ambos llevan
+        gente al hospital por caminos separados, entre los hospitalizados sin
+        la enfermedad la exposición queda sobrerrepresentada y el OR cae por
+        debajo de 1. Pon P(hospitalización | exposición) cerca de la base y el
+        sesgo desaparece. La dirección depende de cómo se combinan los motivos
+        de ingreso: en el ejemplo de Sackett (1979) la asociación fabricada fue
+        positiva (OR ≈ 4 en hospitalizados frente a 1.06 en la comunidad).
       </SimGuide>
       <p className={NOTE}>
         La morbilidad de los controles hospitalarios compite con la
@@ -1604,8 +1851,9 @@ export function RocExplorer({ title }: { title?: ReactNode }) {
         { color: GRAY, label: 'diagonal del azar', dash: true },
       ]} className="mt-2" />
       <SimGuide>
-        Mueve el umbral: subirlo aumenta Se pero degrada Sp; el trade-off es
-        estructural, no del test. La separación de las distribuciones fija el
+        Mueve el umbral: subirlo exige un score más alto para declarar
+        positivo, así que baja la Se y sube la Sp; bajarlo hace lo contrario.
+        El punto recorre la curva, pero la curva no cambia. La separación de las distribuciones fija el
         AUC: con 0.3σ casi no hay discriminación; con 2.8σ el test es casi
         perfecto. El AUC es la probabilidad de que un caso supere en score a
         un control.
@@ -1827,62 +2075,107 @@ function sirIncidence(beta: number, gamma: number, weeks: number, n = 10000, i0 
   return out;
 }
 
+/** P(D ≤ k) para D ~ Poisson(mu): probabilidad de que un caso ya esté notificado k semanas después. */
+function poissonCdf(k: number, mu: number): number {
+  if (k < 0) return 0;
+  if (mu <= 0) return 1;
+  let term = Math.exp(-mu);
+  let acc = term;
+  for (let j = 1; j <= k; j++) {
+    term *= mu / j;
+    acc += term;
+  }
+  return Math.min(1, acc);
+}
+
+/**
+ * Curva epidémica por semana de INICIO de síntomas, vista desde una fecha de
+ * corte. Cada caso se notifica con un retraso Poisson; al corte solo se ven
+ * los casos con inicio + retraso ≤ corte. Es el truncamiento por la derecha
+ * que produce el falso descenso de la cola. El nowcast simple corrige cada
+ * semana dividiendo por P(retraso ≤ corte − semana).
+ * Mismo modelo que la celda R `00/vigilancia` (SIR en tiempo discreto).
+ */
 export function EpiCurveExplorer({ title }: { title?: ReactNode }) {
   const [beta, setBeta] = useState(0.45);
   const [gamma, setGamma] = useState(0.2);
   const [noise, setNoise] = useState(true);
   const [delayMean, setDelayMean] = useState(2);
+  const [cutoff, setCutoff] = useState(24);
   const [barWidth, setBarWidth] = useState<1 | 2 | 4>(1);
+  const [showMissing, setShowMissing] = useState(true);
+  const [showNowcast, setShowNowcast] = useState(false);
   const [seed, setSeed] = useState(7);
 
   const WEEKS = 52;
   const R0 = beta / gamma;
 
-  const { trueInc, reported, incompleteFrom } = useMemo(() => {
+  const sim = useMemo(() => {
     const sir = sirIncidence(beta, gamma, WEEKS);
+    const trueInc = sir.map((s2) => s2.incidence);
     const rand = mulberry32(seed * 7919 + 13);
-    const obs = sir.map(({ incidence }) =>
-      noise ? poissonSample(incidence, rand) : Math.round(incidence)
-    );
-    // Reparto de cada caso observado a su semana de notificación.
-    const rep = new Array(WEEKS + 8).fill(0);
-    obs.forEach((count, w) => {
+    const cases = trueInc.map((mu) => (noise ? poissonSample(mu, rand) : Math.round(mu)));
+    const C = cutoff - 1; // índice 0-based de la semana de corte
+    const seen = new Array(WEEKS).fill(0);
+    cases.forEach((count, w) => {
       for (let c = 0; c < count; c++) {
         const d = delayMean > 0 ? poissonSample(delayMean, rand) : 0;
-        rep[w + d] += 1;
+        if (w + d <= C) seen[w] += 1;
       }
     });
-    const horizon = WEEKS + 8;
-    // Las últimas barras acumulan casos que aún no llegaron: incompletas.
-    const incompleteFrom = Math.max(0, horizon - Math.ceil(delayMean) - 1);
-    return { trueInc: sir.map((s2) => s2.incidence), reported: rep, incompleteFrom };
-  }, [beta, gamma, noise, delayMean, seed]);
+    const nowcast = seen.map((n, w) => {
+      const f = poissonCdf(C - w, delayMean);
+      return w <= C && f >= 0.05 ? n / f : null;
+    });
+    const realPeak = trueInc.indexOf(Math.max(...trueInc)) + 1;
+    return { trueInc, cases, seen, nowcast, realPeak };
+  }, [beta, gamma, noise, delayMean, cutoff, seed]);
 
-  // Agrupación por ancho de barra sobre las semanas notificadas.
-  const groups = useMemo(() => {
-    const g: { start: number; end: number; cases: number; incomplete: boolean }[] = [];
-    for (let w = 0; w < reported.length; w += barWidth) {
-      const end = Math.min(w + barWidth - 1, reported.length - 1);
-      g.push({
-        start: w,
-        end,
-        cases: reported.slice(w, end + 1).reduce((a, b) => a + b, 0),
-        incomplete: end >= incompleteFrom,
-      });
+  // Agrupación por ancho de barra sobre las semanas de inicio 1..corte.
+  const bins = useMemo(() => {
+    const out: { start: number; end: number; seen: number; missing: number; truth: number; now: number | null }[] = [];
+    for (let w = 0; w < cutoff; w += barWidth) {
+      const end = Math.min(w + barWidth, cutoff);
+      const idx = Array.from({ length: end - w }, (_, i) => w + i);
+      const seen = idx.reduce((a, i) => a + sim.seen[i], 0);
+      const cases = idx.reduce((a, i) => a + sim.cases[i], 0);
+      const truth = idx.reduce((a, i) => a + sim.trueInc[i], 0);
+      const nows = idx.map((i) => sim.nowcast[i]);
+      const now = nows.every((v) => v !== null) ? nows.reduce((a, v) => a + (v as number), 0) : null;
+      out.push({ start: w + 1, end, seen, missing: Math.max(0, cases - seen), truth, now });
     }
-    return g;
-  }, [reported, barWidth, incompleteFrom]);
+    return out;
+  }, [sim, cutoff, barWidth]);
+
+  const apparentPeak = useMemo(() => {
+    let best = 0;
+    bins.forEach((b, i) => { if (b.seen > bins[best].seen) best = i; });
+    return bins[best];
+  }, [bins]);
 
   const W = 560;
   const H = 220;
-  const maxY = Math.max(1, ...groups.map((g) => g.cases), Math.max(...trueInc) + 5);
-  const xScale = (w: number) => (w / (reported.length - 1)) * W;
-  const yScale = (c: number) => H - (c / maxY) * (H - 20);
-  const barW = Math.max(2, xScale(barWidth) - xScale(0) - 1);
+  const maxY = Math.max(
+    1,
+    ...bins.map((b) => b.seen + (showMissing ? b.missing : 0)),
+    ...bins.map((b) => b.truth),
+    ...(showNowcast ? bins.map((b) => b.now ?? 0) : [0]),
+  ) * 1.05;
+  const slot = W / bins.length;
+  const barW = Math.max(2, slot - 2);
+  const xc = (i: number) => i * slot + slot / 2;
+  const yScale = (c: number) => H - (c / maxY) * (H - 16);
 
-  const incPath = trueInc
-    .map((c, i) => `${i === 0 ? 'M' : 'L'}${xScale(i + 0.5).toFixed(1)},${yScale(c).toFixed(1)}`)
+  const truthPath = bins
+    .map((b, i) => `${i === 0 ? 'M' : 'L'}${xc(i).toFixed(1)},${yScale(b.truth).toFixed(1)}`)
     .join(' ');
+  const nowPath = bins
+    .map((b, i) => (b.now === null ? null : `${xc(i).toFixed(1)},${yScale(b.now).toFixed(1)}`))
+    .filter((p): p is string => p !== null)
+    .map((p, i) => `${i === 0 ? 'M' : 'L'}${p}`)
+    .join(' ');
+
+  const falseDecline = apparentPeak.end < cutoff - barWidth && sim.realPeak > apparentPeak.end;
 
   return (
     <div className={FIG}>
@@ -1906,7 +2199,12 @@ export function EpiCurveExplorer({ title }: { title?: ReactNode }) {
           <input type="range" min={0} max={5} step={0.5} value={delayMean}
             onChange={(e) => setDelayMean(+e.target.value)} className={SLIDER} />
         </label>
-        <div className="flex items-center gap-3">
+        <label className="flex items-center gap-2">
+          <span className="w-44 shrink-0">fecha de corte («hoy») = semana {cutoff}</span>
+          <input type="range" min={6} max={WEEKS} step={1} value={cutoff}
+            onChange={(e) => setCutoff(+e.target.value)} className={SLIDER} />
+        </label>
+        <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
           <span className="shrink-0">barra:</span>
           {([1, 2, 4] as const).map((w) => (
             <button key={w} type="button" onClick={() => setBarWidth(w)}
@@ -1914,10 +2212,20 @@ export function EpiCurveExplorer({ title }: { title?: ReactNode }) {
               {w} sem.
             </button>
           ))}
-          <label className="ml-1 flex items-center gap-1">
+          <label className="flex items-center gap-1">
             <input type="checkbox" checked={noise} onChange={(e) => setNoise(e.target.checked)}
               className="accent-brand-600" />
-            ruido
+            ruido Poisson
+          </label>
+          <label className="flex items-center gap-1">
+            <input type="checkbox" checked={showMissing} onChange={(e) => setShowMissing(e.target.checked)}
+              className="accent-brand-600" />
+            mostrar lo aún no notificado
+          </label>
+          <label className="flex items-center gap-1">
+            <input type="checkbox" checked={showNowcast} onChange={(e) => setShowNowcast(e.target.checked)}
+              className="accent-brand-600" />
+            nowcast
           </label>
           <button type="button" onClick={() => setSeed((s) => s + 1)}
             className="rounded border border-ink-200 px-2 py-0.5 text-ink-600 hover:bg-ink-50">
@@ -1926,42 +2234,52 @@ export function EpiCurveExplorer({ title }: { title?: ReactNode }) {
         </div>
       </div>
 
-      <p className="mt-1 text-[11px] text-ink-500">
-        R₀ = β/γ = {R0.toFixed(2)} — {R0 > 1 ? 'la epidemia crece' : 'la epidemia se apaga'}.
-        Población de 10 000 personas con 10 infectados iniciales.
+      <p className="mt-1 text-[11px] text-ink-500" aria-live="polite">
+        R₀ = β/γ = {R0.toFixed(2)} ({R0 > 1 ? 'la epidemia crece' : 'la epidemia se apaga'}).
+        Pico real: semana {sim.realPeak}. Con lo notificado hasta la semana {cutoff}, el pico
+        aparente cae en la semana {apparentPeak.start === apparentPeak.end ? apparentPeak.start : `${apparentPeak.start}–${apparentPeak.end}`}
+        {falseDecline ? ': el descenso posterior es un artefacto del retraso.' : '.'}
       </p>
 
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 w-full" role="img"
-        aria-label="Curva epidémica: barras de casos notificados y línea de incidencia verdadera">
+        aria-label={`Curva epidémica por semana de inicio hasta la semana ${cutoff}: casos notificados al corte, casos aún no notificados e incidencia del modelo`}>
         <line x1={0} y1={yScale(0)} x2={W} y2={yScale(0)} stroke={GRAY} strokeWidth={1} />
-        {groups.map((g) => (
-          <rect key={g.start}
-            x={xScale(g.start)} y={yScale(g.cases)}
-            width={barW} height={yScale(0) - yScale(g.cases)}
-            fill={g.incomplete ? tokens.status.warning : tokens.chart.primary}
-            fillOpacity={g.incomplete ? 0.45 : 0.85} />
+        {bins.map((b, i) => (
+          <g key={b.start}>
+            <rect x={xc(i) - barW / 2} y={yScale(b.seen)} width={barW}
+              height={yScale(0) - yScale(b.seen)} fill={tokens.chart.primary} fillOpacity={0.9} />
+            {showMissing && b.missing > 0 && (
+              <rect x={xc(i) - barW / 2} y={yScale(b.seen + b.missing)} width={barW}
+                height={yScale(b.seen) - yScale(b.seen + b.missing)} fill={tokens.chart.grid} />
+            )}
+          </g>
         ))}
-        <path d={incPath} fill="none" stroke={EXP_COLOR} strokeWidth={2} strokeDasharray="5 3" />
+        <path d={truthPath} fill="none" stroke={EXP_COLOR} strokeWidth={2} strokeDasharray="5 3" />
+        {showNowcast && nowPath && (
+          <path d={nowPath} fill="none" stroke={tokens.status.warning} strokeWidth={2} />
+        )}
       </svg>
 
       <SimLegend className="mt-2" items={[
-        { color: tokens.chart.primary, label: 'casos notificados por semana', mark: 'bar' },
-        { color: tokens.status.warning, label: 'semanas incompletas (retraso de notificación)', mark: 'bar' },
-        { color: EXP_COLOR, label: 'incidencia verdadera del modelo SIR', dash: true },
+        { color: tokens.chart.primary, label: 'notificado al corte', mark: 'bar' },
+        ...(showMissing ? [{ color: tokens.chart.grid, label: 'ocurrido, aún sin notificar', mark: 'bar' as const }] : []),
+        { color: EXP_COLOR, label: 'incidencia del modelo SIR', dash: true },
+        ...(showNowcast ? [{ color: tokens.status.warning, label: 'nowcast: notificado ÷ P(retraso ≤ corte − semana)' }] : []),
       ]} />
 
       <SimGuide>
-        Sube β o baja γ: el pico llega antes y más alto. Activa el ruido: con
-        conteos pequeños el azar de Poisson deforma la curva, igual que en los
-        boletines reales. Sube el retraso medio: la cola se aplana y las últimas
-        semanas quedan siempre por debajo de la verdad — nunca interpretes la
-        cola de una curva epidémica reciente como descenso real.
+        Deja el corte en la semana 24 y el retraso en 2: las últimas barras caen aunque la
+        epidemia sigue creciendo. Sube el retraso y la caída aparece antes; ponlo en 0 y
+        desaparece. Activa el nowcast: corrige la cola dividiendo por la probabilidad de que
+        un caso ya esté notificado, y deja de valer cuando esa probabilidad es muy baja. Con
+        barras de 2 o 4 semanas el ruido se suaviza, pero el truncamiento sigue ahí.
       </SimGuide>
       <p className={NOTE}>
-        Modelo SIR de la clase 2B del curso (dS/dt = −βSI/N, dI/dt = βSI/N − γI)
-        integrado por semanas; los casos notificados se retrasan según un
-        Poisson de media editable. La nueva muestra cambia solo el azar, no el
-        modelo — así se ve qué es señal y qué es ruido.
+        SIR en tiempo discreto, paso semanal (S → I con tasa β·S·I/N, I → R con tasa γ), N = 10 000
+        y 10 infectados iniciales; casos con ruido Poisson y retraso de notificación Poisson de
+        media editable. Las barras van por semana de inicio de síntomas, no de notificación. El
+        nowcast supone que la distribución del retraso es conocida y estable. Mismo modelo que la
+        celda R de esta sección.
       </p>
     </div>
   );

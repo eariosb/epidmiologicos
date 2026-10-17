@@ -84,8 +84,9 @@ proc sql;
 quit;
 /* poisson.test -> GENMOD Poisson con offset log(pt):
    el IC del IRR sale del parametro del modelo */
-data tasas; input grupo $ ev pt; lpt = log(pt); datalines;
-exp 12 800  noexp 20 1600 ;
+data tasas; input grupo $ ev pt @@; lpt = log(pt); datalines;
+exp 12 800  noexp 20 1600
+;
 proc genmod data=tasas;
   class grupo(ref='noexp');
   model ev = grupo / dist=poisson link=log offset=lpt;
@@ -111,10 +112,11 @@ estratifica y el tiempo se suma.
 
 El British Doctors Study es la demostración histórica del denominador
 persona-tiempo: ~34 000 médicos seguidos desde 1951, con muertes
-registradas por los obituarios profesionales. A los 10 años la
-mortalidad por cáncer de pulmón era ~0.07 por 1000 personas-año en
-nunca fumadores y escalaba 0.57 → 0.96 → 1.39 → 1.66 según
-cigarrillos/día: un gradiente de razones de tasa de ~8 a ~24. Dos
+registradas en los certificados de defunción. A los 10 años (1951–1961)
+la mortalidad por cáncer de pulmón era 0.07 por 1000 personas-año en no
+fumadores y 0.57, 1.39 y 2.27 en fumadores de 1–14, 15–24 y 25 o más
+cigarrillos al día: razones de tasa de ~8, ~20 y ~32, un gradiente
+dosis-respuesta con denominador persona-tiempo. Dos
 detalles lo hacen didácticamente perfecto:
 
 - **Es un SMR natural**: la mortalidad de los médicos se comparó contra
@@ -139,7 +141,8 @@ $$
 
 El hazard ratio $e^{\beta_j}$ es el análogo continuo del log-rank: con una
 sola covariable binaria, el test del score de Cox **es** el log-rank del
-módulo anterior.
+módulo anterior (exactamente con el manejo de empates de Breslow; con el
+de Efron, que R usa por defecto, casi idéntico).
 
 El ajuste siguiente usa `coxph` sobre recid.csv (semanas hasta re-arresto
 en 432 exconvictos): estima el <Term k="HR">HR</Term> de cada covariable y verifica el
@@ -213,7 +216,7 @@ tiempo antes de sacar conclusiones causales.
 />
 
 <LabExercise
-  id="lab-12-personatiempo"
+  id="lab-13-personatiempo"
   title="Laboratorio: dos cohortes, dos denominadores"
   code={`# Compara dos exposiciones con seguimientos distintos.
 grupo <- c(rep("exp", 5), rep("noexp", 5))
@@ -228,12 +231,13 @@ print(aggregate(cbind(pt, ev) ~ grupo, dat, sum))
     "¿Por qué casos/n daría una respuesta distinta? ¿Cuál es la correcta?",
   ]}
   hint="La tasa es eventos/persona-tiempo; el n de sujetos no entra en el denominador."
-  solution="Las tasas usan PT, no personas. Con seguimiento desigual, casos/n mide 'fracción del estudio', no riesgo. El IRR de poisson.test es la comparación correcta con su IC."
+  solution="Expuestos: 3 eventos en 17.0 persona-años (0.18 por persona-año); no expuestos: 2 en 16.5 (0.12). IRR = 1.46 con IC 95% exacto de 0.17 a 17.4: con 5 eventos en total, los datos son compatibles con un efecto protector fuerte y con uno dañino enorme. Casos/n daría 3/5 frente a 2/5 y trataría igual a quien aportó 1.9 años y a quien aportó 5.0; con seguimiento desigual, la tasa por persona-tiempo es la comparación correcta, y aquí el IC dice que la muestra no decide."
 />
 
-<SasBlock code={`data dat; input grupo $ pt ev; datalines;
+<SasBlock code={`data dat; input grupo $ pt ev @@; datalines;
 exp 3.2 1  exp 4.8 0  exp 2.1 1  exp 5.0 1  exp 1.9 0
-noexp 2.0 1  noexp 3.5 0  noexp 4.2 1  noexp 2.8 0  noexp 4.0 0 ;
+noexp 2.0 1  noexp 3.5 0  noexp 4.2 1  noexp 2.8 0  noexp 4.0 0
+;
 /* Suma de persona-tiempo y eventos por grupo: */
 proc means data=dat sum; class grupo; var pt ev; run;
 /* IRR con IC: GENMOD Poisson + offset */
@@ -272,29 +276,46 @@ en la semana 10 y desempleado en la 30. La forma honesta es el
 exposición de *esa* semana.
 
 <RCell
+  id="13/empleo-largo"
+  title="Empleo semanal en formato largo"
   code={`recid <- read.csv("recid.csv")
-long <- do.call(rbind, lapply(1:52, function(w) {
+# Una fila por persona-semana observada, con el empleo de esa semana
+# y el de la semana anterior.
+long <- do.call(rbind, lapply(2:52, function(w) {
   data.frame(
-    id    = seq_len(nrow(recid)),
-    wk    = w,
-    emp   = recid[[paste0("emp", w)]],
-    obs   = w <= recid$week,                 # solo semanas observadas
-    event = as.integer(recid$week == w & recid$arrest == 1)
+    id        = seq_len(nrow(recid)),
+    wk        = w,
+    emp       = recid[[paste0("emp", w)]],
+    emp_prev  = recid[[paste0("emp", w - 1)]],
+    obs       = w <= recid$week,                 # solo semanas observadas
+    event     = as.integer(recid$week == w & recid$arrest == 1)
   )
 }))
 long <- subset(long, obs)
-tab <- aggregate(cbind(n = 1, eventos = long$event) ~ emp, data = long, sum)
-names(tab)[1] <- "empleado_esa_semana"
-tab$tasa_por_1000 <- round(1000 * tab$eventos / tab$n, 2)
-tab`}
+tasa <- function(x) {
+  t <- aggregate(cbind(n = 1, eventos = long$event) ~ x, data = long, sum)
+  t$tasa_por_1000 <- round(1000 * t$eventos / t$n, 2)
+  t
+}
+cat("Empleo de la MISMA semana:\\n");      print(tasa(long$emp))
+cat("\\nEmpleo de la semana ANTERIOR:\\n"); print(tasa(long$emp_prev))
+# Con la misma semana la razon de tasas es ~0.24; con la anterior, ~0.41.
+# El arresto corta el empleo esa semana: usar la misma semana mezcla
+# causa y consecuencia (causalidad inversa). Allison rezaga una semana.`}
 />
 
-La tasa de re-arresto por 1 000 personas-semana difiere según el
-empleo **de esa misma semana** — eso es una covariable dependiente
-del tiempo. Para usarla dentro de `coxph`, R pide el formato de
-conteo `(tstart, tstop, evento)`: cada persona aporta una fila por
-tramo con exposición constante, y el modelo evalúa el riesgo con el
-empleo *vigente en ese tramo*, no el de la entrada.
+La tasa de re-arresto por 1 000 personas-semana depende del empleo, y
+la celda muestra que **cuándo** se mide la covariable importa tanto como
+medirla. Con el empleo de la misma semana del arresto, los empleados
+parecen tener un cuarto de la tasa (9.15 frente a 2.17); con el de la
+semana anterior, menos de la mitad (8.07 frente a 3.30). La diferencia
+no es ruido: un arresto interrumpe el empleo esa misma semana, así que
+la versión sin rezago incluye parte del desenlace en la exposición.
+
+Para usar la covariable dentro de `coxph`, R pide el formato de conteo
+`(tstart, tstop, evento)`: cada persona aporta una fila por tramo con
+exposición constante, y el modelo evalúa el riesgo con el empleo
+*vigente en ese tramo* (rezagado), no el de la entrada.
 
 <Callout type="warning" title="La covariable también tiene calendario">
 Si la exposición cambia durante el seguimiento —empleo, tratamiento,

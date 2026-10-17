@@ -10,8 +10,7 @@
 
   0   1
 128   9
-  0   1
- 62 100
+[1]  25 231
 Call: survfit(formula = Surv(SurvTime, dead) ~ Therapy, data = va)
 
                   n events median 0.95LCL 0.95UCL

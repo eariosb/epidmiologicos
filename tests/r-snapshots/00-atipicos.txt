@@ -1,2 +1,6 @@
-boxplot marca 12 valores: 340, 357, 378, 384, 389, 392, 411, 467, 553, 587, 991, 999 n  50%   75%   90%   95%  100%
+boxplot marca 12 valores: 340, 357, 378, 384, 389, 392, 411, 467, 553, 587, 991, 999
+   Therapy     Cell SurvTime censor Kps
+70    test squamous      999      0  90
+75    test squamous      991      0  70
+  50%   75%   90%   95%  100%
  80.0 144.0 284.6 389.6 999.0

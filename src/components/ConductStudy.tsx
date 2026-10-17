@@ -47,11 +47,11 @@ export function ConductStudy({
   children?: ReactNode;
 }) {
   return (
-    <section className="my-8 rounded-lg border border-brand-200 bg-brand-50/40 px-5 py-4 dark:border-brand-800 dark:bg-brand-950/20">
-      <p className="text-xs font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300">
+    <section className="my-8 rounded-lg border border-brand-200 bg-brand-50/40 px-5 py-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">
         Conducir el estudio — {design}
       </p>
-      <p className="mt-1 mb-4 text-sm text-ink-600 dark:text-ink-400">
+      <p className="mt-1 mb-4 text-sm text-ink-600">
         La misma secuencia en cada diseño: lo que cambia es el muestreo,
         no el razonamiento.
       </p>
@@ -78,13 +78,13 @@ export function ConductStep({
         {n}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-ink-900 dark:text-ink-100">
+        <p className="font-semibold text-ink-900">
           {step.name}
         </p>
-        <p className="text-sm italic text-ink-500 dark:text-ink-400">
+        <p className="text-sm italic text-ink-500">
           {step.pregunta}
         </p>
-        <div className="mt-1.5 text-sm leading-relaxed text-ink-700 dark:text-ink-300 [&>ul]:list-disc [&>ul]:pl-5">
+        <div className="mt-1.5 text-sm leading-relaxed text-ink-700 [&>ul]:list-disc [&>ul]:pl-5">
           {children}
         </div>
       </div>

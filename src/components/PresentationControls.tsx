@@ -30,8 +30,32 @@ export function PresentationControls({ canvasRef, vertical }: PresentationContro
     prevStep();
   };
 
+  // In the icon rail only the presentation toggle is meaningful: the step
+  // counter and spotlight do nothing until presentation mode starts (the
+  // full controls then render in the top bar, horizontally).
+  if (vertical) {
+    return (
+      <button
+        type="button"
+        onClick={() => setPresentation(!presentationMode)}
+        title={presentationMode ? 'Salir de presentación (Esc)' : 'Modo presentación (P)'}
+        className={`rounded border px-1.5 py-0.5 text-xs font-medium transition-colors ${
+          presentationMode
+            ? 'border-brand-400 bg-brand-100 text-brand-700'
+            : 'border-ink-200 text-ink-600 hover:bg-ink-100 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800'
+        }`}
+      >
+        {presentationMode ? (
+          <Pause aria-hidden className="h-3.5 w-3.5" />
+        ) : (
+          <MonitorPlay aria-hidden className="h-3.5 w-3.5" />
+        )}
+      </button>
+    );
+  }
+
   return (
-    <div className={vertical ? 'flex flex-col items-center gap-1' : 'flex items-center gap-1'}>
+    <div className="flex items-center gap-1">
       <button
         type="button"
         onClick={back}
@@ -73,22 +97,14 @@ export function PresentationControls({ canvasRef, vertical }: PresentationContro
             : 'border-ink-200 text-ink-600 hover:bg-ink-100 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800'
         }`}
       >
-        {vertical ? (
-          presentationMode ? (
+        <span className="inline-flex items-center gap-1.5">
+          {presentationMode ? (
             <Pause aria-hidden className="h-3.5 w-3.5" />
           ) : (
             <MonitorPlay aria-hidden className="h-3.5 w-3.5" />
-          )
-        ) : (
-          <span className="inline-flex items-center gap-1.5">
-            {presentationMode ? (
-              <Pause aria-hidden className="h-3.5 w-3.5" />
-            ) : (
-              <MonitorPlay aria-hidden className="h-3.5 w-3.5" />
-            )}
-            {presentationMode ? 'Editar' : 'Presentar'}
-          </span>
-        )}
+          )}
+          {presentationMode ? 'Editar' : 'Presentar'}
+        </span>
       </button>
     </div>
   );

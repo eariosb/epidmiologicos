@@ -2,4 +2,4 @@ p0   p1 RP       OR exceso
 1 0.01 0.02  2 2.020408    1.0
 2 0.10 0.20  2 2.250000   12.5
 3 0.30 0.60  2 3.500000   75.0
-Con prevalencia 30%, OR = 3.5 pero la asociacion real es RP = 2n
+Con prevalencia 30%, OR = 3.5 mientras la razon de prevalencias es 2

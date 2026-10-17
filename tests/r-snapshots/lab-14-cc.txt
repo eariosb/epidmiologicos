@@ -1,0 +1,4 @@
+OR con controles hospitalarios: 2.12
+OR con controles comunitarios : 3.25
+P(cafe alto | control hospital)  : 0.37
+P(cafe alto | control comunidad) : 0.28

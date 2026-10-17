@@ -1,3 +1,3 @@
-Bajo H0 (delta=0):   rechaza 4.1% - tamano real vs 5% nominal
-Efecto 0.5 DE:       rechaza 26.4% - potencia empirica
-Efecto 1.0 DE:       rechaza 75.0% - potencia empirica
+Bajo H0: rechaza 4.1% | banda Monte Carlo de un test exacto al 5%: 4.0-6.0%
+Efecto 0.5 DE: potencia empirica 26.4% (EE 1.0 pp) | analitica 26.2%
+Efecto 1.0 DE: potencia empirica 75.0% (EE 1.0 pp) | analitica 75.3%

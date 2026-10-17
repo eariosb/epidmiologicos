@@ -2,4 +2,5 @@ control
 caso  0  1
    0 20  7
    1 20  3
-sets informativos: 73 de 111 n
+discordantes: 20 y 7 | OR pareado = 20 / 7 = 2.86 | McNemar exacto: p = 0.019
+sets informativos: 73 de 111

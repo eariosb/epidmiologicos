@@ -30,4 +30,6 @@ Wald test            = 4.42  on 2 df,   p=0.1
 Score (logrank) test = 4.72  on 2 df,   p=0.09
 
 
-OR(ddimer) = 1.215OR(BCG pareado) = 0.519OR ingenuo (sin parear) = 0.688
+OR(ddimer) = 1.215
+OR(BCG pareado) = 0.519  IC95% 0.3 0.9
+OR ingenuo (sin parear) = 0.688

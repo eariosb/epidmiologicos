@@ -1,0 +1,4 @@
+ni confusion ni interaccion RR estratos = 2.00 y 2.00 | crudo = 2.00 | MH = 2.00
+solo confusion             RR estratos = 2.00 y 2.00 | crudo = 4.25 | MH = 2.00
+solo interaccion           RR estratos = 1.00 y 2.00 | crudo = 1.80 | MH = 1.80
+confusion e interaccion    RR estratos = 1.00 y 2.00 | crudo = 4.12 | MH = 1.80

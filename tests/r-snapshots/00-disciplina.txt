@@ -1,1 +1,7 @@
-media reproducible: 9.918 n
+estrategia tasa_pct ee_pct
+      A. 20 subgrupos, sin plan     62.8   1.53
+  B. 1 prueba, 8 rutas sin plan     16.1   1.16
+ C. 20 declarados, sin corregir     62.8   1.53
+   D. 20 declarados, Bonferroni      4.4   0.65
+          E. 1 prueba declarada      4.8   0.15
+Teorico: 20 sin corregir 64.2% | Bonferroni 4.9%

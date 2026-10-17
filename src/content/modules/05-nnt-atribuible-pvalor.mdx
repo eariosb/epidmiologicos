@@ -133,11 +133,11 @@ cat(sprintf("PRA en CC ((OR-1)/OR) = %.3f\\n", (OR-1)/OR))`}
 />
 
 <SasBlock code={`data bajo;
-  input fuma $ bpeso $ n;
+  input fuma $ bpeso $ n @@;
   datalines;
 si si 30  si no 70  no si 20  no no 180
 ;
-/* RELRISK da riesgos Col1/Col2, RR y OR con IC de Woolf.
+/* RELRISK da riesgos Col1/Col2, RR (IC log, Katz) y OR (IC de Woolf).
    SAS no entrega PRA/PRAP/NNT directos: se derivan en DATA step */
 proc freq data=bajo order=data; weight n;
   tables fuma*bpeso / relrisk; run;
@@ -147,7 +147,7 @@ data atr;
   PRA  = (RR-1)/RR;
   Pe   = (a+b)/(a+b+c+d);       /* prevalencia de exposicion */
   PRAP = Pe*(RR-1)/(1+Pe*(RR-1));
-  NNT  = 1/(r1-r0);
+  NNH  = 1/(r1-r0);   /* exposicion danina: numero necesario para danar */
 run;
 proc print data=atr noobs; run;`} />
 
@@ -168,6 +168,12 @@ en vivo: genera tablas 2×2 bajo distintos tamaños de efecto y cuenta qué
 fracción resulta significativa.
 
 <PvalueVsEffect title={<>Potencia vs. tamaño del efecto: 600 tablas simuladas por configuración</>} />
+
+**Para explorar**
+
+1. Con OR = 1 pulsa «Repetir el experimento» varias veces: la fracción bajo 0.05 oscila alrededor del 5 %.
+2. Pon OR ≈ 2 y busca el n por grupo que da una potencia cercana al 80 % (la fórmula da unos 170).
+3. Con OR ≈ 1.1 y n = 1500 la potencia sigue cerca del 18 %. Compara con OR ≈ 1.25: el mismo n detecta uno y casi nunca el otro.
 
 <Callout type="warning" title="La declaración de la ASA">
 Wasserstein &amp; Lazar (2016), en nombre de la American Statistical
@@ -228,6 +234,12 @@ brecha entre la curva asintótica y los números exactos es el contenido
 del módulo siguiente.
 
 <SampleSizeExplorer title={<>Fórmula de n vs. potencia exacta del test</>} />
+
+**Para explorar**
+
+1. Pon el escenario tipo Perondi (0.20 frente a 0.03, 80 %) y compara la potencia exacta de Fisher y de Boschloo con el n que da la fórmula.
+2. Baja p₂ a 0.01: ¿la fórmula se queda corta o se pasa frente a la potencia exacta?
+3. Añade un 20 % de pérdidas y verifica que el n se multiplica por 1/(1 − 0.2) = 1.25.
 
 <RCell
   id="05/tamano-muestral"
@@ -311,6 +323,12 @@ sumaba z_β a z_α como si fuera un cálculo de potencia y confundía L con
 la semiamplitud; se muestra corregida, no como modelo a seguir.
 
 <PrecisionSampleSizeExplorer title={<>L es aleatoria: distribución exacta y n con P(L ≤ L₀) garantizada</>} />
+
+**Para explorar**
+
+1. Calcula el n con la fórmula clásica y lee su garantía real: ¿qué fracción de los estudios lograría el ancho prometido?
+2. Exige una garantía del 90 % y anota cuánto más grande sale el n. Ese es el costo de pedir precisión con probabilidad, no en promedio.
+3. Activa la prior Beta con un p incierto y compara con el n calculado en un único p optimista.
 
 <Callout type="note" title="El impacto de exigir precisión">
 Rothman &amp; Greenland (2018), en *Epidemiology*, abogan por dimensionar
@@ -430,8 +448,9 @@ quit;`} />
   eventLabel="muerte evitada"
   title={<>¿Recomendar lidocaína? El umbral ni siquiera entra en juego</>}
   note={<>La reducción absoluta es <em>negativa</em> con IC completo del lado
-  del daño (NNH ≈ <Claim k="m5.lidocaina.nnh" d={0} />): la lidocaína mata a
-  ~<Claim k="m5.lidocaina.rd" d={1} pct /> de cada 100 tratados. Ningún
+  del daño (NNH ≈ <Claim k="m5.lidocaina.nnh" d={0} />): la lidocaína se
+  asocia a ~<Claim k="m5.lidocaina.rd" d={1} pct /> muertes adicionales por
+  cada 100 tratados (IC 95%: 0.4 a 5.5). Ningún
   ajuste de costos puede rescatar una intervención dañina; el panel lo
   muestra.</>}
 />

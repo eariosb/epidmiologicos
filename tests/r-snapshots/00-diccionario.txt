@@ -1,6 +1,7 @@
 0   1
 128   9
-los '1' son censurados: sobrevivieron al seguimienton
+los '1' son censurados: vivos en el ultimo contacto o perdidos
+
  0 10
 97 40
           Treatment

@@ -49,6 +49,11 @@ export function BlackboardToolbar({ canvasRef, vertical }: Readonly<BlackboardTo
     }
   };
 
+  // Without a configured LLM provider the assistant only emits canned mock
+  // output into the collapsed drawer — the quick actions look dead. Offer
+  // them once a real provider is selected in Settings.
+  const assistantEnabled = state.settings.llmProvider !== 'none';
+
   return (
     <div
       className={
@@ -57,19 +62,23 @@ export function BlackboardToolbar({ canvasRef, vertical }: Readonly<BlackboardTo
           : 'relative flex items-center gap-1 border-b border-ink-200 bg-ink-50 px-2 py-1.5'
       }
     >
-      <ToolbarButton onClick={() => handleAsk('ask')} title="Preguntar a la IA">
-        <Sparkles aria-hidden className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => handleAsk('explain-selection')} title="Explicar selección">
-        <Search aria-hidden className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => handleAsk('generate-r')} title="Generar código R">
-        <Play aria-hidden className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => handleAsk('plot-r')} title="Graficar en R">
-        <ChartColumn aria-hidden className="h-4 w-4" />
-      </ToolbarButton>
-      <div className={vertical ? 'my-0.5 h-px w-6 bg-ink-300' : 'mx-1 h-4 w-px bg-ink-300'} />
+      {assistantEnabled && (
+        <>
+          <ToolbarButton onClick={() => handleAsk('ask')} title="Preguntar a la IA">
+            <Sparkles aria-hidden className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => handleAsk('explain-selection')} title="Explicar selección">
+            <Search aria-hidden className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => handleAsk('generate-r')} title="Generar código R">
+            <Play aria-hidden className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => handleAsk('plot-r')} title="Graficar en R">
+            <ChartColumn aria-hidden className="h-4 w-4" />
+          </ToolbarButton>
+          <div className={vertical ? 'my-0.5 h-px w-6 bg-ink-300' : 'mx-1 h-4 w-px bg-ink-300'} />
+        </>
+      )}
       <ToolbarButton onClick={togglePopover('calc')} title="Calculadora">
         <Calculator aria-hidden className="h-4 w-4" />
       </ToolbarButton>

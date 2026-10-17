@@ -1,4 +1,14 @@
-log-rank terapia: p = 0.93 nlog-rank celula:  p = 1.3e-05 n
+log-rank terapia: p = 0.93
+log-rank celula:  p = 1.3e-05
+HR test vs standard (marginal): 1.02 (IC95% 0.71-1.45)
+
            adeno large small squamous
   standard     9    15    30       15
   test        18    12    18       20
+desbalance terapia x celula: p = 0.07 (Fisher)
+log-rank estratificado por celula: p = 0.4
+  adeno     HR 1.23 (0.53-2.87)
+  large     HR 1.54 (0.69-3.41)
+  small     HR 1.65 (0.86-3.16)
+  squamous  HR 0.54 (0.25-1.18)
+interaccion terapia x celula: p = 0.042 (razon de verosimilitud, 3 gl; exploratorio)

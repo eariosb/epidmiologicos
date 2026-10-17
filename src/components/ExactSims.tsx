@@ -730,7 +730,7 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
         es de la escala OR, no de los datos.
       </SimGuide>
       <p className={NOTE}>
-        Estimador corregido θ̂_c = log((a+c)(d+c)/((b+c)(c+c))); ECM calculado por
+        Estimador corregido θ̂_c = log[(x₁+c)(n₂−x₂+c) / ((n₁−x₁+c)(x₂+c))]; ECM calculado por
         enumeración exacta evaluado en (p̂₁, p̂₂) de tu tabla. Un c óptimo en un punto no
         es una recomendación universal: depende del escenario verdadero, que es lo que
         se estima.

@@ -1,11 +1,12 @@
 'use client';
 
-import { Camera, Sigma, Grid3x3, StickyNote, CircleHelp, Activity } from 'lucide-react';
+import { Camera, Sigma, Grid3x3, Table, StickyNote, CircleHelp, Activity } from 'lucide-react';
 import { useBlackboardContext } from '@cursos/blackboard';
 import type { BlackboardCanvasRef } from '@cursos/blackboard';
 import { CaptureGallery } from './CaptureGallery';
 import { FormulaPalette } from './FormulaPalette';
 import { MatrixBuilder } from './MatrixBuilder';
+import { TableBuilder } from './TableBuilder';
 import { NotesPanel } from './NotesPanel';
 import { QuestionsPanel } from './QuestionsPanel';
 import { DiagnosticsPanel } from './DiagnosticsPanel';
@@ -14,6 +15,7 @@ export const TOOL_TABS = [
   { id: 'capturas', label: 'Capturas', Icon: Camera },
   { id: 'formulas', label: 'Fórmulas', Icon: Sigma },
   { id: 'matrices', label: 'Matrices', Icon: Grid3x3 },
+  { id: 'tablas', label: 'Tablas', Icon: Table },
   { id: 'notas', label: 'Notas', Icon: StickyNote },
   { id: 'preguntas', label: 'Preguntas', Icon: CircleHelp },
   { id: 'diagnostico', label: 'Diagnóstico', Icon: Activity },
@@ -43,6 +45,7 @@ export function ToolsDrawer({ canvasRef, active, open }: ToolsDrawerProps) {
     capturas: <CaptureGallery />,
     formulas: <FormulaPalette />,
     matrices: <MatrixBuilder canvasRef={canvasRef} />,
+    tablas: <TableBuilder canvasRef={canvasRef} />,
     notas: <NotesPanel moduleSlug={moduleSlug} moduleTitle={moduleTitle} />,
     preguntas: <QuestionsPanel />,
     diagnostico: <DiagnosticsPanel />,

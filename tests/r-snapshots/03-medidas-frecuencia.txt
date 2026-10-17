@@ -3,6 +3,7 @@ persona-anos       = 4600
 tasa de incidencia = 8.70 por 1000 p-a
 
 El riesgo usa n=1000; la tasa usa pt=4600.
-Con seguimiento variable, solo la tasa es honesta.
+riesgo actuarial = 0.0426 | desde la tasa = 0.0425 | ingenuo = 0.0400
+Con seguimiento incompleto, el riesgo se estima; no basta dividir.
 
-P aprox = 75.0%   P exacta = 42.9%
+P aprox = 75.0%   P en estado estacionario = 42.9%

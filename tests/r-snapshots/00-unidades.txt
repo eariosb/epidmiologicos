@@ -5,4 +5,7 @@ base filas               unidad
 4          ddimer   135         conjunto 1:c
 5           recid   432 persona (52 semanas)
 6        leucemia    42              persona
-filas: 666  | sets (la unidad real): 111 n
+filas: 666  | sets (la unidad real): 111
+                           OR EE(log OR)
+666 filas independientes 0.69       0.21
+111 sets (condicional)   0.52       0.28

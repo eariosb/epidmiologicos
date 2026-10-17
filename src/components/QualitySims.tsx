@@ -283,9 +283,9 @@ export function Table1Builder({
       )}
 
       <SimGuide>
-        <li>Agrupa por <em>fin</em> (aleatorizado): las diferencias estandarizadas deben rondar 0 — así se ve la aleatorización cumpliendo su promesa.</li>
-        <li>Agrupa por <em>arrest</em> (el desenlace): las filas que se encienden son los confusores que tendrás que ajustar.</li>
-        <li>En VALUNG agrupa por <em>Therapy</em> y mira qué variables quedan desequilibradas entre los dos brazos.</li>
+        <ul><li>Agrupa por <em>fin</em> (aleatorizado): las diferencias estandarizadas deben rondar 0 — así se ve la aleatorización cumpliendo su promesa.</li>
+        <li>Agrupa por <em>arrest</em> (el desenlace): las filas que se encienden predicen el desenlace. Para confundir, una variable tiene que hacer eso <em>y además</em> diferir entre los grupos de exposición; por eso la tabla que diagnostica confusión es la que agrupa por la exposición.</li>
+        <li>En VALUNG agrupa por <em>Therapy</em> y mira qué variables quedan desequilibradas entre los dos brazos.</li></ul>
       </SimGuide>
     </div>
   );
@@ -310,7 +310,7 @@ const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[
     label: 'valung.csv',
     checks: (rows) => {
       const kps = rows.map((r) => num(r.Kps)).filter(Number.isFinite);
-      const mult10 = kps.filter((k) => k % 10 === 0).length / kps.length;
+      const offGrid = kps.filter((k) => k % 10 !== 0).sort((a, b) => a - b);
       const st = rows.map((r) => num(r.SurvTime)).filter(Number.isFinite);
       const sorted = [...st].sort((a, b) => a - b);
       const q = (p: number) => sorted[Math.floor(p * (sorted.length - 1))];
@@ -323,10 +323,10 @@ const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[
         {
           dimension: 'Conformidad',
           label: `Dominio de Prior: valores {${[...priors].sort().join(', ')}}`,
-          detail: 'El protocolo usa 0/10, no 0/1 — quien espere binario lo recodifica mal.',
+          detail: 'Indicador binario codificado 0/10 por el protocolo: usado como número, su coeficiente queda en unidades de 10.',
           severity: 'warn',
           expected: 'documentado',
-          porque: 'Es una convención del protocolo, no un dato errado: se documenta para no recodificarla como binaria.',
+          porque: 'Es una convención del protocolo, no un dato errado: se documenta y se recodifica a 0/1 o factor antes de modelar.',
         },
         {
           dimension: 'Conformidad',
@@ -345,17 +345,17 @@ const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[
           porque: 'La revisión salió limpia: no hay nada que sospechar ni convención que documentar.',
         },
         {
-          dimension: 'Plausibilidad',
-          label: `${(mult10 * 100).toFixed(1)}% de Kps en múltiplos de 10`,
-          detail: 'Preferencia de dígito: el Karnofsky se anotaba redondeado (75, 85, 99 son los únicos no redondos).',
+          dimension: 'Conformidad',
+          label: `${offGrid.length} valores de Kps fuera de la escala de 10 en 10 (${offGrid.join(', ')})`,
+          detail: 'Karnofsky es una escala ordinal de 10 en 10 por diseño: estos valores no existen en ella y se llevan a la fuente.',
           severity: 'warn',
           expected: 'documentado',
-          porque: 'El redondeo es práctica clínica conocida: se documenta como rasgo de la medición, no se corrige.',
+          porque: 'Son pocos y no cambian un análisis ordinal, pero no pertenecen a la escala: se documentan con la decisión tomada (conservar o asignar al nivel vecino).',
         },
         {
           dimension: 'Plausibilidad',
           label: `${outliers.length} valores de SurvTime sobre ${fmt(upper, 0)} días`,
-          detail: 'El boxplot los marca, pero 999 y 991 son seguimientos reales verificados contra la fuente: se marcan, se verifican, no se borran.',
+          detail: 'El boxplot los marca, y 999 parece un código de faltante; pero 999 y 991 son muertes observadas (censor = 0) que la fuente publicada confirma: se marcan, se verifican, no se borran.',
           severity: 'warn',
           expected: 'verificado',
           porque: 'Sí eran sospechosos — hasta verificarlos contra la fuente. Una vez confirmados, el veredicto es verificado.',
@@ -551,9 +551,9 @@ export function DataQualityPanel({
       </p>
 
       <SimGuide>
-        <li>Los hallazgos se calculan del archivo real al cargar: <code>{spec.label}</code> no viene con el informe hecho.</li>
+        <ul><li>Los hallazgos se calculan del archivo real al cargar: <code>{spec.label}</code> no viene con el informe hecho.</li>
         <li>Lee la evidencia antes de marcar: «sospechoso» solo aplica mientras la verificación está pendiente — el detalle del hallazgo suele ya resolverla.</li>
-        <li>Cambia a la otra base y repite la auditoría: el veredicto correcto cambia con el diseño, no con la intuición.</li>
+        <li>Cambia a la otra base y repite la auditoría: el veredicto correcto cambia con el diseño, no con la intuición.</li></ul>
       </SimGuide>
     </div>
   );

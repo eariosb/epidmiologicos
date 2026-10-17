@@ -1,0 +1,407 @@
+{
+ "00/atipicos": {
+  "hash": "eeaa3579",
+  "console": "boxplot marca 12 valores: 340, 357, 378, 384, 389, 392, 411, 467, 553, 587, 991, 999\n   Therapy     Cell SurvTime censor Kps\n70    test squamous      999      0  90\n75    test squamous      991      0  70\n  50%   75%   90%   95%  100%\n 80.0 144.0 284.6 389.6 999.0",
+  "plots": [
+   "/precomputed/00-atipicos/plot-1.png"
+  ]
+ },
+ "00/condicionar": {
+  "hash": "75f87ebe",
+  "console": "    control\ncaso  0  1\n   0 20  7\n   1 20  3\ndiscordantes: 20 y 7 | OR pareado = 20 / 7 = 2.86 | McNemar exacto: p = 0.019\nsets informativos: 73 de 111",
+  "plots": [
+   "/precomputed/00-condicionar/plot-1.png"
+  ]
+ },
+ "00/diccionario": {
+  "hash": "c5a9b03d",
+  "console": "  0   1\n128   9\nlos '1' son censurados: vivos en el ultimo contacto o perdidos\n\n 0 10\n97 40\n          Treatment\nTherapy     0  1\n  standard 69  0\n  test      0 68",
+  "plots": [
+   "/precomputed/00-diccionario/plot-1.png"
+  ]
+ },
+ "00/disciplina": {
+  "hash": "bce807e0",
+  "console": "                     estrategia tasa_pct ee_pct\n      A. 20 subgrupos, sin plan     62.8   1.53\n  B. 1 prueba, 8 rutas sin plan     16.1   1.16\n C. 20 declarados, sin corregir     62.8   1.53\n   D. 20 declarados, Bonferroni      4.4   0.65\n          E. 1 prueba declarada      4.8   0.15\nTeorico: 20 sin corregir 64.2% | Bonferroni 4.9%",
+  "plots": [
+   "/precomputed/00-disciplina/plot-1.png"
+  ]
+ },
+ "00/distribuciones": {
+  "hash": "3df0cca1",
+  "console": "SurvTime observado: media 121.6 | mediana 80 | MAD 87.5 (sin escalar: 59)\nKaplan-Meier: mediana 80 IC95% 52 - 105 | media restringida 132.8\nKps fuera de la escala: 75 75 85 99 (4 de 137)\nprio: media 2.98 | varianza 8.39 | var/media 2.81\ndispersion ajustada por covariables: 2.34",
+  "plots": [
+   "/precomputed/00-distribuciones/plot-1.png"
+  ]
+ },
+ "00/faltantes": {
+  "hash": "04026486",
+  "console": "filas donde los NA empiezan justo tras 'week': 432 de 432\nweek de los no arrestados: 53\npersona-semanas: recortando a 52 = 19809 | sumando la etiqueta 53 = 20127",
+  "plots": [
+   "/precomputed/00-faltantes/plot-1.png"
+  ]
+ },
+ "00/grupos": {
+  "hash": "3665ba9c",
+  "console": "",
+  "plots": [
+   "/precomputed/00-grupos/plot-1.png"
+  ]
+ },
+ "00/inversion": {
+  "hash": "b677131b",
+  "console": "fraccion de casos en el archivo: 0.167\n    vacunado\ncaso   0   1\n   0 219 336\n   1  54  57\nP(vacunado | caso)   = 0.514\nP(vacunado | control)= 0.605\nOR crudo (sin respetar el pareo) = 0.69",
+  "plots": [
+   "/precomputed/00-inversion/plot-1.png"
+  ]
+ },
+ "00/mapa-dist": {
+  "hash": "3c01199d",
+  "console": "",
+  "plots": [
+   "/precomputed/00-mapa-dist/plot-1.png"
+  ]
+ },
+ "00/marginal": {
+  "hash": "da746e0d",
+  "console": "log-rank terapia: p = 0.93\nlog-rank celula:  p = 1.3e-05\nHR test vs standard (marginal): 1.02 (IC95% 0.71-1.45)\n\n           adeno large small squamous\n  standard     9    15    30       15\n  test        18    12    18       20\ndesbalance terapia x celula: p = 0.07 (Fisher)\nlog-rank estratificado por celula: p = 0.4\n  adeno     HR 1.23 (0.53-2.87)\n  large     HR 1.54 (0.69-3.41)\n  small     HR 1.65 (0.86-3.16)\n  squamous  HR 0.54 (0.25-1.18)\ninteraccion terapia x celula: p = 0.042 (razon de verosimilitud, 3 gl; exploratorio)",
+  "plots": [
+   "/precomputed/00-marginal/plot-1.png"
+  ]
+ },
+ "00/test-potencia": {
+  "hash": "b89ec7f2",
+  "console": "Bajo H0: rechaza 4.1% | banda Monte Carlo de un test exacto al 5%: 4.0-6.0%\nEfecto 0.5 DE: potencia empirica 26.4% (EE 1.0 pp) | analitica 26.2%\nEfecto 1.0 DE: potencia empirica 75.0% (EE 1.0 pp) | analitica 75.3%",
+  "plots": []
+ },
+ "00/unidades": {
+  "hash": "53f8d594",
+  "console": "             base filas               unidad\n1          valung   137              persona\n2 caso_control_11    50               pareja\n3             bcg   666         conjunto 1:5\n4          ddimer   135         conjunto 1:c\n5           recid   432 persona (52 semanas)\n6        leucemia    42              persona\nfilas: 666  | sets (la unidad real): 111\n                           OR EE(log OR)\n666 filas independientes 0.69       0.21\n111 sets (condicional)   0.52       0.28",
+  "plots": [
+   "/precomputed/00-unidades/plot-1.png"
+  ]
+ },
+ "00/vigilancia": {
+  "hash": "3f4a18b8",
+  "console": "pico real de la epidemia: semana 28\nsemanas 21 a 24 | notificado al corte: 233 215 161 51 | ocurridos: 273 330 384 372\npico aparente al corte: semana 20",
+  "plots": [
+   "/precomputed/00-vigilancia/plot-1.png"
+  ]
+ },
+ "01/snow-2x2": {
+  "hash": "d419aa0a",
+  "console": "                  agua  casas muertes por_10000\n1 Southwark & Vauxhall  40046    1263       315\n2              Lambeth  26107      98        38\n3     Resto de Londres 256423    1422        55\n\nRazon de tasas = 8.4 | IC95% exacto [6.8, 10.4] | log-normal [6.8, 10.3]\nPrimeras 4 semanas: razon = 13.3 | IC95% exacto [7.8, 24.7]\nMismo denominador, distinta ventana: el 'factor 14' es el inicio de la epidemia.",
+  "plots": []
+ },
+ "02/ciudad": {
+  "hash": "b43d216f",
+  "console": "RR crudo = 3.85  (verdad causal dentro de C: 3.00)\nRR en C=0: 3.00   RR en C=1: 3.00\nP(E) en controles de poblacion: 0.21\nP(E) en controles hospitalarios: 0.75",
+  "plots": []
+ },
+ "02/tres-disenos": {
+  "hash": "40541b56",
+  "console": "Verdad poblacional: RR = 4.03  OR = 4.80\n\nCohorte:       riesgos 0.210 vs 0.053 -> RR = 3.98, RD = 0.157\nCasos-control: solo OR = 4.59 (riesgo no estimable)\nTransversal:   prevalencia y OR de prevalencia = 4.80\n\nEl OR difiere del RR porque la enfermedad no es tan rara (0.20):\nen la practica eso se reporta declarando el diseno, no 'corrigiendo'.",
+  "plots": []
+ },
+ "03/medidas-frecuencia": {
+  "hash": "7dc5335e",
+  "console": "riesgo 5-anos      = 0.040 (probabilidad)\npersona-anos       = 4600\ntasa de incidencia = 8.70 por 1000 p-a\n\nEl riesgo usa n=1000; la tasa usa pt=4600.\nriesgo actuarial = 0.0426 | desde la tasa = 0.0425 | ingenuo = 0.0400\nCon seguimiento incompleto, el riesgo se estima; no basta dividir.\n\nP aprox = 75.0%   P en estado estacionario = 42.9%",
+  "plots": []
+ },
+ "03/medidas-ic": {
+  "hash": "803823bb",
+  "console": "prevalencia = 0.1125, IC95% (0.083, 0.148)\ntasa = 1.41 por 1000 p-a, IC95% (0.73, 2.47)\n\nRegla del curso: toda medida se reporta con su IC;\nun estimador sin intervalo es un numero incompleto.",
+  "plots": []
+ },
+ "03/pr-vs-or": {
+  "hash": "714712fb",
+  "console": "    p0   p1 RP       OR exceso\n1 0.01 0.02  2 2.020408    1.0\n2 0.10 0.20  2 2.250000   12.5\n3 0.30 0.60  2 3.500000   75.0\nCon prevalencia 30%, OR = 3.5 mientras la razon de prevalencias es 2",
+  "plots": []
+ },
+ "03/prueba-diagnostica": {
+  "hash": "74eaa940",
+  "console": "   prev   VPP   VPN\n1 0.005 0.087 1.000\n2 0.020 0.279 0.999\n3 0.200 0.826 0.987\nLR+ = 19.0   LR- = 0.053\nVPP via odds*LR+ = 0.279",
+  "plots": []
+ },
+ "03/tasa-ataque": {
+  "hash": "20ce2482",
+  "console": "tasa de ataque si comio   = 79.6%\ntasa de ataque no comio   = 14.3%\nrazon de tasas de ataque  = 5.6\ndiferencia                = 65.3 puntos\nIC95% (log-normal) de la razon: 1.9 a 16.0",
+  "plots": []
+ },
+ "04/fragilidad-ic": {
+  "hash": "dde1b311",
+  "console": "Woolf:      OR = 2.39  IC95% [0.91, 6.28]\nFisher:     OR = 2.38  IC95% [0.85, 7.66]\nJeffreys:   OR ~ 2.36  IC95% [0.94, 6.53]\n\nCobertura Woolf: 96.8%  |  muestras con celda cero: 0.4%",
+  "plots": []
+ },
+ "04/molinero-tres-disenos": {
+  "hash": "f9f1dfb4",
+  "console": "natural       RR=2.57 OR=2.63 RD=+0.0235 | chi2=4.0 p=0.044\ncohorte       RR=2.33 OR=2.39 RD=+0.0220 | chi2=3.3 p=0.070\ncaso-control  RR=1.61 OR=2.63 RD=+0.2371 | chi2=40.8 p=0.000",
+  "plots": []
+ },
+ "04/tabla-deporte": {
+  "hash": "d4fa7dfa",
+  "console": "       depresion\ndeporte si no\n     si 38  9\n     no 31 22\nriesgo expuestos   = 0.809\nriesgo no expuest. = 0.585\nRR  = 1.382  IC95% (1.059, 1.804)\nOR  = 2.996  IC95% (1.207, 7.437)\nRD  = 0.224\n\n\tPearson's Chi-squared test\n\ndata:  tab\nX-squared = 5.8227, df = 1, p-value = 0.01582\n\n\n\tPearson's Chi-squared test with Yates' continuity correction\n\ndata:  tab\nX-squared = 4.8243, df = 1, p-value = 0.02806",
+  "plots": []
+ },
+ "05/decision-lidocaina": {
+  "hash": "417eaa9b",
+  "console": "ARR combinada = -2.94 pp  IC95% (-5.51, -0.38) pp\nARR < 0: la lidocaina DANA. NNH = 34 (IC 18 a 261)\nNingun ensayo solo era significativo; el acumulado si.",
+  "plots": []
+ },
+ "05/precision-L": {
+  "hash": "39c03eb8",
+  "console": "E[L] = 0.1665    P(L <= 0.12) = 0.034\nFraccion de estudios cuyo IC supera la longitud esperada:\n  P(L > E[L]) = 0.569  (no es 0.5: la distribucion es discreta y asimetrica)\nn clasico = 97    n con garantia 90% = 126",
+  "plots": []
+ },
+ "05/riesgo-atribuible": {
+  "hash": "233d8843",
+  "console": "    bpeso\nfuma si  no\n  si 30  70\n  no 20 180\nr1=0.300  r0=0.100  RR=3.00  OR=3.86\nPRA  = 66.7%  (fraccion del riesgo de fumadoras debida a fumar)\nPRAP = 40.0%  (fraccion del bajo peso poblacional atribuible)\nNNH  = 5  -> cada 5 fumadoras, ~1 bajo peso de mas (exposicion danina)\n\nIC95% RD = (0.101, 0.299) -> NNH (3.3, 9.9)\nPRAP cohorte = 0.400  IC Walter (0.233, 0.594)\nPRAP (CC) = 0.444  IC95% KK (0.268, 0.637)\nPRA en CC ((OR-1)/OR) = 0.741",
+  "plots": []
+ },
+ "05/tamano-muestral": {
+  "hash": "09e7127e",
+  "console": "     Two-sample comparison of proportions power calculation\n\n              n = 54.08752\n             p1 = 0.2\n             p2 = 0.03\n      sig.level = 0.05\n          power = 0.8\n    alternative = two.sided\n\nNOTE: n is number in *each* group\n\nn por grupo (Fleiss) = 55\nn ajustado (20% perdidas) = 68",
+  "plots": []
+ },
+ "06/fisher-vs-boschloo": {
+  "hash": "9df2d85c",
+  "console": "Fisher = 0.0544   mid-p = 0.0297\nz agrupada = 0.0281   Boschloo = 0.0385\nEl veredicto a alpha=0.05 depende del procedimiento.",
+  "plots": []
+ },
+ "06/ic-multinomial": {
+  "hash": "33cbc182",
+  "console": "           serotipo1 serotipo2 serotipo3 serotipo4\nTCL lo         0.441     0.099     0.072     0.004\nTCL hi         0.692     0.301     0.261     0.130\nQH lo          0.391     0.094     0.073     0.018\nQH hi          0.727     0.375     0.337     0.215\nGoodman lo     0.408     0.102     0.079     0.021\nGoodman hi     0.713     0.354     0.317     0.194",
+  "plots": []
+ },
+ "06/metodos-ic": {
+  "hash": "324c5800",
+  "console": "        Wald Wilson AgrestiCoull Jeffreys ClopperPearson Verosimilitud\n[1,] -0.0226 0.0185       0.0080   0.0141         0.0082        0.0114\n[2,]  0.1559 0.2132       0.2237   0.1971         0.2207        0.1920\nWald es inadmisible si algun limite cae fuera de [0,1]\nCobertura minima en p: Wald = 0.14   Wilson = 0.86 (nominal .95)",
+  "plots": []
+ },
+ "06/tamano-y-potencia": {
+  "hash": "7b337467",
+  "console": "Tamano real maximo: Fisher = 0.030  Boschloo = 0.047 (alpha=0.05)\nPotencia en (0.20, 0.03): Fisher = 0.433  Boschloo = 0.549",
+  "plots": []
+ },
+ "07/confusion-dos-caras": {
+  "hash": "9479d4cb",
+  "console": "Fabricacion:\n  estratos: 1 y 1  -> agrupado: 18.16\nEnmascaramiento:\n  estratos: 2.93 y 32.85  -> agrupado: 1",
+  "plots": []
+ },
+ "07/no-colapsable": {
+  "hash": "1bafc957",
+  "console": "OR: estrato 0 = 9.0 | estrato 1 = 9.0 | crudo = 4.7\nRR: estrato 0 = 5.00 | estrato 1 = 1.55 | crudo = 2.04 (entre ambos)",
+  "plots": []
+ },
+ "08/decision-vivienda": {
+  "hash": "2fb1b08b",
+  "console": "  vivienda chd fuma    n\n1 precaria  si   no   40\n2   propia  si   no   92\n3 precaria  no   no  360\n4   propia  no   no 1108\n5 precaria  si   si   96\n6   propia  si   si   52\n7 precaria  no   si  504\n8   propia  no   si  348\nOR crudo    = 1.59\nOR no-fuma  = 1.34\nOR fuma     = 1.27\n\n\tMantel-Haenszel chi-squared test without continuity correction\n\ndata:  arr\nMantel-Haenszel X-squared = 3.8034, df = 1, p-value = 0.05115\nalternative hypothesis: true common odds ratio is not equal to 1\n95 percent confidence interval:\n 0.997781 1.700854\nsample estimates:\ncommon odds ratio\n          1.30272\n\n\nRD estratos: 0.023 y 0.030\nRD combinada = 0.026 [-0.001, 0.052] -> NNT ~ 39",
+  "plots": []
+ },
+ "08/mh-clasico": {
+  "hash": "1f79ba3e",
+  "console": "\tMantel-Haenszel chi-squared test without continuity correction\n\ndata:  arr3\nMantel-Haenszel X-squared = 56, df = 1, p-value = 7.248e-14\nalternative hypothesis: true common odds ratio is not equal to 1\n95 percent confidence interval:\n 3.642889 9.882266\nsample estimates:\ncommon odds ratio\n                6\n\n\nIC95% del OR_MH: (3.64, 9.88)\n\nOR crudo    = 9.63\nOR jovenes  = 6\nOR mayores  = 6\nOR estandar = 4.891\n-> Estratos iguales entre si (OR = 6) y distintos del crudo (9.6):\n   la edad confundia la asociacion; el OR_MH = 6 la recupera.\n   Pero el estandarizado da ~4.9, no 6: la diferencia entre dos\n   ajustes legitimos es la no colapsabilidad del OR (modulo 7).",
+  "plots": []
+ },
+ "09/smr-estandarizacion": {
+  "hash": "b914578a",
+  "console": "esperadas = 18.4  SMR = 1.630\nIC exacto (Poisson): (1.100, 2.328)\nIC de Byar:          (1.100, 2.328)\nCon O = 3, E = 1.5: exacto (0.41, 5.84) | Byar (0.40, 5.84)\nSMR > 1 con IC que no toca 1: el exceso no se explica por azar;\nfalta descartar el efecto del trabajador sano y la confusion residual.\n\nrazon de tasas por edad: 2 1.5 1.4\nrazon de tasas ajustadas: estandar joven 1.60 | estandar viejo 1.44",
+  "plots": []
+ },
+ "10/asbesto-escala": {
+  "hash": "89f74315",
+  "console": "ninguno asbesto  tabaco   ambos\n   1.00    5.17   10.85   53.24\nMultiplicativa: RR conjunto = 53.2 | producto = 56.1 | razon = 0.95\nAditiva: exceso conjunto = 590 | suma de excesos = 158 por 100 000\nRERI = 38.2 | AP = 0.72 | S = 3.7",
+  "plots": []
+ },
+ "10/breslow-day": {
+  "hash": "41985796",
+  "console": "  OR_1  OR_2 OR_MH BD_Tarone     p\nA    6 6.000 6.000     0.000 1.000\nB    6 0.028 0.625   133.960 0.000\nC    6 3.333 4.710     1.329 0.249",
+  "plots": []
+ },
+ "10/cuatro-cuadrantes": {
+  "hash": "e79c9cf9",
+  "console": "ni confusion ni interaccion RR estratos = 2.00 y 2.00 | crudo = 2.00 | MH = 2.00\nsolo confusion             RR estratos = 2.00 y 2.00 | crudo = 4.25 | MH = 2.00\nsolo interaccion           RR estratos = 1.00 y 2.00 | crudo = 1.80 | MH = 1.80\nconfusion e interaccion    RR estratos = 1.00 y 2.00 | crudo = 4.12 | MH = 1.80",
+  "plots": []
+ },
+ "10/reri": {
+  "hash": "031a5f89",
+  "console": "  ao fvl casos controles        OR\n1  0   0    36       100  1.000000\n2  1   0    84        63  3.703704\n3  0   1    10         4  6.944444\n4  1   1    25         2 34.722222\nRazon de OR (multiplicativa) = 1.35, IC95% 0.20 a 9.17, p = 0.76\nRERI = 25.1, IC95% -26.4 a 76.6",
+  "plots": []
+ },
+ "10/ruido-potencia": {
+  "hash": "66480c88",
+  "console": "            n=50 n=100 n=200 n=400 n=800\nefecto      0.25  0.48  0.80  0.98  1.00\ninteraccion 0.16  0.31  0.51  0.81  0.98",
+  "plots": []
+ },
+ "11/recid-protocolo": {
+  "hash": "ff952d1c",
+  "console": "personas: 432\narrestados: 114  | no arrestados: 318\n\nsemana del evento (arrestados): min 1  max 52\nweek en no arrestados: 53\n\nNA en emp por grupo:\n  arrestados: 2655 celdas\n  no arrestados: 0 celdas\n\npersonas-semana (week tal cual):   20127\npersonas-semana (53 -> 52):         19809\nla diferencia son 318 semanas fantasma: una por cada no arrestado",
+  "plots": []
+ },
+ "11/tabla-vida": {
+  "hash": "66a40566",
+  "console": "  intervalo   n  d  c n_eff      q      S\n1       0-1 500 30 40 480.0 0.0625 0.9375\n2       1-2 430 25 25 417.5 0.0599 0.8814\n3       2-3 380 20 30 365.0 0.0548 0.8331\n4       3-4 330 15 25 317.5 0.0472 0.7937\n5       4-5 290 12 30 275.0 0.0436 0.7591\n\nS(5 anos) = 0.759 -> riesgo acumulado = 24.1%",
+  "plots": []
+ },
+ "12/decision-6mp": {
+  "hash": "2103fd09",
+  "console": "Call: survfit(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n                grupo=0\n        time       n.risk      n.event     survival      std.err lower 95% CI\n          23            1           21            0          NaN           NA\nupper 95% CI\n          NA\n\n                grupo=1\n        time       n.risk      n.event     survival      std.err lower 95% CI\n      23.000        6.000        9.000        0.448        0.135        0.249\nupper 95% CI\n       0.807\n\nriesgo recaida 23sem: placebo = 1.00  6-MP = 0.55\nARR = 0.45 [0.09, 0.81]  ->  NNT(23 sem) = 2.2\nCall:\nsurvdiff(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n         N Observed Expected (O-E)^2/E (O-E)^2/V\ngrupo=0 21       21     10.7      9.77      16.8\ngrupo=1 21        9     19.3      5.46      16.8\n\n Chisq= 16.8  on 1 degrees of freedom, p= 4e-05\n\nEl NNT horizonte-fijo usa S(t): es el puente KM -> decision.",
+  "plots": []
+ },
+ "12/km-leucemia": {
+  "hash": "3b82c3ed",
+  "console": "  grupo tiempo status\n1     1      6      1\n2     1      6      1\n3     1      6      1\n4     1      7      1\n...\n\n     0  1\n  0  0 21\n  1 12  9\n    t          S\n1   0 1.00000000\n2   1 0.90476190\n3   2 0.80952381\n4   3 0.76190476\n5   4 0.66666667\n6   5 0.57142857\n7   8 0.38095238\n8  11 0.28571429\n9  12 0.19047619\n10 15 0.14285714\n11 17 0.09523810\n12 22 0.04761905\n13 23 0.00000000\n   t         S\n1  0 1.0000000\n2  6 0.8571429\n3  7 0.8067227\n4 10 0.7529412\n5 13 0.6901961\n6 16 0.6274510\n7 22 0.5378151\n8 23 0.4481793\nCall: survfit(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n                grupo=0\n time n.risk n.event survival std.err lower 95% CI upper 95% CI\n    1     21       2   0.9048  0.0641      0.78754        1.000\n    2     19       2   0.8095  0.0857      0.65785        0.996\n    3     17       1   0.7619  0.0929      0.59988        0.968\n    4     16       2   0.6667  0.1029      0.49268        0.902\n    5     14       2   0.5714  0.1080      0.39455        0.828\n    8     12       4   0.3810  0.1060      0.22085        0.657\n   11      8       2   0.2857  0.0986      0.14529        0.562\n   12      6       2   0.1905  0.0857      0.07887        0.460\n   15      4       1   0.1429  0.0764      0.05011        0.407\n   17      3       1   0.0952  0.0641      0.02549        0.356\n   22      2       1   0.0476  0.0465      0.00703        0.322\n   23      1       1   0.0000     NaN           NA           NA\n\n                grupo=1\n time n.risk n.event survival std.err lower 95% CI upper 95% CI\n    6     21       3    0.857  0.0764        0.720        1.000\n    7     17       1    0.807  0.0869        0.653        0.996\n   10     15       1    0.753  0.0963        0.586        0.968\n   13     12       1    0.690  0.1068        0.510        0.935\n   16     11       1    0.627  0.1141        0.439        0.896\n   22      7       1    0.538  0.1282        0.337        0.858\n   23      6       1    0.448  0.1346        0.249        0.807",
+  "plots": [
+   "/precomputed/12-km-leucemia/plot-1.png"
+  ]
+ },
+ "12/logrank": {
+  "hash": "12d7036f",
+  "console": "Call:\nsurvdiff(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n         N Observed Expected (O-E)^2/E (O-E)^2/V\ngrupo=0 21       21     10.7      9.77      16.8\ngrupo=1 21        9     19.3      5.46      16.8\n\n Chisq= 16.8  on 1 degrees of freedom, p= 4e-05\nCall: survfit(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n         n events median 0.95LCL 0.95UCL\ngrupo=0 21     21      8       4      12\ngrupo=1 21      9     23      16      NA",
+  "plots": []
+ },
+ "13/cox-recid": {
+  "hash": "dd62d954",
+  "console": " [1] \"week\"   \"arrest\" \"fin\"    \"age\"    \"race\"   \"wexp\"   \"mar\"    \"paro\"\n [9] \"prio\"   \"educ\"\n\n  0   1\n318 114\nCall:\ncoxph(formula = Surv(week, arrest) ~ fin + age + race + wexp +\n    mar + paro + prio, data = r)\n\n  n= 432, number of events= 114\n\n         coef exp(coef) se(coef)      z Pr(>|z|)\nfin  -0.37942   0.68426  0.19138 -1.983  0.04742 *\nage  -0.05744   0.94418  0.02200 -2.611  0.00903 **\nrace  0.31390   1.36875  0.30799  1.019  0.30812\nwexp -0.14980   0.86088  0.21222 -0.706  0.48029\nmar  -0.43370   0.64810  0.38187 -1.136  0.25606\nparo -0.08487   0.91863  0.19576 -0.434  0.66461\nprio  0.09150   1.09581  0.02865  3.194  0.00140 **\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n     exp(coef) exp(-coef) lower .95 upper .95\nfin     0.6843     1.4614    0.4702    0.9957\nage     0.9442     1.0591    0.9043    0.9858\nrace    1.3688     0.7306    0.7484    2.5032\nwexp    0.8609     1.1616    0.5679    1.3049\nmar     0.6481     1.5430    0.3066    1.3699\nparo    0.9186     1.0886    0.6259    1.3482\nprio    1.0958     0.9126    1.0360    1.1591\n\nConcordance= 0.64  (se = 0.027 )\nLikelihood ratio test= 33.27  on 7 df,   p=2e-05\nWald test            = 32.11  on 7 df,   p=4e-05\nScore (logrank) test = 33.53  on 7 df,   p=2e-05\n\n  fin   age  race  wexp   mar  paro  prio\n0.684 0.944 1.369 0.861 0.648 0.919 1.096\n         chisq df     p\nfin     0.0624  1 0.803\nage     5.9740  1 0.015\nrace    2.0683  1 0.150\nwexp    4.2246  1 0.040\nmar     1.0110  1 0.315\nparo    0.0184  1 0.892\nprio    0.5206  1 0.471\nGLOBAL 17.6944  7 0.013",
+  "plots": []
+ },
+ "13/empleo-largo": {
+  "hash": "927cbc9a",
+  "console": "Empleo de la MISMA semana:\n  x     n eventos tasa_por_1000\n1 0 10159      93          9.15\n2 1  9218      20          2.17\n\nEmpleo de la semana ANTERIOR:\n  x     n eventos tasa_por_1000\n1 0 10284      83          8.07\n2 1  9093      30          3.30",
+  "plots": []
+ },
+ "13/persona-anos": {
+  "hash": "029fe959",
+  "console": "  id edad_ingreso     anios evento\n1  1     44.83778 10.494182      1\n2  2     39.46338 15.997262      0\n3  3     41.94661  5.201916      1\n4  4     37.15537 20.000000      0\n5  5     42.59001  8.635181      1\n6  6     34.30253 18.414784      0\n\npersona-anios = 78.7   eventos = 3   tasa = 3.81 por 100 p-a\n\nIRR = 1.20\n\n\tComparison of Poisson rates\n\ndata:  c(12, 20) time base: c(800, 1600)\ncount1 = 12, expected count1 = 10.667, p-value = 0.708\nalternative hypothesis: true rate ratio is not equal to 1\n95 percent confidence interval:\n 0.5348553 2.5774713\nsample estimates:\nrate ratio\n       1.2",
+  "plots": []
+ },
+ "14/bcg-estructura": {
+  "hash": "9e54d1b6",
+  "console": "filas: 666  | sets: 111\ntodos los sets tienen 6 miembros: TRUE\ncasos por set: 1\nproporcion de casos en el archivo: 0.167  <- es 1/6 por construccion\n\nP(vacuna | control): 0.605  <- vacunacion de la poblacion fuente, con la edad de los casos",
+  "plots": []
+ },
+ "14/bootstrap-or": {
+  "hash": "73995a93",
+  "console": "         exp\ngrupo     si no\n  caso     7  5\n  control  6 18\nOR = 3.88  IC95% Woolf+0.5 = 0.94 16.02\nIC95% bootstrap percentil = 1.01 19.13",
+  "plots": []
+ },
+ "14/doll-hill-1948": {
+  "hash": "254a1432",
+  "console": "  nivel casos ctrl   OR  li    ls\n1 nunca     2   27  1.0  NA    NA\n2   1-4    33   55  8.1 1.8  36.3\n3  5-14   250  293 11.5 2.7  48.9\n4 15-24   196  190 13.9 3.3  59.4\n5 25-49   136   71 25.9 6.0 111.9\n6   50+    32   13 33.2 6.9 160.4\n\nOR por nivel de consumo: 1.51 (IC95% 1.35-1.69), p = 1.4e-12\nOR fumador vs nunca: 14\nCeldas cero en mujeres: 2",
+  "plots": []
+ },
+ "15/ddimer-clogit": {
+  "hash": "83d13400",
+  "console": "  setno cc ddimer SBP switch\n1     1  0      0 142      2\n2     1  0      1 105      2\n3     1  1      0 142      1\n4     2  0      0 131      2\n5     2  0      0 117      2\n6     2  0      0 120      2\n\n 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20\n 3  4  4  4  5  5  5  5  5  5  5  5  5  8  9  9 10 10 14 15\nCall:\ncoxph(formula = Surv(rep(1, 135L), cc) ~ ddimer + SBP + strata(setno),\n    data = dd, method = \"exact\")\n\n  n= 135, number of events= 28\n\n          coef exp(coef) se(coef)     z Pr(>|z|)\nddimer 0.19435   1.21452  0.45126 0.431   0.6667\nSBP    0.02186   1.02210  0.01067 2.048   0.0406 *\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n       exp(coef) exp(-coef) lower .95 upper .95\nddimer     1.215     0.8234    0.5015     2.941\nSBP        1.022     0.9784    1.0009     1.044\n\nConcordance= 0.577  (se = 0.083 )\nLikelihood ratio test= 4.53  on 2 df,   p=0.1\nWald test            = 4.42  on 2 df,   p=0.1\nScore (logrank) test = 4.72  on 2 df,   p=0.09\n\n\nOR(ddimer) = 1.215\nOR(BCG pareado) = 0.519  IC95% 0.3 0.9\nOR ingenuo (sin parear) = 0.688",
+  "plots": []
+ },
+ "15/ddimer-sets": {
+  "hash": "967a7489",
+  "console": "sets: 20\nmiembros por set:\nmiembros\n 3  4  5  8  9 10 14 15\n 1  3  9  1  2  2  1  1\n\ncasos por set:\ncasos\n 1  2  3\n14  4  2\nsets con mas de un caso: 6\n\npor eso clogit maneja sets de tamano variable",
+  "plots": []
+ },
+ "15/mcnemar-cmh": {
+  "hash": "dcce8d58",
+  "console": "  caso control\n1    1       0\n2    1       0\n3    1       0\n4    0       0\n5    0       1\n6    0       0\n\n     0  1\n  0 20  7\n  1 20  3\ndiscordantes: b = 20, c = 7  ->  OR = b/c = 2.857\n\n\tMcNemar's Chi-squared test\n\ndata:  tab\nMcNemar's chi-squared = 6.2593, df = 1, p-value = 0.01235\n\nMcNemar exacto: p = 0.019 | OR = 2.86, IC95% exacto 1.16-8.00\n\n\tMantel-Haenszel chi-squared test without continuity correction\n\ndata:  arr\nMantel-Haenszel X-squared = 6.2593, df = 1, p-value = 0.01235\nalternative hypothesis: true common odds ratio is not equal to 1\n95 percent confidence interval:\n 1.208155 6.756805\nsample estimates:\ncommon odds ratio\n         2.857143\n\n\nChi2 McNemar = Chi2 CMH, y OR de MH = b/c: la equivalencia de la clase 22.",
+  "plots": []
+ },
+ "16/iptw": {
+  "hash": "81892ac7",
+  "console": "P(sexo=1 | brazo), sin peso: 0.645 vs 0.399\nP(sexo=1 | brazo), con peso: 0.519 vs 0.519\n\nOR crudo     = 2.57 (confundido)\nOR regresion = 2.03\nOR IPTW      = 1.93\n\nOR condicional verdadero = 2.23 (e^0.8, dentro de cada sexo)\nOR marginal verdadero    = 2.11 (poblacion entera, sexo promediado)\nDR marginal verdadera    = 0.153",
+  "plots": []
+ },
+ "16/logistica-poisson": {
+  "hash": "734842b8",
+  "console": "OR crudo    = 1.747\nOR ajustado = 1.034 (IC95% 0.82-1.31)  <- la edad confundia; el efecto verdadero es 1\n\nIRR expuestos vs no (Poisson) = 1.97  = 1.97 directo\nSMR via offset = 1.087  = 1.087  directo\ndeviance/gl, Poisson puro      : 0.83\ndeviance/gl, con heterogeneidad: 3.8  -> quasipoisson o binomial negativa",
+  "plots": []
+ },
+ "17/conforme": {
+  "hash": "541c9f42",
+  "console": "conforme: cobertura media 90.2%, 90% de las calibraciones entre 84.0% y 94.6%\nresiduos de entrenamiento (fijo): 89.4%, sin garantia",
+  "plots": []
+ },
+ "18/dos-bilaterales": {
+  "hash": "28adabc9",
+  "console": "tabla (1,8)/(11,9):  minlike = 0.0432   central = 0.0631\nfisher.test(): 0.0432",
+  "plots": []
+ },
+ "lab-00-ficha-exploratoria": {
+  "hash": "8ca46dac",
+  "console": "filas: 137  | columnas: 9\n'data.frame':\t137 obs. of  9 variables:\n $ Therapy  : chr  \"standard\" \"standard\" \"standard\" \"standard\" ...\n $ Cell     : chr  \"squamous\" \"squamous\" \"squamous\" \"squamous\" ...\n $ SurvTime : int  72 411 228 126 118 10 82 110 314 100 ...\n $ Kps      : int  60 70 60 60 70 20 40 80 50 70 ...\n $ DiagTime : int  7 5 3 9 11 5 10 29 18 6 ...\n $ Age      : int  69 64 38 63 65 49 69 68 43 70 ...\n $ Prior    : int  0 10 0 10 10 0 10 0 0 0 ...\n $ Treatment: int  0 0 0 0 0 0 0 0 0 0 ...\n $ censor   : int  0 0 0 0 0 0 0 0 0 1 ...\nPrior unicos: 0, 10\nTreatment == Therapy recodificada: TRUE",
+  "plots": [
+   "/precomputed/lab-00-ficha-exploratoria/plot-1.png"
+  ]
+ },
+ "lab-02-diseno": {
+  "hash": "b1cd7e85",
+  "console": "",
+  "plots": []
+ },
+ "lab-03-medicion": {
+  "hash": "f7e48b31",
+  "console": "  [,1] [,2] [,3]\nA  1.5    9   45\nB  2.0   10   60\n\ncruda A = 9.80  cruda B = 6.82 (por 1000 p-a)\nLas especificas cuentan otra historia... (anticipo del módulo 9)",
+  "plots": []
+ },
+ "lab-04-medidas": {
+  "hash": "2e4d9603",
+  "console": "    mal\nexp  si no\n  si 45  8\n  no 12 95\nOR = 44.53",
+  "plots": []
+ },
+ "lab-07-dag": {
+  "hash": "0262ce35",
+  "console": "   D\nE      0    1\n  0 1286  675\n  1 1683  356\nOR crudo = 0.4",
+  "plots": []
+ },
+ "lab-08-confusion": {
+  "hash": "982cfaf7",
+  "console": "    exito\ntrat  si no\n   A  81  6\n   B 234 36\n    exito\ntrat  si no\n   A 192 71\n   B  55 25\n     [,1] [,2]\n[1,]  273   77\n[2,]  289   61",
+  "plots": []
+ },
+ "lab-11-cohorte": {
+  "hash": "e9280d1f",
+  "console": "         evento\nk         0 1\n  [0,10)  2 5\n  [10,20) 2 2\n  [20,30) 2 2\n  [30,40) 1 1\n  [40,50) 1 1\n  [50,60) 1 0",
+  "plots": []
+ },
+ "lab-12-valung": {
+  "hash": "03c4d45b",
+  "console": "[1] \"Therapy\"   \"Cell\"      \"SurvTime\"  \"Kps\"       \"DiagTime\"  \"Age\"\n[7] \"Prior\"     \"Treatment\" \"censor\"\n   Therapy     Cell SurvTime Kps DiagTime Age Prior Treatment censor\n1 standard squamous       72  60        7  69     0         0      0\n2 standard squamous      411  70        5  64    10         0      0\n3 standard squamous      228  60        3  38     0         0      0\n4 standard squamous      126  60        9  63    10         0      0\n5 standard squamous      118  70       11  65    10         0      0\n6 standard squamous       10  20        5  49     0         0      0\n\n  0   1\n128   9\n[1]  25 231\nCall: survfit(formula = Surv(SurvTime, dead) ~ Therapy, data = va)\n\n                  n events median 0.95LCL 0.95UCL\nTherapy=standard 69     64  103.0      59     132\nTherapy=test     68     64   52.5      44      95\nCall:\nsurvdiff(formula = Surv(SurvTime, dead) ~ Therapy, data = va)\n\n                  N Observed Expected (O-E)^2/E (O-E)^2/V\nTherapy=standard 69       64     64.5   0.00388   0.00823\nTherapy=test     68       64     63.5   0.00394   0.00823\n\n Chisq= 0  on 1 degrees of freedom, p= 0.9\nCall:\nsurvdiff(formula = Surv(SurvTime, dead) ~ Cell, data = va)\n\n               N Observed Expected (O-E)^2/E (O-E)^2/V\nCell=adeno    27       26     15.7      6.77      8.19\nCell=large    27       26     34.5      2.12      3.02\nCell=small    48       45     30.1      7.37     10.20\nCell=squamous 35       31     47.7      5.82     10.53\n\n Chisq= 25.4  on 3 degrees of freedom, p= 1e-05",
+  "plots": [
+   "/precomputed/lab-12-valung/plot-1.png"
+  ]
+ },
+ "lab-13-personatiempo": {
+  "hash": "b03d03d4",
+  "console": "  grupo   pt ev\n1   exp 17.0  3\n2 noexp 16.5  2",
+  "plots": []
+ },
+ "lab-14-cc": {
+  "hash": "f9f942c8",
+  "console": "OR con controles hospitalarios: 2.12\nOR con controles comunitarios : 3.25\nP(cafe alto | control hospital)  : 0.37\nP(cafe alto | control comunidad) : 0.28",
+  "plots": []
+ },
+ "lab-15-caso-control": {
+  "hash": "1fecfb5b",
+  "console": "    Case Control1 Control2 Control3 Control4 Control5\n     111      111      111      111      111      111\nsets informativos: 73 de 111",
+  "plots": []
+ },
+ "lab-16-logistica": {
+  "hash": "a76e4036",
+  "console": "\tMantel-Haenszel chi-squared test without continuity correction\n\ndata:  arr\nMantel-Haenszel X-squared = 66.389, df = 1, p-value = 3.702e-16\nalternative hypothesis: true common odds ratio is not equal to 1\n95 percent confidence interval:\n 1.702142 2.395828\nsample estimates:\ncommon odds ratio\n         2.019416\n\n\nOR_E ajustado (glm) = 2.025  <- compara con OR_MH\n            2.5 % 97.5 %\n(Intercept)  0.12   0.16\nE            1.71   2.40\nsexo         2.85   4.08",
+  "plots": []
+ },
+ "lab-17-meta": {
+  "hash": "cf037544",
+  "console": "RR fijo = 1.70 (1.00-2.88)\nQ = 1.57 con 5 gl; I^2 = 0%",
+  "plots": []
+ },
+ "lab-18-traductor": {
+  "hash": "9c2879d2",
+  "console": "RR = 1.39  IC95% [1.03, 1.88]\nOR = 1.45  IC95% [1.04, 2.02]\nRD = 0.0349\n\n\tPearson's Chi-squared test\n\ndata:  tab\nX-squared = 4.8015, df = 1, p-value = 0.02844",
+  "plots": []
+ },
+ "lab-19-frontera": {
+  "hash": "fa8cf143",
+  "console": "",
+  "plots": []
+ }
+}

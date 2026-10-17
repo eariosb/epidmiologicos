@@ -53,7 +53,17 @@ El código que sigue implementa el producto acumulado a mano sobre los
 datos de Freireich y luego verifica el resultado con `survival::survfit`,
 que además produce las curvas por brazo y las medianas con su <Term k="IC">IC</Term>.
 
+Antes del código, el explorador construye las dos curvas de Freireich
+escalón por escalón. Cada caída es una recaída; las marcas
+del grupo 6-MP son censuras, pacientes que salieron sin recaer.
+
 <KaplanMeierSim title={<>Construcción de la curva <Term k="KM">Kaplan–Meier</Term>: cada escalón es una recaída, cada cruz una censura</>} />
+
+**Para explorar**
+
+1. Avanza paso a paso y, en cada escalón del grupo 6-MP, anota cuántos estaban en riesgo y cuántos recayeron. Comprueba que Ŝ(t) es el producto de los factores (1 − d/n).
+2. Fíjate en los tiempos 6, 9 y 10 del grupo 6-MP: hay censuras. La curva no cae en una censura, pero el número en riesgo del escalón siguiente es menor.
+3. Lee Ŝ en la semana 10 para cada grupo y compáralo con la salida de `survfit` de la celda siguiente.
 
 <RCell
   id="12/km-leucemia"
@@ -98,7 +108,8 @@ proc lifetest data=leu method=km plots=survival;
   strata grupo;
 run;
 /* La salida 'Quartile Estimates' da la mediana (8 sem. placebo;
-   NR en 6-MP) y 'Test of Equality' el log-rank */`} />
+   23 en 6-MP, con limite superior del IC no alcanzado) y
+   'Test of Equality' el log-rank */`} />
 
 ## Los tipos de censura
 
@@ -133,8 +144,12 @@ $$
 
 La comparación corre con `survdiff` (el log-rank de R) y el resumen de
 `survfit` entrega la mediana por brazo con su IC95%. Sobre estos datos
-aparece una lectura importante: la mediana del grupo tratado no se
-alcanza porque S(t) nunca baja de 0.5.
+aparecen dos lecturas importantes. En 6-MP recayeron 9 de 21 pacientes,
+menos de la mitad, y sin embargo la mediana existe: Ŝ(23) = 0.45, porque
+los 12 censurados salen del conjunto en riesgo y cada recaída posterior
+pesa más. La proporción cruda de eventos no es el riesgo acumulado. Y el
+límite superior del IC de esa mediana **no se alcanza**: la curva
+superior de confianza nunca baja de 0.5 en el seguimiento disponible.
 
 <RCell
   id="12/logrank"
@@ -149,8 +164,9 @@ print(survdiff(Surv(tiempo, status) ~ grupo, data = leu))
 sf <- survfit(Surv(tiempo, status) ~ grupo, data = leu)
 print(sf)
 
-# Lectura de clase (Salazar): en 6-MP la mediana no se alcanza
-# (S nunca baja de 0.5); en placebo son 8 semanas.`}
+# Placebo: mediana 8 semanas (IC 4 a 12). 6-MP: mediana 23 semanas, con el
+# limite superior del IC no alcanzado (NA). Aunque solo 9 de 21 recayeron
+# (43%), S(23) = 0.45: los censurados dejan el conjunto en riesgo.`}
 />
 
 <SasBlock code={`/* survdiff -> el log-rank de STRATA en PROC LIFETEST;
@@ -184,15 +200,21 @@ la misma lógica observado-menos-esperado.
 </Callout>
 
 <Quiz
-  question="En la curva KM de 6-MP, la mediana de supervivencia no existe en el gráfico. ¿Por qué?"
+  question="En el grupo 6-MP recayeron 9 de 21 pacientes (43%), y sin embargo Kaplan–Meier da una mediana de 23 semanas, con Ŝ(23) = 0.45. ¿Cómo puede ser?"
   options={[
-    "Porque faltan datos",
-    "Porque la censura impide calcularla",
-    "Porque Ŝ(t) nunca baja de 0.5: más de la mitad de los pacientes seguía sin recaer al final del estudio",
-    "Porque el log-rank fue no significativo"
+    "Es un error: si menos de la mitad recayó, la mediana no existe",
+    "Los 12 censurados salieron del conjunto en riesgo antes de las 23 semanas; KM reparte su información y las recaídas tardías pesan sobre menos personas, así que 1 − Ŝ(23) = 0.55 supera a 9/21",
+    "Kaplan–Meier cuenta a los censurados como recaídas",
+    "La mediana sale del log-rank, no de la curva"
   ]}
-  correctIndex={2}
-  explanation="La mediana de supervivencia es el primer t con Ŝ(t) ≤ 0.5. En el grupo 6-MP la curva se estabiliza por encima de 0.5 (solo 9 de 21 recayeron), así que la mediana no es estimable y se reporta como 'no alcanzada'. Es una buena noticia disfrazada de dato faltante."
+  correctIndex={1}
+  explanation="9/21 supone que los censurados nunca recaerían, lo cual es falso: solo sabemos que no habían recaído al salir. KM estima la supervivencia condicionando en quienes siguen en riesgo en cada tiempo. Lo que sí queda 'no alcanzado' es el límite superior del IC de la mediana: con tan pocos pacientes al final, la incertidumbre no se cierra."
+  optionNotes={[
+    "Incorrecta: la mediana de KM es el primer t con Ŝ(t) ≤ 0.5, y aquí Ŝ(23) = 0.45. La proporción cruda de eventos no es 1 − Ŝ(t) cuando hay censura.",
+    undefined,
+    "Incorrecta: KM nunca cuenta censuras como eventos; las retira del conjunto en riesgo.",
+    "Incorrecta: la mediana se lee de la curva; el log-rank solo compara curvas.",
+  ]}
 />
 
 <Flashcard
@@ -201,20 +223,23 @@ la misma lógica observado-menos-esperado.
     { front: "Censura a derecha", back: "Se sabe que el evento no ocurrió hasta el último contacto. Cuenta en el riesgo hasta ese momento; después se retira sin castigo." },
     { front: "Kaplan–Meier", back: "Producto escalonado de (1 − d/n) en cada tiempo de evento. Cae solo en eventos; las censuras son marcas sobre la curva." },
     { front: "Log-rank", back: "Compara curvas completas acumulando observado−esperado por evento. Detecta diferencias globales, no en un punto." },
-    { front: "Mediana 'no alcanzada'", back: "Si Ŝ(t) nunca llega a 0.5 no hay mediana; se reporta NR (not reached), no un promedio." },
+    { front: "Mediana 'no alcanzada'", back: "Si Ŝ(t) nunca llega a 0.5 no hay mediana y se reporta NR (not reached). Ojo: con censura, menos de la mitad de eventos no implica NR; manda la curva, no la proporción cruda." },
   ]}
 />
 
 <LabExercise
-  id="lab-11-valung"
+  id="lab-12-valung"
   title="Laboratorio: VALUNG, dos terapias en cáncer de pulmón"
   code={`# valung.csv: dataset del Veterans Administration (clase 16).
 va <- read.csv("valung.csv")
 print(names(va)); print(head(va))
 print(table(va$censor))          # 128 ceros y 9 unos
-print(tapply(va$SurvTime, va$censor, median))
-# Los 9 con censor = 1 tienen tiempos largos: en este dataset 1 = CENSURA
-# y 0 = muerte. Surv() exige 1 = evento, asi que hay que invertir el flag:
+# La codificacion se verifica con la documentacion, no con los tiempos:
+# en este dataset (el 'veteran' de Kalbfleisch y Prentice) 1 = CENSURA y
+# 0 = muerte. Los censurados no son los de tiempos mas largos (sus tiempos
+# van de 25 a 231 dias; los dos mas largos, 991 y 999, son muertes).
+print(range(va$SurvTime[va$censor == 1]))
+# Surv() exige 1 = evento, asi que hay que invertir el flag:
 va$dead <- 1 - va$censor
 
 # KM y log-rank por terapia:
@@ -229,20 +254,20 @@ plot(sf, col = c("#dc2626","#0284c7"), lwd = 2, mark.time = TRUE,
 legend("bottomleft", levels(factor(va$Therapy)),
        col = c("#dc2626","#0284c7"), lwd = 2, bty = "n")`}
   tasks={[
-    "Verifica con table() si censor=1 es muerte o censura (pista: compara medias de SurvTime).",
+    "Verifica la codificación de censor con la documentación del dataset (o con survival::veteran) y explica por qué no basta mirar qué grupo tiene tiempos más largos.",
     "Estima medianas de supervivencia por Therapy.",
     "Aplica log-rank: ¿difiere la supervivencia entre terapias?",
     "Estratifica por Cell (squamous, small, adeno, large): ¿la terapia o el tipo celular explican la supervivencia?",
   ]}
-  hint="En este dataset censor = 1 marca la censura (los 9 pacientes vivos al cierre tienen los tiempos más largos) y 0 la muerte: usa dead &lt;- 1 - censor antes de Surv(). Corre table(va$censor, va$Therapy) y survdiff(... ~ Cell) para comparar."
-  solution="El log-rank por Therapy no es significativo (p ≈ 0.9); por Cell es contundente (χ² ≈ 25, p ≈ 1e-05). El tipo celular domina la supervivencia en cáncer de pulmón: como el ensayo es aleatorizado, no es un confusor sino un factor pronóstico fuerte — estratificar por él aumenta la precisión, no corrige sesgo."
+  hint="En este dataset censor = 1 marca la censura y 0 la muerte (así lo documenta la fuente; los tiempos no lo deciden: los dos más largos son muertes). Usa dead &lt;- 1 - censor antes de Surv(). Corre table(va$censor, va$Therapy) y survdiff(... ~ Cell) para comparar."
+  solution="El log-rank por Therapy no es significativo (p ≈ 0.9); por Cell es contundente (χ² ≈ 25.4, 3 gl, p ≈ 1e-05). El tipo celular domina la supervivencia: como el ensayo es aleatorizado, no es un confusor sino un factor pronóstico fuerte, y estratificar por él aumenta la precisión, no corrige sesgo. El módulo 10 agrega un matiz: dentro de cada tipo celular el efecto de la terapia parece cambiar (interacción con p = 0.04), una hipótesis exploratoria, no un hallazgo."
 />
 
 <SasBlock code={`proc import datafile="valung.csv" out=va dbms=csv replace;
   getnames=yes;
 run;
 /* Verificar la codificacion de la censura antes de modelar:
-   en este dataset 1 = censurado (los 9 tiempos largos), 0 = muerte. */
+   en este dataset 1 = censurado, 0 = muerte (segun la documentacion). */
 proc freq data=va; tables censor*Therapy; run;
 /* KM + log-rank por terapia y por tipo celular: */
 proc lifetest data=va method=km plots=survival;
@@ -328,6 +353,10 @@ run;
 - El NNT usa un horizonte fijo (23 semanas): ¿qué se pierde al resumir la
   curva en un punto? El log-rank usa toda la curva; conviene comparar sus
   mensajes.
+- El horizonte no es inocente: a 10 semanas la ARR es 0.37 (NNT ≈ 2.7), a
+  20 semanas 0.53 y a 23 semanas 0.45. Elegirlo después de mirar las
+  curvas es otra forma del jardín de senderos (módulo 0); se fija en el
+  protocolo, con criterio clínico.
 
 <DecisionCard
   id="decision-11-6mp"

@@ -1,11 +1,8 @@
-Desenlace
-Agua        Muerto   Vivo
-  Southwark   1263 166391
-  Lambeth       98  17250
+agua  casas muertes por_10000
+1 Southwark & Vauxhall  40046    1263       315
+2              Lambeth  26107      98        38
+3     Resto de Londres 256423    1422        55
 
-Riesgo Southwark: 7.53 por 1000
-Riesgo Lambeth:   5.65 por 1000
-
-RR = 1.33,  IC95% [1.09, 1.64]
-La mortalidad acumulada en clientes de Southwark fue ~33% mayor.
-El factor 14 vive en la comparacion por casas, no en esta tabla.
+Razon de tasas = 8.4 | IC95% exacto [6.8, 10.4] | log-normal [6.8, 10.3]
+Primeras 4 semanas: razon = 13.3 | IC95% exacto [7.8, 24.7]
+Mismo denominador, distinta ventana: el 'factor 14' es el inicio de la epidemia.

@@ -1,2 +1,0 @@
-OR con controles hospitalarios: 2.12
-OR con controles comunitarios : 3.25

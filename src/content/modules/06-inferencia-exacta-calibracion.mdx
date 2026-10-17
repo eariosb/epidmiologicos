@@ -130,6 +130,12 @@ reemplázala con cualquier tabla 2×2 de tu interés.
 
 <ExactTestExplorer title={<>Espacio de tablas y regiones de rechazo (α editable)</>} />
 
+**Para explorar**
+
+1. Cambia α a 0.01 y a 0.10 y observa cómo se ensancha o se encoge la franja naranja del mapa.
+2. Busca una tabla en que Fisher rechace y el procedimiento comparado no (celdas «solo Fisher»). ¿Existen con n₁ = n₂?
+3. Desbalancea los tamaños (por ejemplo 20 frente a 50) y compara las discordancias con el caso balanceado.
+
 El hallazgo de la tabla comparada es el corazón del módulo: **la elección
 del procedimiento no es un detalle técnico, es parte del estimando**.
 Fisher da p = <Claim k="m6.perondi.fisher" d={3} /> (no rechaza a α = 0.05);
@@ -170,6 +176,12 @@ frontera) agotaría α exactamente; es el patrón teórico, aunque nadie lo
 usa en la práctica porque introduce aleatoriedad ajena a los datos.
 
 <ExactPowerExplorer title={<>Tamaño real bajo H₀, potencia exacta y discordancia vs. n</>} />
+
+**Para explorar**
+
+1. Calcula las curvas para el escenario tipo Perondi y ubica los valores de n en que la discordancia Fisher–Boschloo tiene sus picos.
+2. Cambia α a 0.01: ¿la ventaja de potencia de Boschloo sobre Fisher crece o se reduce?
+3. Mira el tamaño máximo bajo H₀ de cada procedimiento en la tabla: ninguno pasa de α, pero Fisher queda bastante por debajo. Esa holgura es potencia perdida.
 
 Dos resultados del panel de potencia merecen nota. Primero: si el
 protocolo de Perondi hubiera declarado querer detectar una diferencia
@@ -215,6 +227,12 @@ $(\hat p_1, \hat p_2)$ de tu tabla.
 
 <CorrectionExplorer title={<>Corrección aditiva: efecto sobre el OR, el ECM y la cobertura</>} />
 
+**Para explorar**
+
+1. Pon c = 0, 0.5 y 1 y compara el OR estimado y su IC de Woolf. ¿Cuál de las tres cambia más la conclusión?
+2. Activa la cobertura exacta y compara Woolf con el IC exacto condicional: uno se acerca al 95 % y el otro lo supera con holgura.
+3. Mira la RD y su IC de Agresti–Caffo mientras mueves c: no cambian. La fragilidad es de la escala OR, no de los datos.
+
 La curva de ECM tiene el mínimo interior que la teoría predice: bajar c
 reduce el sesgo pero dispara la varianza; subirlo hace lo contrario. En
 el punto observado de Perondi el óptimo está cerca de c ≈ 0.8, pero ese
@@ -239,10 +257,11 @@ de la disponible.
 ## Cobertura y longitud del IC
 
 El IC de Woolf (log-OR con corrección c = 1/2) es el estándar de facto en
-tablas grandes; con celdas pequeñas su cobertura real cae por debajo del
-nominal (≈<Claim k="m6.woolf.cov.obs.c05" d={2} /> en el punto observado
-de Perondi y ≈<Claim k="m6.woolf.cov.obs.c10" d={2} /> con c = 1;
-verificable por enumeración en el simulador).
+tablas grandes. Con celdas pequeñas su cobertura depende de la corrección:
+en el punto observado de Perondi es ≈<Claim k="m6.woolf.cov.obs.c05" d={3} />
+con c = 1/2, prácticamente la nominal, y cae a ≈<Claim k="m6.woolf.cov.obs.c10" d={2} />
+con c = 1 (verificable por enumeración en el simulador). La corrección no
+es un detalle técnico: cambia la garantía.
 El IC exacto condicional (Cornfield) garantiza cobertura ≥ 0.95
 invirtiendo la prueba de Fisher, pero con una celda en cero produce
 límites que son infinitos con probabilidad alta: es un IC honesto en
@@ -313,6 +332,12 @@ que se evaluó para Woolf vs. Cornfield en la escala del OR.
 
 <CIMethodsExplorer title={<>Seis métodos de IC para una proporción: admisibilidad y cobertura real</>} />
 
+**Para explorar**
+
+1. Pon x = 0 con n = 20: Wald da un intervalo de ancho cero. Compara las cotas superiores de Wilson y Jeffreys.
+2. Recorre la curva de cobertura: ¿en qué zona de p falla más Wald? ¿Algún método cubre 95 % en todo p?
+3. Sube n a 100 y repite: las diferencias se reducen, pero no desaparecen cerca de 0 y de 1.
+
 <Callout type="warning" title="El mito N ≥ 30">
 La regla "con 30 observaciones alcanza la normalidad" no proviene de
 ningún teorema: es una heurística transmitida sin justificación formal. La velocidad de
@@ -355,7 +380,7 @@ cis <- sapply(metodos, function(f) f(x, n))
 print(round(cis, 4))
 # Con x = 2, n = 30 esperado: Wald ~(-0.02, 0.16)  <-- limite inferior
 # NEGATIVO: inadmisible. Wilson ~(0.02, 0.21), Jeffreys ~(0.02, 0.20),
-# Clopper-Pearson ~(0.01, 0.22) el mas ancho (conservador).
+# Clopper-Pearson ~(0.01, 0.22) y Agresti-Coull ~(0.01, 0.22), los mas anchos.
 cat("Wald es inadmisible si algun limite cae fuera de [0,1]\\n")
 
 # Cobertura exacta: promedia P_p(x produce IC que contiene p) sobre x=0:n
@@ -368,7 +393,8 @@ cov_s <- sapply(ps, cobertura, metodo=wilson, n=30)
 cat(sprintf("Cobertura minima en p: Wald = %.2f   Wilson = %.2f (nominal .95)\\n",
             min(cov_w), min(cov_s)))
 # Interpretacion: el minimo de la curva es el peor caso del procedimiento.
-# Wilson oscila cerca de .95; Wald cae muy por debajo en p extremos. La
+# Wilson oscila alrededor de .95 con caidas puntuales (minimo .86 en p
+# extremos); Wald se desploma (.14). La
 # cobertura nominal es un promedio esperado, no una garantia puntual.`}
 />
 
@@ -402,6 +428,12 @@ la normalidad.
 
 <MultinomCIExplorer title={<>Vigilancia de serotipos: cobertura simultánea bajo desequilibrio</>} />
 
+**Para explorar**
+
+1. Con desequilibrio 0 audita la cobertura simultánea del TCL; luego sube el desequilibrio a 0.8 y repite.
+2. Compara la longitud de QH y Goodman sobre la misma muestra con la cobertura que auditaste. ¿Cuál ofrece mejor relación entre cobertura y ancho?
+3. Pulsa «Nueva muestra» varias veces con desequilibrio alto y mira qué serotipo queda sin cubrir con más frecuencia.
+
 <RCell
   id="06/ic-multinomial"
   title="ICs simultáneos multinomiales en R base"
@@ -413,7 +445,8 @@ x <- c(34, 12, 10, 4); n <- sum(x); k <- length(x)
 # TCL por celda (la version ingenua: no es simultanea)
 z  <- qnorm(0.975)
 ph <- x / n
-ci_tcl <- ph + outer(c(-1, 1), z * sqrt(ph * (1 - ph) / n))
+ee <- sqrt(ph * (1 - ph) / n)
+ci_tcl <- rbind(lo = ph - z * ee, hi = ph + z * ee)
 
 # Quesenberry-Hurst (1964): forma cuadratica con B = chi2_{k-1}
 quad <- function(x, n, B) {
@@ -426,7 +459,10 @@ ci_qh <- quad(x, n, qchisq(0.95, k - 1))
 # Goodman (1965): misma forma con B = z^2_{1-a/(2k)} (Bonferroni)
 ci_go <- quad(x, n, qnorm(1 - 0.05 / (2 * k))^2)
 
-round(rbind(TCL = ci_tcl, QH = ci_qh, Goodman = ci_go), 3)
+res <- rbind(ci_tcl, ci_qh, ci_go)
+rownames(res) <- paste(rep(c("TCL", "QH", "Goodman"), each = 2), c("lo", "hi"))
+colnames(res) <- paste0("serotipo", 1:k)
+print(round(res, 3))
 # Interpretacion: QH y Goodman garantizan cobertura SIMULTANEA;
 # el TCL por celda no promete nada sobre el vector completo.`}
 />

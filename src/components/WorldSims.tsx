@@ -76,6 +76,7 @@ const MECH_LABEL: Record<Mechanism, string> = {
 export function MissingDataLab({ title }: { title?: ReactNode }) {
   const [mech, setMech] = useState<Mechanism>('MAR');
   const [rate, setRate] = useState(0.3);
+  const [seed, setSeed] = useState(42);
   const { rows, error } = useCsvRows('valung.csv');
 
   const data = useMemo(() => {
@@ -103,7 +104,7 @@ export function MissingDataLab({ title }: { title?: ReactNode }) {
       return Math.min(0.95, Math.max(0.02, rate * 2 * (1 / (1 + Math.exp(-z)))));
     });
     // Bernoulli con probabilidad individual (semilla fija: captura estable)
-    const rand = mulberry32(42);
+    const rand = mulberry32(seed);
     const isNa = probs.map((p) => rand() < p);
     const nMiss = isNa.filter(Boolean).length;
     const obs = data.filter((_, i) => !isNa[i]);
@@ -134,7 +135,7 @@ export function MissingDataLab({ title }: { title?: ReactNode }) {
         { name: 'Imputación por regresión (edad)', value: regImp },
       ],
     };
-  }, [data, mech, rate]);
+  }, [data, mech, rate, seed]);
 
   const W = 540;
   const H = 180;
@@ -147,25 +148,29 @@ export function MissingDataLab({ title }: { title?: ReactNode }) {
       </div>
 
       <div className="grid gap-x-4 gap-y-1 text-[11px] text-ink-600 sm:grid-cols-2">
-        <label className="flex items-center gap-2">
-          <span className="w-56 shrink-0">mecanismo: {mech}</span>
+        <label className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="shrink-0 sm:w-56">mecanismo: {mech}</span>
           <select
             value={mech}
             onChange={(e) => setMech(e.target.value as Mechanism)}
-            className="rounded border border-ink-200 px-2 py-1"
+            className="min-w-0 max-w-full rounded border border-ink-200 px-2 py-1"
           >
             {(['MCAR', 'MAR', 'MNAR'] as Mechanism[]).map((m) => (
               <option key={m} value={m}>{MECH_LABEL[m]}</option>
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2">
-          <span className="w-44 shrink-0">tasa de faltantes ≈ {(rate * 100).toFixed(0)}%</span>
+        <label className="flex min-w-0 items-center gap-2">
+          <span className="w-36 shrink-0 sm:w-44">tasa de faltantes ≈ {(rate * 100).toFixed(0)}%</span>
           <input
             type="range" min={0.05} max={0.6} step={0.05} value={rate}
             onChange={(e) => setRate(+e.target.value)} className={SLIDER}
           />
         </label>
+        <button type="button" onClick={() => setSeed((s) => s + 1)}
+          className="w-fit rounded border border-ink-200 px-2 py-0.5 text-ink-600 hover:bg-ink-50">
+          nuevo borrado
+        </button>
       </div>
 
       {result && (
@@ -239,9 +244,12 @@ export function MissingDataLab({ title }: { title?: ReactNode }) {
       )}
 
       <SimGuide>
-        <li>Sube la tasa de faltantes bajo MNAR: el sesgo de casos completos crece en la dirección del mecanismo (Kps alto de sobra).</li>
-        <li>Bajo MAR, compara casos completos vs. regresión: la variable observada rescata la estimación.</li>
-        <li>Bajo MCAR todos los métodos son insesgados — la decisión entre ellos es de precisión, no de sesgo.</li>
+        <ul>
+          <li>Bajo MNAR sube la tasa de faltantes: faltan los Kps bajos, así que la media de los casos completos sale demasiado alta, y ningún método la corrige.</li>
+          <li>Bajo MAR compara casos completos con la regresión: la edad observada rescata parte del sesgo, tanto más cuanto mejor prediga el Kps.</li>
+          <li>La imputación por la media da exactamente la misma media que los casos completos: no corrige nada y además encoge la varianza (los IC salen falsamente estrechos).</li>
+          <li>Es una sola realización del borrado: pulsa «nuevo borrado» varias veces. Bajo MCAR los errores cambian de signo al azar (no hay sesgo); bajo MNAR siempre van hacia arriba.</li>
+        </ul>
       </SimGuide>
     </div>
   );
@@ -265,7 +273,8 @@ export function EValueCalculator({ title }: { title?: ReactNode }) {
   const [ciLo, setCiLo] = useState(1.4);
 
   const ePoint = eValue(rr);
-  const eBound = ciLo > 0 && ciLo !== 1 ? eValue(ciLo) : null;
+  // Si el límite del IC ya cruza el 1, no hace falta confusión para incluir el nulo.
+  const eBound = ciLo <= 1 ? 1 : eValue(ciLo);
 
   return (
     <div className={FIG}>
@@ -321,9 +330,9 @@ export function EValueCalculator({ title }: { title?: ReactNode }) {
       </p>
 
       <SimGuide>
-        <li>Prueba RR = 2: el confusor necesita dos asociaciones de 3.41 — más fuerte que la mayoría de confusores clínicos.</li>
+        <ul><li>Prueba RR = 2: el confusor necesita dos asociaciones de 3.41 — más fuerte que la mayoría de confusores clínicos.</li>
         <li>Con RR = 1.2 el E-value cae a ~1.68: efectos modestos se explican con confusión plausible.</li>
-        <li>El E-value del límite es la versión honesta: cuenta lo robusto que queda el hallazgo tras la incertidumbre.</li>
+        <li>El E-value del límite es la versión honesta: cuenta lo robusto que queda el hallazgo tras la incertidumbre.</li></ul>
       </SimGuide>
     </div>
   );
@@ -431,9 +440,9 @@ export function BiasAnalysis2x2({ title }: { title?: ReactNode }) {
       </p>
 
       <SimGuide>
-        <li>Con Se = Sp = 1 el OR corregido = el observado: el ejercicio calibra.</li>
+        <ul><li>Con Se = Sp = 1 el OR corregido = el observado: el ejercicio calibra.</li>
         <li>Baja Se a 0.8 manteniendo Sp: el OR corregido se aleja de 1 — el observado estaba atenuado.</li>
-        <li>Lleva Se+Sp cerca de 1 (p. ej. 0.55/0.55): la corrección explota — medición casi aleatoria.</li>
+        <li>Lleva Se+Sp cerca de 1 (p. ej. 0.55/0.55): la corrección explota — medición casi aleatoria.</li></ul>
       </SimGuide>
     </div>
   );
@@ -515,7 +524,8 @@ export function CityLab({ title }: { title?: ReactNode }) {
     const rrCrudo = rrOf(city);
     const rrC0 = rrOf(city, (c) => c.C === 0);
     const rrC1 = rrOf(city, (c) => c.C === 1);
-    return { rrCrudo, rrC0, rrC1 };
+    const orCrudo = orOf(city.filter((c) => c.D === 1), city.filter((c) => c.D === 0));
+    return { rrCrudo, rrC0, rrC1, orCrudo };
   }, [city]);
 
   const result = useMemo(() => {
@@ -558,17 +568,17 @@ export function CityLab({ title }: { title?: ReactNode }) {
       </p>
 
       <div className="grid gap-x-4 gap-y-2 text-[11px] text-ink-600">
-        <label className="flex items-center gap-2">
-          <span className="w-20 shrink-0">diseño:</span>
+        <label className="flex min-w-0 items-center gap-2">
+          <span className="w-14 shrink-0 sm:w-20">diseño:</span>
           <select value={design} onChange={(e) => setDesign(e.target.value as Design)}
-            className="rounded border border-ink-200 px-2 py-1">
+            className="min-w-0 max-w-full rounded border border-ink-200 px-2 py-1">
             {(Object.keys(DESIGN_LABEL) as Design[]).map((dd) => (
               <option key={dd} value={dd}>{DESIGN_LABEL[dd]}</option>
             ))}
           </select>
         </label>
-        <label className="flex items-center gap-2">
-          <span className="w-44 shrink-0">
+        <label className="flex min-w-0 items-center gap-2">
+          <span className="w-36 shrink-0 sm:w-44">
             {design === 'cohorte' || design === 'transversal' ? `n muestreado = ${n}` : `controles por muestrear ≈ ${n}`}
           </span>
           <input type="range" min={200} max={5000} step={100} value={n}
@@ -586,7 +596,7 @@ export function CityLab({ title }: { title?: ReactNode }) {
           <p className="text-[11px] uppercase tracking-wide text-ink-500">Crudo en la ciudad</p>
           <p className="mt-1 text-2xl font-semibold text-ink-800">RR = {fmt(truth.rrCrudo, 2)}</p>
           <p className="mt-1 text-xs text-ink-600">
-            inflado por confusión (estratos: {fmt(truth.rrC0, 2)} / {fmt(truth.rrC1, 2)})
+            OR crudo = {fmt(truth.orCrudo, 2)} · inflado por confusión (estratos: {fmt(truth.rrC0, 2)} / {fmt(truth.rrC1, 2)})
           </p>
         </div>
         <div className="rounded border border-brand-200 bg-brand-50/60 p-3">
@@ -618,9 +628,9 @@ export function CityLab({ title }: { title?: ReactNode }) {
       </p>
 
       <SimGuide>
-        <li>Empieza por "controles hospitalarios": el OR sale por debajo de 1 — la exposición protectora es el artefacto del colisionador.</li>
+        <ul><li>Empieza por "controles hospitalarios": el OR sale por debajo de 1 — la exposición protectora es el artefacto del colisionador.</li>
         <li>Cambia a controles de la población fuente: el OR vuelve a ≈4 — recuperaste la asociación, con la confusión incluida.</li>
-        <li>En cohorte, compara el RR crudo con los RR por estrato de C (arriba, en la tarjeta "Crudo"): cada estrato ronda 3.00.</li>
+        <li>En cohorte, compara el RR crudo con los RR por estrato de C (arriba, en la tarjeta "Crudo"): cada estrato ronda 3.00.</li></ul>
       </SimGuide>
     </div>
   );

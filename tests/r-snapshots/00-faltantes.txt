@@ -1,1 +1,3 @@
-filas donde los NA empiezan justo tras 'week': 432 de 432 nweek de los no arrestados: 53 n
+filas donde los NA empiezan justo tras 'week': 432 de 432
+week de los no arrestados: 53
+persona-semanas: recortando a 52 = 19809 | sumando la etiqueta 53 = 20127

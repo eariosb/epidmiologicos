@@ -1,1 +1,5 @@
-SurvTime: media 121.6  mediana 80  MAD 87.5 n% multiplos de 10: 97.1  | otros valores: 75, 85, 99 nprio: media 2.98  varianza 8.39  var/media 2.81 n
+SurvTime observado: media 121.6 | mediana 80 | MAD 87.5 (sin escalar: 59)
+Kaplan-Meier: mediana 80 IC95% 52 - 105 | media restringida 132.8
+Kps fuera de la escala: 75 75 85 99 (4 de 137)
+prio: media 2.98 | varianza 8.39 | var/media 2.81
+dispersion ajustada por covariables: 2.34

@@ -1,1 +1,2 @@
-tabla (1,8)/(11,9):  minlike = 0.0432   central = 0.0631n
+tabla (1,8)/(11,9):  minlike = 0.0432   central = 0.0631
+fisher.test(): 0.0432

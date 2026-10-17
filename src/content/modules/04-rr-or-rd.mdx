@@ -25,6 +25,48 @@ exceso absoluto. Cuál unidad corresponde lo decide el diseño (módulo 2),
 no la preferencia del analista.
 </Callout>
 
+## El riesgo y el odds
+
+Antes de dividir entre grupos hay que saber qué se divide. El **riesgo**
+es la parte contra el todo: $f$ eventos entre $N$ personas en riesgo,
+$p = f/N$, y por eso vive entre 0 y 1. El <Term k="odds">odds</Term> es la
+parte contra el resto: $p/(1-p) = f/(N-f)$, la razón de apuestas, que va
+de 0 a infinito. Misma ocurrencia, dos denominadores distintos:
+
+| $p$ | odds $= p/(1-p)$ |
+|---|---|
+| 0.091 | 0.10 |
+| 0.50 | 1 |
+| 0.90 | 9 |
+| 0.95 | 19 |
+| 0.99 | 99 |
+
+La escalera enseña lo esencial: cuando el evento es raro, riesgo y odds
+son prácticamente el mismo número (0.091 ≈ 0.10); cuando es frecuente, el
+odds despega hacia infinito mientras el riesgo apenas se mueve (0.95 →
+19). Todo lo que sigue en el módulo —por qué el OR se aleja de 1 más que
+el RR, por qué es el único que sobrevive al caso-control— es consecuencia
+de esa geometría.
+
+Un dato real fija las unidades. En el *Physicians' Health Study* (1989),
+~22 000 médicos asignados al azar a aspirina o placebo:
+
+$$
+\begin{array}{c|cc|c}
+ & \text{IM} & \text{sin IM} & \\\hline
+\text{aspirina} & 104 & 10\,933 & 11\,037\\
+\text{placebo} & 189 & 10\,845 & 11\,034
+\end{array}
+$$
+
+Riesgo con aspirina: $104/11\,037 = 0.0094$; odds: $104/10\,933 = 0.0095$.
+Riesgo con placebo: $0.0171$; odds: $0.0174$. El RR de la aspirina es
+$0.0094/0.0171 = 0.55$ —el tratamiento casi parte el riesgo a la mitad— y
+el OR es $0.0095/0.0174 = 0.54$. Con un desenlace tan raro, las dos razones
+son indistinguibles a efectos prácticos: ahí el OR puede leerse como RR
+sin daño. El precio aparece cuando el desenlace es frecuente, y es lo
+primero que muestra el explorador.
+
 ## La tabla 2×2
 
 Toda la medición de este módulo sale de una tabla con la convención de
@@ -53,11 +95,25 @@ módulo siguiente.
   title={<>Tabla 2×2 de deporte y depresión (ejemplo de clase)</>}
 />
 
+**Para explorar**
+
+1. Cambia c a 200 y d a 800 (desenlace frecuente entre no expuestos) y compara cuánto se separan el OR y el RR.
+2. Mueve P(E) en la población: el PRAP cambia aunque la tabla no. ¿Por qué un RR grande puede explicar pocos casos de la población?
+3. Intercambia filas (pon los no expuestos arriba): el RR pasa a su inverso y el RD cambia de signo. La orientación de la tabla es parte del resultado.
+
 <Callout type="tip" title="Cuándo OR ≈ RR (y cuándo engaña)">
-Bajo enfermedad rara ($r_0$ pequeño) el OR aproxima bien al RR porque
-$d/(c+d) \approx 1$. Con desenlace frecuente el OR exagera sistemáticamente
-la asociación. Ese es el dilema que el ejemplo de Molinero hace concreto:
-el OR está siempre disponible, el RR solo donde el diseño lo permite.
+La relación exacta sale de reordenar el cociente cruzado:
+$\widehat{OR} = \dfrac{ad}{bc} = \underbrace{\dfrac{a/n_1}{c/n_0}}_{RR}
+\times \dfrac{d/n_0}{b/n_1} = RR \times \dfrac{1-r_0}{1-r_1}$.
+El factor de corrección lo dice todo: si $RR > 1$ entonces $r_1 > r_0$ y
+el factor es mayor que 1, así que el OR exagera en la misma dirección;
+si $RR < 1$ el OR queda más lejos por debajo. El OR **siempre** se aleja
+más de 1 que el RR — y cuando ambos riesgos son pequeños el factor
+$\approx 1$ y las medidas coinciden, como en la aspirina de arriba.
+Leído como si fuera un RR con desenlace frecuente, el OR exagera la
+asociación: no está mal, mide otra cantidad. Ese es el dilema que el
+ejemplo de Molinero hace concreto: el OR está siempre disponible, el RR
+solo donde el diseño lo permite.
 </Callout>
 
 ## Molinero: una asociación, tres diseños
@@ -86,6 +142,32 @@ frecuencia del desenlace por 10 manteniendo los totales, el RR se queda en
   labelE="mal control de HTA"
   labelD="infarto"
 />
+
+**Para explorar**
+
+1. Divide a y c entre 10 sin cambiar los totales de cada fila: el OR vuelve a acercarse al RR.
+2. Busca una tabla con RR = 2 y OR mayor que 3. ¿Qué tienen en común los riesgos de esas tablas?
+
+Hay una simetría que vale la pena ver de cerca, porque es la razón de que
+el caso-control funcione. Transpone la tabla —casos y controles en las
+filas, exposición en las columnas— y pregunta por el OR de *exposición*
+entre casos y controles:
+
+$$
+\begin{array}{c|cc}
+ & \text{mal control} & \text{buen control} \\\hline
+\text{infarto} & 10 & 7\\
+\text{no infarto} & 250 & 461
+\end{array}
+\quad\Rightarrow\quad
+OR = \frac{10 \cdot 461}{250 \cdot 7} \approx 2.6
+$$
+
+El mismo número. El producto cruzado $ad/bc$ no se entera de la
+orientación: el OR de exposición entre casos es idéntico al OR de
+enfermedad entre expuestos. El RR no tiene esa propiedad —transpuesta la
+tabla, sus denominadores pasan a ser cuotas que el investigador fijó— y
+por eso desaparece cuando el diseño muestrea por el desenlace.
 
 El análisis de Molinero no termina en las medidas: repite la misma
 asociación bajo tres esquemas de muestreo con n = 728 y compara la χ² de
@@ -124,17 +206,20 @@ medidas <- function(t, nombre) {
 medidas(nat, "natural"); medidas(coh, "cohorte"); medidas(cc, "caso-control")
 
 # Salida esperada: chi2 ~ 4.0, ~3.3 y ~41 con la MISMA n.
-# Pero el 'RR' del caso-control es ficticio: los marginales
+# Pero el 'RR' y el 'RD' del caso-control son ficticios: los marginales
 # 364/364 son cuotas de diseno, no riesgos poblacionales.`}
 />
 
 <SasBlock code={`/* Molinero: la misma asociacion, tres muestreos */
-data nat; input e $ d $ n; datalines;
-mal si 10   mal no 250  bien si 7    bien no 461 ;
-data coh; input e $ d $ n; datalines;
-mal si 14   mal no 350  bien si 6    bien no 358 ;
-data cc;  input e $ d $ n; datalines;
-mal si 214  mal no 128  bien si 150  bien no 236 ;
+data nat; input e $ d $ n @@; datalines;
+mal si 10   mal no 250  bien si 7    bien no 461
+;
+data coh; input e $ d $ n @@; datalines;
+mal si 14   mal no 350  bien si 6    bien no 358
+;
+data cc;  input e $ d $ n @@; datalines;
+mal si 214  mal no 128  bien si 150  bien no 236
+;
 
 proc freq data=nat order=data; weight n;
   tables e*d / chisq relrisk measures; run;
@@ -158,9 +243,10 @@ esa tabla daría 1.6 cuando el verdadero es 2.6, porque los denominadores
 364/364 son **diseño, no población**.
 </Callout>
 
-## Intervalos de confianza de Woolf
+## Intervalos de confianza en escala log
 
-Los ICs de RR y OR se construyen en la escala logarítmica:
+Los ICs de RR (método de Katz) y OR (método de Woolf) se construyen en la
+escala logarítmica:
 
 $$
 \ln \widehat{RR} \pm 1.96\sqrt{\frac{b/a}{n_1} + \frac{d/c}{n_0}},
@@ -177,12 +263,12 @@ el intervalo apenas no toca 1, es decir, un resultado significativo pero
 frágil que pide interpretar el <Term k="IC">IC</Term> completo y no solo el p.
 
 El ejercicio de clase (deporte y depresión) reúne todo lo anterior en una
-sola tabla: riesgos por fila, RR, OR y RD con sus IC de Woolf, y la prueba
+sola tabla: riesgos por fila, RR y OR con sus IC en escala log, RD, y la prueba
 de Pearson con y sin la corrección de continuidad de Yates.
 
 ### Fragilidad de los ICs asintóticos
 
-Woolf es un IC de Wald en escala log: asintótico. La crítica de Correa
+Katz y Woolf son ICs de Wald en escala log: asintóticos. La crítica de Correa
 (2001, 2003) al intervalo de Wald para una proporción aplica por analogía:
 cuando $\hat{p}$ está cerca de 0 o 1 la cobertura real cae muy por debajo
 del nominal (con $p = 0.03$ y $n = 100$, un Wald de proporciones cubre
@@ -214,12 +300,12 @@ or_hat <- a*d/(b*c); se <- sqrt(1/a+1/b+1/c+1/d)
 cat(sprintf("Woolf:      OR = %.2f  IC95%% [%.2f, %.2f]\\n",
     or_hat, exp(log(or_hat)-1.96*se), exp(log(or_hat)+1.96*se)))
 
-# 2) Fisher exacto (condicional, hypergeometrico)
+# 2) Fisher exacto: OR condicional (MLE) e IC exacto, hipergeometrico
 ft <- fisher.test(coh)
 cat(sprintf("Fisher:     OR = %.2f  IC95%% [%.2f, %.2f]\\n",
     ft$estimate, ft$conf.int[1], ft$conf.int[2]))
 
-# 3) Jeffreys: posterior de cada riesgo con prior Beta(.5,.5)
+# 3) Jeffreys: posterior de cada riesgo con prior Beta(.5,.5); el intervalo es de credibilidad
 set.seed(7)
 r1 <- rbeta(1e5, a + .5, b + .5); r0 <- rbeta(1e5, c + .5, d + .5)
 or_j <- (r1/(1-r1)) / (r0/(1-r0))
@@ -239,7 +325,8 @@ for (i in 1:B) {
 }
 cat(sprintf("\\nCobertura Woolf: %.1f%%  |  muestras con celda cero: %.1f%%\\n",
     100*hit/(B-indef), 100*indef/B))
-# Esperado: cobertura ~97%% (conservador) y ~0.4%% de OR indefinidos.
+# Con B = 4000 el error Monte Carlo de la cobertura es ~0.3 puntos.
+# Resultado: ~97% (algo conservador) y ~0.4% de OR indefinidos.
 # Con n chico la falla no es el ancho: es que el estimador colapsa.`}
 />
 
@@ -275,7 +362,7 @@ print(chisq.test(tab, correct = TRUE))`}
 />
 
 <SasBlock code={`data dep;
-  input deporte $ depresion $ n;
+  input deporte $ depresion $ n @@;
   datalines;
 si si 38  si no 9  no si 31  no no 22
 ;
@@ -284,7 +371,7 @@ proc freq data=dep order=data; weight n;
   exact or;   /* OR exacto opcional */
 run;
 /* CHISQ da Pearson crudo y 'Continuity Adj. Chi-Square' (Yates).
-   RELRISK da OR y 'Cohort (Col1/Col2 Risk)' = RR con IC de Woolf */`} />
+   RELRISK da el OR (IC de Woolf) y 'Cohort (Col1 Risk)' = RR (IC log, Katz) */`} />
 
 ## El dilema de la elección de medida
 
@@ -354,7 +441,7 @@ cat("OR =", round(a*d/(b*c),2), "\\n")
 />
 
 <SasBlock code={`data plag;
-  input exp $ mal $ n;
+  input exp $ mal $ n @@;
   datalines;
 si si 45  si no 8  no si 12  no no 95
 ;

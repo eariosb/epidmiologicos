@@ -91,7 +91,7 @@ async function initWebR(): Promise<WebRType> {
  * agregar su nombre aquí.
  */
 const LOCAL_DATASETS: string[] = [
-  'bcg_matching.csv',      // M15: matching 1:1, vacuna BCG
+  'bcg_matching.csv',      // M0, M14, M15: matching 1:5, vacuna BCG
   'caso_control_11.csv',   // M15: laboratorio de parejas
   'ddimer.csv',            // M15: clogit con matching variable
   'leucemia.txt',          // M12: ensayo 6-MP (Freireich)

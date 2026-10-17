@@ -38,6 +38,12 @@ módulo 8 aplicada a tasas: mismo principio, otro instrumento.
 
 <StandardizationExplorer title={<>La cruda y la ajustada cuentan historias distintas (Glasgow)</>} />
 
+**Para explorar**
+
+1. Pon el riesgo real de A en ×1 y sube el porcentaje de mayores: toda la diferencia cruda es demografía.
+2. Pon el riesgo real en ×0.8 y busca el porcentaje de mayores en que la cruda de A supera a la de B. Es el orden invertido del ejemplo de Glasgow.
+3. Observa que el SMR siempre coincide con el riesgo real elegido: aquí el efecto es el mismo en todas las edades. Con tasas que difieren por edad, directa e indirecta dejarían de coincidir.
+
 ## El ejemplo de Glasgow
 
 El ejemplo 4.6 de Woodward: comparar la mortalidad coronaria entre zonas
@@ -64,31 +70,42 @@ obs      <- 30                      # muertes observadas totales
 
 esperadas <- sum(n_k * lam_ref)
 SMR <- obs / esperadas
-# IC del SMR = IC del conteo observado / esperadas.
-# Poisson exacto (modulo 6) vs. aproximacion de Byar:
-ic_exacto <- poisson.test(obs)$conf.int / esperadas
-lo <- qchisq(0.025, 2*obs)     / 2 / esperadas
-hi <- qchisq(0.975, 2*obs + 2) / 2 / esperadas
+# IC del SMR = IC del conteo observado dividido por las esperadas.
+# Exacto (Poisson, equivalente a los percentiles de chi-cuadrado):
+ic_exacto <- poisson.test(obs, T = esperadas)$conf.int
+# Aproximacion de Byar (Breslow y Day, vol. II), sin tablas:
+z <- qnorm(0.975)
+byar_lo <- obs * (1 - 1/(9*obs) - z/(3*sqrt(obs)))^3 / esperadas
+byar_hi <- (obs + 1) * (1 - 1/(9*(obs + 1)) + z/(3*sqrt(obs + 1)))^3 / esperadas
 cat(sprintf("esperadas = %.1f  SMR = %.3f\\n", esperadas, SMR))
-cat(sprintf("IC exacto:  (%.3f, %.3f)\\n", ic_exacto[1], ic_exacto[2]))
-cat(sprintf("IC Byar:    (%.3f, %.3f)\\n", lo, hi))
-cat("SMR > 1 con IC que no toca 1: exceso de mortalidad real.\\n")
+cat(sprintf("IC exacto (Poisson): (%.3f, %.3f)\\n", ic_exacto[1], ic_exacto[2]))
+cat(sprintf("IC de Byar:          (%.3f, %.3f)\\n", byar_lo, byar_hi))
+# Byar aproxima tan bien que aun con 3 eventos casi coincide con el exacto;
+# su valor historico fue evitar tablas de Poisson antes del software:
+o3 <- 3; e3 <- 1.5
+cat(sprintf("Con O = 3, E = 1.5: exacto (%.2f, %.2f) | Byar (%.2f, %.2f)\\n",
+    poisson.test(o3, T = e3)$conf.int[1], poisson.test(o3, T = e3)$conf.int[2],
+    o3 * (1 - 1/(9*o3) - z/(3*sqrt(o3)))^3 / e3,
+    (o3 + 1) * (1 - 1/(9*(o3 + 1)) + z/(3*sqrt(o3 + 1)))^3 / e3))
+cat("SMR > 1 con IC que no toca 1: el exceso no se explica por azar;\\n")
+cat("falta descartar el efecto del trabajador sano y la confusion residual.\\n")
 
 # Directa: la eleccion de la poblacion estandar NO es inocente.
 lam_propia <- c(0.004, 0.012, 0.028)
+cat("\\nrazon de tasas por edad:", round(lam_propia / lam_ref, 2), "\\n")
 std_joven  <- c(0.7, 0.2, 0.1)   # estandar mas joven
 std_viejo  <- c(0.2, 0.3, 0.5)   # estandar mas viejo
 razon <- function(p) sum(p * lam_propia) / sum(p * lam_ref)
-cat(sprintf("\\nrazon de tasas ajustadas:\\n"))
-cat(sprintf("  estandar joven: %.2f   estandar viejo: %.2f\\n",
+cat(sprintf("razon de tasas ajustadas: estandar joven %.2f | estandar viejo %.2f\\n",
             razon(std_joven), razon(std_viejo)))
-cat("Mismo dato, dos estandares, dos respuestas: hay que declarar cual.\\n")`}
+# Cambia porque la razon por edad no es constante (2.0, 1.5, 1.4): la edad
+# modifica el efecto (modulo 10). Con una razon constante, cualquier
+# estandar daria la misma razon ajustada.`}
 />
 
 <SasBlock code={`/* SMR (indirecta): esperados = persona-anos * tasa de referencia */
 data smr;
   input n_k lam_ref;
-  esperadas + n_k * lam_ref;
   datalines;
 1000 0.002
  800 0.008
@@ -96,18 +113,34 @@ data smr;
 ;
 proc sql;
   select 30/sum(n_k*lam_ref) as SMR format=8.3,
-         /* IC95% aprox. Byar: percentiles chi2 / 2 / esperadas */
-         cinv(0.025, 2*30)/2/sum(n_k*lam_ref)  as lo format=8.3,
+         /* IC95% exacto de Poisson: percentiles chi2 / 2 / esperadas */
+         cinv(0.025, 2*30)/2/sum(n_k*lam_ref)   as lo format=8.3,
          cinv(0.975, 2*30+2)/2/sum(n_k*lam_ref) as hi format=8.3
   from smr;
 quit;
-/* Directa: tasas propias ponderadas por poblacion estandar */
+/* Directa: tasas propias y de referencia ponderadas por cada estandar */
 data dir;
-  lam_propia = sum(0.5*0.004, 0.3*0.012, 0.2*0.028);
-  lam_ref    = sum(0.5*0.002, 0.3*0.008, 0.2*0.020);
-  razon = lam_propia / lam_ref;
+  array lp{3} _temporary_ (0.004 0.012 0.028);
+  array lr{3} _temporary_ (0.002 0.008 0.020);
+  array sj{3} _temporary_ (0.7 0.2 0.1);   /* estandar joven */
+  array sv{3} _temporary_ (0.2 0.3 0.5);   /* estandar viejo */
+  num_j = 0; den_j = 0; num_v = 0; den_v = 0;
+  do k = 1 to 3;
+    num_j + sj{k}*lp{k}; den_j + sj{k}*lr{k};
+    num_v + sv{k}*lp{k}; den_v + sv{k}*lr{k};
+  end;
+  razon_joven = num_j / den_j;   /* 1.60 */
+  razon_viejo = num_v / den_v;   /* 1.44 */
+  keep razon_joven razon_viejo;
 run;
 proc print data=dir noobs; run;`} />
+
+Las dos razones ajustadas difieren porque la razón de tasas no es la misma
+en todas las edades: 2.0 en los jóvenes, 1.5 y 1.4 en los mayores. Eso es
+modificación de efecto por edad, el tema del módulo 10. La estandarización
+resume esa heterogeneidad en un número, y el estándar decide cuánto pesa
+cada edad en el resumen; por eso hay que declararlo, y cuando la
+heterogeneidad es grande conviene reportar también las razones por edad.
 
 <Callout type="note" title="La regla de decisión">
 **Directa** si conoces las tasas específicas de ambas poblaciones y cada

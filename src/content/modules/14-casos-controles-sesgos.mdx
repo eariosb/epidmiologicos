@@ -3,7 +3,7 @@ title: "Diseño de casos y controles: sesgos y selección"
 slug: "14-casos-controles-sesgos"
 objective: "Diseñar un estudio de casos y controles reconociendo que solo el OR es estimable, y evaluar los sesgos propios del diseño: Berkson, Neyman y recuerdo."
 order: 14
-datasets: []
+datasets: ["bcg_matching.csv"]
 duration: 80
 prerequisites: ["Módulo 4: Medidas de asociación", "Módulo 7: Confusión"]
 ---
@@ -52,19 +52,29 @@ sesgos propios del diseño:
 
 <BerksonExplorer title={<>Sesgo de Berkson: dos caminos al hospital crean una asociación fantasma</>} />
 
+**Para explorar**
+
+1. Con los valores iniciales el OR hospitalario queda por debajo de 1 aunque en la población es 1. Baja P(hospitalización | exposición) hasta el nivel base: el sesgo desaparece.
+2. Sube P(hospitalización | enfermedad) a 0.9: ¿el sesgo crece o se reduce? Explica por qué casi todos los casos llegan al hospital de todas formas.
+3. Relaciona lo que ves con MacMahon (1981): allí los controles estaban subexpuestos y el OR subió. Es el mismo mecanismo con el signo contrario.
+
 ## Los casos canónicos
 
-- **Legionella (Reading 1984)**: el estudio de brote clásico, con casos
-  del brote contra controles de la comunidad; la fuente de controles
-  define si el OR apunta al sistema de agua o al azar.
-- **Melanoma (Autier 1996)**: controles de vecindario; el problema de la
-  exposición "tener acceso a dermatoscopio" como confusor de detección.
-- **Hip fracture (Moritz 1997)**: controles comunitarios contra
-  hospitalarios; la Tabla 6.6 de Woodward muestra OR distintos según la
-  fuente de controles.
-- **Sackett (1979)**: el catálogo de sesgos; el ejemplo del curso con
-  n = 2784 muestra que cambiar la fuente de controles cambia la
-  conclusión.
+- **Sackett (1979)**, el Berkson con números: entre 2784 personas de la
+  comunidad, enfermedad respiratoria y enfermedad locomotora no se
+  asocian (OR ≈ 1.06); entre las hospitalizadas, OR ≈ 4.06. La asociación
+  la fabrica la puerta del hospital.
+- **Café y cáncer de páncreas (MacMahon 1981)**: controles tomados entre
+  otros pacientes de los mismos gastroenterólogos. Muchos habían dejado el
+  café por indicación médica, así que los controles quedaron
+  *subexpuestos* y el OR salió ≈ 2.7. Con controles poblacionales, Gold
+  (1985) encontró ≈ 1.4, compatible con el azar. Aquí el sesgo de los
+  controles hospitalarios **infló** el OR.
+- **Fractura de cadera (Moritz, Kelsey y Grisso 1997)**: el mismo estudio
+  con controles hospitalarios y comunitarios llega a conclusiones
+  distintas sobre los factores de riesgo.
+- **Legionella (notas de clase 20–21)**: en un brote, la fuente de
+  controles decide si el OR apunta a la torre de enfriamiento o al azar.
 
 <Callout type="warning" title="La regla de oro de la selección">
 Los controles deben ser personas que, de haber enfermado, habrían sido
@@ -73,52 +83,66 @@ San Vicente, tu control debe ser alguien que *iría* a San Vicente si se
 enfermara, no cualquier sano conveniente.
 </Callout>
 
-## Doll y Hill (1948): el caso-control fundacional, con datos
+## Doll y Hill (1950): el caso-control fundacional, con datos
 
-El primer estudio de casos y controles moderno entrevistó a **709
-pacientes con cáncer de pulmón** en 20 hospitales de Londres y a un
-control por caso, pareado por sexo, grupo etario quinquenal, hospital y
-fecha. La Tabla 1.1 original es un caso-control con **gradiente de
-exposición**, así que permite dos preguntas, no una: ¿los casos fuman
-más? y ¿más consumo, más odds?
+El estudio, iniciado en 1948 y publicado en el *BMJ* en 1950, entrevistó a
+**709 pacientes con cáncer de pulmón** en 20 hospitales de Londres y a un
+control por caso, pareado por sexo, grupo etario quinquenal y hospital.
+La tabla del consumo tiene **gradiente de exposición**, así que permite
+dos preguntas: ¿los casos fuman más? y ¿más consumo, más odds?
 
 <RCell
   id="14/doll-hill-1948"
-  title="OR por nivel de consumo contra nunca fumadores (Doll & Hill 1948, hombres)"
-  code={`# Doll & Hill (1948), Tabla 1.1 — hombres.
-# Cigarrillos/dia equivalentes, casos vs controles:
-nivel  <- c("nunca", "1-4", "5-14", "15-24", "25-49", "50+")
-casos  <- c(2, 33, 250, 196, 136, 32)
-ctrl   <- c(27, 55, 293, 190, 71, 13)
+  title="OR por nivel de consumo y tendencia (Doll & Hill 1950, hombres)"
+  code={`# Doll & Hill (1950), hombres: cigarrillos/dia, casos vs controles.
+nivel <- c("nunca", "1-4", "5-14", "15-24", "25-49", "50+")
+casos <- c(2, 33, 250, 196, 136, 32)
+ctrl  <- c(27, 55, 293, 190, 71, 13)
 
-# OR de cada nivel contra la referencia 'nunca':
+# OR de cada nivel contra 'nunca', con IC de Woolf:
 or <- (casos * ctrl[1]) / (ctrl * casos[1])
-tab <- data.frame(nivel, casos, ctrl, OR = round(or, 1))
+ee <- sqrt(1/casos + 1/ctrl + 1/casos[1] + 1/ctrl[1])
+tab <- data.frame(nivel, casos, ctrl, OR = round(or, 1),
+                  li = round(exp(log(or) - 1.96 * ee), 1),
+                  ls = round(exp(log(or) + 1.96 * ee), 1))
+tab[1, c("li", "ls")] <- NA
 print(tab)
 
-# Esperado: 8.1, 11.5, 13.9, 25.9, 33.2 — gradiente monotono.
-# Alguna vez fumo (todos los niveles) vs nunca:
-cat("\\nOR fumador vs nunca:",
-    round(sum(casos[-1]) * ctrl[1] / (sum(ctrl[-1]) * casos[0+1]), 1), "\\n")
+# La referencia tiene 2 casos: cada OR hereda esa imprecision.
+# La tendencia usa todos los niveles a la vez (puntaje 0..5):
+fit <- glm(cbind(casos, ctrl) ~ seq_along(nivel), family = binomial)
+b <- coef(summary(fit))[2, ]
+cat(sprintf("\\nOR por nivel de consumo: %.2f (IC95%% %.2f-%.2f), p = %.1e\\n",
+            exp(b[1]), exp(b[1] - 1.96 * b[2]), exp(b[1] + 1.96 * b[2]), b[4]))
 
-# Mujeres (misma tabla): los tramos altos tienen ceros —
-# el OR no existe sin correccion; motivo del modulo 6.
+# Alguna vez fumo vs nunca:
+cat("OR fumador vs nunca:",
+    round(sum(casos[-1]) * ctrl[1] / (sum(ctrl[-1]) * casos[1]), 1), "\\n")
+
+# Mujeres: los tramos altos tienen ceros; el OR no existe sin
+# correccion (modulo 6).
 casos_m <- c(19, 7, 19, 9, 6, 0); ctrl_m <- c(32, 12, 10, 6, 0, 0)
 cat("Celdas cero en mujeres:", sum(casos_m == 0 | ctrl_m == 0), "\\n")`}
 />
 
-El gradiente que sale de la tabla (8 → 33 según consumo) es la primera
-demostración empírica de **dosis-respuesta** en un caso-control, el
-criterio de Bradford Hill que más pesa cuando la asociación es nueva.
+Los OR puntuales suben de 8 a 33, pero cada uno se apoya en los **2
+casos que nunca fumaron**, y sus intervalos son enormes (de 1.8–36 a
+6.9–160). Lo sólido es la tendencia: la regresión sobre el nivel de
+consumo usa todas las filas y da un OR de 1.51 por escalón (IC 1.35–1.69,
+p ≈ 10⁻¹²). Esa
+es la evidencia de **dosis-respuesta**, el criterio de Bradford Hill que
+más pesa cuando la asociación es nueva. El análisis trata los datos como
+no pareados, igual que el original; el módulo 15 muestra cuándo eso
+importa.
 
-<Callout type="warning" title="El sesgo de Berkson que atenuó el efecto real">
+<Callout type="warning" title="Controles hospitalarios: el sesgo que atenuó el efecto">
 Los controles de 1948 eran pacientes hospitalizados por *otras*
-enfermedades. Retrospectivamente se sabe que varias de esas enfermedades
-también se asocian al tabaco, así que los controles estaban
-**sobreexpuestos** al factor en estudio. El efecto neto fue el opuesto
-al del sesgo típico: el OR publicado **subestimó** la asociación real.
-Lección: el sesgo de selección no tiene dirección garantizada; puede
-esconder un efecto tan bien como puede inventarlo.
+enfermedades, y varias de ellas (bronquitis, enfermedad coronaria)
+también se asocian al tabaco. Los controles estaban **sobreexpuestos**,
+así que el OR tendió a subestimar la asociación; la cohorte de médicos
+británicos confirmó después efectos mayores. Con MacMahon ocurrió lo
+contrario. El sesgo de selección no tiene dirección garantizada: puede
+esconder un efecto o inventarlo.
 </Callout>
 
 Doll y Hill respondieron explícitamente cuatro preguntas metodológicas
@@ -132,11 +156,11 @@ que sirven como plantilla de auditoría para cualquier caso-control:
 Una variante moderna que conviene nombrar: el **caso-control anidado**
 (y el muestreo por densidad de incidencia) toma los controles de las
 personas-tiempo de la cohorte misma; con ese muestreo, el OR estima la
-*razón de tasas*, no solo los odds — cierre del círculo con el módulo
-13.
+*razón de tasas* sin suponer enfermedad rara, y cierra el círculo con
+el módulo 13.
 
 <LabExercise
-  id="lab-13-cc"
+  id="lab-14-cc"
   title="Laboratorio: diseñar el estudio antes de analizarlo"
   code={`# Escenario: asociacion entre consumo de cafe y cancer de pancreas.
 # Diseña el caso-control: define casos, fuente de controles,
@@ -149,20 +173,25 @@ comunidad <- matrix(c(120, 96, 60, 156), ncol = 2)   # controles comunidad
 or <- function(t) t[1,1]*t[2,2]/(t[1,2]*t[2,1])
 cat("OR con controles hospitalarios:", round(or(hospital), 2), "\\n")
 cat("OR con controles comunitarios :", round(or(comunidad), 2), "\\n")
-# La misma exposicion, dos OR distintos: la diferencia es el diseno.`}
+# Exposicion entre los controles: la diferencia es el diseno.
+cat("P(cafe alto | control hospital)  :", round(80/216, 2), "\\n")
+cat("P(cafe alto | control comunidad) :", round(60/216, 2), "\\n")`}
   tasks={[
     "¿Qué fuente de controles da el OR más creíble y por qué?",
-    "¿Qué sesgo podría inflar el OR hospitalario si el café se asocia con otras enfermedades que hospitalizan?",
+    "Los controles hospitalarios beben más café que los comunitarios. ¿Qué le hace eso al OR y por qué?",
+    "MacMahon (1981) obtuvo el sesgo contrario con controles de gastroenterología. ¿Qué tenían esos controles para inflar el OR?",
     "Escribe una regla de una línea para elegir controles en tu propio estudio.",
   ]}
-  hint="Piensa en Berkson: si la exposición también causa hospitalización por otras causas, los controles hospitalarios la sobrerrepresentan."
-  solution="El control comunitario aproxima la población que produjo los casos; el hospitalario introduce morbilidad competidora. Regla: 'el control es quien habría sido caso si enfermara'."
+  hint="Compara la proporción de café alto entre los dos grupos de controles. Si la exposición lleva al hospital por otras causas, los controles hospitalarios la sobrerrepresentan."
+  solution="Los controles hospitalarios tienen 37 % de café alto frente a 28 % en la comunidad: están sobreexpuestos y el OR baja de 3.25 a 2.12. El comunitario es más creíble porque aproxima la población que produjo los casos. En MacMahon los controles de gastroenterología habían dejado el café por indicación médica: subexpuestos, OR inflado. Regla: el control es quien habría sido caso si enfermara."
 />
 
-<SasBlock code={`data hosp; input caso $ cafe $ n; datalines;
-si si 120  si no 80  no si 96  no no 136 ;
-data com;  input caso $ cafe $ n; datalines;
-si si 120  si no 60  no si 96  no no 156 ;
+<SasBlock code={`data hosp; input caso $ cafe $ n @@; datalines;
+si si 120  si no 96  no si 80  no no 136
+;
+data com;  input caso $ cafe $ n @@; datalines;
+si si 120  si no 96  no si 60  no no 156
+;
 proc freq data=hosp order=data; weight n;
   tables caso*cafe / measures;  /* OR con controles de hospital */
 run;
@@ -246,29 +275,30 @@ el archivo y decide qué es la unidad de análisis:
   id="14/bcg-estructura"
   title="¿111 casos o 666 personas? Verificar el diseño en el archivo"
   code={`bcg <- read.csv("bcg_matching.csv")
-cat("filas:", nrow(bcg), " | sets:", length(unique(bcg$ID)), "\n")
+cat("filas:", nrow(bcg), " | sets:", length(unique(bcg$ID)), "\\n")
 cat("todos los sets tienen 6 miembros:",
-    all(table(bcg$ID) == 6), "\n")
+    all(table(bcg$ID) == 6), "\\n")
 
 # La proporcion de casos es 1/6 por DISENO, no una prevalencia:
 bcg$caso <- as.integer(bcg$Case_control == "Case")
 casos_por_set <- tapply(bcg$caso, bcg$ID, sum)
-cat("casos por set:", paste(unique(casos_por_set), collapse = ", "), "\n")
+cat("casos por set:", paste(unique(casos_por_set), collapse = ", "), "\\n")
 cat("proporcion de casos en el archivo:", round(mean(bcg$caso), 3),
-    " <- es 1/6 por construccion\n")
+    " <- es 1/6 por construccion\\n")
 
 # La vacuna en los CONTROLES si estima algo poblacional:
-cat("\nP(vacuna | control):",
+cat("\\nP(vacuna | control):",
     round(mean(bcg$Bcg_Status[bcg$caso == 0]), 3),
-    " <- estima la prevalencia poblacional\n")`}
+    " <- vacunacion de la poblacion fuente, con la edad de los casos\\n")`}
 />
 
 La proporción 1/6 **no es una prevalencia**: es el diseño hablando a
 través del archivo. Quien la lea como frecuencia poblacional comete el
 mismo error que quien calcula riesgos en un caso-control. Lo que sí
-estima algo poblacional es la exposición **de los controles**: si se
-seleccionaron bien, su proporción de vacunación ≈ la de la población
-fuente que produjo los casos.
+estima algo poblacional es la exposición **de los controles**, con un
+matiz: como están pareados, reflejan la población fuente con la
+distribución de edad (y demás factores de pareamiento) de los casos, no
+la población entera.
 
 ## De "podría haber sesgo" a un número: el análisis de sesgo cuantitativo
 
@@ -286,12 +316,19 @@ P_real = (P_obs + Sp − 1) / (Se + Sp − 1)
 
 y con las prevalencias corregidas se rehace la tabla y el OR. La
 mala clasificación *no diferencial* (misma Se/Sp en casos y
-controles) atenúa hacia 1 — lo que no se afirme, se demuestra:
-haga la corrección. El sesgo de recuerdo es *diferencial* y exige
+controles) de una exposición binaria atenúa hacia 1 en promedio; en un
+estudio concreto, o con exposiciones de más de dos niveles, puede no
+hacerlo. Por eso se corrige en lugar de suponer. El sesgo de recuerdo es *diferencial* y exige
 Se/Sp por fila; un análisis de sensibilidad serio recorre rangos
 plausibles, no un único valor.
 
 <BiasAnalysis2x2 />
+
+**Para explorar**
+
+1. Pon Se = Sp = 1: el OR corregido es el observado. Es la comprobación de que el cálculo está bien armado.
+2. Baja Se a 0.8 con Sp = 0.9: el OR corregido se aleja de 1, así que el observado estaba atenuado.
+3. Lleva Se y Sp hacia 0.55: la corrección explota o deja de ser posible. Con una medición casi aleatoria los datos no dicen nada sobre la exposición.
 
 <Callout type="warning" title="El orden es: suponer, corregir, reportar">
 La corrección depende de Se/Sp **asumidos**, no estimados de estos
@@ -324,6 +361,12 @@ método**.
 
 <BootstrapStress title={<>Prueba de estrés: el IC del OR con n chico por grupo</>} />
 
+**Para explorar**
+
+1. Con n = 15 y P(exp | control) = 0.20 audita los tres IC. Woolf con +0.5 cubre al menos el 95 %; el bootstrap percentil queda cerca del 90 %.
+2. Baja n a 10 y la exposición a 0.10: Woolf estricto no existe en casi la mitad de las tablas y el bootstrap cae cerca del 80 %.
+3. Sube n a 60: los tres convergen al nominal. La conclusión no es que un método gane, sino que con muy pocos datos ninguno compensa la falta de información.
+
 <RCell
   id="14/bootstrap-or"
   title="IC bootstrap para el OR en una tabla chica"
@@ -333,13 +376,15 @@ tab <- matrix(c(7, 5, 6, 18), nrow = 2, byrow = TRUE,
               dimnames = list(grupo = c("caso", "control"),
                               exp  = c("si", "no")))
 tab
-# OR de Woolf con correccion de Haldane para la celda en 5:
+# OR de Woolf con correccion de Haldane-Anscombe (+0.5 a cada celda;
+# sin ella OR = 7*18/(5*6) = 4.2):
 a <- tab[1,1]+0.5; b <- tab[1,2]+0.5; c <- tab[2,1]+0.5; d <- tab[2,2]+0.5
 lor <- log(a*d/(b*c)); se <- sqrt(1/a + 1/b + 1/c + 1/d)
 cat("OR =", round(exp(lor),2), " IC95% Woolf+0.5 =",
-    round(exp(lor + c(-1,1)*1.96*se), 2), "\n")
+    round(exp(lor + c(-1,1)*1.96*se), 2), "\\n")
 
-# Bootstrap: remuestrear dentro de cada grupo
+# Bootstrap parametrico: casos y controles son muestras fijas por
+# diseno, asi que se remuestrea la exposicion dentro de cada grupo
 set.seed(2026); B <- 2000
 n1 <- sum(tab[1,]); n0 <- sum(tab[2,])
 ors <- replicate(B, {
@@ -348,11 +393,11 @@ ors <- replicate(B, {
   A <- x1+0.5; Bc <- n1-x1+0.5; Cc <- x0+0.5; Dd <- n0-x0+0.5
   log(A*Dd/(Bc*Cc))
 })
-cat("IC95% bootstrap percentil =", round(exp(quantile(ors, c(.025,.975))), 2), "\n")
+cat("IC95% bootstrap percentil =", round(exp(quantile(ors, c(.025,.975))), 2), "\\n")
 # Pregunta para el escrito: el bootstrap arregla la varianza, pero
 # la tabla solo tiene 12 casos — de donde puede salir mas
-# informacion? Respuesta honesta: de mas casos, o de un estudio
-# multicentrico. Eso se decide en el protocolo, no en la consola.`}
+# informacion? De mas casos, o de un estudio multicentrico.
+# Eso se decide en el protocolo, no en la consola.`}
 />
 
 <Callout type="warning" title="La auditoría tiene dos capas y no se mezclan">

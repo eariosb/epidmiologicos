@@ -1,0 +1,7 @@
+ao fvl casos controles        OR
+1  0   0    36       100  1.000000
+2  1   0    84        63  3.703704
+3  0   1    10         4  6.944444
+4  1   1    25         2 34.722222
+Razon de OR (multiplicativa) = 1.35, IC95% 0.20 a 9.17, p = 0.76
+RERI = 25.1, IC95% -26.4 a 76.6

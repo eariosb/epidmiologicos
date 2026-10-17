@@ -48,7 +48,17 @@ $c$. Un estudio pareado con 500 parejas pero $b+c=6$ tiene menos evidencia
 que uno con $b+c=40$.
 </Callout>
 
+El explorador muestra cada pareja como un icono: caso a la izquierda,
+control a la derecha, relleno si estaba expuesto. Solo las parejas
+discordantes, en color, entran a la prueba.
+
 <McNemarCmhDemo title={<>Solo b y c alimentan el estadístico</>} />
+
+**Para explorar**
+
+1. Los valores iniciales son las parejas de `caso_control_11.csv` (b = 20, c = 7). Comprueba el OR = 2.86 y el χ² = 6.26 de la celda R siguiente.
+2. Pon b = c: el χ² es 0 sin importar cuántas parejas haya.
+3. Baja a b = 6 y c = 1 y compara el p del χ² con el exacto. Con pocas discordantes el χ² exagera la evidencia.
 
 ## La equivalencia McNemar ⇔ CMH
 
@@ -82,8 +92,11 @@ b <- tab["1","0"]; c0 <- tab["0","1"]
 cat(sprintf("discordantes: b = %d, c = %d  ->  OR = b/c = %.3f\\n",
             b, c0, b/c0))
 
-# Prueba 1: McNemar directo.
+# Prueba 1: McNemar directo, y su version exacta (binomial sobre b+c).
 print(mcnemar.test(tab, correct = FALSE))
+ic <- binom.test(b, b + c0)$conf.int
+cat(sprintf("McNemar exacto: p = %.3f | OR = %.2f, IC95%% exacto %.2f-%.2f\\n",
+            binom.test(b, b + c0)$p.value, b/c0, ic[1]/(1-ic[1]), ic[2]/(1-ic[2])))
 
 # Prueba 2: CMH sobre el array de estratos (un estrato por pareja).
 # Cada estrato es la tabla 2x2 de la pareja: filas = miembro
@@ -93,11 +106,11 @@ arr <- array(0, dim = c(2,2,n),
              dimnames = list(miembro = c("caso","control"),
                              expo = c("E+","E-"), par = NULL))
 for (i in 1:n) {
-  arr[1, cc$caso[i] + 1, i]    <- 1   # fila caso
-  arr[2, cc$control[i] + 1, i] <- 1   # fila control
+  arr[1, 2 - cc$caso[i], i]    <- 1   # fila caso: expuesto -> columna "E+"
+  arr[2, 2 - cc$control[i], i] <- 1   # fila control
 }
 print(mantelhaen.test(arr, correct = FALSE))
-cat("\\nChi2 McNemar = Chi2 CMH: la equivalencia de la clase 22.\\n")`}
+cat("\\nChi2 McNemar = Chi2 CMH, y OR de MH = b/c: la equivalencia de la clase 22.\\n")`}
 />
 
 <SasBlock code={`proc import datafile="caso_control_11.csv" out=cc dbms=csv replace;
@@ -105,17 +118,24 @@ cat("\\nChi2 McNemar = Chi2 CMH: la equivalencia de la clase 22.\\n")`}
 run;
 /* Cada fila YA es una pareja: caso x control */
 proc freq data=cc;
-  tables caso*control / agree;   /* McNemar bajo AGREE */
-  exact mcnem;                    /* McNemar exacto + OR = b/c */
+  tables caso*control / agree;   /* McNemar asintotico bajo AGREE */
+  exact mcnem;                    /* McNemar exacto */
 run;
+/* PROC FREQ no imprime el OR pareado: OR = b/c con b = (caso 1,
+   control 0) y c = (caso 0, control 1), leidos de la tabla */
 /* La equivalencia con CMH: cada pareja es un estrato.
    En formato largo (una fila por miembro con ID de pareja):
    tables ID*miembro*exposicion / cmh  da el mismo chi2 */`} />
 
+Las dos pruebas dan χ² = 6.26 y el estimador de Mantel–Haenszel
+reproduce b/c = 20/7 = 2.86. Con 27 parejas discordantes el IC exacto
+va de 1.16 a 8.0: hay asociación, pero su tamaño queda poco definido.
+Las 23 parejas concordantes no cambian nada de esto.
+
 ## La regresión logística condicional
 
 El dataset <Term k="DDIMER">DDIMER</Term> (embolia pulmonar y dímero D)
-parea sets 1:c con c variable — y bcg_matching.csv (vacuna <Term k="BCG">BCG</Term> y
+tiene sets de tamaño variable, algunos con más de un caso; y bcg_matching.csv (vacuna <Term k="BCG">BCG</Term> y
 meningitis, Rodrigues 1991) pareó **1 caso con 5 controles** en cada uno
 de 111 sets. El McNemar ya no alcanza: el análisis correcto es la
 **regresión logística condicional** (<Term k="clogit">clogit</Term>), que
@@ -136,18 +156,20 @@ fit <- clogit(cc ~ ddimer + SBP + strata(setno), data = dd)
 print(summary(fit))
 
 # El OR de ddimer ajustado por SBP dentro de cada set:
-cat("\\nOR(ddimer) =", round(exp(coef(fit)["ddimer"]), 3))
+cat("\\nOR(ddimer) =", round(exp(coef(fit)["ddimer"]), 3), "\\n")
 
 # bcg_matching.csv tambien es 1:c: 111 sets con 1 caso + 5 controles.
 bcg <- read.csv("bcg_matching.csv")
 bcg$case <- as.integer(bcg$Case_control == "Case")
 fit_b <- clogit(case ~ Bcg_Status + strata(ID), data = bcg)
-cat("OR(BCG pareado) =", round(exp(coef(fit_b)), 3))
+ic_b <- exp(confint(fit_b))
+cat("OR(BCG pareado) =", round(exp(coef(fit_b)), 3),
+    " IC95%", round(ic_b, 2), "\\n")
 
 # Si se ignorara el matching (tabla 2x2 pooled) el OR sale distinto:
 t <- table(bcg$Bcg_Status, bcg$case)
 cat("OR ingenuo (sin parear) =",
-    round(t[2,2]*t[1,1]/(t[2,1]*t[1,2]), 3))`}
+    round(t[2,2]*t[1,1]/(t[2,1]*t[1,2]), 3), "\\n")`}
 />
 
 <SasBlock code={`proc import datafile="ddimer.csv" out=dd dbms=csv replace;
@@ -160,11 +182,20 @@ proc logistic data=dd;
   model cc(event='1') = ddimer SBP;
 run;
 /* Alternativa equivalente: PROC PHREG con ties=discrete
-   (la logistica condicional es un Cox estratificado) */
-proc phreg data=dd;
-  model cc = ddimer SBP / ties=discrete;
+   (la logistica condicional es un Cox estratificado con un
+   tiempo ficticio: los casos "fallan" antes que sus controles) */
+data dd2; set dd; t = 2 - cc; run;
+proc phreg data=dd2;
+  model t*cc(0) = ddimer SBP / ties=discrete;
   strata setno;
 run;`} />
+
+La salida dice `coxph(... method = "exact")`: la logística condicional
+es un Cox estratificado con un tiempo ficticio. En DDIMER, el OR del
+dímero D ajustado por presión es 1.21 con IC 0.50–2.94, así que estos 28
+casos no permiten afirmar ni descartar un efecto; la presión sistólica
+sí se asocia (OR 1.022 por mmHg, ≈ 1.24 por cada 10 mmHg). En BCG, el
+OR pareado es 0.52 (IC 0.30–0.90) y el ingenuo 0.69.
 
 <Callout type="note" title="Por qué logística condicional y no ordinaria">
 El matching introduce un intercepto por estrato: tantos parámetros como
@@ -192,9 +223,11 @@ información. Sus siete pasos:
   </ConductStep>
   <ConductStep n={3}>
     Por cada caso, c controles del mismo nivel del confusor. La
-    proporción fija (1:1, 1:5) es una decisión de eficiencia — más de
-    ~4 controles por caso aporta poco—; la proporción variable (1:c) es
-    lo que ocurre cuando el pool no alcanza.
+    proporción fija (1:1, 1:5) es una decisión de eficiencia: cerca del
+    nulo, la eficiencia relativa a infinitos controles es c/(c+1), es
+    decir 50 % con 1, 80 % con 4 y 83 % con 5, así que pasar de 4 a más
+    aporta poco. La proporción variable es lo que ocurre cuando el pool
+    no alcanza.
   </ConductStep>
   <ConductStep n={4}>
     La variable de pareamiento debe medirse sin error y **no ser la
@@ -215,8 +248,10 @@ información. Sus siete pasos:
   <ConductStep n={7}>
     <strong>Obligatorio: análisis condicional.</strong> McNemar en 1:1,
     clogit en 1:c. El OR de la tabla sin estratificar ignora el
-    pareamiento y sesga hacia el nulo — el diseño que controla la
-    confusión exige el análisis que la respeta.
+    pareamiento y, cuando el factor de pareamiento se asocia con la
+    exposición, suele sesgar hacia el nulo (BCG: 0.69 frente a 0.52).
+    El diseño que controla la confusión exige el análisis que la
+    respeta.
   </ConductStep>
 </ConductStudy>
 
@@ -231,36 +266,26 @@ tamaño variable. El archivo lo dice si lo miras:
   code={`# setno = estrato de matching, cc = caso(1)/control(0)
 dd <- read.csv("ddimer.csv")
 miembros <- table(dd$setno)
-cat("sets:", length(miembros), "\n")
-cat("miembros por set:\n")
+cat("sets:", length(miembros), "\\n")
+cat("miembros por set:\\n")
 print(table(miembros))
 
 # Cuantos casos por set? (DDIMER no es estrictamente 1:c)
 casos <- tapply(dd$cc, dd$setno, sum)
-cat("\ncasos por set:\n")
+cat("\\ncasos por set:\\n")
 print(table(casos))
-cat("sets con mas de un caso:", sum(casos > 1), "\n")
+cat("sets con mas de un caso:", sum(casos > 1), "\\n")
 
 # La verosimilitud condicional no exige c fijo:
-cat("\npor eso clogit maneja sets de tamano variable\n")`}
+cat("\\npor eso clogit maneja sets de tamano variable\\n")`}
 />
 
 La lección de conducción: el archivo manda sobre el protocolo. DDIMER
-no es 1:c con c fijo — hay sets con 1, 2 y 3 casos—, y eso no lo
-invalide: la verosimilitud condicional se escribe por set y tolera
+no es 1:c con c fijo (hay sets con 1, 2 y 3 casos), y eso no lo
+invalida: la verosimilitud condicional se escribe por set y tolera
 tamaños variables. Lo que sí exige es verificar la estructura antes de
 analizarla: quien asume 1:5 fijo y cruza filas por posición, rompe los
 sets.
-
-<Callout type="warning" title="Sobrepareamiento: el lado oscuro del control">
-Parear por algo que no es confusor — un correlato de la exposición sin
-vínculo con el desenlace — fabrica concordancias que no informan: el OR
-no se sesga pero los sets discriminantes escasean y el IC se ensancha
-(<Term k="sobrepareamiento">sobrepareamiento</Term>). Parear por un
-mediador es peor: bloquea parte del efecto real. La regla se repite
-porque se incumple: **solo por confusores verdaderos**, y el DAG del
-módulo 7 es quien dice cuáles lo son.
-</Callout>
 
 ## Los límites del matching
 
@@ -301,13 +326,13 @@ cada pareja no varía.
 <Quiz
   question="En un estudio pareado 1:1, 200 parejas son concordantes en la exposición y solo 12 discordantes (b=9, c=3). El McNemar da χ²=3.0, p=0.083. ¿Cuál es la lectura correcta?"
   options={[
-    "Con 200 parejas el estudio es grande: p no significativo pero el OR=b/c=3 sugiere efecto real que merece más parejas discordantes",
+    "La evidencia vive en 12 parejas: OR = b/c = 3 con IC exacto 0.75–17, compatible con ningún efecto y con uno grande; hacen falta más parejas discordantes",
     "El estudio es inválido porque los concordantes no cuentan",
-    "OR=3 significa que el riesgo se triplica",
+    "Con 212 parejas el estudio es grande, así que p = 0.083 descarta un efecto importante",
     "Hay que aplicar CMH en lugar de McNemar"
   ]}
   correctIndex={0}
-  explanation="En pareamiento la información vive en los discordantes: b+c=12 es una muestra chica aunque haya 212 parejas. OR_MH=b/c=3 es un efecto posiblemente grande con un IC ancho; la conclusión honesta es 'sugerente pero no concluyente'. Y en 1:1, CMH ES McNemar."
+  explanation="En pareamiento la información está en los discordantes: b+c = 12 es una muestra chica aunque haya 212 parejas. El McNemar exacto da p = 0.15 y el IC exacto del OR va de 0.75 a 17: el estudio no distingue entre nada y mucho. Los concordantes no invalidan el estudio, solo no informan. Y en 1:1, CMH es McNemar."
 />
 
 <Flashcard
@@ -316,12 +341,12 @@ cada pareja no varía.
     { front: "Medida legítima", back: "Solo el OR pareado = b/c. Los concordantes no votan: b+c es el tamaño efectivo." },
     { front: "McNemar", back: "χ² = (b−c)²/(b+c) sobre parejas discordantes. En 1:1, McNemar ≡ CMH exactamente." },
     { front: "Matching variable", back: "1:c con c variable → clogit: verosimilitud condicional elimina los interceptos por estrato." },
-    { front: "Sesgos propios", back: "Berkson (controles hospitalarios), Neyman (prevalentes ≠ incidentes), recuerdo (los casos recuerdan más)." },
+    { front: "Sobrepareamiento", back: "Parear por un correlato de la exposición no sesga el OR condicional pero fabrica sets concordantes y ensancha el IC; parear por un mediador sí sesga." },
   ]}
 />
 
 <LabExercise
-  id="lab-14-caso-control"
+  id="lab-15-caso-control"
   title="Laboratorio: BCG, matching 1:5 bajo la lupa"
   code={`# bcg_matching.csv: 111 sets de 6 miembros (1 caso + 5 controles).
 bcg <- read.csv("bcg_matching.csv")
@@ -338,7 +363,7 @@ cat("sets informativos:", sum(info$Bcg_Status), "de", nrow(info), "\\n")`}
     "Explica en dos líneas por qué el análisis debe respetar el matching del diseño.",
   ]}
   hint="table(Bcg_Status, ID) por set muestra la homogeneidad; el clogit usa solo sets con variación interna."
-  solution="~la mitad de los sets son informativos; el OR pareado (~0.52, IC 0.30–0.90) es más protector que el ingenuo (~0.69): ignorar el matching atenúa el efecto real de la BCG."
+  solution="73 de 111 sets (dos tercios) tienen variación de exposición; los 38 restantes no aportan a la verosimilitud condicional. El OR pareado es 0.52 (IC 0.30–0.90) y el ingenuo 0.69: ignorar el pareamiento acerca el OR a 1. Si la vacunación varía con los factores de pareamiento (la edad, por ejemplo), la tabla sin estratificar mezcla esa variación con el efecto."
 />
 
 <SasBlock code={`proc import datafile="bcg_matching.csv" out=bcg dbms=csv replace;

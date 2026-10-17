@@ -34,8 +34,10 @@ su precisión. El tutorial de Normand (1999) usa los seis ensayos de
 lidocaína profiláctica post-IAM reunidos por Hine et al. (1989): ninguno
 es concluyente solo, pero combinados revelan que el beneficio
 antiarrítmico **no** se traduce en menor mortalidad: en la escala de
-riesgos, la lidocaína mata a ~3 de cada 100 tratados (<Term k="RD">RD</Term> ≈ +2.94 pp,
-IC95% 0.4–5.5; el <Term k="RR">RR</Term> combinado es ≈ 1.7).
+riesgos hay un exceso de ~3 muertes por cada 100 tratados (<Term k="RD">RD</Term> ≈ +2.94 pp,
+IC95% 0.4–5.5). El <Term k="RR">RR</Term> combinado es 1.70, con un IC
+(1.001–2.88) cuyo límite inferior roza el 1: la conclusión es frágil en
+esa escala.
 
 $$
 \hat\theta_{FE} = \frac{\sum_k w_k \hat\theta_k}{\sum_k w_k},
@@ -46,10 +48,17 @@ $$
 
 - **Efecto fijo**: los estudios estiman un único θ común.
 - **Efectos aleatorios** (DerSimonian–Laird): cada estudio estima su
-  propio θ_k distribuido con varianza τ²; la heterogeneidad <Term k="I2">I²</Term>
-  mide qué fracción de la variación es real frente a ruido.
+  propio θ_k distribuido con varianza τ²; <Term k="I2">I²</Term> estima
+  qué fracción de la variabilidad observada se debe a heterogeneidad real
+  y no al error de muestreo.
 
 <MetaExplorer title={<>Lidocaína post-IAM: seis estudios inconclusos, una respuesta</>} />
+
+**Para explorar**
+
+1. Con heterogeneidad 0 alterna entre efecto fijo y aleatorio: el rombo no cambia porque τ̂² = 0.
+2. Sube la heterogeneidad a 0.6 y vuelve a alternar. Mira cómo el aleatorio reparte peso hacia los estudios pequeños y ensancha el rombo.
+3. Anota en qué valor de heterogeneidad la prueba Q empieza a rechazar. Con seis estudios, ¿cuánta dispersión hace falta para detectarla?
 
 <Callout type="note" title="El funnel plot y el sesgo de publicación">
 El meta-análisis supone que se observan todos los estudios, pero los no
@@ -65,11 +74,11 @@ Todo lo anterior toma τ² como si se conociera. No se conoce: se estima,
 y la forma más común de estimarlo —el método de momentos de
 DerSimonian–Laird, $\hat\tau^2 = \max\{0, (Q-(k-1))/c\}$— tiene un
 defecto que se ve en la propia fórmula: el estimador sin truncar puede
-dar una varianza **negativa**. La corrección `max(0, ·)` no arregla el
-problema, lo esconde: fuerza al estimador de vuelta al espacio
-paramétrico, sesgándolo hacia arriba en promedio y concentrando masa en
-el borde. Es el caso canónico de **estimación inadmisible**: el
-resultado crudo puede salir de lo que el parámetro permite.
+dar una varianza **negativa**. Ese estimador es **inadmisible**: su parte
+positiva, `max(0, ·)`, tiene menor error cuadrático siempre. Pero la
+truncación tiene su precio: introduce sesgo positivo cuando τ² es chico y
+acumula masa en exactamente cero, un valor que el analista lee luego
+como "no hay heterogeneidad".
 
 ¿Y qué cuesta en la práctica? Cuando k es pequeño (meta-análisis de
 4–10 estudios, lo típico en Cochrane) o τ² es realmente cercano a cero,
@@ -82,13 +91,19 @@ cubre μ.
 
 <Tau2Audit title={<>Auditoría de τ²: DerSimonian–Laird vs. Paule–Mandel bajo estrés</>} />
 
+**Para explorar**
+
+1. Con τ = 0 audita: el efecto fijo es correcto y τ̂² queda en 0 en buena parte de las réplicas.
+2. Pon τ = 0.3 y compara k = 5 con k = 30. ¿Cuánto mejora la cobertura del IC combinado al tener más estudios?
+3. Compara DL con Paule–Mandel en la misma configuración: ¿cuál se trunca más veces en 0?
+
 <Callout type="note" title="Reportar el estimador, no solo I²">
-I² se calcula de Q y no depende del estimador de τ² — por eso dos
-meta-análisis con el mismo I² pueden tener combinados distintos. El
-reporte honesto declara: estimador de τ² (<Term k="DL">DL</Term>, Paule–Mandel, REML),
-valor de τ̂² y su intervalo si existe, y el método del IC del
-combinado (Wald vs. Hartung–Knapp, que corrige exactamente este
-problema de subcobertura con k chico).
+I² se calcula de Q y no depende del estimador de τ²: el mismo
+meta-análisis, con el mismo I², da combinados distintos según se use
+<Term k="DL">DL</Term>, Paule–Mandel o REML. El reporte honesto declara
+el estimador de τ², el valor de τ̂² con su intervalo si existe, y el
+método del IC del combinado (Wald o Hartung–Knapp; este último mejora la
+cobertura con k chico, aunque no la garantiza).
 </Callout>
 
 ## Incertidumbre cuantificada, no escondida
@@ -114,52 +129,66 @@ dato**. Dos piezas:
 
 <RCell
   id="17/conforme"
-  title="Cobertura conforme en 20 líneas"
-  code={`# Prediccion conforme (split): intervalos con cobertura garantizada.
+  title="Predicción conforme partida: qué garantiza y qué no"
+  code={`# Prediccion conforme partida (split): entrenar, calibrar, predecir.
 set.seed(11)
-n <- 400; x <- runif(n, 40, 75)             # edad
-y <- 0.02*x + rnorm(n, 0, 0.08)             # tasa basal de un evento
-tr <- 1:300; te <- 301:400
+gen <- function(n) { x <- runif(n, 40, 75)            # edad
+                     data.frame(x, y = 0.02*x + rnorm(n, 0, 0.08)) }
+tr  <- gen(200)
+fit <- lm(y ~ x, data = tr)                  # 1) ajustar en entrenamiento
+err <- function(d) abs(d$y - predict(fit, newdata = d))
 
-fit <- lm(y ~ x, subset = tr)
-resid <- abs(y[tr] - predict(fit))          # scores de no-conformidad
-q  <- quantile(resid, 0.9)                  # cuantil 90% del error
-pred <- predict(fit, newdata = data.frame(x = x[te]))
-lo <- pred - q; hi <- pred + q
-cob <- mean(y[te] >= lo & y[te] <= hi)
-cat(sprintf("cobertura conforme empirica: %.1f%% (objetivo 90%%)\\n", 100*cob))
+alfa <- 0.10; n_cal <- 100
+k <- ceiling((n_cal + 1) * (1 - alfa))       # 91: el cuantil conforme
+q_tr <- quantile(abs(residuals(fit)), 1 - alfa)   # atajo incorrecto
 
-# El intervalo clasico de lm asume normalidad; el conforme no.`}
+# 2) Repetir 500 veces la calibracion (100 casos nuevos) y medir la
+#    cobertura en 1000 casos de prueba.
+cob <- replicate(500, {
+  q  <- sort(err(gen(n_cal)))[k]
+  te <- err(gen(1000))
+  c(conforme = mean(te <= q), entrenamiento = mean(te <= q_tr))
+})
+cat(sprintf("conforme: cobertura media %.1f%%, 90%% de las calibraciones entre %.1f%% y %.1f%%\\n",
+            100*mean(cob[1, ]), 100*quantile(cob[1, ], .05), 100*quantile(cob[1, ], .95)))
+cat(sprintf("residuos de entrenamiento (fijo): %.1f%%, sin garantia\\n",
+            100*mean(cob[2, ])))`}
 />
+
+La garantía es **marginal**: promediando sobre la calibración y el caso
+nuevo, la cobertura es al menos 90 %. Una calibración concreta de 100
+casos puede entregar 84 % o 95 % (la cobertura condicional sigue una
+Beta(91, 10)); tampoco promete 90 % para cada edad.
+Usar los residuos del entrenamiento rompe el argumento de
+intercambiabilidad: aquí el daño es pequeño porque el modelo tiene dos
+parámetros, pero con modelos flexibles el sobreajuste encoge esos
+residuos y la cobertura cae.
 
 <SasBlock code={`data cp;
   call streaminit(11);
-  do i = 1 to 400;
+  do i = 1 to 1300;
     x = 40 + 35*rand('uniform');
     y = 0.02*x + 0.08*rand('normal');
-    tr = (i <= 300);
+    grupo = 1 + (i > 200) + (i > 300);   /* 1 entrena, 2 calibra, 3 prueba */
     output;
   end;
 run;
-/* 1) ajuste en calibracion, |residuo| = score de no-conformidad */
-proc reg data=cp noprint;
-  where tr = 1;
-  model y = x;
-  output out=cal p=p r=r;
-run; quit;
-/* 2) cuantil 90% del error absoluto */
-data cal; set cal; absr = abs(r); run;
-proc univariate data=cal noprint;
-  var absr; output out=q p90=q90;
-run;
-/* 3) predecir test y aplicar +/- q90 (PROC SCORE con OUTEST) */
+/* 1) ajustar en entrenamiento (grupo 1) */
 proc reg data=cp noprint outest=est;
-  where tr = 1; model y = x;
+  where grupo = 1; model y = x;
 run; quit;
-proc score data=cp(where=(tr=0)) score=est out=pred type=parms predict;
+/* 2) predecir calibracion y prueba */
+proc score data=cp(where=(grupo > 1)) score=est out=pred type=parms predict;
   var x;
 run;
-/* cobertura = mean(y dentro de pred +/- q90) */`} />
+data pred; set pred; absr = abs(y - MODEL1); run;
+/* 3) cuantil conforme: el valor 91 de 100 en calibracion,
+      ceil((100 + 1) * 0.9) = 91 */
+proc sort data=pred(where=(grupo = 2)) out=cal; by absr; run;
+data _null_; set cal; if _n_ = 91 then call symputx('q', absr); run;
+/* 4) cobertura en prueba */
+data prueba; set pred(where=(grupo = 3)); dentro = (absr <= &q); run;
+proc means data=prueba mean; var dentro; run;`} />
 
 ## UQ en acción (el caso Izbicki)
 
@@ -202,7 +231,7 @@ honestidad estadística; son el mismo principio.
 />
 
 <LabExercise
-  id="lab-16-meta"
+  id="lab-17-meta"
   title="Laboratorio final: tu propio meta-análisis"
   code={`# Datos reales: Hine et al. (1989), Tabla I de Normand (1999)
 # ai/ci = muertes lido/control; n1i/n2i = pacientes lido/control
@@ -225,7 +254,7 @@ cat(sprintf("Q = %.2f con %d gl; I^2 = %.0f%%\\n",
     "Escribe el párrafo de reporte clínico: ¿recomendarías lidocaína profiláctica?",
   ]}
   hint="tau² = max(0, (Q − (k−1))/C) con C = Σw − Σw²/Σw; luego repite la ponderación con 1/(v+τ²)."
-  solution="En la escala log-RR que calcula el código, Q ≈ 1.57 con 5 gl, así que I² = 0% (en escala RD, Q ≈ 0.86): la varianza entre ensayos no excede lo esperable por azar, y el modelo de efectos aleatorios coincide con el fijo (tau² = 0). Ojo: I² = 0 con solo 6 ensayos pequeños no demuestra homogeneidad — es la lección agnóstica del módulo 10, ausencia de evidencia no es evidencia de ausencia. En la escala RD el combinado es +2.94 pp (0.4–5.5), igual que la Tabla VII de Normand."
+  solution="En la escala log-RR, Q = 1.57 con 5 gl, así que I² = 0 % (en escala RD, Q = 0.86): la variación entre ensayos no excede lo esperable por azar, τ̂² = 0 y el modelo aleatorio coincide con el fijo. Pero I² = 0 con seis ensayos pequeños no demuestra homogeneidad: la prueba Q tiene muy poco poder con k = 6, la misma lección del módulo 10. En escala RD el combinado es +2.94 pp (0.38–5.51). El RR fijo es 1.70 con límite inferior 1.001: la conclusión sobre mortalidad descansa sobre todo en la escala RD."
 />
 
 <SasBlock code={`/* Hine et al. (1989): RD por estudio, varianza y peso inverso */
@@ -243,18 +272,21 @@ Darby     7 103 5 100
 Bennett   7 110 3 106
 OBrien   11 154 4 146
 ;
-/* Efecto fijo inverso-varianza + Q de Cochran: */
-proc sql;
-  select sum(w*rd)/sum(w) as RD_FE format=8.4,
-         calculated RD_FE - 1.96/sqrt(sum(w)) as lo format=8.4,
-         calculated RD_FE + 1.96/sqrt(sum(w)) as hi format=8.4,
-         sum(w*(rd - calculated RD_FE)**2) as Q format=8.2
-  from hine;
+/* Efecto fijo inverso-varianza + Q de Cochran (dos pasos: SQL no
+   anida agregados) */
+proc sql noprint;
+  select sum(w*rd)/sum(w), 1/sqrt(sum(w)) into :rdfe, :ee from hine;
+  select sum(w*(rd - &rdfe)**2) into :q from hine;
 quit;
-/* Efectos aleatorios (DerSimonian-Laird aprox): PROC MIXED */
-proc mixed data=hine method=reml cl;
+%put RD_FE = &rdfe  IC95%: %sysevalf(&rdfe - 1.96*&ee) a %sysevalf(&rdfe + 1.96*&ee)  Q = &q;
+/* Efectos aleatorios por REML (no DerSimonian-Laird): intercepto
+   aleatorio por estudio y varianza residual fija en v = 1/w */
+proc mixed data=hine method=reml;
+  class estudio;
   model rd = / solution cl;
+  random intercept / subject=estudio;
   weight w;
+  parms (0.0001) (1) / hold=2;   /* tau2 libre, escala residual = 1 */
 run;`} />
 
 <ToolCard task="meta" />
@@ -294,9 +326,17 @@ efecto:
 
 <EValueCalculator />
 
-Con RR = 2 se necesita un confusor de fuerza 3.41 en los dos
-caminos — más fuerte que casi cualquier covariable clínica típica;
-con RR = 1.2 basta 1.68, al alcance de confusores plausibles. El
+**Para explorar**
+
+1. Con RR = 2 y límite inferior 1.4, el E-value del límite es 2.15. Explica en una frase qué significa para un confusor no medido.
+2. Baja el límite inferior por debajo de 1: el E-value del IC pasa a 1, porque el intervalo ya incluye el nulo sin necesidad de confusión.
+3. Pon RR = 1.2 y piensa en un confusor conocido de tu área con RR de 1.7 en ambos caminos. ¿Bastaría para explicar el hallazgo?
+
+Con RR = 2 se necesita un confusor asociado con RR 3.41 tanto a la
+exposición como al desenlace, más fuerte que casi cualquier covariable
+clínica típica; con RR = 1.2 basta 1.69, al alcance de confusores
+plausibles. Para el IC se calcula el E-value del límite más cercano a
+1. El
 E-value no absuelve de dibujar el DAG ni de cuantificar sesgos de
 medición; lo que hace es convertir el "podría ser confusión" del
 revisor en un número que se discute.

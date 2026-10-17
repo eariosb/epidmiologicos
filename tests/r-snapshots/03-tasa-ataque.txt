@@ -1,3 +1,5 @@
 tasa de ataque si comio   = 79.6%
-tasa de ataque no comio   = 4.6%
-razon de tasas de ataque  = 17.3
+tasa de ataque no comio   = 14.3%
+razon de tasas de ataque  = 5.6
+diferencia                = 65.3 puntos
+IC95% (log-normal) de la razon: 1.9 a 16.0

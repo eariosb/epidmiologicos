@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { GLOSSARY, glossaryAnchor } from '@/lib/glossary';
+import { GLOSSARY, GLOSSARY_ALIASES, glossaryAnchor } from '@/lib/glossary';
 
 interface TermProps {
   /** Clave del glosario de siglas (src/lib/glossary.ts). */
@@ -19,9 +19,10 @@ interface TermProps {
  * CSS puro — sin estado, funciona en SSR y en lectores de pantalla vía
  * el sr-only y el focus.
  */
-export function Term({ k, tip, children }: TermProps) {
+export function Term({ k: rawK, tip, children }: TermProps) {
+  const k = rawK ? (GLOSSARY_ALIASES[rawK] ?? rawK) : rawK;
   const text = tip ?? (k ? GLOSSARY[k] : undefined);
-  const label = children ?? k;
+  const label = children ?? rawK;
   const href = k && k in GLOSSARY ? `/glosario#${glossaryAnchor(k)}` : null;
   const inner = (
     <>
@@ -31,7 +32,7 @@ export function Term({ k, tip, children }: TermProps) {
           <span className="sr-only">({text})</span>
           <span
             role="note"
-            className="invisible pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 w-64 max-w-[80vw] -translate-x-1/2 rounded-md bg-ink-900 px-3 py-2 text-left text-xs font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+            className="hidden pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 w-64 max-w-[80vw] -translate-x-1/2 rounded-md bg-ink-900 px-3 py-2 text-left text-xs font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:block group-hover:opacity-100 group-focus-within:block group-focus-within:opacity-100"
           >
             {text}
             <span className="absolute left-1/2 top-full -translate-x-1/2 border-[5px] border-transparent border-t-ink-900" />

@@ -1,6 +1,7 @@
 OR crudo    = 1.747
-OR ajustado = 1.034  <- la edad confundia; el efecto verdadero es 1
+OR ajustado = 1.034 (IC95% 0.82-1.31)  <- la edad confundia; el efecto verdadero es 1
 
-IRR (Poisson) = 0.508
+IRR expuestos vs no (Poisson) = 1.97  = 1.97 directo
 SMR via offset = 1.087  = 1.087  directo
-deviance/gl = 2.008  (esperado ~ 1 si Poisson basta)
+deviance/gl, Poisson puro      : 0.83
+deviance/gl, con heterogeneidad: 3.8  -> quasipoisson o binomial negativa

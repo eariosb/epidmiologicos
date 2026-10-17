@@ -1,1 +1,6 @@
-filas: 666  | sets: 111 ntodos los sets tienen 6 miembros: TRUE ncasos por set: 1 nproporcion de casos en el archivo: 0.167  <- es 1/6 por construccionnnP(vacuna | control): 0.605  <- estima la prevalencia poblacionaln
+filas: 666  | sets: 111
+todos los sets tienen 6 miembros: TRUE
+casos por set: 1
+proporcion de casos en el archivo: 0.167  <- es 1/6 por construccion
+
+P(vacuna | control): 0.605  <- vacunacion de la poblacion fuente, con la edad de los casos

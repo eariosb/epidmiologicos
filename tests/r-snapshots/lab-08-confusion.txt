@@ -1,0 +1,11 @@
+exito
+trat  si no
+   A  81  6
+   B 234 36
+    exito
+trat  si no
+   A 192 71
+   B  55 25
+     [,1] [,2]
+[1,]  273   77
+[2,]  289   61

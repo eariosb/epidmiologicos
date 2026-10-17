@@ -50,14 +50,18 @@ dat  <- data.frame(E, D, edad)
 # Ingenuo vs. ajustado: el coeficiente de E es el log-OR.
 crudo    <- glm(D ~ E,       data = dat, family = binomial)
 ajustado <- glm(D ~ E + edad, data = dat, family = binomial)
-cat("OR crudo    =", round(exp(coef(crudo)["E"]), 3))
-cat("\\nOR ajustado =", round(exp(coef(ajustado)["E"]), 3),
+ic <- exp(confint.default(ajustado)["E", ])
+cat("OR crudo    =", round(exp(coef(crudo)["E"]), 3), "\\n")
+cat("OR ajustado =", round(exp(coef(ajustado)["E"]), 3),
+    sprintf("(IC95%% %.2f-%.2f)", ic[1], ic[2]),
     " <- la edad confundia; el efecto verdadero es 1\\n")
 
 # Poisson sobre persona-tiempo: offset log(persona-anos).
-ev <- c(30, 22); pt <- c(1800, 2600); grupo <- factor(c("exp","no"))
+ev <- c(30, 22); pt <- c(1800, 2600)
+grupo <- factor(c("exp", "no"), levels = c("no", "exp"))   # referencia: no expuestos
 m <- glm(ev ~ grupo + offset(log(pt)), family = poisson)
-cat("\\nIRR (Poisson) =", round(exp(coef(m)["grupono"]), 3))
+cat("\\nIRR expuestos vs no (Poisson) =", round(exp(coef(m)["grupoexp"]), 3),
+    " =", round((30/1800) / (22/2600), 3), "directo")
 
 # El offset tambien formaliza el SMR: si el offset es log(esperados)
 # bajo tasas de referencia, exp(intercepto) ES el SMR.
@@ -66,13 +70,19 @@ smr_glm <- glm(obs ~ 1, offset = log(sum(esp)), family = poisson)
 cat("\\nSMR via offset =", round(exp(coef(smr_glm)), 3),
     " =", round(obs/sum(esp), 3), " directo\\n")
 
-# Diagnostico de sobredispersion: deviance/gl ~ 1 en Poisson puro;
-# si >> 1, la varianza excede la media (usar quasipoisson o nbinom).
+# Diagnostico de sobredispersion en 30 municipios con la misma tasa
+# media (10 por 1000 personas-ano). Poisson puro: deviance/gl ~ 1.
+# Con heterogeneidad entre municipios (tasa x gamma), la varianza
+# excede la media y deviance/gl >> 1.
 set.seed(11)
-ev6  <- rpois(6, 25); pt6 <- runif(6, 1500, 3000)
-m6   <- glm(ev6 ~ 1 + offset(log(pt6)), family = poisson)
-cat("deviance/gl =", round(deviance(m6)/df.residual(m6), 3),
-    " (esperado ~ 1 si Poisson basta)\\n")`}
+pt30  <- runif(30, 1500, 3000)
+ev_p  <- rpois(30, 0.01 * pt30)
+ev_od <- rpois(30, 0.01 * pt30 * rgamma(30, shape = 4, rate = 4))
+dg <- function(ev) { m <- glm(ev ~ 1 + offset(log(pt30)), family = poisson)
+                     round(deviance(m) / df.residual(m), 2) }
+cat("deviance/gl, Poisson puro      :", dg(ev_p), "\\n")
+cat("deviance/gl, con heterogeneidad:", dg(ev_od),
+    " -> quasipoisson o binomial negativa\\n")`}
 />
 
 <SasBlock code={`data dat;
@@ -84,20 +94,22 @@ cat("deviance/gl =", round(deviance(m6)/df.residual(m6), 3),
     output;
   end;
 run;
-/* TRAMPA: SAS modela P(D=0) por defecto -> DESCENDING fija P(D=1) */
+/* Otro generador aleatorio: los numeros no coinciden con R.
+   TRAMPA: SAS modela P(D=0) por defecto -> DESCENDING fija P(D=1) */
 proc logistic data=dat descending;
   model D = E;                      /* OR crudo */
 run;
 proc logistic data=dat descending;
-  model D = E edad / lackfit;       /* OR ajustado + Hosmer-Lemeshow */
+  model D = E edad;                 /* OR ajustado */
 run;
 /* glm Poisson + offset -> GENMOD */
-data tasas; input grupo $ ev pt; lpt = log(pt); datalines;
-exp 30 1800   noexp 22 2600 ;
+data tasas; input grupo $ ev pt @@; lpt = log(pt); datalines;
+exp 30 1800   noexp 22 2600
+;
 proc genmod data=tasas;
-  class grupo(ref='exp');
+  class grupo;
   model ev = grupo / dist=poisson link=log offset=lpt;
-  lsmeans grupo / diff exp cl;      /* IRR noexp vs exp + IC */
+  estimate 'IRR exp vs noexp' grupo 1 -1 / exp;   /* 1.97 + IC */
 run;`} />
 
 <Callout type="note" title="El ejemplo de Kaufman (1983)">
@@ -128,23 +140,32 @@ probabilidad de que un caso reciba mayor score que un control.
 
 <RocExplorer title={<>El umbral mueve el punto operativo: Se y Sp son un trade-off</>} />
 
+**Para explorar**
+
+1. Pon la separación en 0.3, 1.4 y 2.8 y anota el AUC: 0.58, 0.84 y 0.98. Son Φ(Δ/√2), la probabilidad de que un caso supere a un control.
+2. Con separación 1.4, busca el umbral que da Se ≈ 90 % y lee cuánta especificidad cuesta.
+3. Mueve el umbral y comprueba que el AUC no cambia: el AUC describe la prueba; el umbral, la decisión.
+
 <Callout type="warning" title="AUC ≠ calibración">
 Un AUC alto dice que el modelo *ordena* bien a casos y controles; no dice
-que las probabilidades sean *correctas* (calibración, evaluada con
-Hosmer–Lemeshow). Un modelo puede discriminar perfectamente con
-probabilidades mal calibradas. Ambas propiedades se reportan.
+que las probabilidades sean *correctas*. La calibración se mira con una
+curva de calibración (pendiente e intercepto); Hosmer–Lemeshow es una
+prueba de poco poder y sensible al número de grupos. Un modelo puede
+discriminar perfectamente con probabilidades mal calibradas, así que se
+reportan las dos cosas. Y en un caso-control el intercepto refleja la
+fracción de muestreo: las probabilidades absolutas no son estimables.
 </Callout>
 
 <Quiz
   question="Un glm da OR ajustado de E = 1.9 (IC 1.3–2.8) controlando edad, sexo e IMC. El OR crudo era 3.4. ¿Qué describe mejor el resultado?"
   options={[
     "El efecto real es 3.4; el ajuste lo redujo por error",
-    "El efecto crudo estaba inflado por confusión de edad/sexo/IMC; el estimador honesto es 1.9 con su IC",
+    "Si edad, sexo e IMC son confusores (y no mediadores), el crudo mezclaba su efecto con el de E; el reporte es 1.9 con su IC",
     "La regresión siempre reduce el OR",
     "El modelo está mal especificado"
   ]}
   correctIndex={1}
-  explanation="El crudo recoge también el efecto de los confusores que viajan con E. Ajustar mueve el estimador hacia la asociación atribuible a E sola: aquí 1.9, con IC que no toca 1. Es la confusión de los módulos 8–9 corregida con modelo en vez de estratos."
+  explanation="El crudo recoge también el efecto de los confusores que viajan con E, y ajustar los separa: 1.9, con un IC que no toca 1. Dos matices: si el IMC está en el camino causal de E al desenlace, ajustar por él quita parte del efecto real (el DAG decide); y el OR no es colapsable (módulo 7), así que crudo y ajustado pueden diferir algo aun sin confusión."
 />
 
 <Flashcard
@@ -153,12 +174,12 @@ probabilidades mal calibradas. Ambas propiedades se reportan.
     { front: "Logística", back: "OR ajustado = e^β. Generaliza MH a confusores continuos y múltiples." },
     { front: "Poisson", back: "IRR sobre persona-tiempo con offset log(pt). Generaliza el SMR." },
     { front: "ROC/AUC", back: "Discriminación del modelo: AUC = P(score caso > score control). El umbral es una decisión, no parte del modelo." },
-    { front: "Crudo vs ajustado", back: "Si difieren materialmente hay confusión. El ajustado es el reporte; el crudo se muestra para transparencia." },
+    { front: "Crudo vs ajustado", back: "Una diferencia grande sugiere confusión, pero con OR parte puede ser no colapsabilidad. El DAG decide qué ajustar; se reportan ambos." },
   ]}
 />
 
 <LabExercise
-  id="lab-15-logistica"
+  id="lab-16-logistica"
   title="Laboratorio: del estrato al coeficiente"
   code={`# Verifica que glm y MH responden lo mismo.
 set.seed(3)
@@ -176,14 +197,14 @@ print(mantelhaen.test(arr, correct = FALSE))
 fit <- glm(D ~ E + sexo, data = dat, family = binomial)
 cat("\\nOR_E ajustado (glm) =", round(exp(coef(fit)["E"]), 3),
     " <- compara con OR_MH\\n")
-print(confint.default(fit))`}
+print(round(exp(confint.default(fit)), 2))   # IC en escala OR`}
   tasks={[
     "Compara OR_MH con exp(β_E) del glm: ¿coinciden? ¿por qué deberían?",
     "Cambia el efecto verdadero de E a 0 (quita 0.8*E) y repite: ¿qué muestra el ajustado que el crudo no?",
     "Reporta OR + IC (confint) en lugar de p, siguiendo el orden de Woodward.",
   ]}
   hint="mantelhaen.test$estimate y exp(coef(fit)['E']) estiman el mismo OR común bajo homogeneidad."
-  solution="Coinciden porque ambos ponderan los OR por estrato; el glm lo hace con el modelo logit. Con efecto nulo, el ajustado da OR ≈ 1 mientras el crudo muestra asociación espuria."
+  solution="OR_MH = 2.02 (IC 1.70–2.40) y glm = 2.03 (IC 1.71–2.40): bajo homogeneidad ambos estiman el mismo OR común condicional, uno con pesos de Mantel–Haenszel y otro por máxima verosimilitud. El verdadero, e^0.8 = 2.23, cae dentro. Con efecto nulo, el ajustado da OR ≈ 1 mientras el crudo muestra la asociación espuria que fabrica el sexo."
 />
 
 <SasBlock code={`data dat;
@@ -207,12 +228,12 @@ run;`} />
 ### La tercera vía: ajustar con pesos (<Term k="IPTW">IPTW</Term>)
 
 Estratificar (módulo 8) y modelar (este) son dos caras del mismo ajuste.
-La tercera —la que el módulo 2 prometió al hablar de emular el ensayo
-objetivo— es **reponderar la muestra**: el propensity score
-El <Term k="PS">propensity score</Term> $PS = P(E = 1 \mid C)$ estima con qué probabilidad cada sujeto recibió
-la exposición; pesar por $1/PS$ construye una *pseudopoblación* donde
-la exposición ya no depende del confusor — la asignación del ensayo,
-emulada.
+La tercera, la que el módulo 2 prometió al hablar de emular el ensayo
+objetivo, es **reponderar la muestra**. El <Term k="PS">propensity
+score</Term> $PS = P(E = 1 \mid C)$ estima con qué probabilidad cada
+sujeto recibió la exposición; pesar por $1/PS$ construye una
+*pseudopoblación* donde la exposición ya no depende del confusor: la
+asignación del ensayo, emulada.
 
 <RCell
   id="16/iptw"
@@ -243,16 +264,29 @@ cat(sprintf("OR regresion = %.2f\\n",
 cat(sprintf("OR IPTW      = %.2f\\n",
     exp(coef(glm(D ~ E,        data = dat, family = binomial,
                  weights = sw))["E"])))
-cat(sprintf("OR verdadero = %.2f (e^0.8: el mecanismo que genero los datos)\\n",
-    exp(0.8)))`}
+# Los dos modelos apuntan a estimandos distintos:
+p1 <- mean(plogis(-2 + 0.8 + 1.2*sexo))   # P(D) si todos expuestos
+p0 <- mean(plogis(-2 +       1.2*sexo))   # P(D) si nadie expuesto
+cat(sprintf("\\nOR condicional verdadero = %.2f (e^0.8, dentro de cada sexo)\\n", exp(0.8)))
+cat(sprintf("OR marginal verdadero    = %.2f (poblacion entera, sexo promediado)\\n",
+            (p1/(1-p1)) / (p0/(1-p0))))
+cat(sprintf("DR marginal verdadera    = %.3f\\n", p1 - p0))`}
 />
 
-Regresión e IPTW responden la misma pregunta por caminos distintos:
-uno modela $E[D \mid E, C]$, el otro modela $E[E \mid C]$ y olvida el
-desenlace en el paso del ajuste. Con un solo confusor binario coinciden;
-con muchos confusores continuos el propensity score escala mejor — y su
-diagnóstico es otro: las tablas de balance (módulo 7) reemplazan al
-$R^2$.
+Regresión e IPTW controlan el mismo confusor por caminos distintos: uno
+modela $E[D \mid E, C]$, el otro modela $P(E \mid C)$ y deja el
+desenlace fuera del ajuste. Pero con OR **no estiman lo mismo**. La
+regresión da el OR *condicional* (dentro de cada sexo, verdadero 2.23);
+el IPTW da el OR *marginal* (la población entera expuesta frente a la
+población entera sin exponer, verdadero 2.11). Es la no colapsabilidad
+del módulo 7: aun sin confusión, los dos números difieren. Aquí cada
+estimador queda cerca de su propio blanco (2.03 y 1.93, una sola
+muestra). Con diferencias de riesgo o razones de riesgo, que sí colapsan,
+ambos apuntarían al mismo valor.
+
+Con muchos confusores continuos el propensity score escala mejor, y su
+diagnóstico es el **balance** de covariables entre brazos ponderados
+(diferencias estandarizadas), que se revisa sin mirar el desenlace.
 
 <ToolCard task="glm" />
 
@@ -265,8 +299,10 @@ formas de faltar en tres mecanismos:
 - **MCAR** — faltar no depende de nada: los casos completos no sesgan,
   solo pierden precisión.
 - **MAR** — faltar depende de lo *observado* (la edad explica quién
-  no reportó el Kps): los casos completos sesgan; una imputación que
-  use las variables observadas lo repara.
+  no reportó el Kps): los casos completos pueden sesgar; una imputación
+  que use las variables observadas lo repara. Excepción útil: en una
+  regresión, si faltar depende solo de las covariables del modelo y no
+  del desenlace, los casos completos siguen sin sesgo.
 - **MNAR** — faltar depende del propio valor que falta (no reportan
   el Kps los que se sienten peor): ninguna imputación estándar lo
   resuelve; se reporta el análisis base *más* un análisis de
@@ -277,6 +313,12 @@ VALUNG — donde la verdad se conoce — y deja comparar casos
 completos, imputación por la media e imputación por regresión:
 
 <MissingDataLab />
+
+**Para explorar**
+
+1. Bajo MCAR pulsa «nuevo borrado» varias veces: los tres métodos fallan hacia arriba y hacia abajo al azar, sin sesgo.
+2. Bajo MNAR repite: los casos completos fallan siempre hacia arriba, porque faltan los Kps bajos, y ni la regresión lo arregla.
+3. Bajo MAR compara casos completos con regresión sobre la edad. La mejora depende de cuánto prediga la edad al Kps en VALUNG.
 
 La respuesta práctica, en orden:
 
@@ -306,8 +348,9 @@ máxima verosimilitud se sesga y el IC de Wald miente. Las salidas:
 - **Regresión de Firth**: penaliza la verosimilitud y elimina el
   sesgo de primer orden — la herramienta estándar para separación y
   muestras pequeñas (`logistf` en R).
-- **Métodos exactos**: el log-rank exacto y el Fisher/Boschloo del
-  módulo 6 son el análogo para el 2×2.
+- **Métodos exactos**: la regresión logística exacta (`EXACT` en PROC
+  LOGISTIC) para pocos estratos y covariables; en el 2×2, el Fisher y el
+  Boschloo del módulo 6.
 
 <Callout type="warning" title="La separación es un diagnóstico, no un error de R">
 Si un glm logístico devuelve un coeficiente gigante con error
