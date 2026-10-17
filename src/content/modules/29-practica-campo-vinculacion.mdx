@@ -20,7 +20,7 @@ import { LabExercise } from '@/components/LabExercise'
 <Callout type="tip" title="Así llega la base, siempre">
 Ninguna base de campo llega como `valung.csv`: llega con IDs duplicados,
 fechas en dos formatos, unidades mezcladas y una censura que alguien
-digitó al revés. Este módulo no enseña un método nuevo — ensambla el
+digitó al revés. Este módulo no enseña un método nuevo: ensambla el
 curso completo sobre una base sucia y exige el producto que el trabajo
 real pide: **la ficha de limpieza antes que el modelo, y el párrafo
 después del modelo**.
@@ -28,8 +28,8 @@ después del modelo**.
 
 ## La base: `valung_corrupto.csv`
 
-Es el estudio VA de cáncer de pulmón del módulo 12 — el mismo
-cohorte, las mismas variables— **contaminado como llegaría de un
+Es el estudio VA de cáncer de pulmón del módulo 12 (la misma
+cohorte, las mismas variables) **contaminado como llegaría de un
 sistema de captura real**:
 
 - `ID` de paciente con **duplicados**: algunas filas exactas repetidas,
@@ -37,7 +37,7 @@ sistema de captura real**:
   paciente).
 - `SurvTime` en **formatos mixtos**: días enteros, `"587d"`, `"1.7m"`
   (meses), negativos y el centinela `9999`.
-- `AdmitDate` en **DD/MM/YYYY y MM/DD/YYYY mezclados** — con fechas
+- `AdmitDate` en **DD/MM/YYYY y MM/DD/YYYY mezclados**, con fechas
   ambiguas que ambos formatos aceptan callados.
 - `Kps` fuera de rango o `"NA"`; `Age` con `999`, `152`, `-3` y vacíos.
 - `censor` **invertido en una fracción** de las filas.
@@ -70,7 +70,7 @@ cat('fechas no-ISO:', amb, '(el formato no se puede inferir por fila)\\n')
 
 La regla de campo: **ningún modelo corre antes de la ficha**. La ficha
 es el documento que declara cada defecto encontrado, la regla aplicada
-y cuántas filas tocó — es lo que hace la limpieza auditable y
+y cuántas filas tocó: es lo que hace la limpieza auditable y
 reproducible, y lo que separa "limpié la base" de "alguien puede
 verificar cómo quedó la base".
 
@@ -116,8 +116,8 @@ cat(sprintf('Kps median %.0f | Age median %.0f\\n',
 
 <Callout type="warning" title="La censura invertida no se arregla, se detecta">
 No existe regla automática para `censor` invertido: el dato no se
-delata solo. Las señales de campo son plausibilidad cruzada — un
-"evento" con Karnofsky de 90 y 3 días de seguimiento es sospechoso— y,
+delata solo. Las señales de campo son plausibilidad cruzada (un
+"evento" con Karnofsky de 90 y 3 días de seguimiento es sospechoso) y,
 sobre todo, **comparar la curva KM con la del estudio original o con la
 literatura**: una supervivencia que sube con el tiempo delata la
 inversión global; inverciones parciales se detectan por inconsistencias
@@ -130,12 +130,12 @@ corrigen en silencio.
 El segundo ejercicio reproduce el cuello de botella real colombiano:
 tres fuentes que describen a las mismas personas sin compartir llave.
 SIVIGILA tiene el evento notificado, RIPS la atención, la mortalidad el
-desenlace — y la persona aparece con nombres digitados distinto, dos
+desenlace, y la persona aparece con nombres digitados distinto, dos
 apellidos en distinto orden, y documentos con errores de un dígito.
 
 La vinculación determinística (documento exacto) recupera la fracción
 fácil; el resto exige **vinculación probabilística**: comparar nombre,
-fecha de nacimiento, sexo, municipio — y puntuar cada par candidato por
+fecha de nacimiento, sexo y municipio, y puntuar cada par candidato por
 cuánta evidencia aporta cada coincidencia (la lógica de
 Fellegi–Sunter: un apellido raro que coincide pesa más que "García").
 
@@ -178,7 +178,7 @@ El modelo formal asigna a cada comparación un peso $\log_2(m/u)$: la
 probabilidad $m$ de coincidir siendo el mismo par sobre la $u$ de
 coincidir por azar. Apellidos frecuentes aportan poco, fechas exactas
 mucho. Lo operativo que el curso subraya: **la tasa de enlace es un
-resultado, no un trámite** — si el 30 % de los casos de SIVIGILA no
+resultado, no un trámite**: si el 30 % de los casos de SIVIGILA no
 aparece en mortalidad, ese 30 % tiene estructura (murió fuera, se
 notificó mal, el documento falló) y puede sesgar cualquier análisis
 posterior exactamente como un faltante MNAR del módulo 21. El reporte
@@ -188,7 +188,7 @@ vinculados vs. no vinculados.
 
 ## El análisis sobre la base limpia
 
-Con la ficha cerrada, el análisis es el del módulo 12 — pero ahora cada
+Con la ficha cerrada, el análisis es el del módulo 12, pero ahora cada
 número lleva el linaje de la limpieza:
 
 <RCell
@@ -221,10 +221,10 @@ que el trabajo real los pide:
    censura reportada como hallazgo y la tasa de datos perdidos por
    regla.
 2. **El análisis auditado**: el modelo sobre la base limpia, con la
-   comparación contra el resultado sobre la base cruda — cuánto del
+   comparación contra el resultado sobre la base cruda: cuánto del
    efecto era ruido de captura.
 3. **El párrafo del ministerio** (módulo 28): la página con la
-   recomendación, los escenarios y la condición — que ahora incluye una
+   recomendación, los escenarios y la condición, que ahora incluye una
    frase sobre la calidad del dato: "la conclusión se sostiene tras la
    limpieza del 12 % de registros afectados".
 
@@ -237,7 +237,7 @@ que el trabajo real los pide:
     "Se asume que los no vinculados son aleatorios y se continúa"
   ]}
   correctIndex={1}
-  explanation="El no vinculado es un faltante con estructura: si falla más en ciertos grupos (zona, edad, tipo de evento), el análisis sobre vinculados hereda ese sesgo. La tasa de enlace y su comparación son resultados del estudio — asumir aleatoriedad sin verificarla es repetir el error de complete-case del módulo 21."
+  explanation="El no vinculado es un faltante con estructura: si falla más en ciertos grupos (zona, edad, tipo de evento), el análisis sobre vinculados hereda ese sesgo. La tasa de enlace y su comparación son resultados del estudio; asumir aleatoriedad sin verificarla es repetir el error de complete-case del módulo 21."
 />
 
 <LabExercise
@@ -258,13 +258,13 @@ v <- read.csv('valung_corrupto.csv', na.strings = c('', 'NA', 'N/A', '.'))
 # magnitud en casos evitados + escenarios + condicion +
 # certeza + la frase sobre calidad del dato.`}
   tasks={[
-    "Produce la ficha de limpieza completa: cada defecto, la regla, el conteo — mínimo las siete categorías de la tabla del módulo",
+    "Produce la ficha de limpieza completa: cada defecto, la regla, el conteo; mínimo las siete categorías de la tabla del módulo",
     "Detecta las filas de censura sospechosa por plausibilidad cruzada y documenta el criterio usado (no las corrijas en silencio: repórtalas)",
     "Corre el Cox sobre base cruda y sobre base limpia; reporta cuánto se movió el HR y cuál regla de limpieza lo movió más",
     "Vincula las dos fuentes sintéticas de la celda 29/vinculacion con umbral declarado y reporta tasa de enlace y características de los no vinculados",
     "Escribe el párrafo del ministerio: cinco movimientos, incluida la frase sobre calidad del dato",
   ]}
-  hint="La comparación cruda vs. limpia es el corazón del ejercicio: si el HR no cambia, la ficha demuestra robustez; si cambia, demuestra por qué la limpieza no era un trámite. Ambas respuestas son correctas — lo que se evalúa es el proceso."
+  hint="La comparación cruda vs. limpia es el corazón del ejercicio: si el HR no cambia, la ficha demuestra robustez; si cambia, demuestra por qué la limpieza no era un trámite. Ambas respuestas son correctas; lo que se evalúa es el proceso."
 />
 
 ## Producto del módulo
@@ -286,7 +286,7 @@ trabajo real.
   evaluación de tasas de enlace.
 - **Van den Broeck et al. (2005), *J Clin Epidemiol***: la limpieza de
   datos como etapa del método científico, con su documentación.
-- **Hernán &amp; Robins (2020)**: cap. sobre datos de registros — el
+- **Hernán &amp; Robins (2020)**: cap. sobre datos de registros; el
   contrato entre la fuente administrativa y la pregunta causal.
 - **INS Colombia**: documentos de interoperabilidad SIVIGILA–RIPS; la
   estructura real del cuello de botella nacional.

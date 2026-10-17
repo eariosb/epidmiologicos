@@ -23,7 +23,7 @@ los registros no asignan nada, pero una pregunta bien especificada sí
 puede. Este módulo la convierte en protocolo ejecutable: elegibilidad
 explícita, tiempo cero, asignación emulada y auditoría de cada paso.
 La diferencia entre "análisis con ajuste" y "emulación de ensayo" no
-es el método — es que el segundo responde todas las casillas que un
+es el método: es que el segundo responde todas las casillas que un
 protocolo real respondería.
 </Callout>
 
@@ -32,21 +32,21 @@ protocolo real respondería.
 El ensayo objetivo se escribe antes de tocar los datos, en las mismas
 casillas que un protocolo real:
 
-1. **Pregunta**: la comparación de estrategias, no de personas —
+1. **Pregunta**: la comparación de estrategias, no de personas:
    "iniciar A vs. iniciar B" es una estrategia; "estar expuesto" no.
 2. **Elegibilidad**: quién *podría* haber entrado al ensayo. Los
    registros filtran igual: criterios explícitos, aplicados al tiempo
    cero, no al archivo completo.
 3. **Tiempo cero**: el instante en que exposición, elegibilidad e inicio
    del seguimiento coinciden. Es la casilla más incumplida en estudios
-   con registros — y la fuente del *immortal time bias*.
+   con registros, y la fuente del *immortal time bias*.
 4. **Asignación emulada**: quién entró a cada brazo según el registro,
    con su fecha de inicio.
 5. **Seguimiento y desenlace**: definidos igual en ambos brazos, con la
    misma ventana.
-6. **Estimando y análisis**: la comparación declarada — efecto de la
-   asignación (intención de tratar emulada) o de adherirse al
-   protocolo— antes de mirar el desenlace.
+6. **Estimando y análisis**: la comparación declarada (efecto de la
+   asignación, intención de tratar emulada, o de adherirse al
+   protocolo) antes de mirar el desenlace.
 
 <Callout type="warning" title="El tiempo inmortal es el precio de no fijar tiempo cero">
 Si el brazo "expuesto" exige haber sobrevivido hasta recibir el
@@ -62,13 +62,13 @@ El pareamiento por propensity score del módulo 16 tenía la lección
 conceptual; en producción la decisión tiene cuatro perillas, y cada una
 mueve el balance y la muestra:
 
-- **Distancia**: propensity en escala logit (no en probabilidad — allí
+- **Distancia**: propensity en escala logit (no en probabilidad: allí
   el caliper es más legible), o Mahalanobis sobre covariables clave.
 - **Caliper**: la distancia máxima aceptable (~0.2·DE del logit-PS es
   la convención). Más estrecho = mejor balance, menos muestra.
 - **Ratio y reemplazo**: 1:1, 1:k, con o sin reposición; el control
   reusado no es información nueva, es peso concentrado.
-- **La salida importa**: después del matching, la unidad es el par —
+- **La salida importa**: después del matching, la unidad es el par:
   McNemar, clogit, o el estimador ponderado sobre la estructura de
   estratos del módulo 15.
 
@@ -117,7 +117,7 @@ producción, tres problemas aparecen siempre:
   ($P(E)/P(E\mid C)$) y truncamiento en percentiles (1%/99% o 5%/95%),
   declarado.
 - **Overlap (positivity)**: si en algún estrato todos reciben la misma
-  exposición, ese estrato no aporta comparación — el peso infinito es
+  exposición, ese estrato no aporta comparación; el peso infinito es
   su síntoma. El diagnóstico se lee en el solape de las distribuciones
   de PS por brazo, no en la tabla de coeficientes.
 - **La varianza correcta**: la del glm ponderado es optimista; se usa
@@ -157,21 +157,21 @@ cat(sprintf("RD marginal = %.3f | RR marginal = %.2f\\n", r1-r0, r1/r0))`}
 
 ## Clonación–censura–pesos: la estrategia para brazos ambiguos
 
-Cuando el registro no asigna el brazo limpiamente —"iniciar en las
-primeras 12 semanas" es una ventana, no un instante— la técnica de
+Cuando el registro no asigna el brazo limpiamente ("iniciar en las
+primeras 12 semanas" es una ventana, no un instante), la técnica de
 Hernán &amp; Robins es **clonar** cada paciente en los dos brazos
 elegibles en tiempo cero, **censurar** cada clon en el instante en que
 su conducta real diverge del brazo asignado, y **pesar** los supervivientes
 del clon por el inverso de la probabilidad de seguir conforme al brazo
 (IPCW, los pesos de censura inversa del módulo 13 en versión
 inversa). Es la versión operativa del "cada persona-tiempo podía estar
-en cualquier brazo": el clon censurado no desaparece — cede su peso a
+en cualquier brazo": el clon censurado no desaparece, cede su peso a
 sus gemelos conformes.
 
 <Profundiza title="Por qué el IPCW no reintroduce inmortalidad" hint="optativo">
 La clonación parece fabricar el sesgo que se evita: cada paciente vive
 en ambos brazos un rato. La corrección está en que el tiempo "pre-inicio"
-del clon no computa como exposición conforme — se computa como tiempo
+del clon no computa como exposición conforme; se computa como tiempo
 bajo la *asignación* del brazo, igual que en un ensayo real donde el
 paciente asignado a "tratar mañana" muere hoy contando como evento del
 brazo tratamiento. El IPCW reequilibra quién sigue conforme en cada
@@ -185,7 +185,7 @@ Una emulación se audita igual que un ensayo: **Tabla 1 ponderada** (las
 diferencias estandarizadas del módulo 7, con |SMD| &lt; 0.1 como regla),
 **distribución de pesos** (máximo, truncamiento aplicado, tamaño
 efectivo de la pseudopoblación), **overlap en el PS** antes del ajuste,
-y un **análisis de falsificación** — un desenlace que el tratamiento no
+y un **análisis de falsificación**: un desenlace que el tratamiento no
 puede afectar y que debe salir nulo si la emulación está bien armada.
 
 <Quiz
@@ -241,7 +241,7 @@ cat(sprintf("HR marginal (fin) = %.2f, robust SE = %.3f\\n",
     "Repite sin truncamiento y reporta cuánto se mueve el HR y el máximo peso",
     "Propón un análisis de falsificación plausible para estos datos y ejecútalo",
   ]}
-  hint="robust=TRUE en coxph da la varianza sandwich; la del summary sin robust sería optimista. El coeficiente de la regresión ajustada es condicional; el del IPTW es marginal — la no colapsabilidad del módulo 7 reaparece aquí."
+  hint="robust=TRUE en coxph da la varianza sandwich; la del summary sin robust sería optimista. El coeficiente de la regresión ajustada es condicional; el del IPTW es marginal; la no colapsabilidad del módulo 7 reaparece aquí."
 />
 
 ## Producto del módulo
@@ -259,7 +259,7 @@ conclusión es secundaria: lo que se evalúa es el protocolo.
 - **Hernán &amp; Robins (2016), *Am J Epidemiol***: la emulación del
   ensayo objetivo con Big Data; el artículo que define el módulo.
 - **Hernán &amp; Robins (2020), *Causal Inference: What If***: caps.
-  3 y 23 — tiempo cero, clonación–censura–pesos, IPCW.
+  3 y 23: tiempo cero, clonación–censura–pesos, IPCW.
 - **Austin &amp; Stuart (2015), *Stat Med***: las mejores prácticas de
   matching por propensity; caliper, balance y reporte.
 - **Austin (2009)**: las diferencias estandarizadas como diagnóstico de

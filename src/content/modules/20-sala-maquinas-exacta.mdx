@@ -20,7 +20,7 @@ import { LabExercise } from '@/components/LabExercise'
 <Callout type="tip" title="De usar el instrumento a construirlo">
 El módulo 6 enseña a elegir entre Fisher y Boschloo leyendo el diseño.
 Este módulo abre el instrumento: cada pieza que en el Curso I aparece
-como resultado —el supremo, el ordenamiento, el tamaño real— aquí se
+como resultado, el supremo, el ordenamiento, el tamaño real; aquí se
 programa desde R base hasta que deja de ser una caja negra. Quien puede
 reconstruir el test puede auditar el paquete que lo implementa, y esa es
 la competencia que este curso considera terminal.
@@ -31,7 +31,7 @@ la competencia que este curso considera terminal.
 Todo test exacto 2×2 empieza en el mismo lugar: el conjunto finito de
 tablas posibles. Con grupos de tamaño $n_1$ y $n_2$ fijos, una tabla es
 un par $(x_1, x_2)$ con $x_i \in \{0, \ldots, n_i\}$: el espacio tiene
-$(n_1+1)(n_2+1)$ puntos y se puede *enumerar completo* — que es lo que
+$(n_1+1)(n_2+1)$ puntos y se puede *enumerar completo*, que es lo que
 hace posible la inferencia exacta sin Monte Carlo.
 
 Bajo el modelo de dos binomiales, cada tabla tiene probabilidad
@@ -73,8 +73,8 @@ cat("Condicionar no aproxima al incondicional: cambia la pregunta.\\n")`}
 
 El valor p incondicional exige responder: "¿cuál es la probabilidad de
 una tabla al menos tan extrema, bajo el peor $p$ posible?". Bajo la
-nula compuesta $p_1 = p_2 = p$, el parámetro $p$ queda libre — es el
-**parámetro de estorbo**— y la respuesta honesta es el supremo:
+nula compuesta $p_1 = p_2 = p$, el parámetro $p$ queda libre, es el
+**parámetro de estorbo**, y la respuesta honesta es el supremo:
 
 $$
 p_{inc} = \sup_{p \in (0,1)} P_p\big(\text{tabla al menos tan extrema}\big)
@@ -86,7 +86,7 @@ puntúa cada tabla. Boschloo usa el propio valor p de Fisher como puntaje
 agrupada usa $|z|$ con varianza combinada. Ordenamientos distintos dan
 regiones de rechazo distintas y, con ellas, potencias distintas.
 
-En la práctica el supremo se evalúa sobre una malla finita de $p$ —
+En la práctica el supremo se evalúa sobre una malla finita de $p$,
 y ahí empieza el detalle técnico que los paquetes esconden.
 
 <RCell
@@ -127,7 +127,7 @@ $\max_j P_{p_j}$, que nunca excede el supremo verdadero: el reportado es
 un p *optimista*. La cota del error es la variación máxima de la función
 entre nodos vecinos; como $P_p$ es un polinomio de grado $n_1 + n_2$,
 basta una malla moderada para precisión de $10^{-6}$. Cuando la
-función tiene máximos locales —frecuente en tablas asimétricas— una
+función tiene máximos locales, frecuente en tablas asimétricas, una
 malla burda puede saltarse el pico: la auditoría correcta refina la malla
 hasta estabilizar el dígito que se reporta.
 </SalaDeMaquinas>
@@ -136,7 +136,7 @@ hasta estabilizar el dígito que se reporta.
 
 La variante de Berger y Boos (1994) mejora el supremo con una idea de
 economía estadística: si el parámetro de estorbo $p$ puede estimarse de
-los propios datos, no hay que maximizar sobre todo $(0,1)$ — basta
+los propios datos, no hay que maximizar sobre todo $(0,1)$, basta
 maximizar sobre un intervalo de confianza $C_\gamma(p)$ y pagar una
 multa $\gamma$ por la probabilidad de que el $p$ verdadero quede fuera:
 
@@ -145,16 +145,15 @@ p_{BB} = \sup_{p \in C_\gamma} P_p(\text{rechazo}) + \gamma,
 \qquad \gamma \approx 0.001
 $$
 
-El test resultante sigue siendo exacto —la multa cubre la cola dejada
-fuera— y puede ganar potencia cuando el intervalo excluye la región
+El test resultante sigue siendo exacto, la multa cubre la cola dejada
+fuera, y puede ganar potencia cuando el intervalo excluye la región
 donde vive el supremo. En tablas pequeñas el intervalo es ancho y
 Berger–Boos suele coincidir con Boschloo: la ganancia aparece cuando
 $n$ ya permite acotar bien $p$.
 
 <Profundiza title="La condición técnica que hace válida la multa" hint="optativo">
 La corrección funciona porque el evento "el $p$ verdadero está fuera de
-$C_\gamma$" tiene probabilidad acotada por $\gamma$ *para todo* $p$
-—es decir, $C_\gamma$ debe ser un IC con cobertura garantizada
+$C_\gamma$" tiene probabilidad acotada por $\gamma$ *para todo* $p$; es decir, $C_\gamma$ debe ser un IC con cobertura garantizada
 (Clopper–Pearson sirve, Wald no). Entonces
 $P(\text{rechazo}) \le P(\text{rechazo} \cap p \in C_\gamma) + \gamma
 \le \sup_{C_\gamma} P_p(\text{rechazo}) + \gamma$, que es la desigualdad
@@ -167,11 +166,11 @@ achica la multa pero ensancha el intervalo y con él el supremo.
 Con la región de rechazo escrita como máscara binaria sobre el espacio
 de tablas, todo lo demás es álgebra:
 
-- **Tamaño real**: $\max_p P_p(\text{rechazo})$ bajo la nula — el α que
+- **Tamaño real**: $\max_p P_p(\text{rechazo})$ bajo la nula, el α que
   el test *efectivamente* usa. Fisher conserva (~0.03 en la tabla de
   Perondi al α nominal 0.05); Boschloo lo usa casi completo.
 - **Potencia en $(p_1, p_2)$**: $P_{p_1, p_2}(\text{rechazo})$ con
-  pesos de dos binomiales distintas — sin simular una sola réplica.
+  pesos de dos binomiales distintas, sin simular una sola réplica.
 
 <RCell
   id="20/tamano-real"
@@ -210,12 +209,12 @@ cat(sprintf("Potencia en (0.20, 0.03): Fisher = %.3f | Boschloo = %.3f\\n",
 # El test que mejor usa su alfa compra ~12 puntos de potencia.`}
 />
 
-## La proposición del anexo, en el lenguaje del curso
+## La proposición del anexo
 
 El resultado técnico central del anexo puede enunciarse sin demostración
 completa: *para el modelo de dos binomiales con margen de eventos libre,
-el test de Boschloo —ordenamiento por el p de Fisher seguido del supremo
-sobre el parámetro de estorbo— es exacto y uniformemente al menos tan
+el test de Boschloo, ordenamiento por el p de Fisher seguido del supremo
+sobre el parámetro de estorbo, es exacto y uniformemente al menos tan
 potente como Fisher, y estrictamente más potente en una región de medida
 positiva del espacio de parámetros.* La demostración completa está en el
 <Anexo id="ensayo-test-exacto">ensayo técnico del curso</Anexo>; aquí
@@ -225,7 +224,7 @@ queda la arquitectura del argumento:
    que Fisher rechaza tiene p de Fisher ≤ α, y su p incondicional no
    puede exceder α por la definición del supremo.
 2. La contención es estricta cuando existe una tabla con p de Fisher
-   apenas por encima de α cuyo supremo incondicional sí cae bajo α —
+   apenas por encima de α cuyo supremo incondicional sí cae bajo α, 
    en la malla de Perondi hay varias.
 3. Contener la región implica dominar la potencia en todo punto del
    espacio alternativo; la ganancia es estricta donde la contención lo es.
@@ -233,7 +232,7 @@ queda la arquitectura del argumento:
 <Callout type="warning" title="Exacto ≠ adecuado, potente ≠ correcto">
 La proposición no dice que Boschloo sea "el test correcto": dice que
 bajo el modelo de dos binomiales domina a Fisher. Si el diseño fija los
-dos márgenes —el experimento de la dama del té es el caso canónico— el
+dos márgenes, el experimento de la dama del té es el caso canónico, el
 condicional es el modelo muestral correcto y el dominio deja de aplicar.
 La elección de instrumento sigue siendo una decisión sobre el diseño;
 la maquinaria solo garantiza que, elegido el modelo, el test usa todo

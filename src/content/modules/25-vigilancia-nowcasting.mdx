@@ -20,7 +20,7 @@ import { LabExercise } from '@/components/LabExercise'
 <Callout type="tip" title="La semana pasada todavía no terminó de llegar">
 Todo dato de vigilancia llega tarde: el caso ocurre, se notifica, se
 digita, se consolida. La curva que baja al final de la gráfica del INS
-no es el brote cediendo — es el retraso acumulándose. Tratar la cola
+no es el brote cediendo, es el retraso acumulándose. Tratar la cola
 cruda como dato completo es el error operativo más común y más caro de
 la vigilancia: se declara control lo que todavía está en tránsito.
 </Callout>
@@ -30,7 +30,7 @@ la vigilancia: se declara control lo que todavía está en tránsito.
 Para cada caso hay dos fechas: la de ocurrencia (inicio de síntomas o
 diagnóstico, según la definición) y la de notificación. Su diferencia es
 el **retraso** $d = t_{reporte} - t_{ocurrencia}$, y es una variable
-aleatoria con su propia distribución — no una constante administrativa.
+aleatoria con su propia distribución, no una constante administrativa.
 
 La curva observada al día $t$ es una versión truncada por la derecha de
 la curva verdadera:
@@ -41,7 +41,7 @@ $$
 
 Los días recientes están más truncados que los antiguos: al día $t$ solo
 se ven los casos con retraso 0; al $t-1$, los de retraso ≤ 1; y así hacia
-atrás. Por eso la cola cae siempre — **caería igual aunque la epidemia
+atrás. Por eso la cola cae siempre: **caería igual aunque la epidemia
 estuviera creciendo**.
 
 <RCell
@@ -80,7 +80,7 @@ $$
 \hat{n}(t) = \frac{N_{obs}(t)}{F(40 - t)}
 $$
 
-en su versión más simple — el estimador del módulo 13 de nuevo, con la
+en su versión más simple; es el estimador del módulo 13 de nuevo, con la
 censura por la derecha cambiada de nombre. Las versiones formales
 ajustan un modelo jerárquico (Poisson o binomial negativa) sobre la
 matriz triángulo-retraso y propagan la incertidumbre: el nowcast no es
@@ -112,24 +112,24 @@ for (i in c(20, 30, 35, 38, 40)) {
 # el mismo pecado que reportar el crudo.`}
 />
 
-## Lo que el nowcasting asume — y cuándo falla
+## Lo que el nowcasting asume, y cuándo falla
 
 La corrección supone que la distribución del retraso es **estable**: que
 los casos de hoy tardarán lo mismo que los de hace un mes. Falla, y hay
 que declararlo, cuando:
 
 - **Fin de semana y festivos**: el retraso tiene estructura de calendario
-  — en SIVIGILA los lunes concentran el reporte acumulado; un $F(d)$
+  (en SIVIGILA los lunes concentran el reporte acumulado); un $F(d)$
   único mezcla dos procesos.
 - **Sobrecarga del sistema**: cuando la epidemia crece, los laboratorios
-  y las UPAS se saturan y el retraso *aumenta* — el nowcast basado en el
+  y las UPAS se saturan y el retraso *aumenta*; el nowcast basado en el
   pasado tranquilo subestima el presente congestionado.
 - **Cambios de definición o de canal**: una circular del INS que
   reclasifica eventos, o la migración a un sistema nuevo, rompe la
   estabilidad de golpe.
 
 La defensa práctica: estimar $F(d)$ sobre ventanas recientes móviles y
-reportar el nowcast con su banda — si el lector ve la incertidumbre, el
+reportar el nowcast con su banda: si el lector ve la incertidumbre, el
 ajuste es un instrumento; si ve una línea lisa, es una promesa falsa.
 
 <Profundiza title="La matriz triángulo-retraso y el modelo jerárquico" hint="optativo">
@@ -150,14 +150,14 @@ El nowcasting arregla una métrica; la evaluación del sistema usa los
 **atributos de los CDC** y del módulo 19, ahora como instrumento de
 auditoría:
 
-- **Oportunidad (timeliness)**: la distribución del retraso misma —
+- **Oportunidad (timeliness)**: la distribución del retraso misma:
   mediana y percentil 90 por fase (consulta → notificación →
   laboratorio → consolidación).
 - **Completitud**: captura–recaptura del módulo 19 sobre dos fuentes
   (SIVIGILA vs. laboratorio, o vs. RIPS de urgencias).
 - **Sensibilidad y valor predictivo**: la vigilancia centinela contra
   la confirmación de laboratorio.
-- **Estabilidad del retraso**: el supuesto del nowcasting medido — la
+- **Estabilidad del retraso**: el supuesto del nowcasting medido: la
   mediana del retraso por mes debe ser constante; si crece, el sistema
   declara congestión antes que los casos.
 
@@ -198,7 +198,7 @@ cobertura nacional, su costo conocido es el retraso y la
 infranotificación medible por captura–recaptura. La **vigilancia
 síndromica** complementa: monitorea señales pre-diagnósticas
 (urgencias por IRA, dispensación de antitérmicos, consultas telefónicas)
-que llegan días antes que la ficha — se gana oportunidad a cambio de
+que llegan días antes que la ficha; se gana oportunidad a cambio de
 especificidad, el intercambio que todo sistema temprano paga.
 
 <Quiz
@@ -239,7 +239,7 @@ for (i in (T_max-9):T_max)
     "Rompe la estabilidad: duplica el retraso en las últimas dos semanas (saturación) y cuantifica el subestimado del nowcast que asume retraso estable",
     "Escribe el párrafo de boletín correcto para el escenario saturado, declarando la incertidumbre",
   ]}
-  hint="La comparación justa es nowcast vs. verdad por horizonte: el error del día T-1 siempre será mayor que el del día T-7 — esa rampa de incertidumbre es el producto, no un defecto."
+  hint="La comparación justa es nowcast vs. verdad por horizonte: el error del día T-1 siempre será mayor que el del día T-7; esa rampa de incertidumbre es el producto, no un defecto."
 />
 
 ## Producto del módulo

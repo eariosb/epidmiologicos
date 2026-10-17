@@ -28,14 +28,14 @@ de decisión, no como decoración del informe.
 ## La selección como colisionador
 
 Un **colisionador** es un nodo con dos flechas entrantes ($E \to S
-\leftarrow D$). Dejarlo libre no pasa nada — el camino está bloqueado
+\leftarrow D$). Dejarlo libre no pasa nada, el camino está bloqueado
 por naturaleza; el desastre es *condicionar* sobre él: condicionar un
 colisionador **abre** el camino y fabrica asociación donde no la hay.
 
 Y la forma más común de condicionar un colisionador es el propio estudio:
 si entrar a la muestra depende de la exposición y del desenlace, analizar
 los datos del estudio es condicionar sobre "ser seleccionado". El sesgo
-de Berkson del módulo 2 es exactamente eso — controles hospitalarios,
+de Berkson del módulo 2 es exactamente eso; controles hospitalarios,
 cuya llegada al hospital depende de su enfermedad *y* de otras
 dolencias. La misma estructura reaparece con disfraces:
 
@@ -73,7 +73,7 @@ cat(sprintf("fraccion seleccionada: %.0f%%\\n", 100*mean(S)))
 La lección incómoda del DAG: **ajustar más variables puede empeorar el
 sesgo**. En la estructura M ($U_1 \to Z \leftarrow U_2$, con
 $U_1 \to E$ y $U_2 \to D$, más $E \to D$), la variable $Z$ es
-pre-exposición, está asociada a ambas —parece un confusor de manual—
+pre-exposición, está asociada a ambas, parece un confusor de manual,
 pero es un colisionador entre dos no medidas. Ajustarla abre el camino
 $U_1 \to Z \leftarrow U_2$ y *agrega* sesgo sobre un análisis crudo que
 era correcto.
@@ -81,12 +81,12 @@ era correcto.
 La **butterfly bias** es la variante con un solo no medido: ajustar el
 colisionador amplifica el sesgo del confusor oculto en lugar de
 removerlo. La moraleja común es la regla que el módulo 7 ya anticipaba
-con otro acento: no se ajusta "todo lo disponible" — se ajusta lo que el
+con otro acento: no se ajusta "todo lo disponible"; se ajusta lo que el
 DAG declara necesario, y cada inclusión debe responder a un camino que
 cierra, no a una covariable que sobra.
 
 <Callout type="warning" title="Pre-exposición no es sinónimo de confusor">
-El reflejo heredado —"ajusta por todo lo medido antes de la exposición"—
+El reflejo heredado ("ajusta por todo lo medido antes de la exposición")
 convierte el M-bias en práctica estándar. Las variables instrumentales
 discretas, los colisionadores y los mediadores pueden estar todos
 pre-exposición; ninguno debe ajustarse. La Tabla 1 del módulo 7 muestra
@@ -103,7 +103,7 @@ Cuando el confusor no se puede medir ni acotar, queda una vía: una
 2. **Independencia**: $Z$ no comparte causas con el desenlace (es
    "como si fuera aleatoria").
 3. **Restricción de exclusión**: $Z$ solo llega al desenlace *a través*
-   de la exposición — sin caminos laterales.
+   de la exposición, sin caminos laterales.
 
 Si las tres se sostienen, el efecto se estima en dos etapas: predecir
 $E$ con $Z$ (el componente de la exposición "asignado por el
@@ -137,7 +137,7 @@ cat(sprintf("Wald IV:           beta_E = %.2f\\n", wald))
 
 <Profundiza title="El precio del instrumento: débil y parcial" hint="optativo">
 Dos condiciones de honestidad con IV: si la relevancia es débil ($Z$ casi
-no mueve a $E$), el estimador explota — el denominador de Wald tiende a
+no mueve a $E$), el estimador explota: el denominador de Wald tiende a
 cero y el sesgo relativo del IV supera al de OLS (la regla práctica pide
 F &gt; 10 en la primera etapa). Y lo que el IV estima no es el efecto
 medio de toda la población sino el de los **compliers**: quienes cambian
@@ -152,7 +152,7 @@ Dos estructuras completan el mapa:
 
 - **Front-door**: si toda la acción de $E$ sobre $D$ pasa por un
   mediador $M$ observado, y $M$ no tiene puertas traseras propias, el
-  efecto es identificable aunque $E \to D$ esté confundido — la prueba
+  efecto es identificable aunque $E \to D$ esté confundido; la prueba
   de Pearl para el caso del mecanismo completo.
 - **DAGs con tiempo**: cuando exposición y confusor se encadenan
   ($L_0 \to E_1 \to L_1 \to E_2 \to D$, con $L_1$ confusor de $E_2$ y a
@@ -164,7 +164,7 @@ Dos estructuras completan el mapa:
 Los **SWIG** (single-world intervention graphs) cierran el puente: el
 mismo DAG con el nodo de exposición partido en el valor observado y el
 valor intervenido, sobre el cual las condiciones de identificación se
-leen como d-separación contrafactual — el gráfico y la notación de
+leen como d-separación contrafactual: el gráfico y la notación de
 resultados potenciales diciendo lo mismo.
 
 <Quiz
@@ -176,7 +176,7 @@ resultados potenciales diciendo lo mismo.
     "sesgo de información, porque la exposición se mide peor en hospitalizados"
   ]}
   correctIndex={1}
-  explanation="Restringir el análisis a una consecuencia común de exposición y desenlace (o de sus causas) es condicionar un colisionador: fabrica o distorsiona la asociación. Es el sesgo de Berkson en su forma general, y no se corrige ajustando — se corrige con pesos de selección o redefiniendo la pregunta."
+  explanation="Restringir el análisis a una consecuencia común de exposición y desenlace (o de sus causas) es condicionar un colisionador: fabrica o distorsiona la asociación. Es el sesgo de Berkson en su forma general, y no se corrige ajustando; se corrige con pesos de selección o redefiniendo la pregunta."
 />
 
 <LabExercise
@@ -206,7 +206,7 @@ cat(sprintf("IV debil: beta = %.2f (inestable, F bajo)\\n",
     "Para la trampa 3, calcula el F de la primera etapa y la EE del IV débil vs. uno fuerte",
     "Dibuja el DAG de tu propio estudio marcando: colisionadores, mediadores, un posible IV y el camino que un no medido dejaría abierto",
   ]}
-  hint="El M-bias es pequeño en magnitud pero crece si las asociaciones U-E y U-D son fuertes; el IV débil falla con F < 10 en la primera etapa — calcula el F del summary del primer lm."
+  hint="El M-bias es pequeño en magnitud pero crece si las asociaciones U-E y U-D son fuertes; el IV débil falla con F < 10 en la primera etapa; calcula el F del summary del primer lm."
 />
 
 ## Producto del módulo

@@ -19,7 +19,7 @@ import { LabExercise } from '@/components/LabExercise'
 
 <Callout type="tip" title="La mitad del valor está en que lo entiendan">
 El análisis más riguroso muere en la reunión donde nadie entiende qué es
-un OR. El decisor no necesita el modelo — necesita saber qué tan grande
+un OR. El decisor no necesita el modelo, necesita saber qué tan grande
 es el beneficio, qué tan seguros estamos, y qué se pierde si se decide
 mal. Este módulo trata esa traducción como parte del método estadístico:
 un párrafo mal escrito puede costar más vidas que un error estándar mal
@@ -31,14 +31,14 @@ calculado.
 La pregunta del decisor no es "¿es significativo?" sino "¿qué hago?". La
 respuesta formal necesita tres ingredientes que el análisis ya produce:
 
-- **La magnitud del efecto** con su intervalo — el estimando del
+- **La magnitud del efecto** con su intervalo: el estimando del
   módulo 27, no el coeficiente.
 - **El umbral de decisión**: el efecto mínimo que justifica la acción,
   definido por costos y consecuencias, no por α. Una intervención
   barata y segura se adopta con evidencia modesta; una costosa exige
   certeza mayor.
 - **La probabilidad de estar por encima del umbral**: la fracción de la
-  distribución del estimando que supera el umbral — legible sin saber
+  distribución del estimando que supera el umbral; legible sin saber
   estadística: "hay 85 % de probabilidad de que el beneficio supere el
   mínimo que justifica el programa".
 
@@ -78,7 +78,7 @@ $$
 
 Si el EVPI es menor que el costo del nuevo estudio, la respuesta honesta
 al "necesitamos más datos" es: la información adicional no vale su
-precio. El razonamiento se usa en ambas direcciones — justifica esperar
+precio. El razonamiento se usa en ambas direcciones: justifica esperar
 cuando la incertidumbre es cara, y justifica decidir ya cuando es
 barata.
 
@@ -113,29 +113,29 @@ estructura que funciona tiene cinco movimientos, y ninguno menciona un
 coeficiente:
 
 1. **La pregunta en lenguaje de acción**: "¿conviene financiar la
-   vacunación domiciliaria en los municipios de baja cobertura?" — no
+   vacunación domiciliaria en los municipios de baja cobertura?", no
    "análisis de efectividad de una intervención".
-2. **El número que decide**: la magnitud en unidades del decisor —
+2. **El número que decide**: la magnitud en unidades del decisor:
    casos evitados, vidas, años de vida, millones de pesos. El NNT del
    módulo 8 es el instrumento rey: "por cada 250 personas vacunadas a
    domicilio, se evita una hospitalización".
-3. **La incertidumbre traducida**: no el IC — su lectura. "En el peor
+3. **La incertidumbre traducida**: no el IC sino su lectura. "En el peor
    escenario compatible con los datos, aun se evitaría una
-   hospitalización por cada 400 vacunados" — el límite del IC dicho
+   hospitalización por cada 400 vacunados": el límite del IC dicho
    como escenario.
-4. **La condición**: bajo qué supuesto vale la recomendación — "siempre
+4. **La condición**: bajo qué supuesto vale la recomendación ("siempre
    que la cobertura efectiva supere el 60 %, según el análisis de
-   sensibilidad".
+   sensibilidad").
 5. **La acción**: la recomendación en una oración, con su nivel de
-   certeza — "adoptar en los 112 municipios; la probabilidad de que
-   el beneficio supere el umbral es del 90 %".
+   certeza ("adoptar en los 112 municipios; la probabilidad de que
+   el beneficio supere el umbral es del 90 %").
 
 <Callout type="warning" title="Lo que el párrafo no puede hacer">
 Tres errores de traducción que cuestan credibilidad: prometer más
 certeza de la que hay ("el programa funciona" cuando el IC cruza el
 umbral), enterrar la condición (la recomendación válida solo bajo el
 supuesto que quedó en el anexo), y falsear la escala (un RR de 0.74
-dicho como "reduce en 26 %" sin decir sobre qué base — la reducción
+dicho como "reduce en 26 %" sin decir sobre qué base: la reducción
 absoluta en una mortalidad del 0.5 % es otra conversación). El decisor
 mal informado por exceso de confianza es peor que el no informado.
 </Callout>
@@ -174,7 +174,7 @@ cat(sprintf('NNT = %.0f (peor caso %.0f, mejor caso %.0f).\\n',
 
 <Profundiza title="Cuando el decisor y el analista usan el mismo lenguaje" hint="optativo">
 El análisis de decisión formal (árboles de decisión, utilidades,
-EVSI — el valor de un estudio *específico* antes de financiarlo) tiene
+EVSI, el valor de un estudio *específico* antes de financiarlo) tiene
 su literatura completa en economía de la salud: el costo-efectividad
 con umbral de disposición a pagar es la misma aritmética del umbral con
 otra moneda. Lo que el módulo reclama como núcleo es más modesto y más
@@ -215,7 +215,7 @@ cat(sprintf('probabilidad de superar el umbral: %.0f%%\\n',
 # 'odds', sin 'significativo', sin 'coeficiente'.`}
   tasks={[
     "Escribe el párrafo de una página con los cinco movimientos para un resultado real de tu trabajo",
-    "Haz leer el párrafo a alguien no técnico y reporta qué pregunta quedó sin responder — eso señala el movimiento que falló",
+    "Haz leer el párrafo a alguien no técnico y reporta qué pregunta quedó sin responder; eso señala el movimiento que falló",
     "Calcula la probabilidad de superar el umbral para dos umbrales distintos y muestra cómo cambia la recomendación",
   ]}
   hint="Si el párrafo necesita más de una oración para la condición, el supuesto es demasiado técnico: muévelo al anexo y deja en el cuerpo solo su consecuencia ('válido si la cobertura supera el 60 %')."
@@ -227,7 +227,7 @@ cat(sprintf('probabilidad de superar el umbral: %.0f%%\\n',
 Una página real: pregunta de acción, magnitud en frecuencias naturales,
 escenarios de incertidumbre, condición declarada, recomendación con su
 certeza cuantificada. Sin OR, sin p, sin "con precaución". El anexo
-técnico existe — pero la página se sostiene sola.
+técnico existe, pero la página se sostiene sola.
 </Callout>
 
 ## Lecturas

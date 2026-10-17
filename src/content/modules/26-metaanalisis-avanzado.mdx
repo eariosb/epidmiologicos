@@ -21,7 +21,7 @@ import { LabExercise } from '@/components/LabExercise'
 El meta-análisis del módulo 10 enseñó el procedimiento: pesar, combinar,
 reportar. La pregunta avanzada es otra: si los estudios difieren más de
 lo que el azar explica, el promedio ponderado es la respuesta a una
-pregunta que nadie hizo — ¿para *quién* es el efecto medio? La
+pregunta que nadie hizo: ¿para *quién* es el efecto medio? La
 heterogeneidad no es el obstáculo del meta-análisis; es su contenido.
 </Callout>
 
@@ -31,16 +31,16 @@ Tres cantidades miden lo mismo con escalas distintas, y reportar solo una
 es la omisión más común:
 
 - **$Q$ de Cochran**: la suma ponderada de desviaciones del promedio.
-  Su p-valor tiene el problema familiar — con pocos estudios no detecta,
+  Su p-valor tiene el problema familiar: con pocos estudios no detecta,
   con muchos detecta cualquier cosa. Sirve como semáforo, no como medida.
-- **$\tau^2$**: la varianza *entre* estudios de los efectos verdaderos —
+- **$\tau^2$**: la varianza *entre* estudios de los efectos verdaderos,
   el parámetro sustantivo. Se estima por momentos (DerSimonian–Laird)
   o por máxima verosimilitud restringida (REML, el estándar actual).
 - **$I^2$**: la fracción de la variabilidad observada que es
   heterogeneidad real y no ruido muestral, $I^2 = \max(0, (Q - k + 1)/Q)$.
   Es adimensional, comparable entre meta-análisis, y malinterpretable:
   con estudios enormes, $I^2$ alto no implica efectos clínicamente
-  distintos — implica errores estándar diminutos.
+  distintos: implica errores estándar diminutos.
 
 <RCell
   id="26/heterogeneidad"
@@ -82,7 +82,7 @@ $$
 $$
 
 Con heterogeneidad sustancial, el IP puede cruzar el nulo aunque el IC
-del promedio no lo haga — y esa es la respuesta honesta al decisor: "en
+del promedio no lo haga, y esa es la respuesta honesta al decisor: "en
 promedio funciona, pero hay contextos plausibles donde no". Un
 meta-análisis que reporta efecto medio sin intervalo de predicción, con
 $\tau^2 > 0$, está reportando la mitad del resultado.
@@ -107,12 +107,12 @@ El embudo del módulo 10 era visual; la versión formal lo convierte en
 prueba. La lógica del **test de Egger**: si el embudo es simétrico, el
 efecto de cada estudio no debe correlacionarse con su precisión; regresar
 el efecto estandarizado contra la precisión debe dar intercepto cero.
-Un intercepto distinto de cero señala asimetría — y con ella, estudios
+Un intercepto distinto de cero señala asimetría, y con ella, estudios
 pequeños con efectos inflados o estudios negativos perdidos.
 
 El **trim-and-fill** va un paso más: recorta la asimetría estimada,
 rellena los estudios "faltantes" por simetría, y reestima el efecto. No
-recupera los estudios perdidos — mide *cuánto cambiaría* la conclusión
+recupera los estudios perdidos: mide *cuánto cambiaría* la conclusión
 si existieran. Es un análisis de sensibilidad con la estructura del
 módulo 22: la pregunta es cuánto sesgo basta para cambiar el veredicto.
 
@@ -143,7 +143,7 @@ lado <- sum(ef < mu); cat(sprintf('efecto medio %.2f | estudios a la
 
 Cuando $\tau^2$ es grande, la pregunta natural es *por qué* difieren los
 estudios. La meta-regresión regresa el efecto de cada estudio contra
-covariables del estudio — latitud, dosis, año, calidad— y explica parte
+covariables del estudio (latitud, dosis, año, calidad) y explica parte
 de la heterogeneidad como estructura, no como ruido:
 
 $$
@@ -153,7 +153,7 @@ $$
 
 La advertencia obligada es **ecológica**: la covariable es del estudio,
 no del paciente. "Los estudios en latitudes altas muestran más efecto"
-no implica "el efecto es mayor en personas de latitudes altas" — la
+no implica "el efecto es mayor en personas de latitudes altas": la
 agregación puede fabricar o invertir el gradiente, el mismo sesgo del
 módulo 14 en forma meta-analítica.
 
@@ -161,7 +161,7 @@ módulo 14 en forma meta-analítica.
 Las covariables de estudio no están asignadas al azar: correlacionan
 entre sí (los estudios antiguos son también los de peor calidad y de
 otra población). Una meta-regresión con $k$ estudios y varias
-covariables es una regresión con $k$ observaciones — la regla de
+covariables es una regresión con $k$ observaciones; la regla de
 eventos-por-variable del módulo 11 aplica con más fuerza: una
 covariable por vez, y como hipótesis, no como hallazgo.
 </Callout>
@@ -184,7 +184,7 @@ promedia.
   options={[
     "El efecto es protector y robusto porque el IC no cruza 1",
     "Con I² = 89% el meta-análisis no es válido y debe descartarse",
-    "El promedio protege, pero se debe reportar el intervalo de predicción — que probablemente incluye RR ≥ 1 — y explorar qué covariable explica la heterogeneidad",
+    "El promedio protege, pero se debe reportar el intervalo de predicción (que probablemente incluye RR ≥ 1) y explorar qué covariable explica la heterogeneidad",
     "Se debe usar modelo de efectos fijos para reducir el I²"
   ]}
   correctIndex={2}
@@ -216,7 +216,7 @@ cat(sprintf('Q residual = %.1f en %d df\\n', resid2, nrow(ens)-2))
     "Ejecuta el test de Egger sobre BCG y reporta si hay evidencia de asimetría",
     "Escribe en tres líneas por qué el coeficiente de latitud no puede leerse como 'la vacuna funciona mejor en personas del norte'",
   ]}
-  hint="La varianza del coeficiente de la meta-regresión debe usar los pesos con tau2 incluido; con pesos de efectos fijos la precisión es ficticia — el mismo fenómeno del módulo 10."
+  hint="La varianza del coeficiente de la meta-regresión debe usar los pesos con tau2 incluido; con pesos de efectos fijos la precisión es ficticia; el mismo fenómeno del módulo 10."
 />
 
 ## Producto del módulo
@@ -225,7 +225,7 @@ cat(sprintf('Q residual = %.1f en %d df\\n', resid2, nrow(ens)-2))
 Sobre un meta-análisis propio o el BCG: $\tau^2$, $I^2$ e intervalo de
 predicción reportados juntos; diagnóstico de asimetría (embudo + Egger)
 con la salvedad de su potencia; una meta-regresión de una covariable con
-su advertencia ecológica; y la conclusión escrita para el decisor —
+su advertencia ecológica; y la conclusión escrita para el decisor:
 qué dice el promedio, qué dice la predicción, y qué pregunta queda abierta.
 </Callout>
 

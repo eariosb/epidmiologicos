@@ -20,7 +20,7 @@ import { LabExercise } from '@/components/LabExercise'
 <Callout type="tip" title="La pregunta que ningún ajuste responde">
 Todo ajuste del Curso I supone que el confusor está en la base. La
 pregunta de campo es otra: **¿y si no está?** Este módulo convierte esa
-duda en procedimiento — no para probar que no hay confusión residual
+duda en procedimiento: no para probar que no hay confusión residual
 (nadie puede), sino para medir cuánta haría falta para cambiar la
 conclusión.
 </Callout>
@@ -37,7 +37,7 @@ $$
 RR_{EC} \ge RR_{obs} \qquad \text{y} \qquad RR_{CD} \ge RR_{obs}
 $$
 
-— el confusor debe asociarse con la exposición *y* con el desenlace al
+es decir, el confusor debe asociarse con la exposición *y* con el desenlace al
 menos tan fuertemente como el RR observado. Un RR de 9 entre tabaco y
 cáncer de pulmón exigía un gen con dos asociaciones de magnitud 9:
 ninguno propuesto se acercaba, y la objeción quedó medida en lugar de
@@ -51,7 +51,7 @@ E = RR + \sqrt{RR \cdot (RR - 1)}
 $$
 
 es la fuerza mínima que el confusor necesitaría en **ambos** caminos a la
-vez —sobre $E$ y sobre $D$, más allá de lo ya ajustado— para llevar la
+vez (sobre $E$ y sobre $D$, más allá de lo ya ajustado) para llevar la
 estimación a 1. Se calcula también sobre el límite del IC más cercano a
 1: la versión honesta, que incluye la incertidumbre del estimador.
 
@@ -63,7 +63,7 @@ estimación a 1. Se calcula también sobre el límite del IC más cercano a
 evalue <- function(est) est + sqrt(est * (est - 1))
 e_rr  <- function(rr) if (rr >= 1) evalue(rr) else evalue(1/rr)
 
-# Caso: RR = 3.9, IC95% (1.8, 8.7) — asociacion 'fuerte' pero imprecisa.
+# Caso: RR = 3.9, IC95% (1.8, 8.7): asociacion 'fuerte' pero imprecisa.
 rr <- 3.9; lo <- 1.8; hi <- 8.7
 cat(sprintf("RR = %.1f  ->  E-value = %.2f\\n", rr, e_rr(rr)))
 # El E-value del IC se toma del limite mas cercano a 1:
@@ -83,7 +83,7 @@ perezosa es "E-value grande = estudio robusto". Tres precisiones que el
 reporte honesto conserva:
 
 - Es una **condición suficiente, no necesaria**: un confusor puede
-  dañar la estimación sin llevarla al nulo — el sesgo parcial no tiene
+  dañar la estimación sin llevarla al nulo; el sesgo parcial no tiene
   E-value.
 - Supone el confusor en el **peor escenario posible** (asociado a E y a
   D a la vez); un confusor que solo se asocia a uno de los dos sesga
@@ -97,8 +97,8 @@ reporte honesto conserva:
 El E-value responde "¿cuánto sesgo basta para anular?"; la pregunta
 complementaria es "¿qué pasa con el sesgo plausible?". El análisis de
 sesgo probabilístico corrige el estimando por parámetros de sesgo que
-**no se conocen pero sí se pueden razonar** — sensibilidad/especificidad
-de la medición, prevalencia del confusor, sus asociaciones— asignándoles
+**no se conocen pero sí se pueden razonar** (sensibilidad/especificidad
+de la medición, prevalencia del confusor, sus asociaciones), asignándoles
 distribuciones en lugar de valores fijos y propagándolas por Monte
 Carlo. El producto es una distribución del estimando corregido, no un
 punto.
@@ -134,7 +134,7 @@ cat(sprintf("OR corregido: mediana %.2f, IC simulado 95%% (%.2f, %.2f)\\n",
 ## Bounding: la respuesta sin supuestos
 
 La posición más austera es la de Manski: **sin supuestos sobre el
-confusor no medido, el efecto no está identificado — pero sí acotado**.
+confusor no medido, el efecto no está identificado, pero sí acotado**.
 Para un desenlace binario, el riesgo bajo exposición satisface
 
 $$
@@ -145,7 +145,7 @@ independientemente de cualquier asociación, así que la diferencia
 causal $P(D=1 \mid \text{hacer } E=1) - P(D=1 \mid \text{hacer } E=0)$
 queda acotada en un intervalo de ancho 1: informativo solo en el signo,
 cuando el intervalo no cruza cero. Las cotas se estrechan con supuestos
-débiles (monotonía, dirección del sesgo conocida) — cada supuesto que se
+débiles (monotonía, dirección del sesgo conocida): cada supuesto que se
 acepta compra precisión, y el reporte muestra la escala completa: qué se
 gana a cambio de qué se asume.
 
@@ -165,17 +165,17 @@ probabilístico en métodos, las cotas en el anexo de sensibilidad.
 Cuándo declarar la asociación robusta frente a lo no medido:
 
 1. **E-value del IC** (no del punto) comparable o mayor que las
-   asociaciones de los confusores *conocidos* del problema — si la edad
+   asociaciones de los confusores *conocidos* del problema: si la edad
    mueve el RR en 1.3, un confusor fantasma con 1.6 no convence, uno
    con 4 sí.
 2. **El análisis probabilístico** con parámetros defendibles no cruza
-   el nulo — o lo cruza con fracción pequeña y declarada.
+   el nulo, o lo cruza con fracción pequeña y declarada.
 3. **Las cotas** mantienen el signo bajo supuestos que el equipo
    clínico acepta como plausibles.
 
 Si ninguna se sostiene, la conclusión honesta no es "no hay efecto":
-es "la asociación es frágil frente a confusión no medida de magnitud X"
-— y ese número es la respuesta que el informe debe llevar.
+es "la asociación es frágil frente a confusión no medida de magnitud X";
+ese número es la respuesta que el informe debe llevar.
 
 <Quiz
   question="Un estudio reporta OR = 2.1, IC95% (1.1, 4.0) para una exposición ocupacional. El E-value del IC es 1.4. ¿Qué conclusión sobre confusión no medida es correcta?"
@@ -226,7 +226,7 @@ cat(sprintf("el IC solo resiste hasta RR ~ %.2f en ambos caminos.\\n",
 Para una asociación real: E-value del punto y del IC con su frase de
 reporte, tabla de confusores conocidos con sus magnitudes, corrección
 probabilística con los parámetros justificados, y la declaración final
-de robustez — o del umbral de confusión que la rompería.
+de robustez, o del umbral de confusión que la rompería.
 </Callout>
 
 ## Lecturas

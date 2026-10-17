@@ -1,5 +1,5 @@
 ---
-title: "II-2. Datos faltantes en serio: mecanismos, imputación múltiple y sensibilidad"
+title: "II-2. Datos faltantes: mecanismos, imputación múltiple y sensibilidad"
 slug: "21-datos-faltantes"
 objective: "Diagnosticar el mecanismo de faltantes (MCAR, MAR, MNAR), aplicar imputación múltiple con diagnósticos, y declarar la sensibilidad del resultado a lo que no se observó."
 order: 21
@@ -21,7 +21,7 @@ import { LabExercise } from '@/components/LabExercise'
 En el Curso I el faltante aparecía como fricción: el paciente sin `Age`
 desaparecía del glm y la muestra se achicaba. Aquí el faltante es el
 problema: el mecanismo que lo generó decide qué procedimiento es honesto,
-y ningún método devuelve la información perdida — solo la trata con la
+y ningún método devuelve la información perdida; solo la trata con la
 incertidumbre que le corresponde.
 </Callout>
 
@@ -30,14 +30,14 @@ incertidumbre que le corresponde.
 Rubin (1976) ordenó las formas de faltar en tres mecanismos, y la
 clasificación no es pedantería: cada uno dicta qué estimador es válido.
 
-- **MCAR** (completamente al azar): faltar no depende de nada — un tubo
+- **MCAR** (completamente al azar): faltar no depende de nada: un tubo
   de ensayo roto, un formulario extraviado. Los completos son una
   submuestra aleatoria: no hay sesgo, solo precisión perdida.
 - **MAR** (al azar condicional): faltar depende de lo *observado*, no de
-  lo faltante — los hombres responden menos la escala de depresión, pero
+  lo faltante: los hombres responden menos la escala de depresión, pero
   dentro de cada sexo faltar es azar. Recuperable si el modelo usa las
   variables observadas que predicen el faltante.
-- **MNAR** (no al azar): faltar depende del propio valor — quien tiene
+- **MNAR** (no al azar): faltar depende del propio valor: quien tiene
   depresión más severa responde menos. Ningún procedimiento estándar lo
   corrige; la respuesta honesta es el análisis de sensibilidad.
 
@@ -74,22 +74,22 @@ cat(sprintf("verdadera = %.1f | MCAR = %.1f | MAR = %.1f | MNAR = %.1f\\n",
 
 Antes de imputar se describe *cómo* falta la base:
 
-- **Patrón monótono**: las variables se encadenan — si falta $V_3$
+- **Patrón monótono**: las variables se encadenan: si falta $V_3$
   también faltan $V_4, V_5$ (típico de abandono en seguimiento). Habilita
   imputación secuencial simple, variable a variable.
 - **Patrón general**: cualquier combinación de huecos (típico de bases
   administrativas). Exige el ciclo iterativo de imputación encadenada.
 - **Fracción de información faltante**: un 20 % de celdas vacías puede
   concentrarse en una covariable inútil o dispersarse por todo el
-  modelo — el conteo por variable y por sujeto lo separa.
+  modelo; el conteo por variable y por sujeto lo separa.
 
 <Callout type="warning" title="Little no decide">
 El test de Little contrasta MCAR contra "no MCAR": un p pequeño descarta
-MCAR, pero un p grande **no lo confirma** — con n chico simplemente no
+MCAR, pero un p grande **no lo confirma**, porque con n chico simplemente no
 detecta desviaciones (la misma lógica de los tests de supuestos del
 repaso). Y aunque lo rechace, no distingue MAR de MNAR. El mecanismo se
-justifica con el proceso de recolección — quién faltó, por qué faltó,
-qué registró el sistema— no con un p.
+justifica con el proceso de recolección (quién faltó, por qué faltó,
+qué registró el sistema), no con un p.
 </Callout>
 
 ## Imputación múltiple: imputar, estimar, combinar
@@ -98,12 +98,12 @@ La idea de Rubin tiene tres pasos y el segundo es el que casi nadie
 discute:
 
 1. **Imputar $M$ veces**: cada copia rellena los huecos con un sorteo de
-   la distribución predictiva — no con el valor esperado, porque el
+   la distribución predictiva, no con el valor esperado, porque el
    objetivo no es adivinar el dato sino *representar su incertidumbre*.
 2. **Estimar en cada copia**: el análisis completo, idéntico, sobre las
    $M$ bases. Nada especial aquí.
 3. **Combinar con las reglas de Rubin**: el estimador es la media de los
-   $\hat\theta_m$; la varianza suma dos fuentes — la variabilidad *dentro*
+   $\hat\theta_m$; la varianza suma dos fuentes: la variabilidad *dentro*
    de cada copia y la variabilidad *entre* copias, que es exactamente el
    precio de no haber observado los datos.
 
@@ -112,7 +112,7 @@ $$
 V = \bar W + \Big(1 + \frac{1}{M}\Big) B
 $$
 
-Una imputación simple —un solo valor por hueco— produce el mismo
+Una imputación simple (un solo valor por hueco) produce el mismo
 estimador puntual pero con $B = 0$: finge certeza que no existe y los IC
 subcubren.
 
@@ -151,12 +151,12 @@ cat(sprintf("complete-case: b0 = %.2f, b1 = %.2f\\n", cc[1], cc[2]))
 ## Complete-case: cuándo es sesgo y cuándo solo precisión
 
 Analizar solo los completos es válido en más casos de los que sugiere su
-mala fama — y malo en los casos que importan:
+mala fama, y malo en los casos que importan:
 
 - **Válido sin sesgo** si faltar no depende del desenlace condicionado
   a las covariables del modelo: regresión con MAR en la covariable es
   sesgada, pero MAR solo en el desenlace (dado X) no lo es.
-- **Válido pero caro** con MCAR: no hay sesgo, se pierde potencia —
+- **Válido pero caro** con MCAR: no hay sesgo, se pierde potencia:
   un 30 % de faltantes dispersos puede eliminar la mitad de la muestra
   efectiva.
 - **Sesgado** con MAR en la covariable o en el desenlace condicionado,
@@ -169,7 +169,7 @@ documentada.
 
 ## MNAR y el análisis de sensibilidad
 
-Cuando el argumento apunta a MNAR —faltar por lo que falta— ninguna
+Cuando el argumento apunta a MNAR (faltar por lo que falta), ninguna
 imputación estándar salva el estimando. Lo que queda es acotar la
 respuesta: el **δ-adjustment** imputa los faltantes desplazados un δ
 respecto del modelo MAR, y repite el análisis para una grilla de δ.
@@ -184,8 +184,8 @@ responder depende del valor) y el de **patrón-mezcla** (factoriza como
 $P(R)\,P(Y\mid R)$: distribuciones distintas para respondedores y no
 respondedores). El δ-adjustment es la versión operativa del segundo:
 parametriza cuánto difieren las distribuciones en la dirección que el
-dato no puede ver. Los dos marcos son no identificables sin supuestos
-—por eso el producto es siempre una sensibilidad, nunca una corrección—.
+dato no puede ver. Los dos marcos son no identificables sin supuestos;
+por eso el producto es siempre una sensibilidad, nunca una corrección.
 </Profundiza>
 
 <Callout type="note" title="El reporte honesto">
@@ -202,7 +202,7 @@ que se reporta mal.
   question="Un ensayo pierde el 25 % de los desenlaces: los pacientes con peor evolución abandonan más. ¿Qué afirmación es correcta?"
   options={[
     "Es MAR: la pérdida depende de variables del estudio, así que la imputación múltiple la corrige",
-    "Es probablemente MNAR — depende del desenlace no observado — y lo correcto es un análisis de sensibilidad",
+    "Es probablemente MNAR (depende del desenlace no observado) y lo correcto es un análisis de sensibilidad",
     "Es MCAR porque el 25 % es una fracción fija",
     "Complete-case es válido porque el abandono es un proceso aleatorio"
   ]}
@@ -245,8 +245,8 @@ desc(rep(FALSE, n), "FULL")
 <Callout type="note" title="Entrega: sección de métodos defendible">
 Para una base con faltantes (propia o la del laboratorio): descripción
 del patrón, mecanismo argumentado en dos líneas, método elegido con su
-modelo, comparación complete-case vs. MI, y —si el mecanismo admite
-duda MNAR— la curva de sensibilidad con el δ crítico declarado.
+modelo, comparación complete-case vs. MI, y, si el mecanismo admite
+duda MNAR, la curva de sensibilidad con el δ crítico declarado.
 </Callout>
 
 ## Lecturas
