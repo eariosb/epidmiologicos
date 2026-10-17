@@ -132,8 +132,23 @@ m17) lleva su propia marca.
 
 ## Funcionalidades
 
-- **Módulos MDX** con KaTeX (`remark-math` + `rehype-katex`), citas
-  `<Term>` con glosario, quizzes, flashcards y ejercicios de laboratorio.
+- **Módulos MDX** con KaTeX (`remark-math` + `rehype-katex`), quizzes,
+  flashcards y ejercicios de laboratorio.
+- **Glosario en vivo con tooltips** (`<Term>` + `src/lib/glossary.ts`):
+  **204 entradas** —siglas, símbolos y conceptos, en 14 secciones
+  temáticas— en un diccionario único que alimenta dos superficies.
+  En el texto, `<Term k="RR">` dibuja un subrayado punteado discreto y,
+  al hover/focus, un tooltip con la expansión en español y el original
+  en inglés; si la clave existe en el glosario, además enlaza al ancla
+  `/glosario#clave` para la entrada completa. `tip="..."` sirve
+  recorderis libres para personas, resultados y métodos. Es CSS puro,
+  sin estado ni JS: funciona en SSR, con teclado y en lectores de
+  pantalla (vía `sr-only` y `role="note"`). ~160 términos enlazados en
+  los módulos; la página **`/glosario`** renderiza el compendio completo
+  de la misma fuente —una entrada nueva queda disponible en ambos.
+  Curaduría asistida: `scripts/wrap_terms.py` envuelve las siglas en
+  prosa (omitiendo código, matemática y frontmatter) y `audit_terms.py`
+  / `term_gaps.py` auditan la cobertura.
 - **Arquitectura de capas** (`src/components/Deep.tsx`): `<Profundiza>` y
   `<SalaDeMaquinas>` como plegables nativos con contratos distintos;
   frontmatter extendido (`course`, `level`, `attr`, `profiles`,
@@ -200,7 +215,8 @@ m17) lleva su propia marca.
 
 ```
 src/
-  app/                    App Router: /, /anexos, /bibliografia, /cursos/[slug], api/
+  app/                    App Router: /, /anexos, /bibliografia, /glosario,
+                          /rutas, /cursos/[slug], api/
   components/             Simuladores, RCell, Callout, Quiz, mdx-components…
   content/modules/        repaso (00) + 19 módulos MDX + claims.json generado
   hooks/                  useExactTask, useProgress, useWebR, useBroadcast…
@@ -212,7 +228,9 @@ packages/blackboard/      Pizarra digital + asistente LLM (workspace)
 public/anexos/            Ensayo técnico, scripts R, figuras del anexo
 public/data/              Datasets del curso (VALUNG, RECID, BCG, DDIMER,
                           valung_corrupto para la práctica de campo II-10…)
-scripts/                  QA: run_all_r, check_mdx, check_render, build-claims
+scripts/                  QA (run_all_r, check_mdx, check_render, build-claims)
+                          y curaduría del glosario (wrap_terms, audit_terms,
+                          term_gaps)
 tests/visual/             Snapshots Playwright (escritorio + móvil)
 docs/QA.md                Línea base y compuertas de calidad
 ```
