@@ -6,6 +6,8 @@ order: 4
 datasets: []
 duration: 90
 prerequisites: ["Módulo 3: Medición"]
+profiles: ["clinico"]
+attr: "Material base del curso ADEI (profesor Juan Carlos Salazar Uribe); estructura guiada por Woodward (2014)."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -288,6 +290,7 @@ Tres alternativas, todas disponibles en R base:
   nominal.
 - **Haldane–Anscombe** (sumar 0.5 a cada celda): parche clásico de Woolf.
 
+<SalaDeMaquinas title="La cobertura real de Woolf, medida por simulación">
 <RCell
   id="04/fragilidad-ic"
   title="Tres intervalos para el mismo OR, y la cobertura real de Woolf"
@@ -329,6 +332,7 @@ cat(sprintf("\\nCobertura Woolf: %.1f%%  |  muestras con celda cero: %.1f%%\\n",
 # Resultado: ~97% (algo conservador) y ~0.4% de OR indefinidos.
 # Con n chico la falla no es el ancho: es que el estimador colapsa.`}
 />
+</SalaDeMaquinas>
 
 <RCell
   id="04/tabla-deporte"

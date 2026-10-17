@@ -1,0 +1,3 @@
+casos evitados esperados: 600 (peor 250, mejor 1000)
+NNT = 83
+probabilidad de superar el umbral: 87%

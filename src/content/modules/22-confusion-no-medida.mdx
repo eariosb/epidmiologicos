@@ -1,0 +1,243 @@
+---
+title: "II-3. Confusión no medida: E-value, análisis de sesgo y bounding"
+slug: "22-confusion-no-medida"
+objective: "Cuantificar qué tan fuerte tendría que ser un confusor no medido para explicar una asociación: E-value aplicado, análisis de sesgo probabilístico y cotas de Manski."
+order: 22
+datasets: []
+duration: 105
+prerequisites: ["Curso I completo, especialmente los módulos 7 y 14"]
+course: "II"
+level: "avanzado"
+profilesDeep: ["clinico", "politica"]
+attr: "Complemento propio para el curso avanzado: robustez frente a lo no medido."
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+
+<Callout type="tip" title="La pregunta que ningún ajuste responde">
+Todo ajuste del Curso I supone que el confusor está en la base. La
+pregunta de campo es otra: **¿y si no está?** Este módulo convierte esa
+duda en procedimiento — no para probar que no hay confusión residual
+(nadie puede), sino para medir cuánta haría falta para cambiar la
+conclusión.
+</Callout>
+
+## De Cornfield al E-value
+
+Fisher y Neyman atacaron a Doll y Hill con la objeción de siempre: un
+"gen del fumar" podría causar tanto el hábito como el cáncer. Cornfield
+(1959) respondió con la aritmética que inauguró el análisis de
+sensibilidad: para que un confusor binario explique **toda** una
+asociación observada, debe cumplir simultáneamente
+
+$$
+RR_{EC} \ge RR_{obs} \qquad \text{y} \qquad RR_{CD} \ge RR_{obs}
+$$
+
+— el confusor debe asociarse con la exposición *y* con el desenlace al
+menos tan fuertemente como el RR observado. Un RR de 9 entre tabaco y
+cáncer de pulmón exigía un gen con dos asociaciones de magnitud 9:
+ninguno propuesto se acercaba, y la objeción quedó medida en lugar de
+declamada.
+
+El E-value de VanderWeele y Ding (2017) empaqueta esa lógica en un
+número único. Para un RR observado:
+
+$$
+E = RR + \sqrt{RR \cdot (RR - 1)}
+$$
+
+es la fuerza mínima que el confusor necesitaría en **ambos** caminos a la
+vez —sobre $E$ y sobre $D$, más allá de lo ya ajustado— para llevar la
+estimación a 1. Se calcula también sobre el límite del IC más cercano a
+1: la versión honesta, que incluye la incertidumbre del estimador.
+
+<RCell
+  id="22/evalue"
+  title="E-value: calculadora y tabla de reporte"
+  code={`# E-value para RR (y su version para OR con enfermedad no rara:
+# se convierte a RR aproximado por sqrt(OR)).
+evalue <- function(est) est + sqrt(est * (est - 1))
+e_rr  <- function(rr) if (rr >= 1) evalue(rr) else evalue(1/rr)
+
+# Caso: RR = 3.9, IC95% (1.8, 8.7) — asociacion 'fuerte' pero imprecisa.
+rr <- 3.9; lo <- 1.8; hi <- 8.7
+cat(sprintf("RR = %.1f  ->  E-value = %.2f\\n", rr, e_rr(rr)))
+# El E-value del IC se toma del limite mas cercano a 1:
+cat(sprintf("IC (%.1f, %.1f) -> E-value del IC = %.2f\\n",
+            lo, hi, if (lo > 1) e_rr(lo) else if (hi < 1) e_rr(1/hi) else 1))
+# Lectura: para anular el punto estimado haria falta un confusor con
+# RR >= 2.7 en ambos caminos; para anular el IC basta uno con RR >= 1.7.
+# Frase de reporte: 'un confusor no medido tendria que asociarse a la
+# exposicion y al desenlace con RR de al menos 2.7 (punto) o 1.7 (IC),
+# mas alla de los covariables ajustados.'`}
+/>
+
+## Lo que el E-value no responde
+
+El E-value resume en un número una condición conjunta, y su lectura
+perezosa es "E-value grande = estudio robusto". Tres precisiones que el
+reporte honesto conserva:
+
+- Es una **condición suficiente, no necesaria**: un confusor puede
+  dañar la estimación sin llevarla al nulo — el sesgo parcial no tiene
+  E-value.
+- Supone el confusor en el **peor escenario posible** (asociado a E y a
+  D a la vez); un confusor que solo se asocia a uno de los dos sesga
+  menos de lo que sugiere el número.
+- No trata **confusión por múltiples variables no medidas**: la
+  condición aplica a un confusor binario o a la combinación de varios
+  bajo supuestos que el método declara.
+
+## Análisis de sesgo cuantitativo: la versión probabilística
+
+El E-value responde "¿cuánto sesgo basta para anular?"; la pregunta
+complementaria es "¿qué pasa con el sesgo plausible?". El análisis de
+sesgo probabilístico corrige el estimando por parámetros de sesgo que
+**no se conocen pero sí se pueden razonar** — sensibilidad/especificidad
+de la medición, prevalencia del confusor, sus asociaciones— asignándoles
+distribuciones en lugar de valores fijos y propagándolas por Monte
+Carlo. El producto es una distribución del estimando corregido, no un
+punto.
+
+<RCell
+  id="22/sesgo-prob"
+  title="Corrección probabilística por clasificación errónea"
+  code={`# Caso-control con exposicion mal medida: Se = 0.9, Sp = 0.8
+# (valores plausibles para exposicion autoreportada), pero inciertos.
+set.seed(4); B <- 20000
+
+# Tabla observada: 100 casos, 100 controles; expuestos 60 vs 40.
+ca_e <- 60; co_e <- 40
+OR_obs <- (ca_e * (100 - co_e)) / ((100 - ca_e) * co_e)
+
+# Parametros como distribuciones (beta centradas en lo plausible):
+Se <- rbeta(B, 90, 10)          # media 0.90
+Sp <- rbeta(B, 80, 20)          # media 0.80
+
+# Corregir los conteos aparentes a verdaderos:
+# obs = Se*verd + (1-Sp)*(no verd)  ->  verd = (obs - (1-Sp))/(Se+Sp-1)
+pe_ca <- pmax(0.001, (ca_e/100 - (1 - Sp)) / (Se + Sp - 1))
+pe_co <- pmax(0.001, (co_e/100 - (1 - Sp)) / (Se + Sp - 1))
+OR_cor <- (pe_ca/(1-pe_ca)) / (pe_co/(1-pe_co))
+
+cat(sprintf("OR observado = %.2f\\n", OR_obs))
+cat(sprintf("OR corregido: mediana %.2f, IC simulado 95%% (%.2f, %.2f)\\n",
+            median(OR_cor), quantile(OR_cor,.025), quantile(OR_cor,.975)))
+# La correccion ensancha el intervalo: esa amplitud es el precio de
+# declarar la incertidumbre de la medicion, no de fingirla.`}
+/>
+
+## Bounding: la respuesta sin supuestos
+
+La posición más austera es la de Manski: **sin supuestos sobre el
+confusor no medido, el efecto no está identificado — pero sí acotado**.
+Para un desenlace binario, el riesgo bajo exposición satisface
+
+$$
+P(D=1\mid E=1) \in [0,1]
+$$
+
+independientemente de cualquier asociación, así que la diferencia
+causal $P(D=1 \mid \text{hacer } E=1) - P(D=1 \mid \text{hacer } E=0)$
+queda acotada en un intervalo de ancho 1: informativo solo en el signo,
+cuando el intervalo no cruza cero. Las cotas se estrechan con supuestos
+débiles (monotonía, dirección del sesgo conocida) — cada supuesto que se
+acepta compra precisión, y el reporte muestra la escala completa: qué se
+gana a cambio de qué se asume.
+
+<Profundiza title="Las tres capas y cuándo usar cada una" hint="optativo">
+La familia se ordena por cuánto supone: **E-value** (un número, el más
+débil: solo dice qué magnitud de confusión total bastaría), **análisis
+de sesgo parametrizado** (corrección con parámetros declarados y su
+incertidumbre: el caballo de trabajo cuando los parámetros son
+discutibles), **bounding** (cotas sin supuestos: la respuesta más
+honesta y la menos informativa). En la práctica se reportan en orden
+creciente de exigencia: el E-value en el resumen, el análisis
+probabilístico en métodos, las cotas en el anexo de sensibilidad.
+</Profundiza>
+
+## Reglas de decisión y de reporte
+
+Cuándo declarar la asociación robusta frente a lo no medido:
+
+1. **E-value del IC** (no del punto) comparable o mayor que las
+   asociaciones de los confusores *conocidos* del problema — si la edad
+   mueve el RR en 1.3, un confusor fantasma con 1.6 no convence, uno
+   con 4 sí.
+2. **El análisis probabilístico** con parámetros defendibles no cruza
+   el nulo — o lo cruza con fracción pequeña y declarada.
+3. **Las cotas** mantienen el signo bajo supuestos que el equipo
+   clínico acepta como plausibles.
+
+Si ninguna se sostiene, la conclusión honesta no es "no hay efecto":
+es "la asociación es frágil frente a confusión no medida de magnitud X"
+— y ese número es la respuesta que el informe debe llevar.
+
+<Quiz
+  question="Un estudio reporta OR = 2.1, IC95% (1.1, 4.0) para una exposición ocupacional. El E-value del IC es 1.4. ¿Qué conclusión sobre confusión no medida es correcta?"
+  options={[
+    "La asociación es robusta: el OR supera 2",
+    "Basta un confusor con RR ≈ 1.4 en ambos caminos para que el IC cubra 1: la asociación es frágil",
+    "No existe confusión no medida porque el E-value es positivo",
+    "El E-value solo aplica a RR, no a IC, así que no se puede decir nada"
+  ]}
+  correctIndex={1}
+  explanation="El E-value se calcula sobre el límite del IC más cercano a 1 (el 1.1): un confusor con fuerza 1.4 en ambos caminos ya basta para que la evidencia desaparezca. En contextos donde existen confusores típicos de magnitud 1.5-2, la asociación no sobrevive al escrutinio."
+/>
+
+<LabExercise
+  id="22/lab-nomedido"
+  title="Laboratorio: tres capas de sensibilidad sobre un estudio propio"
+  code={`# Elige una asociacion de tu trabajo: RR/OR observado y su IC.
+rr <- 2.5; lo <- 1.6; hi <- 3.9
+
+# 1) E-value del punto y del IC:
+evalue <- function(e) e + sqrt(e * (e - 1))
+cat(sprintf("E-value punto = %.2f | IC = %.2f\\n",
+            evalue(rr), evalue(lo)))
+
+# 2) Comparalo con los confusores CONOCIDOS de tu problema:
+#    escribe la asociacion tipica exposicion-desenlace de 3 de ellos.
+conocidos <- c(edad = 1.4, sexo = 1.1, tabaquismo = 1.8)
+print(conocidos)
+
+# 3) Bounding con monotonia (supuesto: el confusor no protege un
+#    extremo y daana el otro simultaneamente): baja RR al borde
+#    plausible y reporta donde se rompe.
+cat(sprintf("El punto resiste hasta confusores de RR ~ %.2f;\\n",
+            evalue(rr)))
+cat(sprintf("el IC solo resiste hasta RR ~ %.2f en ambos caminos.\\n",
+            evalue(lo)))`}
+  tasks={[
+    "Calcula el E-value del punto y del IC de una asociación de tu área y escribe la frase de reporte completa",
+    "Lista los tres confusores medidos más fuertes de tu problema y compara sus magnitudes con el E-value",
+    "Construye la corrección probabilística con distribuciones plausibles para la Se/Sp de tu exposición y reporta la mediana y el IC corregido",
+  ]}
+  hint="Si solo tienes OR y la enfermedad no es rara, convierte OR → RR con sqrt(OR) antes de calcular el E-value, o usa la fórmula de conversión de VanderWeele para OR comunes."
+/>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: sección de sensibilidad">
+Para una asociación real: E-value del punto y del IC con su frase de
+reporte, tabla de confusores conocidos con sus magnitudes, corrección
+probabilística con los parámetros justificados, y la declaración final
+de robustez — o del umbral de confusión que la rompería.
+</Callout>
+
+## Lecturas
+
+- **Cornfield et al. (1959)**: el origen del análisis de sensibilidad;
+  la respuesta a Fisher y Neyman en su formulación canónica.
+- **VanderWeele &amp; Ding (2017), *Annals of Internal Medicine***: el
+  E-value; el artículo más citado del módulo.
+- **Ding &amp; VanderWeele (2016)**: las cotas de sensibilidad
+  generalizadas para varios parámetros de confusión.
+- **Lash, Fox &amp; Fink (2009), *Applying Quantitative Bias
+  Analysis***: el texto del análisis probabilístico completo.
+- **Manski (2007), *Identification for Prediction and Decision***: el
+  marco del bounding; las cotas como respuesta sin supuestos.

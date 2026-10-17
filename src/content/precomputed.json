@@ -21,7 +21,7 @@
   ]
  },
  "00/disciplina": {
-  "hash": "bce807e0",
+  "hash": "a6890792",
   "console": "                     estrategia tasa_pct ee_pct\n      A. 20 subgrupos, sin plan     62.8   1.53\n  B. 1 prueba, 8 rutas sin plan     16.1   1.16\n C. 20 declarados, sin corregir     62.8   1.53\n   D. 20 declarados, Bonferroni      4.4   0.65\n          E. 1 prueba declarada      4.8   0.15\nTeorico: 20 sin corregir 64.2% | Bonferroni 4.9%",
   "plots": [
    "/precomputed/00-disciplina/plot-1.png"
@@ -103,6 +103,11 @@
   "console": "Verdad poblacional: RR = 4.03  OR = 4.80\n\nCohorte:       riesgos 0.210 vs 0.053 -> RR = 3.98, RD = 0.157\nCasos-control: solo OR = 4.59 (riesgo no estimable)\nTransversal:   prevalencia y OR de prevalencia = 4.80\n\nEl OR difiere del RR porque la enfermedad no es tan rara (0.20):\nen la practica eso se reporta declarando el diseno, no 'corrigiendo'.",
   "plots": []
  },
+ "03/ic-multinomial": {
+  "hash": "33cbc182",
+  "console": "           serotipo1 serotipo2 serotipo3 serotipo4\nTCL lo         0.441     0.099     0.072     0.004\nTCL hi         0.692     0.301     0.261     0.130\nQH lo          0.391     0.094     0.073     0.018\nQH hi          0.727     0.375     0.337     0.215\nGoodman lo     0.408     0.102     0.079     0.021\nGoodman hi     0.713     0.354     0.317     0.194",
+  "plots": []
+ },
  "03/medidas-frecuencia": {
   "hash": "7dc5335e",
   "console": "riesgo 5-anos      = 0.040 (probabilidad)\npersona-anos       = 4600\ntasa de incidencia = 8.70 por 1000 p-a\n\nEl riesgo usa n=1000; la tasa usa pt=4600.\nriesgo actuarial = 0.0426 | desde la tasa = 0.0425 | ingenuo = 0.0400\nCon seguimiento incompleto, el riesgo se estima; no basta dividir.\n\nP aprox = 75.0%   P en estado estacionario = 42.9%",
@@ -166,11 +171,6 @@
  "06/fisher-vs-boschloo": {
   "hash": "9df2d85c",
   "console": "Fisher = 0.0544   mid-p = 0.0297\nz agrupada = 0.0281   Boschloo = 0.0385\nEl veredicto a alpha=0.05 depende del procedimiento.",
-  "plots": []
- },
- "06/ic-multinomial": {
-  "hash": "33cbc182",
-  "console": "           serotipo1 serotipo2 serotipo3 serotipo4\nTCL lo         0.441     0.099     0.072     0.004\nTCL hi         0.692     0.301     0.261     0.130\nQH lo          0.391     0.094     0.073     0.018\nQH hi          0.727     0.375     0.337     0.215\nGoodman lo     0.408     0.102     0.079     0.021\nGoodman hi     0.713     0.354     0.317     0.194",
   "plots": []
  },
  "06/metodos-ic": {
@@ -323,6 +323,191 @@
  "18/dos-bilaterales": {
   "hash": "28adabc9",
   "console": "tabla (1,8)/(11,9):  minlike = 0.0432   central = 0.0631\nfisher.test(): 0.0432",
+  "plots": []
+ },
+ "20/espacio-tablas": {
+  "hash": "251386af",
+  "console": "P_p=0.2(tabla 4,1) incondicional = 0.02364\nP(tabla con x1=4 | m=5) condicional = 0.13545\nLos dos pesos responden modelos muestrales distintos.\nCondicionar no aproxima al incondicional: cambia la pregunta.",
+  "plots": []
+ },
+ "20/lab-maquina": {
+  "hash": "ad0dc278",
+  "console": "tuyo = 0.054400 | fisher.test = 0.054400 | diff = 0.00e+00",
+  "plots": []
+ },
+ "20/supremo-malla": {
+  "hash": "c5e53ae5",
+  "console": "malla 0.050: supremo >= 0.03846  (argmax p ~ 0.500)\nmalla 0.010: supremo >= 0.03846  (argmax p ~ 0.500)\nmalla 0.002: supremo >= 0.03846  (argmax p ~ 0.500)",
+  "plots": []
+ },
+ "20/tamano-real": {
+  "hash": "9e85a91d",
+  "console": "Tamano real: Fisher = 0.030 | Boschloo = 0.047 (nominal 0.05)\nPotencia en (0.20, 0.03): Fisher = 0.433 | Boschloo = 0.549",
+  "plots": []
+ },
+ "21/lab-faltantes": {
+  "hash": "b1a512bb",
+  "console": "MCAR: n = 382 | coef(prio) = 0.104\nMAR : n = 363 | coef(prio) = 0.108\nMNAR: n = 345 | coef(prio) = 0.143\nFULL: n = 432 | coef(prio) = 0.116",
+  "plots": []
+ },
+ "21/mecanismos": {
+  "hash": "e6d1c53c",
+  "console": "verdadera = 54.2 | MCAR = 54.2 | MAR = 54.1 | MNAR = 53.6",
+  "plots": []
+ },
+ "21/mi-rubin": {
+  "hash": "6c940337",
+  "console": "verdadero: b0 = 2.04, b1 = 1.52\nMI:        b0 = 2.03, b1 = 1.54  (B entre copias: 0.0004)\ncomplete-case: b0 = 2.03, b1 = 1.54",
+  "plots": []
+ },
+ "22/evalue": {
+  "hash": "0c0ecf9d",
+  "console": "RR = 3.9  ->  E-value = 7.26\nIC (1.8, 8.7) -> E-value del IC = 3.00",
+  "plots": []
+ },
+ "22/lab-nomedido": {
+  "hash": "0fbeec52",
+  "console": "E-value punto = 4.44 | IC = 2.58\n      edad       sexo tabaquismo\n       1.4        1.1        1.8\nEl punto resiste hasta confusores de RR ~ 4.44;\nel IC solo resiste hasta RR ~ 2.58 en ambos caminos.",
+  "plots": []
+ },
+ "22/sesgo-prob": {
+  "hash": "ec01ef15",
+  "console": "OR observado = 2.25\nOR corregido: mediana 3.33, IC simulado 95% (2.84, 4.58)",
+  "plots": []
+ },
+ "23/colisionador": {
+  "hash": "3edad705",
+  "console": "OR poblacional = 0.95 (verdad: 1, sin asociacion)\nOR en seleccionados = 0.65 (fabricado por el colisionador)\nfraccion seleccionada: 36%",
+  "plots": []
+ },
+ "23/iv-2sls": {
+  "hash": "e17de30e",
+  "console": "OLS (confundida): beta_E = 2.46\nIV 2SLS:           beta_E = 2.10\nWald IV:           beta_E = 2.10",
+  "plots": []
+ },
+ "23/lab-dags": {
+  "hash": "ec381919",
+  "console": "sin ajustar:  beta_E = 0.494 (verdad 0.5)\najustando Z:  beta_E = 0.299 <- el ajuste FABRICA sesgo\nIV debil: beta = 2.63 (inestable, F bajo)",
+  "plots": []
+ },
+ "24/iptw-serio": {
+  "hash": "475fcd2d",
+  "console": "rango del PS: 0.005 a 0.977\npeso max: 16.7 -> truncado en 4.3\nSMD(x) crudo = 1.193 | ponderado = 0.139 (regla: |SMD|<0.1)\nRD marginal = 0.110 | RR marginal = 1.73",
+  "plots": []
+ },
+ "24/lab-iptw": {
+  "hash": "cf7f60c1",
+  "console": "PS fin=1: [0.35, 0.63] | fin=0: [0.35, 0.63]\nSMD age  : crudo +0.123 -> ponderado +0.001\nSMD prio : crudo -0.002 -> ponderado -0.002\nHR marginal (fin) = 0.70, robust SE = 0.190",
+  "plots": []
+ },
+ "24/matching": {
+  "hash": "d0bf0a9c",
+  "console": "tratados: 827 | pareados: 796 (96%) | caliper = 0.12\ndiscordantes b=199 c=113 | OR pareado = 1.76",
+  "plots": []
+ },
+ "25/atributos": {
+  "hash": "5e9eb558",
+  "console": "retraso total: mediana 6 d | p90 13 d\npor fase (medianas): consulta 2, ficha 1, consolidacion 3",
+  "plots": []
+ },
+ "25/lab-nowcast": {
+  "hash": "4031c0cf",
+  "console": "dia 47: verdad 73 | crudo 70 | nowcast 73\ndia 48: verdad 74 | crudo 69 | nowcast 73\ndia 49: verdad 75 | crudo 69 | nowcast 74\ndia 50: verdad 75 | crudo 71 | nowcast 80\ndia 51: verdad 76 | crudo 65 | nowcast 77\ndia 52: verdad 77 | crudo 60 | nowcast 77\ndia 53: verdad 78 | crudo 58 | nowcast 82\ndia 54: verdad 78 | crudo 38 | nowcast 64\ndia 55: verdad 79 | crudo 32 | nowcast 71\ndia 56: verdad 80 | crudo 18 | nowcast 69",
+  "plots": []
+ },
+ "25/nowcast": {
+  "hash": "72e435d0",
+  "console": "dia 20: verdad  88 | crudo  87 (99%) | nowcast  95 (108%)\ndia 30: verdad 116 | crudo 112 (97%) | nowcast 122 (106%)\ndia 35: verdad 133 | crudo  98 (74%) | nowcast 107 (81%)\ndia 38: verdad 145 | crudo  74 (51%) | nowcast  81 (56%)\ndia 40: verdad 153 | crudo  36 (24%) | nowcast  39 (26%)",
+  "plots": []
+ },
+ "25/retraso": {
+  "hash": "a8a47e7a",
+  "console": "dia 40: verdad 153, reportados 31 (20%)\ndia 35: verdad 133, reportados 104 (78%)\ndia 20: verdad 88, reportados 88 (100%)",
+  "plots": []
+ },
+ "26/egger": {
+  "hash": "6d82ce44",
+  "console": "intercepto de Egger = -11.70 (p = 0.000)\nefecto medio -0.37 | estudios a la\n  izquierda del promedio: 7 de 12",
+  "plots": []
+ },
+ "26/heterogeneidad": {
+  "hash": "978179f7",
+  "console": "Q = 73.2 (df = 12, p = 0.0000)\ntau2 = 0.256 | I2 = 84%\nRR combinado: FE 0.54 | RE 0.43\nIC95% RE: (0.31, 0.59)",
+  "plots": []
+ },
+ "26/lab-meta": {
+  "hash": "dc50a4cc",
+  "console": "               Estimate Std. Error    t value  Pr(>|t|)\n(Intercept) -0.35011101 0.41167256 -0.8504599 0.4131986\nlat         -0.01477632 0.01135743 -1.3010269 0.2198417\nQ residual = 6.3 en 11 df",
+  "plots": []
+ },
+ "26/prediccion": {
+  "hash": "38d76635",
+  "console": "IC95% del promedio: RR (0.38, 0.59)\nIP95% de prediccion: RR (0.14, 1.66)",
+  "plots": []
+ },
+ "27/dr": {
+  "hash": "bc4dd350",
+  "console": "g-formula RD = 0.141 | AIPW RD = 0.149",
+  "plots": []
+ },
+ "27/gformula": {
+  "hash": "81fa8ffb",
+  "console": "estimando marginal: RD = 0.129 | RR = 1.60\nriesgo si todos expuestos = 0.345 | si nadie = 0.216\nOR condicional (coef) = 2.15 | OR marginal = 1.91",
+  "plots": []
+ },
+ "27/lab-estimandos": {
+  "hash": "c0d0547c",
+  "console": "ATE: RD = 0.141\nATT: RD = 0.165\nOR condicional = 2.22",
+  "plots": []
+ },
+ "27/msm": {
+  "hash": "86d2cac2",
+  "console": "ajustando L1: b_A0 = 0.10 (verdad 0.5+efecto via A1)\nMSM con pesos: b_A0 = 0.43 | b_A1 = 0.49",
+  "plots": []
+ },
+ "28/evpi": {
+  "hash": "5498f366",
+  "console": "E[beneficio neto adoptar] = 98.5 vidas-equiv\nperdida esperada de equivocarse (EVPI) = 0.0",
+  "plots": []
+ },
+ "28/lab-parrafo": {
+  "hash": "0191abfd",
+  "console": "casos evitados esperados: 600 (peor 250, mejor 1000)\nNNT = 83\nprobabilidad de superar el umbral: 87%",
+  "plots": []
+ },
+ "28/traduccion": {
+  "hash": "fadcc7cd",
+  "console": "En 40000 personas, se esperarian 320 casos evitados.\nEscenarios: esperado 320, mejor 560, peor 120 casos evitados.\nNNT = 125 (peor caso 333, mejor caso 71).",
+  "plots": []
+ },
+ "28/umbral": {
+  "hash": "7a77c164",
+  "console": "RR medio = 0.74 | P(RR < 0.90) = 99.3%\nP(reduccion > 15%) = 95.7%\nP(reduccion > 20%) = 83.2%",
+  "plots": []
+ },
+ "29/auditoria": {
+  "hash": "9b7a5bc3",
+  "console": "filas: 149  IDs unicos: 137\nIDs repetidos: 11\nSurvTime no numerico: 17 | <=0 o 9999: 9\nKps fuera [0,100]: 6 | Age imposible: 9\nfechas no-ISO: 110 (el formato no se puede inferir por fila)",
+  "plots": []
+ },
+ "29/lab-campo": {
+  "hash": "856186ed",
+  "console": "",
+  "plots": []
+ },
+ "29/limpieza": {
+  "hash": "85e104a4",
+  "console": "base limpia: 137 filas | SurvTime faltantes: 10 | median 82 d\nKps median 60 | Age median 62",
+  "plots": []
+ },
+ "29/modelo": {
+  "hash": "2764cf82",
+  "console": "     coef exp(coef) se(coef)     z Pr(>|z|)\ntrt 0.606     1.833    0.647 0.936    0.349\nKps 0.024     1.024    0.023 1.045    0.296",
+  "plots": []
+ },
+ "29/vinculacion": {
+  "hash": "fb6feb7a",
+  "console": "SIV GARCIA LOPEZ JUAN -> mejor RIPS 1 (score 7)\nSIV PEREZ ANA -> mejor RIPS 2 (score 2)\nSIV RODRIGUEZ MARIA -> mejor RIPS 3 (score 4)\nSIV GOMEZ LUIS -> mejor RIPS 4 (score 7)",
   "plots": []
  },
  "lab-00-ficha-exploratoria": {

@@ -6,6 +6,9 @@ order: 3
 datasets: []
 duration: 75
 prerequisites: ["Módulo 2: Diseños"]
+profiles: ["vigilancia"]
+profilesDeep: ["vigilancia"]
+attr: "Material base del curso ADEI (profesor Juan Carlos Salazar Uribe); estructura guiada por Woodward (2014). Los ICs simultáneos multinomiales siguen a González-Gómez, Correa & Vélez (2015)."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -493,6 +496,85 @@ prevalencia del escenario deja la decisión a medias. → **Conecta con
 M16** (la curva ROC resume Se/Sp sobre todos los umbrales de un modelo)
 y con el análisis de sesgo de **M14** (Se/Sp mal medidas distorsionan
 el OR).
+</Callout>
+
+## De una proporción a cuatro serotipos: la multinomial
+
+En vigilancia la pregunta rara vez es una sola proporción. Un
+laboratorio que tipifica muestras de dengue reporta cuatro números
+a la vez: la fracción de DENV-1, DENV-2, DENV-3 y DENV-4
+circulando. La pregunta inferencial cambia de forma: ya no es
+"¿dónde está p?" sino "¿dónde está el vector π completo?". Y ahí
+aparece la primera trampa: construir un IC del 95% por serotipo
+**no** produce cuatro intervalos simultáneos al 95%. La
+probabilidad de que los cuatro cubran a la vez es, en el mejor de
+los casos, del orden de $0.95^4 \approx 0.81$ — y peor en la
+práctica, porque los conteos de una multinomial no son
+independientes.
+
+La literatura ofrece métodos genuinamente simultáneos. El estudio
+de González, Correa &amp; Vélez (2015), en la *Revista de la
+Facultad de Ciencias* de la UNAL, comparó trece de ellos por
+simulación —nivel real frente a nominal, longitud, y un índice que
+combina ambos— con dos hallazgos que interesan aquí: los intervalos
+basados directamente en el TCL rinden mal, y los métodos
+recomendables (los basados en la F de Leemis, la verosimilitud
+relativa y Quesenberry–Hurst) mantienen la cobertura incluso cuando
+hay celdas con poca masa. La segunda trampa es exactamente esa:
+cuando la distribución de serotipos se desequilibra —una variante
+dominante y otra rara con conteos cercanos a cero— la entropía de
+π cae y con ella la cobertura real de los métodos que confían en
+la normalidad.
+
+<MultinomCIExplorer title={<>Vigilancia de serotipos: cobertura simultánea bajo desequilibrio</>} />
+
+**Para explorar**
+
+1. Con desequilibrio 0 audita la cobertura simultánea del TCL; luego sube el desequilibrio a 0.8 y repite.
+2. Compara la longitud de QH y Goodman sobre la misma muestra con la cobertura que auditaste. ¿Cuál ofrece mejor relación entre cobertura y ancho?
+3. Pulsa «Nueva muestra» varias veces con desequilibrio alto y mira qué serotipo queda sin cubrir con más frecuencia.
+
+<RCell
+  id="03/ic-multinomial"
+  title="ICs simultáneos multinomiales en R base"
+  code={`# Vigilancia de serotipos: n aislamientos tipificados en k
+# categorias. X ~ Multinomial(n, pi). IC simultaneo = los k
+# intervalos cubren el vector pi COMPLETO a la vez.
+x <- c(34, 12, 10, 4); n <- sum(x); k <- length(x)
+
+# TCL por celda (la version ingenua: no es simultanea)
+z  <- qnorm(0.975)
+ph <- x / n
+ee <- sqrt(ph * (1 - ph) / n)
+ci_tcl <- rbind(lo = ph - z * ee, hi = ph + z * ee)
+
+# Quesenberry-Hurst (1964): forma cuadratica con B = chi2_{k-1}
+quad <- function(x, n, B) {
+  d <- sqrt(B * (B + 4 * x * (n - x) / n))
+  rbind(lo = (B + 2 * x - d) / (2 * (n + B)),
+        hi = (B + 2 * x + d) / (2 * (n + B)))
+}
+ci_qh <- quad(x, n, qchisq(0.95, k - 1))
+
+# Goodman (1965): misma forma con B = z^2_{1-a/(2k)} (Bonferroni)
+ci_go <- quad(x, n, qnorm(1 - 0.05 / (2 * k))^2)
+
+res <- rbind(ci_tcl, ci_qh, ci_go)
+rownames(res) <- paste(rep(c("TCL", "QH", "Goodman"), each = 2), c("lo", "hi"))
+colnames(res) <- paste0("serotipo", 1:k)
+print(round(res, 3))
+# Interpretacion: QH y Goodman garantizan cobertura SIMULTANEA;
+# el TCL por celda no promete nada sobre el vector completo.`}
+/>
+
+<Callout type="warning" title="La celda rara manda">
+Con una variante casi ausente el problema no es estimar su π —el
+IC exacto de Clopper–Pearson de la sección de incertidumbre ya
+muestra cómo intervalar un cero observado— sino que la cobertura
+*simultánea* del conjunto se degrada: un solo intervalo que falle
+rompe el vector. La auditoría del simulador lo cuantifica: a igual
+n, el desequilibrio de π (medido por la entropía $H = -\sum \pi_j
+\ln \pi_j$) es el factor que más separa nominal de empírico.
 </Callout>
 
 ## Producto del módulo

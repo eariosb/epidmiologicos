@@ -59,6 +59,7 @@ import { Table1Builder, DataQualityPanel } from '@/components/QualitySims';
 import { MissingDataLab, EValueCalculator, BiasAnalysis2x2, CityLab } from '@/components/WorldSims';
 import { Claim } from '@/components/Claim';
 import { Anexo } from '@/components/Anexo';
+import { Profundiza, SalaDeMaquinas } from '@/components/Deep';
 import { BlackboardAnchor, BlackboardEmbed } from '@cursos/blackboard';
 
 /**
@@ -175,6 +176,8 @@ export const mdxComponents: MDXComponents = {
   CityLab: withReset(CityLab),
   Claim,
   Anexo,
+  Profundiza,
+  SalaDeMaquinas,
   BlackboardAnchor,
   BlackboardEmbed,
   table: MdxTable,

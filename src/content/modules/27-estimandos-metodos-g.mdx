@@ -1,0 +1,270 @@
+---
+title: "II-8. Estimandos y métodos G: el efecto bien preguntado"
+slug: "27-estimandos-metodos-g"
+objective: "Especificar el estimando antes del estimador, distinguir efecto total de efectos controlados, y ejecutar g-computación e IPTW para exposiciones simples y variables en el tiempo."
+order: 27
+datasets: []
+duration: 115
+prerequisites: ["Curso I completo, especialmente los módulos 7, 15 y 16; módulos 23 y 24"]
+course: "II"
+level: "avanzado"
+profilesDeep: ["clinico", "politica"]
+attr: "Complemento propio para el curso avanzado: la pregunta causal antes que el procedimiento."
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+
+<Callout type="tip" title="Antes del cómo, el qué">
+Todo el arsenal del curso —regresión, estratificación, matching,
+IPTW— son estimadores: maneras de *calcular*. El estimando es la
+pregunta: qué efecto, en quién, comparado contra qué. Dos analistas con
+los mismos datos y métodos impecables pueden responder preguntas
+distintas sin notarlo — y sus números "discreparán" porque sus
+estimandos discreparon primero. Este módulo pone la pregunta por
+delante del procedimiento.
+</Callout>
+
+## El estimando: cinco casillas antes de estimar
+
+Un estimando completo responde cinco casillas — el ICH E9(R1) las
+formalizó para ensayos, y aplican a cualquier pregunta causal:
+
+1. **Población**: ¿en quién? Todos los elegibles, los tratados (ATT),
+   los que adherirían, los compliers del instrumento.
+2. **Tratamiento (estrategia)**: ¿qué intervención exacta? "Iniciar
+   tratamiento" es una estrategia; "estar expuesto alguna vez" no.
+3. **Desenlace**: ¿qué variable, medida cuándo?
+4. **Resumen**: ¿qué contraste? RD, RR, HR — y sobre qué escala.
+5. **Eventos intercurrentes**: ¿qué hacer con lo que interrumpe la
+   estrategia? Cambiar de tratamiento, morir, abandonar — la casilla
+   que más estimandos distintos fabrica: *treatment policy* (ignorar
+   la desviación), *hypothetical* (el mundo sin ella), *principal
+   stratum* (en quienes no la tendrían).
+
+<Callout type="warning" title="El coeficiente no es el estimando">
+"El efecto del tratamiento" ajustado por regresión es un estimando
+condicional: el contraste entre personas idénticas en las covariables.
+El IPTW estima el marginal: el contraste promediado sobre la
+población. Para el OR no colapsable del módulo 7, los dos números son
+distintos *aunque ambos sean correctos* — y el reporte que no declara
+cuál estimó está incompleto.
+</Callout>
+
+## La g-formula: estandarización con nombre formal
+
+La g-computación es la estandarización del módulo 9 en su versión
+general: modelar el desenlace dado exposición y confusores,
+**predecir** el resultado de cada sujeto bajo cada nivel de exposición,
+y **promediar** sobre la distribución de confusores de la población:
+
+$$
+E[Y^a] = \sum_c E[Y \mid A=a, C=c]\,P(C=c)
+$$
+
+La lectura causal exige el mismo contrato del módulo 16: todos los
+confusores medidos, modelo razonable, positividad. La diferencia con el
+coeficiente de la regresión: la g-formula entrega el efecto **marginal**
+— el número que la política pública pregunta— en cualquier escala (RD,
+RR, riesgos), no solo el coeficiente condicional del modelo.
+
+<RCell
+  id="27/gformula"
+  title="G-computación: predecir bajo cada mundo y promediar"
+  code={`set.seed(15); n <- 5000
+x <- rnorm(n)
+A <- rbinom(n, 1, plogis(-0.5 + 1.2*x))          # exposicion confundida
+Y <- rbinom(n, 1, plogis(-1.5 + 0.8*A + 0.9*x))  # desenlace
+
+fit <- glm(Y ~ A + x, family = binomial)
+# Mundos hipoteticos: todos expuestos / todos no expuestos.
+d1 <- transform(data.frame(A = 1, x = x), p = predict(fit, newdata = data.frame(A = 1, x = x), type = 'response'))
+d0 <- data.frame(A = 0, x = x)
+p1 <- predict(fit, newdata = d1[, c('A','x')], type = 'response')
+p0 <- predict(fit, newdata = d0, type = 'response')
+
+rd <- mean(p1) - mean(p0); rr <- mean(p1)/mean(p0)
+cat(sprintf('estimando marginal: RD = %.3f | RR = %.2f\\n', rd, rr))
+cat(sprintf('riesgo si todos expuestos = %.3f | si nadie = %.3f\\n',
+            mean(p1), mean(p0)))
+# El OR del coeficiente es condicional; compara:
+cat(sprintf('OR condicional (coef) = %.2f | OR marginal = %.2f\\n',
+            exp(coef(fit)['A']), (mean(p1)/(1-mean(p1)))/(mean(p0)/(1-mean(p0)))))
+# Distintos porque el OR no colapsa - el modulo 7 lo anticipaba.`}
+/>
+
+## IPTW como método G: dos caras del mismo estimando
+
+El IPTW del módulo 16 y la g-computación estiman *el mismo estimando
+marginal* por vías opuestas: uno pesa la población para fabricar la
+pseudo-población sin confusión; la otra predice el desenlace y promedia.
+Las dos asumen intercambiabilidad condicional; cada una pone la fe en un
+modelo distinto — el de exposición (PS) o el del desenlace.
+
+El estimador **doblemente robusto** combina ambos: es consistente si
+*al menos uno* de los dos modelos está bien especificado. La mejora
+práctica no es solo el seguro — es la eficiencia: cuando ambos modelos
+son razonables, el DR tiene menor varianza que cualquiera de los dos
+por separado.
+
+<RCell
+  id="27/dr"
+  title="Doblemente robusto: el seguro de los dos modelos"
+  code={`set.seed(16); n <- 5000
+x <- rnorm(n)
+A <- rbinom(n, 1, plogis(-0.5 + 1.2*x))
+Y <- rbinom(n, 1, plogis(-1.5 + 0.8*A + 0.9*x))
+
+ps  <- glm(A ~ x, family = binomial)$fitted
+fit <- glm(Y ~ A + x, family = binomial)
+p1 <- predict(fit, newdata = data.frame(A = 1, x = x), type = 'response')
+p0 <- predict(fit, newdata = data.frame(A = 0, x = x), type = 'response')
+
+# AIPW: prediccion + correccion por el residual ponderado.
+mu1 <- mean(p1 + A*(Y - p1)/ps)
+mu0 <- mean(p0 + (1-A)*(Y - p0)/(1-ps))
+cat(sprintf('g-formula RD = %.3f | AIPW RD = %.3f\\n',
+            mean(p1) - mean(p0), mu1 - mu0))
+# Con ambos modelos correctos coinciden; si uno falla, el DR sobrevive.
+# Experimento: rompe el modelo de Y (omite x) y repite - el DR se
+# mantiene porque el PS esta bien; la g-formula pura no.`}
+/>
+
+## Exposiciones variables en el tiempo: donde el ajuste muere
+
+El escenario que define a los métodos G: exposición en dos tiempos con un
+confusor *entre* ellos, $A_0 \to L_1 \to A_1 \to Y$, donde $L_1$ es a la
+vez confusor de $A_1$ y consecuencia de $A_0$ (adherencia, toxicidad,
+respuesta intermedia). Ajustar $L_1$ bloquea parte del efecto de $A_0$;
+no ajustarlo deja confundido $A_1$. **Ninguna regresión resuelve la
+trampa** — es la estructura que el DAG del módulo 23 anticipaba.
+
+Los métodos G la resuelven cambiando el objeto: en vez de un coeficiente,
+se estima el contraste de **regímenes** — "tratar siempre" vs. "nunca
+tratar" vs. "tratar solo si $L_1$ supera un umbral". Tres implementaciones:
+
+- **G-computación secuencial**: simula la cadena $L_1 \to A_1 \to Y$
+  bajo cada régimen y promedia las trayectorias.
+- **MSM con IPTW**: un peso por cada tiempo, multiplicados; el modelo
+  marginal estructural regresa $Y$ sobre el régimen.
+- **G-estimación**: la vía estructural de los modelos anidados — la más
+  elegante y la menos usada por su dificultad de implementación.
+
+<RCell
+  id="27/msm"
+  title="MSM de dos tiempos: el confusor que también es mediador"
+  code={`set.seed(17); n <- 4000
+U  <- rnorm(n)
+A0 <- rbinom(n, 1, .4)
+L1 <- 0.8*A0 + U + rnorm(n)                    # confusor Y mediador
+A1 <- rbinom(n, 1, plogis(-0.3 + 0.7*L1))      # A1 depende de L1
+Y  <- 0.5*A0 + 0.5*A1 + 0.9*U + rnorm(n)      # efecto total: 0.5+0.5
+
+# La trampa: ajustar L1 para A1 borra parte del efecto de A0.
+cat(sprintf('ajustando L1: b_A0 = %.2f (verdad 0.5+efecto via A1)\\n',
+            coef(lm(Y ~ A0 + A1 + L1))['A0']))
+# MSM: pesos para A1 dado L1 (A0 ya es azar aqui).
+ps1 <- glm(A1 ~ L1, family = binomial)$fitted
+w <- ifelse(A1 == 1, 1/ps1, 1/(1-ps1))
+msm <- lm(Y ~ A0 + A1, weights = w)
+cat(sprintf('MSM con pesos: b_A0 = %.2f | b_A1 = %.2f\\n',
+            coef(msm)['A0'], coef(msm)['A1']))
+# A0 recupera su efecto total porque L1 entra en el PESO, no en el
+# ajuste - el camino mediado queda abierto, el confuso queda cerrado.`}
+/>
+
+<Profundiza title="Regímenes dinámicos y el precio de la positividad" hint="optativo">
+El estimando más rico es el régimen dinámico — "tratar cuando el
+biomarcador supaera el umbral"— cuya estimación exige que en cada tiempo
+y cada historia previa existan sujetos bajo cada acción posible. Con $T$
+tiempos la positividad se erosiona exponencialmente: es el costo del
+producto de pesos, y la razón por la que los MSM prácticos truncan pesos
+y las g-computaciones suavizan trayectorias. La lección estructural:
+cuanto más fina la pregunta (regímenes que dependen de más historia),
+más frágil la identificación — el estimando ideal y el estimable no
+siempre coinciden, y reconocerlo es parte del protocolo.
+</Profundiza>
+
+## El mapa de decisiones
+
+Con cinco casillas llenas, la elección de método se vuelve mecánica:
+
+| Situación | Método |
+|---|---|
+| Exposición en un tiempo, confusores medidos | G-computación o IPTW (DR si ambos modelos son discutibles) |
+| Interesa el efecto en los tratados | Matching / ATT |
+| Exposición variable + confusor-mediador | MSM-IPTW o g-computación secuencial |
+| Evento intercurrente ineludible | Declarar la estrategia (policy/hypothetical/principal) antes de elegir |
+| Estimando no identificable con los datos | Análisis de sensibilidad (módulo 22), no estimación |
+
+<Quiz
+  question="Un estudio de VIH ajusta por carga viral intermedia para estimar el efecto del tratamiento inicial sobre mortalidad. La carga viral es a la vez efecto del tratamiento y predictor de la adherencia posterior. ¿Qué estima el coeficiente del tratamiento?"
+  options={[
+    "El efecto total del tratamiento inicial",
+    "Un efecto parcial que bloquea el camino mediado — ni el total ni un efecto interpretable sin más estructura",
+    "El efecto directo controlado, que es lo que la clínica necesita",
+    "El efecto marginal sobre los adherentes"
+  ]}
+  correctIndex={1}
+  explanation="Ajustar un confusor-mediador bloquea el camino causal y a la vez abre caminos espurios (la carga viral es colisionador entre U y la mortalidad). El efecto total exige métodos G que manejen la variable en el peso o la simulación, no en el condicionamiento."
+/>
+
+<LabExercise
+  id="27/lab-estimandos"
+  title="Laboratorio: el mismo dato, tres estimandos"
+  code={`# Con la simulacion del AIPW: estima TRES estimandos distintos.
+set.seed(16); n <- 5000
+x <- rnorm(n)
+A <- rbinom(n, 1, plogis(-0.5 + 1.2*x))
+Y <- rbinom(n, 1, plogis(-1.5 + 0.8*A + 0.9*x))
+
+ps <- glm(A ~ x, family = binomial)$fitted
+# 1) ATE (marginal, toda la poblacion):
+p1 <- predict(glm(Y ~ A + x, family = binomial),
+              data.frame(A = 1, x = x), type = 'response')
+p0 <- predict(glm(Y ~ A + x, family = binomial),
+              data.frame(A = 0, x = x), type = 'response')
+cat(sprintf('ATE: RD = %.3f\\n', mean(p1) - mean(p0)))
+# 2) ATT: efecto en los expuestos - remuestrea sobre SU distribucion de x:
+xt <- x[A == 1]
+p1t <- predict(glm(Y ~ A + x, family = binomial),
+               data.frame(A = 1, x = xt), type = 'response')
+p0t <- predict(glm(Y ~ A + x, family = binomial),
+               data.frame(A = 0, x = xt), type = 'response')
+cat(sprintf('ATT: RD = %.3f\\n', mean(p1t) - mean(p0t)))
+# 3) Condicional: el coeficiente del glm:
+cat(sprintf('OR condicional = %.2f\\n',
+            exp(coef(glm(Y ~ A + x, family = binomial))['A'])))
+# Tres numeros, tres preguntas: el reporte honesto declara cual.`}
+  tasks={[
+    "Explica en dos líneas por qué ATE y ATT difieren aunque usen el mismo modelo",
+    "Rompe el modelo del desenlace (omite x) y verifica que el AIPW se mantiene mientras la g-formula pura se sesga",
+    "En el MSM de dos tiempos, construye el régimen 'tratar solo si L1 > 0' por g-computación secuencial y compara su riesgo con 'tratar siempre'",
+  ]}
+  hint="Para el ATT basta promediar las predicciones sobre la distribución de x de los expuestos, no de toda la muestra — el estimando cambia por la población sobre la que se promedia, no por el modelo."
+/>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: la tabla de estimandos">
+Para una pregunta causal propia: las cinco casillas llenas (población,
+estrategia, desenlace, resumen, eventos intercurrentes), el estimando
+declarado en una frase, el método elegido con su justificación (incluido
+qué estructura lo exige — confusor-mediador, overlap, etc.), el estimador
+con su IC correcto, y una línea declarando qué estimandos *alternativos*
+otro analista podría haber elegido con los mismos datos.
+</Callout>
+
+## Lecturas
+
+- **Hernán &amp; Robins (2020), *Causal Inference: What If***: caps. 4,
+  13 y 20-22 — estimandos, g-formula, MSM; el texto del módulo.
+- **ICH E9(R1) (2019)**: el marco de estimandos para ensayos clínicos;
+  las cinco casillas en su forma regulatoria.
+- **Robins (1986)**: el artículo fundacional de los métodos G.
+- **Bang &amp; Robins (2005)**: la estimación doblemente robusta; el
+  seguro de los dos modelos.
+- **Lunceford &amp; Davidian (2004)**: comparación práctica de
+  estimadores con propensity score; cuándo cada uno falla.

@@ -13,11 +13,29 @@ de usarse, los ejemplos vienen de los datasets reales del curso y las cifras
 de la narrativa están atadas al código que las produce (sistema `<Claim>`),
 no escritas a mano.
 
-## Estructura (repaso + 19 módulos en seis bloques)
+## Estructura (dos cursos, un sitio)
 
 Una idea central por módulo: cada uno tiene **un concepto, un ejemplo
 ancla, un visual interactivo y un producto** que alimenta un portafolio
-analítico.
+analítico. El sitio ofrece dos niveles seleccionables en la navegación:
+
+- **Curso I — Análisis Estadístico de Datos Epidemiológicos I** (repaso +
+  19 módulos en seis bloques): el curso de pregrado completo, coherente
+  con el material de Salazar y la espina dorsal de Woodward.
+- **Curso II — Análisis Estadístico de Datos Epidemiológicos II**
+  (módulos II-1 a II-10 en tres bloques): el curso avanzado, con la
+  maquinaria profunda y la práctica de campo.
+
+Cada módulo usa la **arquitectura de capas**: el núcleo queda a la vista
+y la profundidad vive en dos plegables con contratos distintos —
+`<Profundiza>` (demostraciones, literatura, matiz metodológico) y
+`<SalaDeMaquinas>` (implementación, enumeración, trampas de software,
+advertencias de reproducibilidad). La página **`/rutas`** genera las tres
+rutas por perfil (vigilancia, clínico, política) desde el frontmatter de
+los módulos; el hilo transversal de **precisión** (m5 → m6 → m9 → m13 →
+m17) lleva su propia marca.
+
+### Curso I — repaso + 19 módulos
 
 **Antes de empezar — Repaso (módulo 0)**
 
@@ -37,10 +55,10 @@ analítico.
 
 1. ¿Qué es la epidemiología cuantitativa? Historia, ética y el caso fundacional (Snow, Tuskegee, Belmont) + normativa colombiana aplicada a datos (Res. 8430, Ley 1581)
 2. El mapa de los diseños y la pregunta causal (árbol interactivo, Bradford Hill, emulación del ensayo objetivo) + **Simépolis**: ciudad de 20 000 habitantes con verdad conocida (`CityLab`), muestreable con cuatro diseños para ver emerger confusión y sesgo de Berkson
-3. Medición de la enfermedad: incidencia, prevalencia y tasas (P = I × D), encuestas con estratos/conglomerados/pesos y OR→RP según prevalencia
+3. Medición de la enfermedad: incidencia, prevalencia y tasas (P = I × D), encuestas con estratos/conglomerados/pesos, OR→RP según prevalencia e **ICs simultáneos multinomiales** para vigilancia de serotipos (`MultinomCIExplorer`: TCL vs. Quesenberry–Hurst, Goodman y Sison–Glaz bajo desequilibrio)
 4. Medidas de asociación I: RR, OR y RD (laboratorio 2×2, Molinero)
 5. Medidas de asociación II: NNT, riesgo atribuible, ICs y valores p; tamaño muestral por fórmula, calibración exacta y la longitud del IC como variable aleatoria con garantía P(L ≤ L₀)
-6. Inferencia exacta y calibración en muestras pequeñas: Fisher vs. procedimientos incondicionales (Boschloo, z agrupada, Berger–Boos, mid-p), potencia exacta, correcciones con celdas en cero, comparativa de métodos de IC para una proporción (caso Perondi) e **ICs simultáneos multinomiales** para vigilancia de serotipos (`MultinomCIExplorer`: TCL vs. Quesenberry–Hurst, Goodman y Sison–Glaz bajo desequilibrio)
+6. Inferencia exacta y calibración en muestras pequeñas: Fisher vs. procedimientos incondicionales (Boschloo, z agrupada, Berger–Boos, mid-p), potencia exacta, correcciones con celdas en cero y comparativa de métodos de IC para una proporción (caso Perondi)
 
 **Bloque II — Confusión e interacción (módulos 7–10)**
 
@@ -70,6 +88,40 @@ analítico.
 18. Herramientas computacionales: R, SAS y Python para epidemiología (traductor de estimandos, paquetes esenciales, depuración y reproducibilidad) + **"la máquina también miente"**: la misma "prueba exacta bilateral" cambia de veredicto según la definición que implementa cada paquete (minlike vs. central) y el desempate de empates en punto flotante
 19. Fronteras abiertas: avances verificados, repositorios de datos, referentes y casos de brote en Colombia y el mundo
 
+### Curso II — 10 módulos en tres bloques
+
+**Bloque II-A — Fundamentos**
+
+- II-1. La sala de máquinas de la inferencia exacta: espacio de tablas,
+  supremos, condicional vs. incondicional, enumeración y reproducibilidad
+- II-2. Datos faltantes en serio: mecanismos MCAR/MAR/MNAR, imputación
+  múltiple con reglas de Rubin y análisis de sensibilidad MNAR
+- II-3. Confusión no medida: E-value (Cornfield → VanderWeele–Ding),
+  análisis de sesgo probabilístico y cotas de Manski
+- II-4. DAGs avanzados: selección como colisionador, M-bias, butterfly,
+  variables instrumentales (2SLS/LATE), front-door y SWIGs
+- II-5. Emulación del ensayo objetivo: protocolo en seis casillas,
+  matching en producción, IPTW estabilizado, clonación–censura–pesos
+
+**Bloque II-B — Vigilancia y decisión**
+
+- II-6. Vigilancia epidemiológica y nowcasting: el retraso de reporte
+  como variable aleatoria, corrección de la cola, atributos del sistema
+- II-7. Meta-análisis avanzado: τ²/I², intervalo de predicción, sesgo
+  de publicación (Egger, trim-and-fill), meta-regresión y su sesgo
+  ecológico
+- II-8. Estimandos y métodos G: las cinco casillas del estimando,
+  g-formula, doble robustez, MSM para exposiciones variables
+- II-9. Incertidumbre y decisión: umbrales, valor de la información
+  (EVPI) y el **párrafo del ministerio** (una página, cinco movimientos)
+
+**Bloque II-C — Práctica de campo**
+
+- II-10. Integración real: **`valung_corrupto.csv`** (IDs duplicados,
+  formatos mixtos, censura invertida), la ficha de limpieza auditable,
+  vinculación SIVIGILA–RIPS–mortalidad por Fellegi–Sunter y el producto
+  final para el decisor
+
 ## Principios rectores (Woodward)
 
 1. La epidemiología es **comparativa**: toda medida exige un grupo de referencia.
@@ -82,6 +134,11 @@ analítico.
 
 - **Módulos MDX** con KaTeX (`remark-math` + `rehype-katex`), citas
   `<Term>` con glosario, quizzes, flashcards y ejercicios de laboratorio.
+- **Arquitectura de capas** (`src/components/Deep.tsx`): `<Profundiza>` y
+  `<SalaDeMaquinas>` como plegables nativos con contratos distintos;
+  frontmatter extendido (`course`, `level`, `attr`, `profiles`,
+  `profilesDeep`, `thread`), selector Curso I/II en la navegación,
+  atribución por módulo al pie y `/rutas` por perfil profesional.
 - **Simuladores interactivos** (`EpiSims`, `ExactSims`, `AuditSims`):
   laboratorio 2×2, mapa de decisiones de cinco procedimientos exactos,
   potencia y tamaño reales por enumeración, correcciones con celdas en
@@ -106,7 +163,7 @@ analítico.
   `src/content/claims.json`. Si el cómputo cambia, el texto lo refleja.
   Las cifras del resto de módulos que aparecen en prosa salen de la celda
   ejecutable adyacente — sus salidas están congeladas en
-  `tests/r-snapshots/` (69 archivos) y `pnpm check:r` las audita.
+  `tests/r-snapshots/` (112 archivos) y `pnpm check:r` las audita.
 - **Anexos** (`/anexos`): manifiesto validado con Zod (`src/lib/anexos.ts`)
   con el ensayo técnico del test exacto de Fisher (MD + PDF), los scripts
   R originales, resultados, seis figuras y `ciudad_simulada.R` (el
@@ -153,7 +210,8 @@ src/
   workers/exact.worker.ts Web Worker de cálculo exacto
 packages/blackboard/      Pizarra digital + asistente LLM (workspace)
 public/anexos/            Ensayo técnico, scripts R, figuras del anexo
-public/data/              Datasets del curso (VALUNG, RECID, BCG, DDIMER…)
+public/data/              Datasets del curso (VALUNG, RECID, BCG, DDIMER,
+                          valung_corrupto para la práctica de campo II-10…)
 scripts/                  QA: run_all_r, check_mdx, check_render, build-claims
 tests/visual/             Snapshots Playwright (escritorio + móvil)
 docs/QA.md                Línea base y compuertas de calidad
@@ -202,7 +260,7 @@ Playwright · pnpm workspaces.
 ```bash
 pnpm install          # instala deps (lockfile congelado en CI)
 pnpm dev              # http://localhost:3000
-pnpm build            # build de producción (29 páginas generadas)
+pnpm build            # build de producción (41 páginas generadas)
 pnpm start            # sirve el build
 ```
 
@@ -211,10 +269,11 @@ pnpm start            # sirve el build
 | Comando | Qué verifica |
 |---|---|
 | `pnpm typecheck` | `tsc --noEmit` sin errores |
-| `pnpm test` | 221 tests Vitest (exact2x2, precision, multinomial, tasks, claims, RAG, hooks, componentes) |
-| `pnpm check:mdx` | Los 20 archivos MDX (repaso + 19 módulos) compilan con next-mdx-remote |
-| `pnpm check:r` | Las salidas de las 66 celdas R coinciden con los snapshots de `tests/r-snapshots` |
-| `pnpm test:visual` | 46 capturas Playwright (20 páginas de módulo + home + anexos + bibliografía × escritorio/móvil) |
+| `pnpm test` | 250 tests Vitest (exact2x2, precision, multinomial, tasks, claims, RAG, hooks, componentes) |
+| `pnpm check:mdx` | Los 30 archivos MDX (Curso I + Curso II) compilan con next-mdx-remote |
+| `pnpm check:r` | Las salidas de las 112 celdas R coinciden con los snapshots de `tests/r-snapshots` |
+| `pnpm check:cells` | Lint de las celdas R (escapes, ids, hashes del manifiesto) |
+| `pnpm test:visual` | 132 capturas Playwright (30 páginas de módulo + home + anexos + bibliografía × escritorio/móvil, más test de desborde horizontal) |
 
 Otras utilidades: `python scripts/run_all_r.py --update` regenera los
 snapshots de R; `pnpm exec playwright test --update-snapshots` regenera
@@ -278,6 +337,12 @@ una celda los referencia por nombre.
   UNAL Medellín), con adaptación y texto interactivo de Esneider Ríos. Las
   condiciones de uso y publicación del contenido se fijan por acuerdo escrito
   con su autor.
+- **Atribución por módulo** (`attr` en frontmatter, visible al pie de cada
+  módulo): el Curso I sigue el material de Salazar con la estructura de
+  Woodward, el hilo de precisión del seminario de **Juan Carlos Correa
+  Morales** (m5 y afines) y los aportes propios del repaso (m0), la
+  inferencia exacta (m6) y los complementos de m17–m19. El Curso II es
+  diseño propio sobre la literatura metodológica citada en cada módulo.
 - **Textos de terceros** (Woodward y demás bibliografía): se citan; no se
   alojan ni se redistribuyen.
 # curso_epidemiologicos

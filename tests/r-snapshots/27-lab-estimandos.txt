@@ -1,0 +1,3 @@
+ATE: RD = 0.141
+ATT: RD = 0.165
+OR condicional = 2.22

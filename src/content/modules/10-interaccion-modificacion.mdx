@@ -6,6 +6,7 @@ order: 10
 datasets: []
 duration: 100
 prerequisites: ["Módulo 8: Estratificación"]
+attr: "Material base del curso ADEI (profesor Juan Carlos Salazar Uribe); estructura guiada por Woodward (2014)."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -353,6 +354,7 @@ simulados:
 2. Cambia a «Sinergismo» y sube n hasta que la prueba de interacción alcance 80 % de potencia. Compara ese n con el que necesita el efecto principal.
 3. Sube el número de subgrupos explorados a 10 y lee la probabilidad de encontrar al menos una interacción falsa.
 
+<SalaDeMaquinas title="La potencia de la interacción por Monte Carlo">
 <RCell
   id="10/ruido-potencia"
   title="Potencia de la prueba de interacción frente a la del efecto principal"
@@ -376,6 +378,7 @@ print(round(pot, 2))
 # la interaccion, del mismo tamano relativo (RR x2), necesita n ~ 400.
 # Frente al efecto promedio, que usa ambos estratos, el factor ronda 4.`}
 />
+</SalaDeMaquinas>
 
 <Callout type="warning" title="Cuándo creerle a una interacción">
 Los criterios de credibilidad de subgrupos (Sun et al., 2010; ICEMAN,

@@ -6,6 +6,9 @@ order: 6
 datasets: []
 duration: 100
 prerequisites: ["Módulo 5: NNT, riesgo atribuible, ICs y valores p"]
+thread: "precision"
+profiles: ["vigilancia", "clinico"]
+attr: "Inferencia exacta y calibración: desarrollo propio (artículo asociado como anexo técnico), dentro del hilo de precisión del profesor Juan Carlos Correa Morales."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -20,7 +23,6 @@ import {
   CorrectionExplorer,
   CIMethodsExplorer,
 } from '@/components/ExactSims'
-import { MultinomCIExplorer } from '@/components/AuditSims'
 
 
 <Callout type="tip" title="Exacto describe el cómputo, no la adecuación">
@@ -82,7 +84,15 @@ condicionamiento acota los valores p posibles y el test resultante usa
 típicamente 60–80% del α nominal.
 
 La familia **incondicional** toma la otra vía: mantiene el modelo de dos
-binomiales, ordena las tablas por algún estadístico de discrepancia y
+binomiales y, en lugar de condicionar, maximiza el valor p sobre los
+escenarios posibles del parámetro común. Su miembro práctico es el test
+de **Boschloo**: exacto como Fisher pero uniformemente más potente cuando
+el diseño fija solo los tamaños de grupo. La moraleja de campo queda así:
+Fisher es exacto y conservador; si tu diseño fijó solo los grupos,
+Boschloo (o la z agrupada) usa mejor el α que pagaste.
+
+<Profundiza title="La familia incondicional, en detalle" hint="optativo">
+El procedimiento ordena las tablas por algún estadístico de discrepancia y
 maximiza el valor p sobre el parámetro de estorbo $p$ (la probabilidad
 común bajo H₀). El resultado es exacto (no puede exceder α) pero puede
 acercarse mucho más a α que Fisher. En la práctica el supremo se evalúa
@@ -102,7 +112,6 @@ Storer–Kim (1990): es más liberal y no garantiza exactitud estricta.)
 | Boschloo | valor p de Fisher | dos binomiales | exacto, uniformemente más potente que Fisher |
 | Berger–Boos | Boschloo sobre IC del parámetro | dos binomiales | exacto (γ); en tablas pequeñas suele coincidir con Boschloo |
 
-<Callout type="warning" title="El parámetro de estorbo es la disputa">
 El test incondicional necesita responder "¿cuál es la probabilidad de
 una tabla al menos tan extrema?" cuando H₀ no especifica $p$. La solución
 de Barnard y de Boschloo es tomar el supremo sobre $p \in (0,1)$; la de
@@ -112,7 +121,7 @@ ese supremo responde la pregunta del diseño. Si el diseño fijara ambos
 márgenes —raro fuera del experimento de la dama del té; un ensayo fija
 solo los tamaños de grupo— el supremo no existiría como problema; en un
 estudio que deja el margen de eventos libre, sí.
-</Callout>
+</Profundiza>
 
 ## Misma tabla, cinco procedimientos
 
@@ -147,7 +156,7 @@ Boschloo (~<Claim k="m6.power.z" d={2} /> vs ~<Claim k="m6.power.boschloo" d={2}
 no hay un test uniformemente mejor dentro de
 la familia incondicional; Boschloo solo domina a Fisher.
 
-<Callout type="note" title="El supremo tiene máximos locales">
+<SalaDeMaquinas title="El supremo tiene máximos locales">
 El valor p incondicional es un supremo sobre $p \in (0,1)$ y esa función
 no es unimodal: en la tabla de Perondi la cola de Boschloo tiene **tres
 picos** —0.0282 cerca de p ≈ 0.134 y de p ≈ 0.866, y el máximo global
@@ -157,7 +166,7 @@ curso evalúa sobre una malla densa de todo (0,1) y no sobre un
 optimizador de un solo arranque. Detalle técnico: como n₁ = n₂ aquí, las
 definiciones bilaterales *minlike* y *central* de Boschloo coinciden
 (ambas dan 0.0385); con grupos desbalanceados pueden diferir.
-</Callout>
+</SalaDeMaquinas>
 
 ## El tamaño real del test
 
@@ -201,7 +210,7 @@ den veredictos opuestos) oscila con n: no converge monótonamente a cero,
 porque la discreción del espacio muestral no desaparece con tamaños
 modestos. Aumentar n no garantiza que el condicionamiento deje de costar.
 
-<Callout type="warning" title="No rechazar ≠ aceptar: el argumento agnóstico">
+<Profundiza title="No rechazar ≠ aceptar: el argumento agnóstico" hint="optativo">
 Si el tamaño real de Fisher con n = 34 es ~<Claim k="m6.size.fisher" d={3} /> sobre un nominal de
 0.05, un "no significativo" es todavía más débil de lo habitual: el test
 casi nunca alcanza a rechazar. Coscrato, Izbicki y Stern (2018)
@@ -211,7 +220,7 @@ tamaño del conjunto de no-decisión, no solo el error tipo I. Es la
 formalización de lo que este módulo muestra numéricamente: entre
 "rechazo" y "no rechazo" hay un territorio grande donde la discreción
 del espacio muestral, no los datos, hizo el veredicto.
-</Callout>
+</Profundiza>
 
 ## Ceros, correcciones y el trade-off sesgo-varianza
 
@@ -235,12 +244,15 @@ $(\hat p_1, \hat p_2)$ de tu tabla.
 
 La curva de ECM tiene el mínimo interior que la teoría predice: bajar c
 reduce el sesgo pero dispara la varianza; subirlo hace lo contrario. En
-el punto observado de Perondi el óptimo está cerca de c ≈ 0.8, pero ese
-punto es lo que se estima —no lo que se conoce—, así que el criterio más
-honesto promedia el ECM sobre la posterior de Jeffreys
+el punto observado de Perondi el óptimo está cerca de c ≈ 0.8.
+
+<SalaDeMaquinas title="Del óptimo puntual a c = 0.5">
+El punto observado es lo que se estima —no lo que se conoce—, así que el
+criterio más honesto promedia el ECM sobre la posterior de Jeffreys
 $p_i \sim \mathrm{Beta}(x_i + 1/2,\ n_i - x_i + 1/2)$. Ese promedio
 (reproducible por Monte Carlo sobre la malla de tablas) mueve el óptimo
 a c ≈ 0.5: casi exactamente la corrección de Haldane.
+</SalaDeMaquinas>
 
 La otra lección es de escala: en la misma tabla de Perondi, el OR de
 supervivencia (estándar vs. alta) sin corregir es <Claim k="m6.perondi.or" d={2} />,
@@ -276,9 +288,9 @@ ambos excluyen el cero sin dramatismo:
 [<Claim k="m6.perondi.newcombeLo" d={3} />, <Claim k="m6.perondi.newcombeHi" d={3} />]
 respectivamente.
 
-<Callout type="note" title="La misma tabla, leída por Bayes">
+<Profundiza title="La misma tabla, leída por Bayes (Altham, 1969)" hint="optativo">
 Existe un puente elegante entre el valor p frecuentista y la lectura
-bayesiana (Altham, 1969): la probabilidad unilateral de Fisher,
+bayesiana: la probabilidad unilateral de Fisher,
 P(X₁ ≥ 7) = 0.0272, es exactamente la probabilidad posterior
 P(p₁ > p₂ | datos) cuando p₁ ~ Beta(0, 1) y p₂ ~ Beta(1, 0) —previas
 empujadas hacia las esquinas—. Con previas uniformes Beta(1, 1) la
@@ -287,7 +299,7 @@ lectura: muestra que el valor p condicional puede replicarse como una
 probabilidad posterior con una previa particular, y que la respuesta
 bayesiana depende de esa previa tanto como la frecuentista depende del
 ordenamiento elegido.
-</Callout>
+</Profundiza>
 
 <Callout type="note" title="Exacto no es sinónimo de informativo">
 Un IC exacto garantiza cobertura pero puede tener longitud infinita; un
@@ -398,85 +410,6 @@ cat(sprintf("Cobertura minima en p: Wald = %.2f   Wilson = %.2f (nominal .95)\\n
 # cobertura nominal es un promedio esperado, no una garantia puntual.`}
 />
 
-## De una proporción a cuatro serotipos: la multinomial
-
-En vigilancia la pregunta rara vez es una sola proporción. Un
-laboratorio que tipifica muestras de dengue reporta cuatro números
-a la vez: la fracción de DENV-1, DENV-2, DENV-3 y DENV-4
-circulando. La pregunta inferencial cambia de forma: ya no es
-"¿dónde está p?" sino "¿dónde está el vector π completo?". Y ahí
-aparece la primera trampa: construir un IC del 95% por serotipo
-**no** produce cuatro intervalos simultáneos al 95%. La
-probabilidad de que los cuatro cubran a la vez es, en el mejor de
-los casos, del orden de $0.95^4 \approx 0.81$ — y peor en la
-práctica, porque los conteos de una multinomial no son
-independientes.
-
-La literatura ofrece métodos genuinamente simultáneos. El estudio
-de González, Correa &amp; Vélez (2015), en la *Revista de la
-Facultad de Ciencias* de la UNAL, comparó trece de ellos por
-simulación —nivel real frente a nominal, longitud, y un índice que
-combina ambos— con dos hallazgos que interesan aquí: los intervalos
-basados directamente en el TCL rinden mal, y los métodos
-recomendables (los basados en la F de Leemis, la verosimilitud
-relativa y Quesenberry–Hurst) mantienen la cobertura incluso cuando
-hay celdas con poca masa. La segunda trampa es exactamente esa:
-cuando la distribución de serotipos se desequilibra —una variante
-dominante y otra rara con conteos cercanos a cero— la entropía de
-π cae y con ella la cobertura real de los métodos que confían en
-la normalidad.
-
-<MultinomCIExplorer title={<>Vigilancia de serotipos: cobertura simultánea bajo desequilibrio</>} />
-
-**Para explorar**
-
-1. Con desequilibrio 0 audita la cobertura simultánea del TCL; luego sube el desequilibrio a 0.8 y repite.
-2. Compara la longitud de QH y Goodman sobre la misma muestra con la cobertura que auditaste. ¿Cuál ofrece mejor relación entre cobertura y ancho?
-3. Pulsa «Nueva muestra» varias veces con desequilibrio alto y mira qué serotipo queda sin cubrir con más frecuencia.
-
-<RCell
-  id="06/ic-multinomial"
-  title="ICs simultáneos multinomiales en R base"
-  code={`# Vigilancia de serotipos: n aislamientos tipificados en k
-# categorias. X ~ Multinomial(n, pi). IC simultaneo = los k
-# intervalos cubren el vector pi COMPLETO a la vez.
-x <- c(34, 12, 10, 4); n <- sum(x); k <- length(x)
-
-# TCL por celda (la version ingenua: no es simultanea)
-z  <- qnorm(0.975)
-ph <- x / n
-ee <- sqrt(ph * (1 - ph) / n)
-ci_tcl <- rbind(lo = ph - z * ee, hi = ph + z * ee)
-
-# Quesenberry-Hurst (1964): forma cuadratica con B = chi2_{k-1}
-quad <- function(x, n, B) {
-  d <- sqrt(B * (B + 4 * x * (n - x) / n))
-  rbind(lo = (B + 2 * x - d) / (2 * (n + B)),
-        hi = (B + 2 * x + d) / (2 * (n + B)))
-}
-ci_qh <- quad(x, n, qchisq(0.95, k - 1))
-
-# Goodman (1965): misma forma con B = z^2_{1-a/(2k)} (Bonferroni)
-ci_go <- quad(x, n, qnorm(1 - 0.05 / (2 * k))^2)
-
-res <- rbind(ci_tcl, ci_qh, ci_go)
-rownames(res) <- paste(rep(c("TCL", "QH", "Goodman"), each = 2), c("lo", "hi"))
-colnames(res) <- paste0("serotipo", 1:k)
-print(round(res, 3))
-# Interpretacion: QH y Goodman garantizan cobertura SIMULTANEA;
-# el TCL por celda no promete nada sobre el vector completo.`}
-/>
-
-<Callout type="warning" title="La celda rara manda">
-Con una variante casi ausente el problema no es estimar su π —el
-método de Clopper–Pearson del módulo anterior ya muestra cómo
-intervalar un cero observado— sino que la cobertura *simultánea*
-del conjunto se degrada: un solo intervalo que falle rompe el
-vector. La auditoría del simulador lo cuantifica: a igual n, el
-desequilibrio de π (medido por la entropía $H = -\sum \pi_j \ln
-\pi_j$) es el factor que más separa nominal de empírico.
-</Callout>
-
 ## Potencia prospectiva, potencia observada y la dimensión ética
 
 El panel de potencia calcula lo que Woodward llama la potencia del
@@ -486,12 +419,14 @@ toma el efecto estimado como verdadero y reproduce circularmente el
 valor p ya obtenido; Hoenig &amp; Heisey (2001) muestran que es una
 transformación del p y no aporta información nueva.
 
+<Profundiza title="Assurance: la potencia promediada sobre lo plausible" hint="optativo">
 La versión prospectiva más honesta es el **assurance** (O'Hagan et al.,
 2005): en lugar de calcular potencia en un punto $(p_1, p_2)$, se
 promedia sobre la distribución a priori de lo plausible. Un estudio con
 80% de potencia en el escenario optimista y 40% en el conservador tiene
 un assurance quizá del 60%; ese número, no el 80%, es el que el comité
 de ética debería ver.
+</Profundiza>
 
 <Callout type="warning" title="El ensayo subpotenciado es un problema ético">
 Un ensayo sin potencia suficiente expone a los participantes al riesgo
@@ -595,7 +530,7 @@ cat(sprintf("z agrupada = %.4f   Boschloo = %.4f\\n", pz, pb))
 cat("El veredicto a alpha=0.05 depende del procedimiento.\\n")`}
 />
 
-<Callout type="warning" title="La orientación de la tabla cambia el resultado">
+<SalaDeMaquinas title="La orientación de la tabla cambia el resultado">
 La misma tabla transpuesta **no da el mismo valor p** en algunos
 paquetes, y ninguno avisa. `Exact::exact.test` en R supone los grupos en
 filas; `scipy.stats.barnard_exact` en Python los supone en columnas. Con
@@ -605,7 +540,7 @@ ningún mensaje de error—. Lección de reproducibilidad: al replicar un
 análisis 2×2 en otro paquete, verificar primero la orientación con una
 tabla de resultado conocido. El espacio de tablas del simulador usa la
 convención del curso: grupos en filas, eventos en la primera columna.
-</Callout>
+</SalaDeMaquinas>
 
 <RCell
   id="06/tamano-y-potencia"

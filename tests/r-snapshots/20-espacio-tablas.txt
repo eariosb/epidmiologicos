@@ -1,0 +1,4 @@
+P_p=0.2(tabla 4,1) incondicional = 0.02364
+P(tabla con x1=4 | m=5) condicional = 0.13545
+Los dos pesos responden modelos muestrales distintos.
+Condicionar no aproxima al incondicional: cambia la pregunta.

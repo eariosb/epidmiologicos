@@ -1,0 +1,305 @@
+---
+title: "II-1. La sala de máquinas exacta: supremos, ordenamientos y tamaño real"
+slug: "20-sala-maquinas-exacta"
+objective: "Implementar desde cero la maquinaria de los tests incondicionales 2×2: el supremo sobre el parámetro de estorbo, los ordenamientos del espacio de tablas, Berger–Boos y la medición del tamaño real."
+order: 20
+datasets: []
+duration: 120
+prerequisites: ["Curso I completo, especialmente el módulo 6"]
+course: "II"
+level: "avanzado"
+thread: "precision"
+attr: "Desarrollo propio: la maquinaria técnica del anexo de inferencia exacta (artículo asociado al curso)."
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+
+<Callout type="tip" title="De usar el instrumento a construirlo">
+El módulo 6 enseña a elegir entre Fisher y Boschloo leyendo el diseño.
+Este módulo abre el instrumento: cada pieza que en el Curso I aparece
+como resultado —el supremo, el ordenamiento, el tamaño real— aquí se
+programa desde R base hasta que deja de ser una caja negra. Quien puede
+reconstruir el test puede auditar el paquete que lo implementa, y esa es
+la competencia que este curso considera terminal.
+</Callout>
+
+## El espacio de tablas como objeto computable
+
+Todo test exacto 2×2 empieza en el mismo lugar: el conjunto finito de
+tablas posibles. Con grupos de tamaño $n_1$ y $n_2$ fijos, una tabla es
+un par $(x_1, x_2)$ con $x_i \in \{0, \ldots, n_i\}$: el espacio tiene
+$(n_1+1)(n_2+1)$ puntos y se puede *enumerar completo* — que es lo que
+hace posible la inferencia exacta sin Monte Carlo.
+
+Bajo el modelo de dos binomiales, cada tabla tiene probabilidad
+$P_p(x_1, x_2) = \mathrm{Bin}(x_1; n_1, p)\,\mathrm{Bin}(x_2; n_2, p)$
+cuando ambos grupos comparten el mismo riesgo $p$ (la nula). Bajo el
+modelo condicional de Fisher, el total de eventos $m = x_1 + x_2$ se
+fija y $X_1$ sigue una hipergeométrica. Las dos probabilidades no son
+el mismo objeto: una pondera tablas por verosimilitud conjunta, la otra
+por la geometría del margen fijado.
+
+<RCell
+  id="20/espacio-tablas"
+  title="El espacio de tablas y sus dos pesos"
+  code={`# Espacio completo de tablas 2x2 con n1 = n2 = 10 (121 puntos).
+n1 <- 10; n2 <- 10
+tablas <- expand.grid(x1 = 0:n1, x2 = 0:n2)
+
+# Peso incondicional bajo H0 (p comun, dos binomiales):
+w_uncond <- function(p)
+  outer(dbinom(0:n1, n1, p), dbinom(0:n2, n2, p))
+
+# Peso condicional (Fisher): fijado m, X1 ~ Hipergeometrica.
+w_cond <- function(m) {
+  xs <- max(0, m - n2):min(n1, m)
+  w <- numeric(n1 + 1)
+  w[xs + 1] <- dhyper(xs, n1, n2, m)
+  w
+}
+
+cat(sprintf("P_p=0.2(tabla 4,1) incondicional = %.5f\\n",
+            w_uncond(0.2)[5, 2]))
+cat(sprintf("P(tabla con x1=4 | m=5) condicional = %.5f\\n",
+            w_cond(5)[5]))
+cat("Los dos pesos responden modelos muestrales distintos.\\n")
+cat("Condicionar no aproxima al incondicional: cambia la pregunta.\\n")`}
+/>
+
+## El supremo en la práctica
+
+El valor p incondicional exige responder: "¿cuál es la probabilidad de
+una tabla al menos tan extrema, bajo el peor $p$ posible?". Bajo la
+nula compuesta $p_1 = p_2 = p$, el parámetro $p$ queda libre — es el
+**parámetro de estorbo**— y la respuesta honesta es el supremo:
+
+$$
+p_{inc} = \sup_{p \in (0,1)} P_p\big(\text{tabla al menos tan extrema}\big)
+$$
+
+"Al menos tan extrema" lo define el **ordenamiento**: una función que
+puntúa cada tabla. Boschloo usa el propio valor p de Fisher como puntaje
+(las tablas más improbables condicionalmente son "más extremas"); la z
+agrupada usa $|z|$ con varianza combinada. Ordenamientos distintos dan
+regiones de rechazo distintas y, con ellas, potencias distintas.
+
+En la práctica el supremo se evalúa sobre una malla finita de $p$ —
+y ahí empieza el detalle técnico que los paquetes esconden.
+
+<RCell
+  id="20/supremo-malla"
+  title="El supremo y el precio de la malla"
+  code={`# Tabla observada: 7/34 vs 1/34 (Perondi, modulo 6).
+x1 <- 7; n1 <- 34; x2 <- 1; n2 <- 34
+
+p_fisher <- function(a, b) {
+  m  <- a + b
+  xs <- max(0, m - n2):min(n1, m)
+  pr <- dhyper(xs, n1, n2, m)
+  sum(pr[pr <= pr[a - xs[1] + 1] + 1e-12])   # minlike
+}
+pfs <- outer(0:n1, 0:n2, Vectorize(p_fisher))
+pf  <- p_fisher(x1, x2)
+rej <- pfs <= pf + 1e-12                     # region de Boschloo
+
+# P_p(region) en funcion de p, y su supremo sobre mallas de
+# creciente densidad:
+pesos <- function(p) outer(dbinom(0:n1, n1, p), dbinom(0:n2, n2, p))
+P_rej <- function(p) sum(pesos(p) * rej)
+
+for (paso in c(0.05, 0.01, 0.002)) {
+  grid <- seq(paso, 1 - paso, by = paso)
+  cat(sprintf("malla %.3f: supremo >= %.5f  (argmax p ~ %.3f)\\n",
+              paso, max(sapply(grid, P_rej)),
+              grid[which.max(sapply(grid, P_rej))]))
+}
+# La malla da una COTA INFERIOR del supremo: el valor p reportado
+# puede ser algo menor que el verdadero (mas liberal), nunca mayor.
+# En tablas de este tamano la diferencia con la malla fina es ~1e-7.`}
+/>
+
+<SalaDeMaquinas title="Por qué la malla da una cota inferior">
+Evaluar $P_p(\text{rechazo})$ en $K$ puntos de malla estima
+$\max_j P_{p_j}$, que nunca excede el supremo verdadero: el reportado es
+un p *optimista*. La cota del error es la variación máxima de la función
+entre nodos vecinos; como $P_p$ es un polinomio de grado $n_1 + n_2$,
+basta una malla moderada para precisión de $10^{-6}$. Cuando la
+función tiene máximos locales —frecuente en tablas asimétricas— una
+malla burda puede saltarse el pico: la auditoría correcta refina la malla
+hasta estabilizar el dígito que se reporta.
+</SalaDeMaquinas>
+
+## Berger–Boos: el supremo que admite duda
+
+La variante de Berger y Boos (1994) mejora el supremo con una idea de
+economía estadística: si el parámetro de estorbo $p$ puede estimarse de
+los propios datos, no hay que maximizar sobre todo $(0,1)$ — basta
+maximizar sobre un intervalo de confianza $C_\gamma(p)$ y pagar una
+multa $\gamma$ por la probabilidad de que el $p$ verdadero quede fuera:
+
+$$
+p_{BB} = \sup_{p \in C_\gamma} P_p(\text{rechazo}) + \gamma,
+\qquad \gamma \approx 0.001
+$$
+
+El test resultante sigue siendo exacto —la multa cubre la cola dejada
+fuera— y puede ganar potencia cuando el intervalo excluye la región
+donde vive el supremo. En tablas pequeñas el intervalo es ancho y
+Berger–Boos suele coincidir con Boschloo: la ganancia aparece cuando
+$n$ ya permite acotar bien $p$.
+
+<Profundiza title="La condición técnica que hace válida la multa" hint="optativo">
+La corrección funciona porque el evento "el $p$ verdadero está fuera de
+$C_\gamma$" tiene probabilidad acotada por $\gamma$ *para todo* $p$
+—es decir, $C_\gamma$ debe ser un IC con cobertura garantizada
+(Clopper–Pearson sirve, Wald no). Entonces
+$P(\text{rechazo}) \le P(\text{rechazo} \cap p \in C_\gamma) + \gamma
+\le \sup_{C_\gamma} P_p(\text{rechazo}) + \gamma$, que es la desigualdad
+de Berger–Boos. La elección de $\gamma$ es un balance: menor $\gamma$
+achica la multa pero ensancha el intervalo y con él el supremo.
+</Profundiza>
+
+## Tamaño real y potencia exacta por enumeración
+
+Con la región de rechazo escrita como máscara binaria sobre el espacio
+de tablas, todo lo demás es álgebra:
+
+- **Tamaño real**: $\max_p P_p(\text{rechazo})$ bajo la nula — el α que
+  el test *efectivamente* usa. Fisher conserva (~0.03 en la tabla de
+  Perondi al α nominal 0.05); Boschloo lo usa casi completo.
+- **Potencia en $(p_1, p_2)$**: $P_{p_1, p_2}(\text{rechazo})$ con
+  pesos de dos binomiales distintas — sin simular una sola réplica.
+
+<RCell
+  id="20/tamano-real"
+  title="Auditoría completa de dos tests por enumeración"
+  code={`# Mismo ensamble que el modulo 6, ahora leido como auditoria:
+# el tamano real es el supremo de P_p(rechazo) bajo la nula.
+n1 <- 34; n2 <- 34; alpha <- 0.05
+
+p_fisher <- function(a, b) {
+  m  <- a + b
+  xs <- max(0, m - n2):min(n1, m)
+  pr <- dhyper(xs, n1, n2, m)
+  sum(pr[pr <= pr[a - xs[1] + 1] + 1e-12])
+}
+pfs   <- outer(0:n1, 0:n2, Vectorize(p_fisher))
+rej_F <- pfs <= alpha                       # Fisher al nominal
+
+# Region de Boschloo: la tabla t rechaza si max_p P_p(pf <= pf_t) <= a.
+grid <- seq(0.002, 0.998, by = 0.002)
+ord  <- order(pfs)
+S    <- sapply(grid, function(p)
+         cumsum(outer(dbinom(0:n1, n1, p), dbinom(0:n2, n2, p))[ord]))
+pos  <- findInterval(as.vector(pfs) + 1e-12, pfs[ord])
+PB   <- matrix(apply(S[pos, ], 1, max), n1 + 1)
+rej_B <- PB <= alpha
+
+pesos <- function(pa, pb) outer(dbinom(0:n1, n1, pa), dbinom(0:n2, n2, pb))
+tam <- function(rej) max(sapply(grid, function(p) sum(pesos(p,p) * rej)))
+cat(sprintf("Tamano real: Fisher = %.3f | Boschloo = %.3f (nominal %.2f)\\n",
+            tam(rej_F), tam(rej_B), alpha))
+
+# Potencia bajo (0.20, 0.03), escenario de diseno:
+pw <- function(rej) sum(pesos(0.20, 0.03) * rej)
+cat(sprintf("Potencia en (0.20, 0.03): Fisher = %.3f | Boschloo = %.3f\\n",
+            pw(rej_F), pw(rej_B)))
+# El test que mejor usa su alfa compra ~12 puntos de potencia.`}
+/>
+
+## La proposición del anexo, en el lenguaje del curso
+
+El resultado técnico central del anexo puede enunciarse sin demostración
+completa: *para el modelo de dos binomiales con margen de eventos libre,
+el test de Boschloo —ordenamiento por el p de Fisher seguido del supremo
+sobre el parámetro de estorbo— es exacto y uniformemente al menos tan
+potente como Fisher, y estrictamente más potente en una región de medida
+positiva del espacio de parámetros.* La demostración completa está en el
+<Anexo id="ensayo-test-exacto">ensayo técnico del curso</Anexo>; aquí
+queda la arquitectura del argumento:
+
+1. La región de Boschloo contiene a la de Fisher al mismo α: toda tabla
+   que Fisher rechaza tiene p de Fisher ≤ α, y su p incondicional no
+   puede exceder α por la definición del supremo.
+2. La contención es estricta cuando existe una tabla con p de Fisher
+   apenas por encima de α cuyo supremo incondicional sí cae bajo α —
+   en la malla de Perondi hay varias.
+3. Contener la región implica dominar la potencia en todo punto del
+   espacio alternativo; la ganancia es estricta donde la contención lo es.
+
+<Callout type="warning" title="Exacto ≠ adecuado, potente ≠ correcto">
+La proposición no dice que Boschloo sea "el test correcto": dice que
+bajo el modelo de dos binomiales domina a Fisher. Si el diseño fija los
+dos márgenes —el experimento de la dama del té es el caso canónico— el
+condicional es el modelo muestral correcto y el dominio deja de aplicar.
+La elección de instrumento sigue siendo una decisión sobre el diseño;
+la maquinaria solo garantiza que, elegido el modelo, el test usa todo
+el α permitido.
+</Callout>
+
+<Quiz
+  question="Una malla de 200 puntos reporta p = 0.0384 para Boschloo. El supremo verdadero podría ser…"
+  options={[
+    "exactamente 0.0384: la malla es suficiente en tablas discretas",
+    "algo mayor o algo menor que 0.0384 según la tabla",
+    "algo mayor que 0.0384: la malla subestima el supremo al muestrear solo 200 puntos",
+    "algo menor que 0.0384: la malla sobreestima por redondeo"
+  ]}
+  correctIndex={2}
+  explanation="La malla evalúa un máximo sobre un subconjunto de (0,1), así que nunca excede el supremo verdadero: lo subestima, y el p reportado queda por debajo del real (más liberal). Refinar la malla solo puede subir el valor."
+/>
+
+<LabExercise
+  id="20/lab-maquina"
+  title="Laboratorio: audita fisher.test con tu propia máquina"
+  code={`# Reproduce fisher.test() desde R base y compara, cifra a cifra.
+# 1) Elige una tabla 2x2 (la del trabajo o inventada).
+a <- 7; b <- 27; c <- 1; d <- 33
+tab <- matrix(c(a, b, c, d), nrow = 2, byrow = TRUE)
+
+# 2) Tu p de Fisher por hipergeometrica directa (minlike):
+n1 <- sum(tab[1,]); n2 <- sum(tab[2,]); m <- a + c
+xs <- max(0, m - n2):min(n1, m)
+pr <- dhyper(xs, n1, n2, m)
+p0 <- dhyper(a, n1, n2, m)
+mi_p <- sum(pr[pr <= p0 + 1e-12])
+
+# 3) Contra el paquete:
+su_p <- fisher.test(tab)$p.value
+cat(sprintf("tuyo = %.6f | fisher.test = %.6f | diff = %.2e\\n",
+            mi_p, su_p, abs(mi_p - su_p)))
+# Si difieren en mas de ~1e-10: revisa la definicion de 'extremo'
+# (minlike vs. two-sided de prob <= observada) y la tolerancia del
+# empate en punto flotante.`}
+  tasks={[
+    "Replica el p de Fisher de tu tabla con la hipergeométrica directa y verifica la igualdad con fisher.test()",
+    "Repite con una tabla que tenga otro punto del espacio con la misma probabilidad que la observada (empate): ¿cambia algo con la tolerancia 1e-12?",
+    "Calcula el p incondicional ordenando por el p de Fisher y tomando el supremo sobre una malla de 500 puntos; compara con la z agrupada como ordenamiento",
+  ]}
+  hint="Los empates exactos en probabilidad hipergeométrica existen (tablas simétricas cuando n1 = n2); sin tolerancia de punto flotante la comparación <= los pierde."
+/>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: el test auditado">
+Un script que tome una tabla 2×2 cualquiera y devuelva, implementado a
+mano: el p de Fisher, el mid-p, el p de Boschloo (con el tamaño de malla
+declarado) y el tamaño real de ambos tests al α nominal. Cada número con
+su verificación contra el paquete correspondiente, y una nota de 200
+palabras sobre dónde puede fallar la implementación.
+</Callout>
+
+## Lecturas
+
+- **Berger & Boos (1994)**: la maximización sobre el intervalo del
+  parámetro de estorbo; la cota γ que mantiene la exactitud.
+- **Mehrotra, Chan & Berger (2003)**: la comparación sistemática de
+  ordenamientos incondicionales; la referencia técnica del módulo.
+- **Boschloo (1970)**: el ordenamiento original por el p de Fisher.
+- **Agresti (2001)**: la revisión que consolidó la familia incondicional
+  como alternativa seria a Fisher.
+- **El anexo técnico del curso**: la proposición completa con su
+  demostración y la auditoría de paquetes reproducible.

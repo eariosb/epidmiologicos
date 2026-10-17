@@ -1,0 +1,3 @@
+sin ajustar:  beta_E = 0.494 (verdad 0.5)
+ajustando Z:  beta_E = 0.299 <- el ajuste FABRICA sesgo
+IV debil: beta = 2.63 (inestable, F bajo)

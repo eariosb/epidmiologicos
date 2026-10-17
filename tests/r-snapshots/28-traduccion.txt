@@ -1,0 +1,3 @@
+En 40000 personas, se esperarian 320 casos evitados.
+Escenarios: esperado 320, mejor 560, peor 120 casos evitados.
+NNT = 125 (peor caso 333, mejor caso 71).

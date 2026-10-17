@@ -6,6 +6,7 @@ order: 14
 datasets: ["bcg_matching.csv"]
 duration: 80
 prerequisites: ["Módulo 4: Medidas de asociación", "Módulo 7: Confusión"]
+attr: "Material base del curso ADEI (profesor Juan Carlos Salazar Uribe); estructura guiada por Woodward (2014)."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -367,6 +368,7 @@ método**.
 2. Baja n a 10 y la exposición a 0.10: Woolf estricto no existe en casi la mitad de las tablas y el bootstrap cae cerca del 80 %.
 3. Sube n a 60: los tres convergen al nominal. La conclusión no es que un método gane, sino que con muy pocos datos ninguno compensa la falta de información.
 
+<SalaDeMaquinas title="El bootstrap paramétrico paso a paso">
 <RCell
   id="14/bootstrap-or"
   title="IC bootstrap para el OR en una tabla chica"
@@ -399,6 +401,7 @@ cat("IC95% bootstrap percentil =", round(exp(quantile(ors, c(.025,.975))), 2), "
 # informacion? De mas casos, o de un estudio multicentrico.
 # Eso se decide en el protocolo, no en la consola.`}
 />
+</SalaDeMaquinas>
 
 <Callout type="warning" title="La auditoría tiene dos capas y no se mezclan">
 El **bootstrap** (B remuestras de *tu* tabla) aproxima la

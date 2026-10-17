@@ -1,0 +1,3 @@
+RR medio = 0.74 | P(RR < 0.90) = 99.3%
+P(reduccion > 15%) = 95.7%
+P(reduccion > 20%) = 83.2%

@@ -1,0 +1,292 @@
+---
+title: "II-10. Práctica de campo: limpieza, vinculación y el producto final"
+slug: "29-practica-campo-vinculacion"
+objective: "Ejecutar el flujo completo del trabajo real: auditar una base contaminada, producir la ficha de limpieza, vincular registros entre fuentes y entregar el producto para el decisor."
+order: 29
+datasets: ["valung_corrupto.csv"]
+duration: 150
+prerequisites: ["Curso I completo; módulos 20-28 del Curso II"]
+course: "II"
+level: "avanzado"
+profilesDeep: ["vigilancia", "clinico", "politica"]
+attr: "Diseño propio para el curso avanzado: el ejercicio más parecido al trabajo real que la plataforma permite."
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+
+<Callout type="tip" title="Así llega la base, siempre">
+Ninguna base de campo llega como `valung.csv`: llega con IDs duplicados,
+fechas en dos formatos, unidades mezcladas y una censura que alguien
+digitó al revés. Este módulo no enseña un método nuevo — ensambla el
+curso completo sobre una base sucia y exige el producto que el trabajo
+real pide: **la ficha de limpieza antes que el modelo, y el párrafo
+después del modelo**.
+</Callout>
+
+## La base: `valung_corrupto.csv`
+
+Es el estudio VA de cáncer de pulmón del módulo 12 — el mismo
+cohorte, las mismas variables— **contaminado como llegaría de un
+sistema de captura real**:
+
+- `ID` de paciente con **duplicados**: algunas filas exactas repetidas,
+  otras con el mismo ID y valores distintos (dos capturas del mismo
+  paciente).
+- `SurvTime` en **formatos mixtos**: días enteros, `"587d"`, `"1.7m"`
+  (meses), negativos y el centinela `9999`.
+- `AdmitDate` en **DD/MM/YYYY y MM/DD/YYYY mezclados** — con fechas
+  ambiguas que ambos formatos aceptan callados.
+- `Kps` fuera de rango o `"NA"`; `Age` con `999`, `152`, `-3` y vacíos.
+- `censor` **invertido en una fracción** de las filas.
+- Faltantes en cuatro dialectos: `""`, `"NA"`, `"N/A"`, `"."`.
+
+<RCell
+  id="29/auditoria"
+  title="Primer paso: auditar, no analizar"
+  code={`v <- read.csv('valung_corrupto.csv', na.strings = c('', 'NA', 'N/A', '.'))
+cat('filas:', nrow(v), ' IDs unicos:', length(unique(v$ID)), '\\n')
+
+# 1) IDs duplicados: exactos vs. en conflicto.
+dup <- v$ID[duplicated(v$ID)]
+cat('IDs repetidos:', length(unique(dup)), '\\n')
+# 2) SurvTime no parseable / imposible:
+st <- suppressWarnings(as.numeric(v$SurvTime))
+cat('SurvTime no numerico:', sum(is.na(st)), '| <=0 o 9999:',
+    sum(!is.na(st) & (st <= 0 | st == 9999)), '\\n')
+# 3) Kps fuera de rango / edades imposibles:
+cat('Kps fuera [0,100]:', sum(!is.na(v$Kps) & (v$Kps < 0 | v$Kps > 100)),
+    '| Age imposible:', sum(!is.na(v$Age) & (v$Age < 18 | v$Age > 100)), '\\n')
+# 4) Fechas ambiguas: cuantas admiten los dos parseos:
+amb <- sum(grepl('^[0-9]{2}/[0-9]{2}/', v$AdmitDate))
+cat('fechas no-ISO:', amb, '(el formato no se puede inferir por fila)\\n')
+# 5) Censura sospechosa: evento 'registrado' con Kps alto y tiempo
+# minusculo es implausible - marca candidatas a inversion.`}
+/>
+
+## La ficha de limpieza: el producto que precede al modelo
+
+La regla de campo: **ningún modelo corre antes de la ficha**. La ficha
+es el documento que declara cada defecto encontrado, la regla aplicada
+y cuántas filas tocó — es lo que hace la limpieza auditable y
+reproducible, y lo que separa "limpié la base" de "alguien puede
+verificar cómo quedó la base".
+
+| Defecto | Regla declarada | Filas afectadas |
+|---|---|---|
+| ID duplicado exacto | conservar la primera ocurrencia | n |
+| ID duplicado en conflicto | conservar la fila completa y consistente; documentar | n |
+| `SurvTime` con `"d"` | quitar sufijo, queda en días | n |
+| `SurvTime` en `"m"` | multiplicar por 30.44 | n |
+| `SurvTime` ≤ 0 o 9999 | faltante estructural, no imputable | n |
+| Fechas ambiguas | declarar el formato asumido y listar las ambiguas | n |
+| `Kps`/`Age` imposibles | faltante; verificar contra fuente si existe | n |
+| `censor` sospechoso | revisión por plausibilidad (Kps, SurvTime, tratamiento) | n |
+
+<RCell
+  id="29/limpieza"
+  title="Limpieza ejecutable: cada regla aplicada y contada"
+  code={`v <- read.csv('valung_corrupto.csv', na.strings = c('', 'NA', 'N/A', '.'))
+v$SurvTime_clean <- suppressWarnings({
+  s <- v$SurvTime
+  num <- as.numeric(gsub('[dm]$', '', s))
+  num[grepl('m$', s)] <- num[grepl('m$', s)] * 30.44
+  num})
+v$SurvTime_clean[v$SurvTime_clean <= 0 | v$SurvTime_clean == 9999] <- NA
+v$Kps[v$Kps < 0 | v$Kps > 100] <- NA
+v$Age[v$Age < 18 | v$Age > 100] <- NA
+v$Therapy <- tolower(v$Therapy)
+v$Cell <- gsub('squamous', 'squamous', tolower(v$Cell))
+v$Cell[v$Cell == 'squamous' | v$Cell == 'squamous'] <- 'squamous'
+v$Cell <- gsub('^small.*', 'small', v$Cell)
+
+# Duplicados exactos primero; en conflicto despues (queda la de menor NA):
+v <- v[!duplicated(v), ]
+v <- v[order(v$ID, rowSums(is.na(v))), ]
+v <- v[!duplicated(v$ID), ]
+
+cat(sprintf('base limpia: %d filas | SurvTime faltantes: %d | median %.0f d\\n',
+            nrow(v), sum(is.na(v$SurvTime_clean)),
+            median(v$SurvTime_clean, na.rm = TRUE)))
+cat(sprintf('Kps median %.0f | Age median %.0f\\n',
+            median(v$Kps, na.rm = TRUE), median(v$Age, na.rm = TRUE)))`}
+/>
+
+<Callout type="warning" title="La censura invertida no se arregla, se detecta">
+No existe regla automática para `censor` invertido: el dato no se
+delata solo. Las señales de campo son plausibilidad cruzada — un
+"evento" con Karnofsky de 90 y 3 días de seguimiento es sospechoso— y,
+sobre todo, **comparar la curva KM con la del estudio original o con la
+literatura**: una supervivencia que sube con el tiempo delata la
+inversión global; inverciones parciales se detectan por inconsistencias
+internas y se reportan como hallazgo de calidad de dato, no se
+corrigen en silencio.
+</Callout>
+
+## Vinculación de registros: SIVIGILA–RIPS–mortalidad
+
+El segundo ejercicio reproduce el cuello de botella real colombiano:
+tres fuentes que describen a las mismas personas sin compartir llave.
+SIVIGILA tiene el evento notificado, RIPS la atención, la mortalidad el
+desenlace — y la persona aparece con nombres digitados distinto, dos
+apellidos en distinto orden, y documentos con errores de un dígito.
+
+La vinculación determinística (documento exacto) recupera la fracción
+fácil; el resto exige **vinculación probabilística**: comparar nombre,
+fecha de nacimiento, sexo, municipio — y puntuar cada par candidato por
+cuánta evidencia aporta cada coincidencia (la lógica de
+Fellegi–Sunter: un apellido raro que coincide pesa más que "García").
+
+<RCell
+  id="29/vinculacion"
+  title="Vinculación probabilística en miniatura"
+  code={`# Dos fuentes sinteticas de la misma poblacion:
+set.seed(60); n <- 200
+siv <- data.frame(
+  nom = c('GARCIA LOPEZ JUAN','PEREZ ANA','RODRIGUEZ MARIA','GOMEZ LUIS')[1:4],
+  fn  = as.Date(c('1980-03-15','1975-11-02','1990-07-21','1988-01-30')),
+  mun = '11001', doc = paste0('80', sample(100000:999999, 4)))
+# RIPS: los mismos 4 con ruido de digitacion:
+rips <- data.frame(
+  nom = c('GARCIA JUAN','PEREZ ANA MARIA','RODRIGES MARIA','GOMEZ LUIS A'),
+  fn  = as.Date(c('1980-03-15','1975-11-20','1990-07-21','1988-01-30')),
+  doc = c(siv$doc[1], paste0('81', substr(siv$doc[2],3,8)),
+          'SIN DOC', siv$doc[4]))
+
+# Puntaje por campo: nombre similar + fecha igual +/- dias + doc.
+score <- function(a, b) {
+  s <- 0
+  s <- s + 3*(!is.na(a$doc) & a$doc == b$doc)
+  s <- s + 2*(a$nom == b$nom) + 1*(a$nom != b$nom &
+        any(strsplit(a$nom,' ')[[1]] %in% strsplit(b$nom,' ')[[1]]))
+  s <- s + 2*(abs(a$fn - b$fn) == 0) + 1*(abs(a$fn - b$fn) <= 30)
+  s
+}
+for (i in 1:4) {
+  sc <- sapply(1:4, function(j) score(siv[i,], rips[j,]))
+  cat(sprintf('SIV %s -> mejor RIPS %d (score %d)\\n',
+              siv$nom[i], which.max(sc), max(sc)))
+}
+# El umbral se declara: score >= X vincula, el resto queda para
+# revision manual - y esa fraccion se reporta, no se esconde.`}
+/>
+
+<Profundiza title="Fellegi–Sunter y la honestidad de la tasa de enlace" hint="optativo">
+El modelo formal asigna a cada comparación un peso $\log_2(m/u)$: la
+probabilidad $m$ de coincidir siendo el mismo par sobre la $u$ de
+coincidir por azar. Apellidos frecuentes aportan poco, fechas exactas
+mucho. Lo operativo que el curso subraya: **la tasa de enlace es un
+resultado, no un trámite** — si el 30 % de los casos de SIVIGILA no
+aparece en mortalidad, ese 30 % tiene estructura (murió fuera, se
+notificó mal, el documento falló) y puede sesgar cualquier análisis
+posterior exactamente como un faltante MNAR del módulo 21. El reporte
+incluye tasa de enlace por fuente y por grupo, y la comparación de
+vinculados vs. no vinculados.
+</Profundiza>
+
+## El análisis sobre la base limpia
+
+Con la ficha cerrada, el análisis es el del módulo 12 — pero ahora cada
+número lleva el linaje de la limpieza:
+
+<RCell
+  id="29/modelo"
+  title="El mismo Cox de siempre, sobre datos auditados"
+  code={`v <- read.csv('valung_corrupto.csv', na.strings = c('', 'NA', 'N/A', '.'))
+v$Surv <- suppressWarnings({
+  s <- v$SurvTime; num <- as.numeric(gsub('[dm]$', '', s))
+  num[grepl('m$', s)] <- num[grepl('m$', s)] * 30.44; num})
+v$Surv[v$Surv <= 0 | v$Surv == 9999] <- NA
+v$Kps[v$Kps < 0 | v$Kps > 100] <- NA
+v <- v[!duplicated(v), ]
+v <- v[order(v$ID, rowSums(is.na(v))), ]
+v <- v[!duplicated(v$ID), ]
+v$trt <- ifelse(tolower(v$Therapy) == 'test', 1, 0)
+
+library(survival)
+fit <- coxph(Surv(Surv, censor) ~ trt + Kps, data = v)
+print(round(summary(fit)$coefficients, 3))
+# Pregunta de auditoria: el HR cambia respecto a valung.csv limpio?
+# Cuanto del cambio es censura invertida y cuanto es deduplicacion?`}
+/>
+
+## El producto final: ficha + análisis + párrafo
+
+El ejercicio completo tiene tres entregables encadenados, en el orden en
+que el trabajo real los pide:
+
+1. **La ficha de limpieza**: tabla defecto–regla–afectados, con la
+   censura reportada como hallazgo y la tasa de datos perdidos por
+   regla.
+2. **El análisis auditado**: el modelo sobre la base limpia, con la
+   comparación contra el resultado sobre la base cruda — cuánto del
+   efecto era ruido de captura.
+3. **El párrafo del ministerio** (módulo 28): la página con la
+   recomendación, los escenarios y la condición — que ahora incluye una
+   frase sobre la calidad del dato: "la conclusión se sostiene tras la
+   limpieza del 12 % de registros afectados".
+
+<Quiz
+  question="Al vincular SIVIGILA con mortalidad, el 28 % de los fallecidos notificados no aparece en la base de mortalidad. ¿Qué se reporta?"
+  options={[
+    "Nada: la tasa de enlace es un detalle operativo del proceso",
+    "La tasa de enlace por grupo y la comparación vinculados vs. no vinculados: el no vinculado puede tener estructura que sesgue el análisis",
+    "Se descartan los no vinculados y se analiza solo el 72 %",
+    "Se asume que los no vinculados son aleatorios y se continúa"
+  ]}
+  correctIndex={1}
+  explanation="El no vinculado es un faltante con estructura: si falla más en ciertos grupos (zona, edad, tipo de evento), el análisis sobre vinculados hereda ese sesgo. La tasa de enlace y su comparación son resultados del estudio — asumir aleatoriedad sin verificarla es repetir el error de complete-case del módulo 21."
+/>
+
+<LabExercise
+  id="29/lab-campo"
+  title="Laboratorio integrador: de la base sucia al párrafo"
+  code={`# Flujo completo sobre valung_corrupto.csv.
+# 1) Auditoria -> ficha (cuenta filas por defecto):
+v <- read.csv('valung_corrupto.csv', na.strings = c('', 'NA', 'N/A', '.'))
+# ... tu auditoria aqui ...
+
+# 2) Limpieza con reglas declaradas:
+# ... tu limpieza aqui ...
+
+# 3) Analisis sobre limpia vs. cruda:
+# ... coxph en ambas, compara HR y su IC ...
+
+# 4) La pagina del ministerio (modulo 28):
+# magnitud en casos evitados + escenarios + condicion +
+# certeza + la frase sobre calidad del dato.`}
+  tasks={[
+    "Produce la ficha de limpieza completa: cada defecto, la regla, el conteo — mínimo las siete categorías de la tabla del módulo",
+    "Detecta las filas de censura sospechosa por plausibilidad cruzada y documenta el criterio usado (no las corrijas en silencio: repórtalas)",
+    "Corre el Cox sobre base cruda y sobre base limpia; reporta cuánto se movió el HR y cuál regla de limpieza lo movió más",
+    "Vincula las dos fuentes sintéticas de la celda 29/vinculacion con umbral declarado y reporta tasa de enlace y características de los no vinculados",
+    "Escribe el párrafo del ministerio: cinco movimientos, incluida la frase sobre calidad del dato",
+  ]}
+  hint="La comparación cruda vs. limpia es el corazón del ejercicio: si el HR no cambia, la ficha demuestra robustez; si cambia, demuestra por qué la limpieza no era un trámite. Ambas respuestas son correctas — lo que se evalúa es el proceso."
+/>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: el paquete de campo completo">
+Los tres artefactos encadenados: (1) la ficha de limpieza auditable de
+`valung_corrupto.csv`, (2) el análisis comparado crudo vs. limpio con la
+tasa de enlace del ejercicio de vinculación, y (3) la página del
+decisor con la calidad del dato declarada. Es el portafolio que un
+empleador de vigilancia o de investigación clínica reconoce como
+trabajo real.
+</Callout>
+
+## Lecturas
+
+- **Fellegi &amp; Sunter (1969)**: la teoría de la vinculación
+  probabilística; el marco de los pesos de comparación.
+- **Winkler (2006)**: la revisión moderna de record linkage; métodos y
+  evaluación de tasas de enlace.
+- **Van den Broeck et al. (2005), *J Clin Epidemiol***: la limpieza de
+  datos como etapa del método científico, con su documentación.
+- **Hernán &amp; Robins (2020)**: cap. sobre datos de registros — el
+  contrato entre la fuente administrativa y la pregunta causal.
+- **INS Colombia**: documentos de interoperabilidad SIVIGILA–RIPS; la
+  estructura real del cuello de botella nacional.

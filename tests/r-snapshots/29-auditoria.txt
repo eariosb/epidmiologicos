@@ -1,0 +1,5 @@
+filas: 149  IDs unicos: 137
+IDs repetidos: 11
+SurvTime no numerico: 17 | <=0 o 9999: 9
+Kps fuera [0,100]: 6 | Age imposible: 9
+fechas no-ISO: 110 (el formato no se puede inferir por fila)

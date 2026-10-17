@@ -6,6 +6,9 @@ order: 16
 datasets: []
 duration: 90
 prerequisites: ["Módulo 8: Mantel–Haenszel", "Módulo 13: Cox"]
+profiles: ["clinico"]
+profilesDeep: ["clinico"]
+attr: "Material base del curso ADEI (profesor Juan Carlos Salazar Uribe); estructura guiada por Woodward (2014)."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -225,8 +228,7 @@ proc logistic data=dat descending;
   model D = E sexo;
 run;`} />
 
-### La tercera vía: ajustar con pesos (<Term k="IPTW">IPTW</Term>)
-
+<Profundiza title="La tercera vía: ajustar con pesos (IPTW)" hint="optativo">
 Estratificar (módulo 8) y modelar (este) son dos caras del mismo ajuste.
 La tercera, la que el módulo 2 prometió al hablar de emular el ensayo
 objetivo, es **reponderar la muestra**. El <Term k="PS">propensity
@@ -287,6 +289,7 @@ ambos apuntarían al mismo valor.
 Con muchos confusores continuos el propensity score escala mejor, y su
 diagnóstico es el **balance** de covariables entre brazos ponderados
 (diferencias estandarizadas), que se revisa sin mirar el desenlace.
+</Profundiza>
 
 <ToolCard task="glm" />
 

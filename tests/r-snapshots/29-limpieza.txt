@@ -1,0 +1,2 @@
+base limpia: 137 filas | SurvTime faltantes: 10 | median 82 d
+Kps median 60 | Age median 62

@@ -1,0 +1,4 @@
+rango del PS: 0.005 a 0.977
+peso max: 16.7 -> truncado en 4.3
+SMD(x) crudo = 1.193 | ponderado = 0.139 (regla: |SMD|<0.1)
+RD marginal = 0.110 | RR marginal = 1.73

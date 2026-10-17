@@ -6,6 +6,10 @@ order: 5
 datasets: []
 duration: 90
 prerequisites: ["Módulo 4: RR, OR y RD"]
+thread: "precision"
+profiles: ["clinico", "politica"]
+profilesDeep: ["politica"]
+attr: "Calibración de tamaños muestrales y potencia: hilo del profesor Juan Carlos Correa Morales; material base ADEI/Woodward."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -343,6 +347,7 @@ magnitud. La decisión de L₀ es una decisión de política de
 investigación, no un detalle técnico.
 </Callout>
 
+<SalaDeMaquinas title="La distribución exacta de L por enumeración binomial">
 <RCell
   id="05/precision-L"
   title="La distribución exacta de L en R base"
@@ -384,6 +389,7 @@ cat(sprintf("n clasico = %d    n con garantia 90%% = %d\\n",
 # Salida esperada: 97 vs ~126. La garantia de 90% cuesta ~30% mas que la
 # formula clasica, que en la practica equivale a una garantia ~50%.`}
 />
+</SalaDeMaquinas>
 
 ## Laboratorio de decisión · ¿recomendar lidocaína profiláctica?
 

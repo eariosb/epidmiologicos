@@ -1,0 +1,1 @@
+verdadera = 54.2 | MCAR = 54.2 | MAR = 54.1 | MNAR = 53.6

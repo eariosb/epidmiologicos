@@ -1,0 +1,5 @@
+E-value punto = 4.44 | IC = 2.58
+      edad       sexo tabaquismo
+       1.4        1.1        1.8
+El punto resiste hasta confusores de RR ~ 4.44;
+el IC solo resiste hasta RR ~ 2.58 en ambos caminos.

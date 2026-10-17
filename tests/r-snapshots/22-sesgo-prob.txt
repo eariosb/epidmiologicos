@@ -1,0 +1,2 @@
+OR observado = 2.25
+OR corregido: mediana 3.33, IC simulado 95% (2.84, 4.58)

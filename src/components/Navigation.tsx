@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import clsx from 'clsx';
+import { COURSE_II_BLOCKS } from '@/lib/course-blocks';
 import type { ModuleEntry } from '@/lib/modules';
 
 interface BlockDef {
@@ -21,6 +22,24 @@ interface NavigationProps {
 
 function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const hasCourseII = modules.some((m) => m.meta.course === 'II');
+  const [course, setCourse] = useState<'I' | 'II'>(() => {
+    const slug = pathname.split('/').pop();
+    const current = modules.find((m) => m.meta.slug === slug);
+    if (current) return current.meta.course;
+    if (typeof window !== 'undefined') {
+      const saved = window.localStorage.getItem('course-level');
+      if (saved === 'I' || saved === 'II') return saved;
+    }
+    return 'I';
+  });
+  const elegirCurso = (c: 'I' | 'II') => {
+    setCourse(c);
+    window.localStorage.setItem('course-level', c);
+  };
+
+  const shown = modules.filter((m) => m.meta.course === course);
+  const shownBlocks = course === 'II' ? [...COURSE_II_BLOCKS] : blocks;
 
   return (
     <nav aria-label="Índice del curso" className="flex h-full flex-col">
@@ -38,11 +57,41 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
           <span className="mt-1 block text-xs text-ink-600">Escuela de Estadística</span>
         </Link>
         <p className="mt-1 text-xs text-ink-500">UNAL · Medellín</p>
+        <Link
+          href="/rutas"
+          onClick={onNavigate}
+          className={clsx(
+            'mt-2 inline-block rounded px-1.5 py-0.5 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500',
+            pathname === '/rutas'
+              ? 'bg-brand-50 text-brand-700'
+              : 'text-brand-600 hover:bg-brand-50',
+          )}
+        >
+          Rutas por perfil →
+        </Link>
+        {hasCourseII && (
+          <div className="mt-3 flex rounded border border-ink-200 p-0.5 text-xs" role="group" aria-label="Nivel del curso">
+            {(['I', 'II'] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => elegirCurso(c)}
+                aria-pressed={course === c}
+                className={clsx(
+                  'flex-1 rounded px-2 py-1 font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500',
+                  course === c ? 'bg-brand-500 text-white' : 'text-ink-600 hover:bg-ink-100',
+                )}
+              >
+                Curso {c}{c === 'II' ? ' · avanzado' : ''}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 py-3">
-        {blocks.map((block) => {
-          const blockModules = modules.filter(
+        {shownBlocks.map((block) => {
+          const blockModules = shown.filter(
             (m) => m.meta.order >= block.from && m.meta.order <= block.to
           );
           if (blockModules.length === 0) return null;
@@ -53,6 +102,9 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
               </p>
               <ul className="space-y-0.5">
                 {blockModules.map((mod) => {
+                  const numerar = mod.meta.course === 'II'
+                    ? `II-${mod.meta.order - 19}.`
+                    : mod.meta.order === 0 ? 'Repaso' : `${mod.meta.order}.`;
                   const href = `/cursos/${mod.meta.slug}`;
                   const active = pathname === href;
                   return (
@@ -68,8 +120,11 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
                             : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900'
                         )}
                       >
-                        {mod.meta.order === 0 ? 'Repaso' : `${mod.meta.order}.`}{' '}
+                        {numerar}{' '}
                         {mod.meta.title.replace(/^\d+\.\s*/, '')}
+                        {mod.meta.level === 'transversal' && (
+                          <span className="ml-1 text-[10px] font-normal uppercase tracking-wide text-ink-400">transversal</span>
+                        )}
                       </Link>
                     </li>
                   );

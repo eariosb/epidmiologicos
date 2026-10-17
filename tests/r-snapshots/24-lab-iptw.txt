@@ -1,0 +1,4 @@
+PS fin=1: [0.35, 0.63] | fin=0: [0.35, 0.63]
+SMD age  : crudo +0.123 -> ponderado +0.001
+SMD prio : crudo -0.002 -> ponderado -0.002
+HR marginal (fin) = 0.70, robust SE = 0.190

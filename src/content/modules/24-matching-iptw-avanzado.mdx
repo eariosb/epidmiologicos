@@ -1,0 +1,268 @@
+---
+title: "II-5. Emulación del ensayo objetivo: matching, IPTW y registros"
+slug: "24-matching-iptw-avanzado"
+objective: "Especificar y auditar una emulación de ensayo con registros: elegibilidad, tiempo cero, matching y propensity en producción, IPTW con diagnóstico de overlap y truncamiento."
+order: 24
+datasets: []
+duration: 120
+prerequisites: ["Curso I completo, especialmente los módulos 2, 15 y 16"]
+course: "II"
+level: "avanzado"
+profilesDeep: ["clinico"]
+attr: "Complemento propio para el curso avanzado: el protocolo del ensayo objetivo aplicado a registros reales."
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+
+<Callout type="tip" title="El ensayo que nadie corrió">
+El módulo 2 presentó la emulación del ensayo objetivo como principio:
+los registros no asignan nada, pero una pregunta bien especificada sí
+puede. Este módulo la convierte en protocolo ejecutable: elegibilidad
+explícita, tiempo cero, asignación emulada y auditoría de cada paso.
+La diferencia entre "análisis con ajuste" y "emulación de ensayo" no
+es el método — es que el segundo responde todas las casillas que un
+protocolo real respondería.
+</Callout>
+
+## El protocolo, casilla por casilla
+
+El ensayo objetivo se escribe antes de tocar los datos, en las mismas
+casillas que un protocolo real:
+
+1. **Pregunta**: la comparación de estrategias, no de personas —
+   "iniciar A vs. iniciar B" es una estrategia; "estar expuesto" no.
+2. **Elegibilidad**: quién *podría* haber entrado al ensayo. Los
+   registros filtran igual: criterios explícitos, aplicados al tiempo
+   cero, no al archivo completo.
+3. **Tiempo cero**: el instante en que exposición, elegibilidad e inicio
+   del seguimiento coinciden. Es la casilla más incumplida en estudios
+   con registros — y la fuente del *immortal time bias*.
+4. **Asignación emulada**: quién entró a cada brazo según el registro,
+   con su fecha de inicio.
+5. **Seguimiento y desenlace**: definidos igual en ambos brazos, con la
+   misma ventana.
+6. **Estimando y análisis**: la comparación declarada — efecto de la
+   asignación (intención de tratar emulada) o de adherirse al
+   protocolo— antes de mirar el desenlace.
+
+<Callout type="warning" title="El tiempo inmortal es el precio de no fijar tiempo cero">
+Si el brazo "expuesto" exige haber sobrevivido hasta recibir el
+tratamiento, esas semanas inmortales se acumulan de su lado y el efecto
+sale fabricado. La vacuna de un vistazo: **¿cada persona-tiempo del
+análisis podría haber pertenecido a cualquiera de los dos brazos en ese
+instante?** Si no, el estudio le regaló tiempo a un brazo.
+</Callout>
+
+## Matching en producción
+
+El pareamiento por propensity score del módulo 16 tenía la lección
+conceptual; en producción la decisión tiene cuatro perillas, y cada una
+mueve el balance y la muestra:
+
+- **Distancia**: propensity en escala logit (no en probabilidad — allí
+  el caliper es más legible), o Mahalanobis sobre covariables clave.
+- **Caliper**: la distancia máxima aceptable (~0.2·DE del logit-PS es
+  la convención). Más estrecho = mejor balance, menos muestra.
+- **Ratio y reemplazo**: 1:1, 1:k, con o sin reposición; el control
+  reusado no es información nueva, es peso concentrado.
+- **La salida importa**: después del matching, la unidad es el par —
+  McNemar, clogit, o el estimador ponderado sobre la estructura de
+  estratos del módulo 15.
+
+<RCell
+  id="24/matching"
+  title="Matching 1:1 por propensity con caliper, a mano"
+  code={`set.seed(12); n <- 3000
+sexo <- rbinom(n,1,.5); edad <- rnorm(n, 60, 12)
+# Tratamiento confundido por ambos; desenlace con efecto verdadero 0.6:
+Z <- rbinom(n, 1, plogis(-1.5 + 0.8*sexo + 0.04*(edad-60)))
+D <- rbinom(n, 1, plogis(-2 + 0.6*Z + 1.0*sexo + 0.03*(edad-60)))
+dat <- data.frame(Z, D, sexo, edad)
+
+# Propensity en escala logit:
+ps <- glm(Z ~ sexo + edad, data = dat, family = binomial)$fitted
+dat$lps <- qlogis(ps)
+
+# Matching greedy 1:1 con caliper 0.2*DE(logit-PS):
+cal <- 0.2 * sd(dat$lps)
+trat <- which(dat$Z == 1); ctrl <- which(dat$Z == 0)
+pares <- data.frame(t = integer(), c = integer())
+usado <- rep(FALSE, length(ctrl))
+for (i in trat) {
+  dd <- abs(dat$lps[i] - dat$lps[ctrl])
+  dd[usado] <- Inf
+  j <- which.min(dd)
+  if (dd[j] <= cal) { pares <- rbind(pares, c(i, ctrl[j])); usado[j] <- TRUE }
+}
+colnames(pares) <- c("t","c")
+cat(sprintf("tratados: %d | pareados: %d (%.0f%%) | caliper = %.2f\\n",
+            length(trat), nrow(pares), 100*nrow(pares)/length(trat), cal))
+
+# Efecto sobre los pares (McNemar del desenlace):
+b <- sum(dat$D[pares$t] == 1 & dat$D[pares$c] == 0)
+cc <- sum(dat$D[pares$t] == 0 & dat$D[pares$c] == 1)
+cat(sprintf("discordantes b=%d c=%d | OR pareado = %.2f\\n", b, cc, b/cc))`}
+/>
+
+## IPTW en serio
+
+El IPTW del módulo 16 funcionaba porque el mundo era amable. En
+producción, tres problemas aparecen siempre:
+
+- **Pesos extremos**: un sujeto con $P(E)=0.99$ recibe peso 100 y manda
+  en el estimador. La respuesta práctica: pesos **estabilizados**
+  ($P(E)/P(E\mid C)$) y truncamiento en percentiles (1%/99% o 5%/95%),
+  declarado.
+- **Overlap (positivity)**: si en algún estrato todos reciben la misma
+  exposición, ese estrato no aporta comparación — el peso infinito es
+  su síntoma. El diagnóstico se lee en el solape de las distribuciones
+  de PS por brazo, no en la tabla de coeficientes.
+- **La varianza correcta**: la del glm ponderado es optimista; se usa
+  la sandwich robusta o bootstrap sobre todo el procedimiento (el PS se
+  estima, y esa incertidumbre también entra en el error).
+
+<RCell
+  id="24/iptw-serio"
+  title="IPTW con pesos estabilizados, truncamiento y balance"
+  code={`set.seed(21); n <- 5000
+x <- rnorm(n)
+E <- rbinom(n, 1, plogis(-0.5 + 1.4*x))        # fuerte confounding en x
+D <- rbinom(n, 1, plogis(-2 + 0.6*E + 1.0*x))
+
+ps <- glm(E ~ x, family = binomial)$fitted
+cat(sprintf("rango del PS: %.3f a %.3f\\n", min(ps), max(ps)))
+
+# Pesos estabilizados y truncados en el percentil 1-99:
+sw <- ifelse(E == 1, mean(E)/ps, (1-mean(E))/(1-ps))
+q99 <- quantile(sw, 0.99); sw_t <- pmin(sw, q99)
+cat(sprintf("peso max: %.1f -> truncado en %.1f\\n", max(sw), q99))
+
+# Balance: diferencia estandarizada de x antes y despues:
+smd <- function(w) {
+  m1 <- weighted.mean(x[E==1], w[E==1]); m0 <- weighted.mean(x[E==0], w[E==0])
+  v1 <- weighted.mean((x[E==1]-m1)^2, w[E==1])
+  v0 <- weighted.mean((x[E==0]-m0)^2, w[E==0])
+  (m1 - m0) / sqrt((v1 + v0)/2)
+}
+cat(sprintf("SMD(x) crudo = %.3f | ponderado = %.3f (regla: |SMD|<0.1)\\n",
+            smd(rep(1,n)), smd(sw_t)))
+
+# Efecto marginal (riesgo en pseudopoblacion):
+r1 <- weighted.mean(D[E==1], sw_t[E==1]); r0 <- weighted.mean(D[E==0], sw_t[E==0])
+cat(sprintf("RD marginal = %.3f | RR marginal = %.2f\\n", r1-r0, r1/r0))`}
+/>
+
+## Clonación–censura–pesos: la estrategia para brazos ambiguos
+
+Cuando el registro no asigna el brazo limpiamente —"iniciar en las
+primeras 12 semanas" es una ventana, no un instante— la técnica de
+Hernán &amp; Robins es **clonar** cada paciente en los dos brazos
+elegibles en tiempo cero, **censurar** cada clon en el instante en que
+su conducta real diverge del brazo asignado, y **pesar** los supervivientes
+del clon por el inverso de la probabilidad de seguir conforme al brazo
+(IPCW, los pesos de censura inversa del módulo 13 en versión
+inversa). Es la versión operativa del "cada persona-tiempo podía estar
+en cualquier brazo": el clon censurado no desaparece — cede su peso a
+sus gemelos conformes.
+
+<Profundiza title="Por qué el IPCW no reintroduce inmortalidad" hint="optativo">
+La clonación parece fabricar el sesgo que se evita: cada paciente vive
+en ambos brazos un rato. La corrección está en que el tiempo "pre-inicio"
+del clon no computa como exposición conforme — se computa como tiempo
+bajo la *asignación* del brazo, igual que en un ensayo real donde el
+paciente asignado a "tratar mañana" muere hoy contando como evento del
+brazo tratamiento. El IPCW reequilibra quién sigue conforme en cada
+brazo; el conteo de eventos queda ligado a la asignación desde tiempo
+cero.
+</Profundiza>
+
+## El diagnóstico completo
+
+Una emulación se audita igual que un ensayo: **Tabla 1 ponderada** (las
+diferencias estandarizadas del módulo 7, con |SMD| &lt; 0.1 como regla),
+**distribución de pesos** (máximo, truncamiento aplicado, tamaño
+efectivo de la pseudopoblación), **overlap en el PS** antes del ajuste,
+y un **análisis de falsificación** — un desenlace que el tratamiento no
+puede afectar y que debe salir nulo si la emulación está bien armada.
+
+<Quiz
+  question="En un IPTW, un 2% de los pacientes concentra el 40% del peso total. ¿Cuál es el diagnóstico correcto?"
+  options={[
+    "Todo bien: los pesos extremos son normales en estudios grandes",
+    "El modelo de propensity está mal especificado; hay que quitarlo",
+    "Hay estratos con poco overlap; conviene revisar la distribución del PS por brazo y considerar truncamiento o redefinir la población",
+    "Se resuelve aumentando el tamaño muestral"
+  ]}
+  correctIndex={2}
+  explanation="Pesos concentrados en pocos sujetos son el síntoma de positividad frágil: en alguna zona del espacio de covariables casi nadie recibe uno de los tratamientos. La respuesta es diagnóstica (overlap) y de definición (truncar, o restringir la población a la zona comparable), no muestral."
+/>
+
+<LabExercise
+  id="24/lab-iptw"
+  title="Laboratorio: la emulación auditada sobre recid.csv"
+  code={`# recid.csv: semanas hasta re-arresto. Emula el ensayo
+# 'apoyo financiero (fin) vs. no' con IPTW.
+r <- read.csv("recid.csv")
+ps <- glm(fin ~ age + race + wexp + mar + paro + prio,
+          data = r, family = binomial)$fitted
+
+# 1) Overlap: rango del PS por brazo.
+cat(sprintf("PS fin=1: [%.2f, %.2f] | fin=0: [%.2f, %.2f]\\n",
+            min(ps[r$fin==1]), max(ps[r$fin==1]),
+            min(ps[r$fin==0]), max(ps[r$fin==0])))
+
+# 2) Pesos estabilizados + truncamiento al percentil 99:
+sw <- ifelse(r$fin==1, mean(r$fin)/ps, (1-mean(r$fin))/(1-ps))
+sw <- pmin(sw, quantile(sw, 0.99))
+
+# 3) Balance: SMD de cada covariable antes y despues.
+smd <- function(x, w) {
+  m1 <- weighted.mean(x[r$fin==1], w[r$fin==1])
+  m0 <- weighted.mean(x[r$fin==0], w[r$fin==0])
+  s  <- sqrt((var(x[r$fin==1]) + var(x[r$fin==0]))/2)
+  (m1 - m0)/s
+}
+for (v in c("age","prio")) {
+  cat(sprintf("SMD %-5s: crudo %+.3f -> ponderado %+.3f\\n",
+              v, smd(r[[v]], rep(1,nrow(r))), smd(r[[v]], sw)))
+}
+
+# 4) Estimando marginal: HR con pesos (Cox sobre pseudopoblacion).
+library(survival)
+fit <- coxph(Surv(week, arrest) ~ fin, data = r, weights = sw, robust = TRUE)
+cat(sprintf("HR marginal (fin) = %.2f, robust SE = %.3f\\n",
+            exp(coef(fit)), sqrt(fit$var[1,1])))`}
+  tasks={[
+    "Reporta el SMD de las cinco covariables antes y después del peso: ¿todas bajo 0.1?",
+    "Compara el HR ponderado con el HR ajustado por regresión y con el crudo: explica en tres líneas qué estima cada uno",
+    "Repite sin truncamiento y reporta cuánto se mueve el HR y el máximo peso",
+    "Propón un análisis de falsificación plausible para estos datos y ejecútalo",
+  ]}
+  hint="robust=TRUE en coxph da la varianza sandwich; la del summary sin robust sería optimista. El coeficiente de la regresión ajustada es condicional; el del IPTW es marginal — la no colapsabilidad del módulo 7 reaparece aquí."
+/>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: protocolo + evidencia de emulación">
+Para una pregunta de efectividad con registros: las seis casillas del
+ensayo objetivo escritas, la Tabla 1 ponderada con SMDs, el
+diagnóstico de overlap y pesos, el estimando declarado (marginal vs.
+condicional) con su IC correcto, y el análisis de falsificación. La
+conclusión es secundaria: lo que se evalúa es el protocolo.
+</Callout>
+
+## Lecturas
+
+- **Hernán &amp; Robins (2016), *Am J Epidemiol***: la emulación del
+  ensayo objetivo con Big Data; el artículo que define el módulo.
+- **Hernán &amp; Robins (2020), *Causal Inference: What If***: caps.
+  3 y 23 — tiempo cero, clonación–censura–pesos, IPCW.
+- **Austin &amp; Stuart (2015), *Stat Med***: las mejores prácticas de
+  matching por propensity; caliper, balance y reporte.
+- **Austin (2009)**: las diferencias estandarizadas como diagnóstico de
+  balance; el origen de la regla |SMD| &lt; 0.1.
+- **Cain et al. (2010)**: la clonación–censura–pesos aplicada a
+  efectividad de antirretrovirales.

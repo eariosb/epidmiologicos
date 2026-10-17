@@ -4,6 +4,49 @@ Todas las cifras del curso están verificadas contra los datos en
 `public/data` y/o el código de `src/lib/`. Las entradas marcan los cambios
 relevantes para quien ya haya usado la versión anterior.
 
+## [1.1.0] — 2026-11
+
+Dos cursos en un sitio, arquitectura de capas y el Curso II completo
+(plan de 12 sprints).
+
+### Agregado
+
+- **Curso II — 10 módulos completos** (orders 20–29, `course: II`,
+  `level: avanzado`): sala de máquinas exacta, datos faltantes/MI,
+  confusión no medida (E-value, sesgo probabilístico, bounding), DAGs
+  avanzados (colisionador, M-bias, IV), emulación del ensayo objetivo
+  (matching producción, IPTW estabilizado, clonación–censura–pesos),
+  vigilancia y nowcasting, meta-análisis avanzado (τ²/I², IP, Egger),
+  estimandos y métodos G (g-formula, doble robustez, MSM), incertidumbre
+  y decisión (EVPI, párrafo del ministerio) y la práctica de campo.
+- **Arquitectura de capas**: `<Profundiza>` y `<SalaDeMaquinas>`
+  (`src/components/Deep.tsx`, plegables nativos) con contratos
+  distintos; aplicada a los módulos 0, 4, 5, 6, 10, 12, 14, 16 del
+  Curso I y a todo el Curso II.
+- **Frontmatter extendido**: `course`, `level`, `attr`, `profiles`,
+  `profilesDeep`, `thread`; selector Curso I/II en la navegación,
+  badge del hilo de precisión y pie de atribución por módulo.
+- **`/rutas`**: página generada desde `profiles`/`profilesDeep` con las
+  tres rutas profesionales (vigilancia, clínico, política).
+- **`valung_corrupto.csv`** + `scripts/gen_valung_corrupto.py`: la base
+  contaminada deliberadamente (IDs duplicados, formatos mixtos de
+  SurvTime y fechas, censura invertida, centinelas, faltantes en cuatro
+  dialectos) para el ejercicio de limpieza del módulo II-10.
+- **RCell colapsable**: la salida en vivo y la precalculada ganan
+  cabecera con toggle; cada ejecución reexpande automáticamente.
+
+### Cambiado
+
+- **m06 reestructurado en capas**: el núcleo queda como decisión de
+  campo; la familia incondicional, Altham, assurance y las trampas de
+  software migran a `Profundiza`/`SalaDeMaquinas`. `MultinomCIExplorer`
+  y la celda `ic-multinomial` se movieron a m03 (contexto de
+  vigilancia).
+- **m00 comprimido**: catálogo de tests a plegable con resumen de una
+  página; jardín de senderos y matices de corrección a `Profundiza`.
+- **`course-blocks.ts`**: constantes de bloques extraídas de
+  `modules.ts` para no arrastrar `node:fs` al cliente (fix del build).
+
 ## [1.0.0] — 2026-10
 
 Primera versión completa del curso tras el plan de diez fases

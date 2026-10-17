@@ -1,0 +1,2 @@
+IC95% del promedio: RR (0.38, 0.59)
+IP95% de prediccion: RR (0.14, 1.66)

@@ -1,0 +1,2 @@
+Tamano real: Fisher = 0.030 | Boschloo = 0.047 (nominal 0.05)
+Potencia en (0.20, 0.03): Fisher = 0.433 | Boschloo = 0.549

@@ -1,0 +1,3 @@
+malla 0.050: supremo >= 0.03846  (argmax p ~ 0.500)
+malla 0.010: supremo >= 0.03846  (argmax p ~ 0.500)
+malla 0.002: supremo >= 0.03846  (argmax p ~ 0.500)

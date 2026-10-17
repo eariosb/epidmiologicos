@@ -1,0 +1,232 @@
+---
+title: "II-4. DAGs avanzados: selección, instrumentales y fronteras"
+slug: "23-dags-avanzados"
+objective: "Diagnosticar sesgo de selección como colisionador, evaluar variables instrumentales, reconocer el M-bias y la trampa del butterfly, y conectar el DAG con los métodos G."
+order: 23
+datasets: []
+duration: 105
+prerequisites: ["Curso I completo, especialmente el módulo 7"]
+course: "II"
+level: "avanzado"
+attr: "Complemento propio para el curso avanzado: el DAG como lenguaje de decisión."
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+
+<Callout type="tip" title="La variable que decide entrar al estudio">
+El criterio de puerta trasera del módulo 7 resuelve la confusión clásica:
+el confusor está ahí, obsérvalo y ajústalo. Los sesgos que más cuestan en
+el trabajo real son de otra familia: participar en el estudio ya es un
+colisionador, y a veces la única vía de identificación es una variable
+instrumental que nadie pidió. Este módulo es el DAG usado como lenguaje
+de decisión, no como decoración del informe.
+</Callout>
+
+## La selección como colisionador
+
+Un **colisionador** es un nodo con dos flechas entrantes ($E \to S
+\leftarrow D$). Dejarlo libre no pasa nada — el camino está bloqueado
+por naturaleza; el desastre es *condicionar* sobre él: condicionar un
+colisionador **abre** el camino y fabrica asociación donde no la hay.
+
+Y la forma más común de condicionar un colisionador es el propio estudio:
+si entrar a la muestra depende de la exposición y del desenlace, analizar
+los datos del estudio es condicionar sobre "ser seleccionado". El sesgo
+de Berkson del módulo 2 es exactamente eso — controles hospitalarios,
+cuya llegada al hospital depende de su enfermedad *y* de otras
+dolencias. La misma estructura reaparece con disfraces:
+
+- **Pérdida de seguimiento** que depende de la exposición y del estado
+  de salud: los completos son un subconjunto seleccionado por un
+  colisionador.
+- **Participación voluntaria**: la encuesta de salud donde participan
+  los preocupados por su salud.
+- **Análisis restringido a los que sobrevivieron** (o a los que no
+  tuvieron el evento intermedio): el "sesgo del superviviente".
+
+<RCell
+  id="23/colisionador"
+  title="El colisionador fabrica asociación, medida en vivo"
+  code={`set.seed(8); n <- 20000
+E <- rbinom(n, 1, 0.5)                      # exposicion (sin efecto)
+D <- rbinom(n, 1, 0.2)                      # desenlace (independiente)
+# S = 1: seleccionado al estudio; depende de E y de D.
+S <- rbinom(n, 1, plogis(-1.5 + 1.2*E + 1.2*D))
+
+# Asociacion E-D en la poblacion vs. dentro de los seleccionados:
+fit_all <- glm(D ~ E, family = binomial)
+fit_sel <- glm(D ~ E, family = binomial, subset = S == 1)
+cat(sprintf("OR poblacional = %.2f (verdad: 1, sin asociacion)\\n",
+            exp(coef(fit_all)["E"])))
+cat(sprintf("OR en seleccionados = %.2f (fabricado por el colisionador)\\n",
+            exp(coef(fit_sel)["E"])))
+cat(sprintf("fraccion seleccionada: %.0f%%\\n", 100*mean(S)))
+# El sesgo no se corrige ajustando covariables: se corrige con pesos
+# de seleccion inversa (1/P(S=1)) o restringiendo la pregunta.`}
+/>
+
+## M-bias y la trampa del butterfly
+
+La lección incómoda del DAG: **ajustar más variables puede empeorar el
+sesgo**. En la estructura M ($U_1 \to Z \leftarrow U_2$, con
+$U_1 \to E$ y $U_2 \to D$, más $E \to D$), la variable $Z$ es
+pre-exposición, está asociada a ambas —parece un confusor de manual—
+pero es un colisionador entre dos no medidas. Ajustarla abre el camino
+$U_1 \to Z \leftarrow U_2$ y *agrega* sesgo sobre un análisis crudo que
+era correcto.
+
+La **butterfly bias** es la variante con un solo no medido: ajustar el
+colisionador amplifica el sesgo del confusor oculto en lugar de
+removerlo. La moraleja común es la regla que el módulo 7 ya anticipaba
+con otro acento: no se ajusta "todo lo disponible" — se ajusta lo que el
+DAG declara necesario, y cada inclusión debe responder a un camino que
+cierra, no a una covariable que sobra.
+
+<Callout type="warning" title="Pre-exposición no es sinónimo de confusor">
+El reflejo heredado —"ajusta por todo lo medido antes de la exposición"—
+convierte el M-bias en práctica estándar. Las variables instrumentales
+discretas, los colisionadores y los mediadores pueden estar todos
+pre-exposición; ninguno debe ajustarse. La Tabla 1 del módulo 7 muestra
+asociaciones, pero la decisión de ajuste la da el grafo, no la tabla.
+</Callout>
+
+## Variables instrumentales: la identificación prestada
+
+Cuando el confusor no se puede medir ni acotar, queda una vía: una
+**variable instrumental** (IV) $Z$ que cumpla tres condiciones:
+
+1. **Relevancia**: $Z$ se asocia a la exposición (el instrumento mueve
+   la dosis).
+2. **Independencia**: $Z$ no comparte causas con el desenlace (es
+   "como si fuera aleatoria").
+3. **Restricción de exclusión**: $Z$ solo llega al desenlace *a través*
+   de la exposición — sin caminos laterales.
+
+Si las tres se sostienen, el efecto se estima en dos etapas: predecir
+$E$ con $Z$ (el componente de la exposición "asignado por el
+instrumento") y regresar $D$ sobre esa predicción. La intuición es la de
+un ensayo natural: quien no puede aleatorizar la exposición encuentra
+una fuente de variación que sí es aleatoria.
+
+<RCell
+  id="23/iv-2sls"
+  title="IV en dos etapas: la exposición que el instrumento asigna"
+  code={`set.seed(9); n <- 5000
+U <- rnorm(n)                                # confusor NO medido
+Z <- rbinom(n, 1, 0.5)                       # instrumento: asigna exposicion
+E <- 0.8*Z + 1.0*U + rnorm(n)                # E depende de Z y de U
+D <- 2.0*E + 1.0*U + rnorm(n)                # efecto verdadero: 2.0
+
+# OLS ingenua: confundida por U.
+cat(sprintf("OLS (confundida): beta_E = %.2f\\n",
+            coef(lm(D ~ E))["E"]))
+
+# Dos etapas manuales (2SLS):
+E_hat <- fitted(lm(E ~ Z))                   # parte de E explicada por Z
+iv <- coef(lm(D ~ E_hat))["E_hat"]
+cat(sprintf("IV 2SLS:           beta_E = %.2f\\n", iv))
+# Wald del instrumento: (E[D|Z=1]-E[D|Z=0]) / (E[E|Z=1]-E[E|Z=0])
+wald <- diff(tapply(D, Z, mean)) / diff(tapply(E, Z, mean))
+cat(sprintf("Wald IV:           beta_E = %.2f\\n", wald))
+# Las dos vias dan lo mismo con IV binario: el efecto sobre los
+# 'compliers', quienes cambian su exposicion cuando cambia Z.`}
+/>
+
+<Profundiza title="El precio del instrumento: débil y parcial" hint="optativo">
+Dos condiciones de honestidad con IV: si la relevancia es débil ($Z$ casi
+no mueve a $E$), el estimador explota — el denominador de Wald tiende a
+cero y el sesgo relativo del IV supera al de OLS (la regla práctica pide
+F &gt; 10 en la primera etapa). Y lo que el IV estima no es el efecto
+medio de toda la población sino el de los **compliers**: quienes cambian
+su exposición cuando el instrumento cambia (LATE, el efecto local). Con
+un instrumento que no convence, el reporte honesto dice qué efecto
+estimó y sobre quién.
+</Profundiza>
+
+## La puerta frontal y los DAGs con tiempo
+
+Dos estructuras completan el mapa:
+
+- **Front-door**: si toda la acción de $E$ sobre $D$ pasa por un
+  mediador $M$ observado, y $M$ no tiene puertas traseras propias, el
+  efecto es identificable aunque $E \to D$ esté confundido — la prueba
+  de Pearl para el caso del mecanismo completo.
+- **DAGs con tiempo**: cuando exposición y confusor se encadenan
+  ($L_0 \to E_1 \to L_1 \to E_2 \to D$, con $L_1$ confusor de $E_2$ y a
+  la vez mediador de $E_1$), ningún ajuste estándar funciona: ajustar
+  $L_1$ bloquea parte del efecto, no ajustarlo deja el camino abierto.
+  Es el escenario que los métodos G (módulo II-8) resuelven, y el DAG
+  es el instrumento que lo detecta.
+
+Los **SWIG** (single-world intervention graphs) cierran el puente: el
+mismo DAG con el nodo de exposición partido en el valor observado y el
+valor intervenido, sobre el cual las condiciones de identificación se
+leen como d-separación contrafactual — el gráfico y la notación de
+resultados potenciales diciendo lo mismo.
+
+<Quiz
+  question="En un estudio de EPOC, la variable 'ingreso al hospital' depende de la exposición y de la gravedad basal. Analizar solo pacientes hospitalizados introduce…"
+  options={[
+    "confusión clásica que se corrige ajustando comorbilidades",
+    "sesgo por colisionador: condicionar el ingreso abre un camino espurio entre exposición y desenlace",
+    "ningún sesgo: los hospitalizados son más graves pero son una muestra válida",
+    "sesgo de información, porque la exposición se mide peor en hospitalizados"
+  ]}
+  correctIndex={1}
+  explanation="Restringir el análisis a una consecuencia común de exposición y desenlace (o de sus causas) es condicionar un colisionador: fabrica o distorsiona la asociación. Es el sesgo de Berkson en su forma general, y no se corrige ajustando — se corrige con pesos de selección o redefiniendo la pregunta."
+/>
+
+<LabExercise
+  id="23/lab-dags"
+  title="Laboratorio: tres trampas en tres grafos"
+  code={`set.seed(5); n <- 8000
+# TRAMPA 1 - colisionador: ya la viste. Repite con tu propio S.
+
+# TRAMPA 2 - M-bias: U1->E, U2->D, U1->Z<-U2. Z parece confusor.
+U1 <- rnorm(n); U2 <- rnorm(n)
+E2 <- U1 + rnorm(n); D2 <- U2 + 0.5*E2 + rnorm(n)
+Z  <- U1 + U2 + rnorm(n)                  # colisionador entre no medidas
+cat(sprintf("sin ajustar:  beta_E = %.3f (verdad 0.5)\\n",
+            coef(lm(D2 ~ E2))["E2"]))
+cat(sprintf("ajustando Z:  beta_E = %.3f <- el ajuste FABRICA sesgo\\n",
+            coef(lm(D2 ~ E2 + Z))["E2"]))
+
+# TRAMPA 3 - IV debil: baja el coeficiente de Z a 0.1 en el ejemplo
+# de la celda anterior y observa la varianza del estimador.
+Zd <- rbinom(n, 1, 0.5); Ud <- rnorm(n)
+Ed <- 0.1*Zd + Ud + rnorm(n); Dd <- 2*Ed + Ud + rnorm(n)
+Eh <- fitted(lm(Ed ~ Zd))
+cat(sprintf("IV debil: beta = %.2f (inestable, F bajo)\\n",
+            coef(lm(Dd ~ Eh))["Eh"]))`}
+  tasks={[
+    "Reproduce el M-bias y explica en dos líneas por qué ajustar Z empeora el estimador aunque Z se asocie a E y a D",
+    "Para la trampa 3, calcula el F de la primera etapa y la EE del IV débil vs. uno fuerte",
+    "Dibuja el DAG de tu propio estudio marcando: colisionadores, mediadores, un posible IV y el camino que un no medido dejaría abierto",
+  ]}
+  hint="El M-bias es pequeño en magnitud pero crece si las asociaciones U-E y U-D son fuertes; el IV débil falla con F < 10 en la primera etapa — calcula el F del summary del primer lm."
+/>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: el DAG auditado">
+El DAG del estudio propio con cada nodo clasificado (confusor, mediador,
+colisionador, IV candidato, no medido), el conjunto de ajuste justificado
+camino por camino, y una línea por cada trampa descartada: "X no se
+ajusta porque es colisionador entre…". Si existe candidato a IV, su
+primera etapa y la declaración de a quién aplica el efecto estimado.
+</Callout>
+
+## Lecturas
+
+- **Pearl (2009), *Causality***: puerta trasera, front-door y la base
+  formal de todo el módulo.
+- **Hernán, Hernández-Díaz &amp; Robins (2004)**: el sesgo de selección
+  estructurado como colisionador; la lectura canónica de Berkson.
+- **Ding &amp; Miratrix (2015)**: M-bias y butterfly bias cuantificados.
+- **Angrist, Imbens &amp; Rubin (1996)**: la identificación con IV y el
+  LATE; qué efecto estima el instrumento.
+- **Richardson &amp; Robins (2013)**: los SWIGs y la unificación
+  gráfico–contrafactual.

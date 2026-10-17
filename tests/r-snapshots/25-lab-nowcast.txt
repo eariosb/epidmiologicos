@@ -1,0 +1,10 @@
+dia 47: verdad 73 | crudo 70 | nowcast 73
+dia 48: verdad 74 | crudo 69 | nowcast 73
+dia 49: verdad 75 | crudo 69 | nowcast 74
+dia 50: verdad 75 | crudo 71 | nowcast 80
+dia 51: verdad 76 | crudo 65 | nowcast 77
+dia 52: verdad 77 | crudo 60 | nowcast 77
+dia 53: verdad 78 | crudo 58 | nowcast 82
+dia 54: verdad 78 | crudo 38 | nowcast 64
+dia 55: verdad 79 | crudo 32 | nowcast 71
+dia 56: verdad 80 | crudo 18 | nowcast 69

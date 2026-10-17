@@ -1,0 +1,4 @@
+MCAR: n = 382 | coef(prio) = 0.104
+MAR : n = 363 | coef(prio) = 0.108
+MNAR: n = 345 | coef(prio) = 0.143
+FULL: n = 432 | coef(prio) = 0.116

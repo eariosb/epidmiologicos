@@ -1,0 +1,262 @@
+---
+title: "II-2. Datos faltantes en serio: mecanismos, imputación múltiple y sensibilidad"
+slug: "21-datos-faltantes"
+objective: "Diagnosticar el mecanismo de faltantes (MCAR, MAR, MNAR), aplicar imputación múltiple con diagnósticos, y declarar la sensibilidad del resultado a lo que no se observó."
+order: 21
+datasets: []
+duration: 105
+prerequisites: ["Curso I completo, especialmente el módulo 16"]
+course: "II"
+level: "avanzado"
+profilesDeep: ["clinico"]
+attr: "Complemento propio para el curso avanzado: datos faltantes como problema de diseño, no de software."
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+
+<Callout type="tip" title="La fila que no está también es diseño">
+En el Curso I el faltante aparecía como fricción: el paciente sin `Age`
+desaparecía del glm y la muestra se achicaba. Aquí el faltante es el
+problema: el mecanismo que lo generó decide qué procedimiento es honesto,
+y ningún método devuelve la información perdida — solo la trata con la
+incertidumbre que le corresponde.
+</Callout>
+
+## Los tres mecanismos, con números
+
+Rubin (1976) ordenó las formas de faltar en tres mecanismos, y la
+clasificación no es pedantería: cada uno dicta qué estimador es válido.
+
+- **MCAR** (completamente al azar): faltar no depende de nada — un tubo
+  de ensayo roto, un formulario extraviado. Los completos son una
+  submuestra aleatoria: no hay sesgo, solo precisión perdida.
+- **MAR** (al azar condicional): faltar depende de lo *observado*, no de
+  lo faltante — los hombres responden menos la escala de depresión, pero
+  dentro de cada sexo faltar es azar. Recuperable si el modelo usa las
+  variables observadas que predicen el faltante.
+- **MNAR** (no al azar): faltar depende del propio valor — quien tiene
+  depresión más severa responde menos. Ningún procedimiento estándar lo
+  corrige; la respuesta honesta es el análisis de sensibilidad.
+
+El matiz que el curso insiste en repetir: **el mecanismo no se lee de
+los datos, se argumenta del proceso**. Ningún test sobre la tabla
+observada distingue MAR de MNAR, porque lo que faltaría para distinguir
+es justo lo que falta.
+
+<RCell
+  id="21/mecanismos"
+  title="Los tres mecanismos sobre la misma base"
+  code={`set.seed(11); n <- 3000
+edad <- rnorm(n, 60, 12)
+dep  <- 30 + 0.4*edad + rnorm(n, 0, 8)     # depresion ~ edad + ruido
+verdadera <- mean(dep)                      # ~54
+
+# MCAR: faltar es azar puro (10%).
+m_mcar <- runif(n) < 0.10
+# MAR: faltar depende de lo OBSERVADO (edad), no de dep.
+m_mar <- runif(n) < plogis(-2 + 0.03*(edad - 60))
+# MNAR: faltar depende del propio valor faltante.
+m_mnar <- runif(n) < plogis(-2 + 0.06*(dep - 54))
+
+cc <- function(m) mean(dep[!m])            # media de los completos
+cat(sprintf("verdadera = %.1f | MCAR = %.1f | MAR = %.1f | MNAR = %.1f\\n",
+            verdadera, cc(m_mcar), cc(m_mar), cc(m_mnar)))
+# Interpretacion: MCAR es insesgada; MAR es insesgada PERO los
+# completos sobre-representan jovenes (la media no es la de la
+# poblacion; las comparaciones dentro de estrato si lo son); MNAR
+# esta sesgada y ningun ajuste con observados la repara.`}
+/>
+
+## Diagnóstico de patrones
+
+Antes de imputar se describe *cómo* falta la base:
+
+- **Patrón monótono**: las variables se encadenan — si falta $V_3$
+  también faltan $V_4, V_5$ (típico de abandono en seguimiento). Habilita
+  imputación secuencial simple, variable a variable.
+- **Patrón general**: cualquier combinación de huecos (típico de bases
+  administrativas). Exige el ciclo iterativo de imputación encadenada.
+- **Fracción de información faltante**: un 20 % de celdas vacías puede
+  concentrarse en una covariable inútil o dispersarse por todo el
+  modelo — el conteo por variable y por sujeto lo separa.
+
+<Callout type="warning" title="Little no decide">
+El test de Little contrasta MCAR contra "no MCAR": un p pequeño descarta
+MCAR, pero un p grande **no lo confirma** — con n chico simplemente no
+detecta desviaciones (la misma lógica de los tests de supuestos del
+repaso). Y aunque lo rechace, no distingue MAR de MNAR. El mecanismo se
+justifica con el proceso de recolección — quién faltó, por qué faltó,
+qué registró el sistema— no con un p.
+</Callout>
+
+## Imputación múltiple: imputar, estimar, combinar
+
+La idea de Rubin tiene tres pasos y el segundo es el que casi nadie
+discute:
+
+1. **Imputar $M$ veces**: cada copia rellena los huecos con un sorteo de
+   la distribución predictiva — no con el valor esperado, porque el
+   objetivo no es adivinar el dato sino *representar su incertidumbre*.
+2. **Estimar en cada copia**: el análisis completo, idéntico, sobre las
+   $M$ bases. Nada especial aquí.
+3. **Combinar con las reglas de Rubin**: el estimador es la media de los
+   $\hat\theta_m$; la varianza suma dos fuentes — la variabilidad *dentro*
+   de cada copia y la variabilidad *entre* copias, que es exactamente el
+   precio de no haber observado los datos.
+
+$$
+\bar\theta = \frac{1}{M}\sum_m \hat\theta_m, \qquad
+V = \bar W + \Big(1 + \frac{1}{M}\Big) B
+$$
+
+Una imputación simple —un solo valor por hueco— produce el mismo
+estimador puntual pero con $B = 0$: finge certeza que no existe y los IC
+subcubren.
+
+<RCell
+  id="21/mi-rubin"
+  title="MI a mano: imputar, estimar, combinar"
+  code={`set.seed(23); n <- 500
+x    <- rnorm(n)                           # exposicion observada
+y    <- 2 + 1.5*x + rnorm(n)               # desenlace
+falta <- runif(n) < plogis(-1 + x)         # MAR en y (depende de x)
+yobs <- ifelse(falta, NA, y)
+verdadero <- coef(lm(y ~ x))               # la verdad: (2, 1.5)
+
+# Imputacion estocastica: prediccion + ruido del residuo, M veces.
+M <- 20; est <- replicate(M, {
+  fit <- lm(yobs ~ x, subset = !is.na(yobs))
+  pred <- predict(fit, newdata = data.frame(x = x[is.na(yobs)]))
+  yi <- yobs
+  yi[is.na(yi)] <- pred + rnorm(sum(is.na(yobs)), 0, sigma(fit))
+  coef(lm(yi ~ x))
+})
+
+# Reglas de Rubin: media entre copias, W dentro + (1+1/M) B entre.
+thetas <- rowMeans(est)
+B <- apply(est, 1, var)
+cat(sprintf("verdadero: b0 = %.2f, b1 = %.2f\\n", verdadero[1], verdadero[2]))
+cat(sprintf("MI:        b0 = %.2f, b1 = %.2f  (B entre copias: %.4f)\\n",
+            thetas[1], thetas[2], B[2]))
+cc <- coef(lm(yobs ~ x, subset = !is.na(yobs)))
+cat(sprintf("complete-case: b0 = %.2f, b1 = %.2f\\n", cc[1], cc[2]))
+# Con MAR en y dado x, el sesgo de complete-case es leve; con MAR en x
+# o MNAR en y seria severo. MI lo corrige solo si el modelo de
+# imputacion incluye las variables que predicen el faltante.`}
+/>
+
+## Complete-case: cuándo es sesgo y cuándo solo precisión
+
+Analizar solo los completos es válido en más casos de los que sugiere su
+mala fama — y malo en los casos que importan:
+
+- **Válido sin sesgo** si faltar no depende del desenlace condicionado
+  a las covariables del modelo: regresión con MAR en la covariable es
+  sesgada, pero MAR solo en el desenlace (dado X) no lo es.
+- **Válido pero caro** con MCAR: no hay sesgo, se pierde potencia —
+  un 30 % de faltantes dispersos puede eliminar la mitad de la muestra
+  efectiva.
+- **Sesgado** con MAR en la covariable o en el desenlace condicionado,
+  y siempre con MNAR.
+
+La decisión práctica: complete-case es el punto de partida, no el método.
+Si cambia la conclusión respecto a MI, el mecanismo argumentado decide
+cuál creer; si no la cambia, se reportan ambos y la robustez queda
+documentada.
+
+## MNAR y el análisis de sensibilidad
+
+Cuando el argumento apunta a MNAR —faltar por lo que falta— ninguna
+imputación estándar salva el estimando. Lo que queda es acotar la
+respuesta: el **δ-adjustment** imputa los faltantes desplazados un δ
+respecto del modelo MAR, y repite el análisis para una grilla de δ.
+El reporte deja de ser un número y pasa a ser una curva: "la asociación
+se mantiene mientras los faltantes no superen en promedio δ₀ al modelo
+MAR; más allá, el signo se invierte".
+
+<Profundiza title="Patrones-mezcla y modelos de selección" hint="optativo">
+Los dos marcos formales para MNAR son el modelo de **selección**
+(factoriza $P(Y, R)$ como $P(Y)\,P(R\mid Y)$: la probabilidad de
+responder depende del valor) y el de **patrón-mezcla** (factoriza como
+$P(R)\,P(Y\mid R)$: distribuciones distintas para respondedores y no
+respondedores). El δ-adjustment es la versión operativa del segundo:
+parametriza cuánto difieren las distribuciones en la dirección que el
+dato no puede ver. Los dos marcos son no identificables sin supuestos
+—por eso el producto es siempre una sensibilidad, nunca una corrección—.
+</Profundiza>
+
+<Callout type="note" title="El reporte honesto">
+La sección de métodos deja una sola pregunta abierta al lector: "¿qué
+asumieron sobre los datos que no vieron?". Responderla exige declarar:
+fracción y patrón de faltantes, mecanismo argumentado, método usado
+(complete-case, MI y su modelo, o sensibilidad con su δ), y la
+comparación de resultados entre análisis. "Los datos faltantes se
+manejaron por imputación múltiple" sin modelo de imputación es la frase
+que se reporta mal.
+</Callout>
+
+<Quiz
+  question="Un ensayo pierde el 25 % de los desenlaces: los pacientes con peor evolución abandonan más. ¿Qué afirmación es correcta?"
+  options={[
+    "Es MAR: la pérdida depende de variables del estudio, así que la imputación múltiple la corrige",
+    "Es probablemente MNAR — depende del desenlace no observado — y lo correcto es un análisis de sensibilidad",
+    "Es MCAR porque el 25 % es una fracción fija",
+    "Complete-case es válido porque el abandono es un proceso aleatorio"
+  ]}
+  correctIndex={1}
+  explanation="Faltar por evolución clínica es faltar por el propio desenlace: MNAR. Ni complete-case ni MI bajo MAR corrigen ese sesgo; la respuesta honesta es acotar el resultado con un análisis de sensibilidad (δ-adjustment o patrones-mezcla)."
+/>
+
+<LabExercise
+  id="21/lab-faltantes"
+  title="Laboratorio: la misma base, tres mecanismos"
+  code={`# Toma recid.csv y fabrica los tres mecanismos sobre 'prio'.
+r <- read.csv("recid.csv")
+prio <- r$prio; edad <- r$age; n <- nrow(r)
+set.seed(7)
+
+m_mcar <- runif(n) < 0.15
+m_mar  <- runif(n) < plogis(-1.5 + 0.03*(edad - 35))
+m_mnar <- runif(n) < plogis(-1.5 + 0.2*(prio - mean(prio)))
+
+desc <- function(m, nombre) {
+  d <- r[!m, ]
+  fit <- glm(arrest ~ prio, data = d, family = binomial)
+  cat(sprintf("%s: n = %d | coef(prio) = %.3f\\n",
+              nombre, nrow(d), coef(fit)["prio"]))
+}
+desc(m_mcar, "MCAR"); desc(m_mar, "MAR "); desc(m_mnar, "MNAR")
+desc(rep(FALSE, n), "FULL")
+# Compara no solo el coeficiente sino su error estandar:
+# que pierde cada mecanismo, informacion o imparcialidad.`}
+  tasks={[
+    "Reporta coeficiente y EE de los cuatro análisis e identifica cuál mecanismo mueve el estimando y cuál solo la precisión",
+    "Implementa una MI de 10 copias para el escenario MAR (imputa prio desde edad + fin + arrest con regresión estocástica) y combina con las reglas de Rubin",
+    "Repite el escenario MNAR con un δ-adjustment: imputa prio desplazado +1, +2, +3 respecto del modelo MAR y reporta en qué punto cambia la conclusión",
+  ]}
+  hint="Para la MI de una variable de conteo como prio puedes redondear la predicción + ruido, o usar un modelo Poisson/NB con predicción estocástica: lo que importa es que la imputación no sea un valor fijo."
+/>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: sección de métodos defendible">
+Para una base con faltantes (propia o la del laboratorio): descripción
+del patrón, mecanismo argumentado en dos líneas, método elegido con su
+modelo, comparación complete-case vs. MI, y —si el mecanismo admite
+duda MNAR— la curva de sensibilidad con el δ crítico declarado.
+</Callout>
+
+## Lecturas
+
+- **Rubin (1976)**: la clasificación MCAR/MAR/MNAR y las reglas de
+  combinación; el marco de todo el módulo.
+- **Sterne et al. (2009), *BMJ***: imputación múltiple en la práctica
+  epidemiológica; la guía de reporte más citada.
+- **Little (1988)**: el test de MCAR y sus límites.
+- **Van Buuren (2018), *FIMD***: el texto de referencia de la imputación
+  encadenada; los capítulos de diagnóstico aplican directo al laboratorio.
+- **Carpenter & Kenward (2013)**: el análisis de sensibilidad MNAR por
+  δ-adjustment, con ejemplos de ensayos clínicos.

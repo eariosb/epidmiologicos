@@ -1,0 +1,268 @@
+---
+title: "II-6. Vigilancia epidemiológica y nowcasting: lo que el dato aún no sabe"
+slug: "25-vigilancia-nowcasting"
+objective: "Modelar el retraso de reporte, corregir la curva reciente por nowcasting, y evaluar la vigilancia con los atributos que un sistema real debe demostrar."
+order: 25
+datasets: []
+duration: 110
+prerequisites: ["Curso I completo, especialmente los módulos 3, 13 y 17"]
+course: "II"
+level: "avanzado"
+profilesDeep: ["vigilancia", "politica"]
+attr: "Complemento propio para el curso avanzado: el retraso de reporte como problema estadístico, no administrativo."
+---
+
+import { Callout } from '@/components/Callout'
+import { Quiz } from '@/components/Quiz'
+import { RCell } from '@/components/RCell'
+import { LabExercise } from '@/components/LabExercise'
+
+<Callout type="tip" title="La semana pasada todavía no terminó de llegar">
+Todo dato de vigilancia llega tarde: el caso ocurre, se notifica, se
+digita, se consolida. La curva que baja al final de la gráfica del INS
+no es el brote cediendo — es el retraso acumulándose. Tratar la cola
+cruda como dato completo es el error operativo más común y más caro de
+la vigilancia: se declara control lo que todavía está en tránsito.
+</Callout>
+
+## El proceso de reporte: una segunda epidemia invisible
+
+Para cada caso hay dos fechas: la de ocurrencia (inicio de síntomas o
+diagnóstico, según la definición) y la de notificación. Su diferencia es
+el **retraso** $d = t_{reporte} - t_{ocurrencia}$, y es una variable
+aleatoria con su propia distribución — no una constante administrativa.
+
+La curva observada al día $t$ es una versión truncada por la derecha de
+la curva verdadera:
+
+$$
+N_{obs}(t) = \sum_{d=0}^{D} n(t-d)\,P(\text{retraso} \le d)
+$$
+
+Los días recientes están más truncados que los antiguos: al día $t$ solo
+se ven los casos con retraso 0; al $t-1$, los de retraso ≤ 1; y así hacia
+atrás. Por eso la cola cae siempre — **caería igual aunque la epidemia
+estuviera creciendo**.
+
+<RCell
+  id="25/retraso"
+  title="El truncamiento por la derecha, fabricado y medido"
+  code={`set.seed(31)
+# Epidemia verdadera que CRECE: incidencia 50 -> 140 en 40 dias.
+t <- 1:40
+verdad <- round(50 * exp(0.028 * t))
+# Cada caso se reporta con retraso ~ geométrico discreto (media ~5 d).
+retardo <- function(n) rgeom(n, 0.2)
+# Casos del dia t reportados hasta hoy (dia 40):
+reportados <- sapply(t, function(i) {
+  d_max <- 40 - i                      # dias disponibles para llegar
+  d <- retardo(verdad[i])
+  sum(d <= d_max)
+})
+# La curva observada colapsa al final AUNQUE la verdadera crece:
+cat(sprintf('dia 40: verdad %d, reportados %d (%.0f%%)\\n',
+            verdad[40], reportados[40], 100*reportados[40]/verdad[40]))
+cat(sprintf('dia 35: verdad %d, reportados %d (%.0f%%)\\n',
+            verdad[35], reportados[35], 100*reportados[35]/verdad[35]))
+cat(sprintf('dia 20: verdad %d, reportados %d (%.0f%%)\\n',
+            verdad[20], reportados[20], 100*reportados[20]/verdad[20]))
+# Regla de campo: los ultimos ~5-7 dias de cualquier curva SIVIGILA
+# son un artefacto del retraso, no un hecho epidemiologico.`}
+/>
+
+## Nowcasting: corregir lo que falta por llegar
+
+El nowcasting invierte la fórmula: estima la distribución del retraso
+$F(d)$ con los casos ya reportados (su historia de llegada), y proyecta
+cuántos casos de los días recientes *ya ocurrieron pero aún no llegan*:
+
+$$
+\hat{n}(t) = \frac{N_{obs}(t)}{F(40 - t)}
+$$
+
+en su versión más simple — el estimador del módulo 13 de nuevo, con la
+censura por la derecha cambiada de nombre. Las versiones formales
+ajustan un modelo jerárquico (Poisson o binomial negativa) sobre la
+matriz triángulo-retraso y propagan la incertidumbre: el nowcast no es
+una curva, es una curva **con banda de incertidumbre que crece hacia el
+presente**.
+
+<RCell
+  id="25/nowcast"
+  title="Nowcast multiplicativo sobre la misma epidemia"
+  code={`# Con la simulacion anterior: estima F(d) con los retardos
+# observados y corrige cada dia.
+set.seed(31)
+t <- 1:40; verdad <- round(50 * exp(0.028 * t))
+d_obs <- unlist(lapply(t, function(i) pmin(rgeom(verdad[i], .2), 40 - i)))
+F_hat <- function(d) mean(d_obs <= d)          # F empirica del retardo
+reportados <- sapply(t, function(i)
+  sum(rgeom(verdad[i], .2) <= 40 - i))
+
+nowcast <- ifelse(40 - t < 30,
+                  reportados / pmax(F_hat(40 - t), 0.05), reportados)
+
+for (i in c(20, 30, 35, 38, 40)) {
+  cat(sprintf('dia %2d: verdad %3d | crudo %3d (%.0f%%) | nowcast %3.0f (%.0f%%)\\n',
+              i, verdad[i], reportados[i], 100*reportados[i]/verdad[i],
+              nowcast[i], 100*nowcast[i]/verdad[i]))
+}
+# El nowcast rescata la forma reciente; su honestidad esta en que el
+# error crece hacia el presente - reportarlo sin incertidumbre es
+# el mismo pecado que reportar el crudo.`}
+/>
+
+## Lo que el nowcasting asume — y cuándo falla
+
+La corrección supone que la distribución del retraso es **estable**: que
+los casos de hoy tardarán lo mismo que los de hace un mes. Falla, y hay
+que declararlo, cuando:
+
+- **Fin de semana y festivos**: el retraso tiene estructura de calendario
+  — en SIVIGILA los lunes concentran el reporte acumulado; un $F(d)$
+  único mezcla dos procesos.
+- **Sobrecarga del sistema**: cuando la epidemia crece, los laboratorios
+  y las UPAS se saturan y el retraso *aumenta* — el nowcast basado en el
+  pasado tranquilo subestima el presente congestionado.
+- **Cambios de definición o de canal**: una circular del INS que
+  reclasifica eventos, o la migración a un sistema nuevo, rompe la
+  estabilidad de golpe.
+
+La defensa práctica: estimar $F(d)$ sobre ventanas recientes móviles y
+reportar el nowcast con su banda — si el lector ve la incertidumbre, el
+ajuste es un instrumento; si ve una línea lisa, es una promesa falsa.
+
+<Profundiza title="La matriz triángulo-retraso y el modelo jerárquico" hint="optativo">
+El objeto formal es el *reporting triangle*: filas por fecha de
+ocurrencia, columnas por retraso, celdas con casos que reportaron en
+$d$ días. Bajo independencia de retraso y ocurrencia, cada celda es
+$N(t) \cdot p_d$ y la suma proyectada es $n(t) / F(T-t)$. Los modelos
+de Noufaily et al. y de van de Kassteele et al. ponen estructura
+(semana epidemiológica, festivos, sobredispersión) sobre esa matriz;
+nobBs y el paquete `NCoV` la implementan con bandas de predicción
+completas. En producción INS, la corrección opera sobre la ventana de
+4-8 semanas más reciente con un modelo de retraso reestimado semanal.
+</Profundiza>
+
+## Evaluar la vigilancia como sistema
+
+El nowcasting arregla una métrica; la evaluación del sistema usa los
+**atributos de los CDC** y del módulo 19, ahora como instrumento de
+auditoría:
+
+- **Oportunidad (timeliness)**: la distribución del retraso misma —
+  mediana y percentil 90 por fase (consulta → notificación →
+  laboratorio → consolidación).
+- **Completitud**: captura–recaptura del módulo 19 sobre dos fuentes
+  (SIVIGILA vs. laboratorio, o vs. RIPS de urgencias).
+- **Sensibilidad y valor predictivo**: la vigilancia centinela contra
+  la confirmación de laboratorio.
+- **Estabilidad del retraso**: el supuesto del nowcasting medido — la
+  mediana del retraso por mes debe ser constante; si crece, el sistema
+  declara congestión antes que los casos.
+
+<RCell
+  id="25/atributos"
+  title="Atributos medibles: el retraso como indicador de salud del sistema"
+  code={`# Con SIVIGILA el retraso se descompone por fase.
+set.seed(33); n <- 800
+consulta  <- rpois(n, 2)                 # sintomas -> consulta
+notifica  <- rpois(n, 1) + 8*rbinom(n,1,.15)  # consulta -> ficha (+cola)
+consolida <- rpois(n, 3)                 # ficha -> base nacional
+retraso <- consulta + notifica + consolida
+
+cat(sprintf('retraso total: mediana %d d | p90 %d d\\n',
+            median(retraso), quantile(retraso, .9)))
+cat('por fase (medianas): ')
+cat(sprintf('consulta %d, ficha %d, consolidacion %d\\n',
+            median(consulta), median(notifica), median(consolida)))
+# La fase con mayor cola es el cuello de botella operativo:
+# si 'notifica' crece, el problema es la UPAS; si 'consolida' crece,
+# es la infraestructura. El diagnostico del sistema esta en la
+# descomposicion, no en el total.`}
+/>
+
+<Callout type="warning" title="La trampa del boletín semanal">
+Comparar la semana en curso con la anterior sobre datos crudos es
+comparar dos niveles de completitud distintos. El protocolo correcto:
+comparar semanas **con el mismo horizonte de maduración** (esta semana
+vs. la pasada vista hoy, o ambas vistas con 14 días de retraso), o
+comparar los nowcasts, nunca los crudos recientes.
+</Callout>
+
+## Vigilancia síndromica y el caso colombiano
+
+SIVIGILA notifica por evento obligatorio con fichas semanales para la
+mayoría de eventos e inmediata para los de alerta; su fortaleza es la
+cobertura nacional, su costo conocido es el retraso y la
+infranotificación medible por captura–recaptura. La **vigilancia
+síndromica** complementa: monitorea señales pre-diagnósticas
+(urgencias por IRA, dispensación de antitérmicos, consultas telefónicas)
+que llegan días antes que la ficha — se gana oportunidad a cambio de
+especificidad, el intercambio que todo sistema temprano paga.
+
+<Quiz
+  question="La curva de casos de dengue muestra un descenso sostenido en las últimas tres semanas. El boletín declara 'tendencia decreciente'. ¿Qué objeción es correcta?"
+  options={[
+    "Ninguna: tres semanas de descenso es una tendencia real",
+    "Las últimas semanas están truncadas por retraso de reporte; hay que nowcastear o comparar con el mismo horizonte de maduración",
+    "El descenso es estacional y debe ignorarse",
+    "La vigilancia de dengue es pasiva y no produce curvas válidas"
+  ]}
+  correctIndex={1}
+  explanation="La cola de la curva refleja incompletitud, no incidencia: los casos recientes aún están en tránsito por el proceso de reporte. La comparación honesta usa nowcasting con su banda, o madura ambas semanas al mismo horizonte de retraso."
+/>
+
+<LabExercise
+  id="25/lab-nowcast"
+  title="Laboratorio: el nowcast en una curva sintética tipo SIVIGILA"
+  code={`# Construye tu propio triangulo de reporte y corrige.
+set.seed(40); T_max <- 56   # 8 semanas diarias
+verdad <- round(80 * exp(-0.010 * T_max + 0.010 * 1:T_max))  # meseta->crece
+# Retraso con estructura semanal: mas corto miercoles-viernes.
+dia_semana <- rep(1:7, length.out = T_max)
+p_ret <- ifelse(dia_semana %in% 3:5, 0.35, 0.20)   # prob geom por dia
+
+# Triangulo: casos del dia t reportados con retraso d.
+dias_disp <- T_max - 1:T_max
+obs <- mapply(function(v, dd) sum(rgeom(v, 0.25) <= dd), verdad, dias_disp)
+# Estima F con los reportados y corrige la cola (ultimos 10 dias):
+F_est <- ecdf(unlist(lapply(1:T_max, function(i)
+  pmin(rgeom(obs[i], .25), T_max - i))))
+now <- obs / pmax(F_est(dias_disp), .05)
+
+for (i in (T_max-9):T_max)
+  cat(sprintf('dia %d: verdad %d | crudo %d | nowcast %d\\n',
+              i, verdad[i], obs[i], round(now[i])))`}
+  tasks={[
+    "Corta la serie 7, 14 y 21 días antes del final y repite el nowcast: ¿qué ventana mínima de maduración necesita tu estimación para ser estable?",
+    "Rompe la estabilidad: duplica el retraso en las últimas dos semanas (saturación) y cuantifica el subestimado del nowcast que asume retraso estable",
+    "Escribe el párrafo de boletín correcto para el escenario saturado, declarando la incertidumbre",
+  ]}
+  hint="La comparación justa es nowcast vs. verdad por horizonte: el error del día T-1 siempre será mayor que el del día T-7 — esa rampa de incertidumbre es el producto, no un defecto."
+/>
+
+## Producto del módulo
+
+<Callout type="note" title="Entrega: boletín con nowcast auditado">
+Sobre una serie de vigilancia (propia o la simulada): el triángulo de
+reporte, la distribución del retraso con su descomposición por fase,
+la curva corregida con banda de incertidumbre, la comparación correcta
+de semanas, y la declaración de dónde el supuesto de estabilidad podría
+fallar. El producto final es un párrafo de boletín que un decisor puede
+leer sin saber qué es $F(d)$.
+</Callout>
+
+## Lecturas
+
+- **Lawless (1994)**: el ajuste por retraso de reporte formulado como
+  problema de verosimilitud; la base estadística del nowcasting.
+- **Noufaily et al. (2013)**: el algoritmo de detección de brotes de
+  Farrington sobre datos corregidos por retraso.
+- **van de Kassteele, Eilers &amp; Wallinga (2019)**: nowcasting
+  bayesiano del número de casos con incertidumbre completa.
+- **CDC (2001), *Updated Guidelines for Evaluating Public Health
+  Surveillance Systems***: los atributos del sistema como instrumento
+  de auditoría.
+- **INS Colombia, Protocolo de Vigilancia en Salud Pública**: la
+  estructura real de eventos, fichas y tiempos del sistema nacional.

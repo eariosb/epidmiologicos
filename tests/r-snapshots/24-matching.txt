@@ -1,0 +1,2 @@
+tratados: 827 | pareados: 796 (96%) | caliper = 0.12
+discordantes b=199 c=113 | OR pareado = 1.76

@@ -1,0 +1,3 @@
+OLS (confundida): beta_E = 2.46
+IV 2SLS:           beta_E = 2.10
+Wald IV:           beta_E = 2.10

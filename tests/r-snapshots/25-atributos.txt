@@ -1,0 +1,2 @@
+retraso total: mediana 6 d | p90 13 d
+por fase (medianas): consulta 2, ficha 1, consolidacion 3

@@ -1,0 +1,3 @@
+dia 40: verdad 153, reportados 31 (20%)
+dia 35: verdad 133, reportados 104 (78%)
+dia 20: verdad 88, reportados 88 (100%)

@@ -1,0 +1,3 @@
+estimando marginal: RD = 0.129 | RR = 1.60
+riesgo si todos expuestos = 0.345 | si nadie = 0.216
+OR condicional (coef) = 2.15 | OR marginal = 1.91

@@ -35,8 +35,14 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
 
   const source = getModuleSource(entry.fileName);
   const { prev, next } = getAdjacentModules(slug);
-  const block = blockForOrder(entry.meta.order);
-  const modules = getAllModules();
+  const block = blockForOrder(entry.meta.order, entry.meta.course);
+  const modules = getAllModules(entry.meta.course);
+
+  const THREADS = {
+    precision: 'Hilo: precisión y calibración',
+    diseno: 'Hilo: diseño',
+    campo: 'Hilo: trabajo de campo',
+  } as const;
 
   const moduleContext: ModuleContext = {
     slug: entry.meta.slug,
@@ -57,10 +63,24 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
           <header className="mb-8 border-b border-ink-200 pb-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
               Bloque {block.id} · {block.title} ·{' '}
-              {entry.meta.order === 0
-                ? 'Repaso'
-                : `Módulo ${entry.meta.order} de ${modules.filter((m) => m.meta.order > 0).length}`}
+              {entry.meta.course === 'II'
+                ? `Curso II · Módulo II-${entry.meta.order - 19}`
+                : entry.meta.order === 0
+                  ? 'Repaso'
+                  : `Módulo ${entry.meta.order} de ${modules.filter((m) => m.meta.order > 0).length}`}
             </p>
+            {(entry.meta.thread || entry.meta.level === 'transversal') && (
+              <p className="mt-1 flex gap-2 text-xs">
+                {entry.meta.level === 'transversal' && (
+                  <span className="rounded-full border border-ink-200 px-2 py-0.5 text-ink-500">navegación profesional</span>
+                )}
+                {entry.meta.thread && (
+                  <span className="rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 text-brand-700">
+                    {THREADS[entry.meta.thread]}
+                  </span>
+                )}
+              </p>
+            )}
             <h1 className="mt-2 font-display text-4xl font-semibold leading-tight tracking-tight text-ink-900">
               {entry.meta.title.replace(/^\d+\.\s*/, '')}
             </h1>
@@ -88,6 +108,12 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
               }}
             />
           </div>
+
+          {entry.meta.attr && (
+            <p className="mt-8 border-t border-ink-100 pt-3 text-xs italic text-ink-500">
+              {entry.meta.attr}
+            </p>
+          )}
 
           <nav aria-label="Navegación entre módulos" className="mt-12 flex justify-between gap-4 border-t border-ink-200 pt-6">
             {prev ? (

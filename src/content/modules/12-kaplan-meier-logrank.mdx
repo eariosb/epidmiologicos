@@ -6,6 +6,8 @@ order: 12
 datasets: ["leucemia.txt", "valung.csv"]
 duration: 95
 prerequisites: ["Módulo 11: Cohortes y tablas de vida"]
+profiles: ["clinico"]
+attr: "Material base del curso ADEI (profesor Juan Carlos Salazar Uribe); estructura guiada por Woodward (2014)."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -187,7 +189,7 @@ S(t) por brazo con su IC, como hace el laboratorio de decisión de
 abajo, no el p del log-rank.
 </Callout>
 
-<Callout type="note" title="Log-rank y sus primos sin censura">
+<Profundiza title="Log-rank y sus primos sin censura" hint="optativo">
 Con dos grupos y sin censura, el log-rank equivale al test de Savage
 (scores exponenciales) aplicado a los tiempos; el test que sí se reduce a
 Wilcoxon es su variante ponderada Gehan–Breslow (pesos = tamaños del
@@ -197,7 +199,7 @@ mortalidad del SHHS se analizó también con <Term k="CMH">CMH</Term> sobre
 una tabla 2×2×9 estratificada (clase 16, <code>mantelhaen.test</code>),
 mostrando que la estratificación clásica y la supervivencia comparten
 la misma lógica observado-menos-esperado.
-</Callout>
+</Profundiza>
 
 <Quiz
   question="En el grupo 6-MP recayeron 9 de 21 pacientes (43%), y sin embargo Kaplan–Meier da una mediana de 23 semanas, con Ŝ(23) = 0.45. ¿Cómo puede ser?"

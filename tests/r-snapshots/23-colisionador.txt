@@ -1,0 +1,3 @@
+OR poblacional = 0.95 (verdad: 1, sin asociacion)
+OR en seleccionados = 0.65 (fabricado por el colisionador)
+fraccion seleccionada: 36%

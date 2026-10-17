@@ -1,13 +1,15 @@
 ---
 title: "Leer los datos antes de analizarlos"
 slug: "00-repaso-datos-epidemiologicos"
-objective: "Explorar como entender qué cuenta cada número y su información asociada,
- qué dice el diccionario, cuándo un número raro es señal, qué es un faltante real y qué no,
- aprender a leer los datos con criterio y algunos conceptos fundamentales."
+objective: " Entender qué hay en un
+archivo epidemiológico. Qué cuenta una fila, qué quiere decir un código,
+como abordar la escaces o perdida de información y qué comparación permite el diseño."
 order: 0
 datasets: ["valung.csv", "recid.csv", "bcg_matching.csv", "caso_control_11.csv", "ddimer.csv", "leucemia.txt"]
 duration: 120
 prerequisites: []
+profiles: ["vigilancia", "clinico", "politica"]
+attr: "Módulo introductorio de repaso: desarrollo propio."
 ---
 
 import { Callout } from '@/components/Callout'
@@ -22,24 +24,24 @@ import { TestSelector, PValueLab } from '@/components/TestSims'
 import { DataQualityPanel } from '@/components/QualitySims'
 
 <Callout type="tip" title="Antes de abrir el primer archivo">
-Probabilidad, estimación, inferencia y regresión ya las conoces. Aquí las
-usamos para algo que va antes de cualquier modelo: **entender qué hay en un
-archivo epidemiológico**. Qué cuenta una fila, qué quiere decir un código,
-por qué una celda está vacía y qué comparación permite el diseño.
+Probabilidad, estimación, inferencia y regresión son la la parte estructural del recorrido académico en estadística. 
+Ahora serán útiles para explorar y entender qué cuenta cada dato y su información asociada,
+qué dice el diccionario, cuándo un número raro es señal, qué es un faltante real y qué no,
+aprender a interpretar con criterio.
+
 </Callout>
 
 Una idea guía todo el curso: la incidencia va al centro porque respeta el
 orden en el tiempo. Cuenta casos nuevos entre quienes estaban en riesgo, y
 sobre eso se construye cualquier comparación causal. La prevalencia mezcla
-cuántos enferman con cuánto dura la enfermedad, y el odds ratio es una razón
-de razones, porque cada odds ya es p/(1 − p).
+cuántos enferman con cuánto dura la enfermedad.
 
-El recorrido tiene cinco partes y puedes saltar las que ya domines. En la
+El recorrido tiene cinco partes. En la
 **1** vemos de dónde viene cada fila; en la **2**, qué dice la base y qué
 esconde; en la **3**, qué comparaciones tienen sentido; en la **4**, cómo
-se decide con un test sin engañarse; y en la **5** armas tu propia ficha
-exploratoria. Son unas dos horas. Al final de cada sección hay una nota que
-dice en qué módulo vuelve el tema.
+se decide con un test sin engañarse; y en la **5** un ejemplo de una ficha
+exploratoria. Al final de cada sección hay una nota que
+dice en qué módulo se detalla el tema.
 
 Casi todo lo que sigue se reduce a un hábito: mirar el dato con criterio,
 pensando en la pregunta del estudio y en cómo se obtuvieron los datos
@@ -67,11 +69,11 @@ eligen mirando los datos, cada decisión es una bifurcación, aunque al final
 se reporte una sola prueba y nadie haya buscado a propósito.
 
 La Figura 1 pone números a ese riesgo. Simulamos un ensayo en el que el
-tratamiento **no hace nada**, con 400 personas en 20 subgrupos de 20 (10
+tratamiento **no tiene efecto real**, con 400 personas en 20 subgrupos de 20 (10
 tratadas y 10 controles en cada uno), y lo repetimos 1000 veces. Cada barra
-es el porcentaje de estudios en que un analista "encontró" un efecto; como
+es el porcentaje de estudios en que un analista "encontró" un efecto significativo; como
 no hay efecto, todo hallazgo es un falso positivo. La línea punteada marca
-el 5 % que promete α.
+el 5 % que promete α, el valor de significancia.
 
 <RCell
   id="00/disciplina"
@@ -127,7 +129,7 @@ bp <- barplot(100 * tasa, names.arg = names(tasa), cex.names = 0.75,
               col = cols, border = NA, ylim = c(0, 105),
               space = c(0.2, 0.2, 0.8, 0.2, 0.2),
               ylab = "% de estudios con un 'hallazgo'",
-              main = "Sin efecto real: declarar la familia no basta,\nhay que corregir por ella",
+              main = "Sin efecto real: declarar la familia no basta,\\nhay que corregir por ella",
               panel.first = abline(h = seq(0, 100, 20), col = "grey92"))
 abline(h = 5, lty = 2, col = "gray40")
 mtext("α = 5%", side = 4, at = 5, line = 0.4, las = 1,
@@ -143,7 +145,7 @@ Las barras naranjas muestran el problema sin plan, en sus dos formas. La
 barra A es la más cruda: el analista hace las 20 pruebas, una por subgrupo,
 y reporta las que salgan significativas. Como el tratamiento no hace nada,
 cada prueba tiene 5 % de probabilidad de salir «significativa» por puro
-azar — pero con 20 oportunidades, la probabilidad de que **alguna** salga es
+azar, pero con 20 oportunidades, la probabilidad de que **alguna** salga es
 1 − 0.95²⁰ ≈ 64 %. Eso es lo que se ve: dos de cada tres estudios reportan
 un hallazgo, y todos son falsos positivos.
 
@@ -157,7 +159,7 @@ oportunista triplica el error: del 5 % al 16 %.
 La barra C, en ámbar, responde a la pregunta obvia: ¿basta con declarar el
 plan? No. Declarar los 20 subgrupos antes de mirar deja el error donde
 estaba — 62.8 % — porque siguen siendo 20 oportunidades de equivocarse:
-**declarar sin corregir no controla nada**. El plan no reduce el error; lo
+**declarar sin corregir no controla nada**. El plan no reduce el error; solo lo
 vuelve contable. Controlarlo exige usar ese conteo, y ahí entran las barras
 azules: Bonferroni reparte el 5 % entre las 20 pruebas (cada una al nivel
 0.05/20) y la familia vuelve a su cauce, 4.4 %; y una única prueba declarada
@@ -168,10 +170,9 @@ Quedan dos condiciones, y ninguna basta sola. **Declarar la familia de
 pruebas antes de mirar** es necesaria, porque sin ella no hay qué corregir.
 **Ajustar por el tamaño de esa familia**, o reducirla a una prueba primaria,
 es lo que controla el error. Un script reproducible, con semilla y datos
-versionados, cumple otra función: muestra qué se hizo, no si era lo que se
-iba a hacer.
+versionados, cumple otra función: muestra exactamente qué se hizo.
 
-<Callout type="note" title="¿Siempre hay que corregir?">
+<Profundiza title="¿Siempre hay que corregir? Y la otra cultura: inferir vs. predecir" hint="optativo">
 Depende de la afirmación. Bonferroni protege una afirmación global, "el
 tratamiento funciona en algún subgrupo", y esa es la que falla en la barra C.
 Si cada subgrupo responde una pregunta propia y se reportan los 20
@@ -180,7 +181,6 @@ resultados, cada uno conserva su 5 % y el lector ve el denominador; Rothman
 es reportar solo el que salió. Los modelos jerárquicos ofrecen una tercera
 vía: encogen las estimaciones de cada subgrupo hacia la media común y
 reducen la necesidad de corregir (Gelman, Hill y Yajima, 2012).
-</Callout>
 
 **Inferir y predecir.** Quien viene del aprendizaje automático sabe que allí
 se prueban decenas de modelos y se elige el mejor, y que eso es legítimo
@@ -199,6 +199,7 @@ se mezclan gratis: elegir variables por validación cruzada y luego leer los
 valores p del modelo elegido es el jardín otra vez (inferencia
 posselección). Este curso es casi todo inferencial, con OR, HR y diferencias
 de riesgo acompañadas de su IC, así que rige la primera regla.
+</Profundiza>
 
 *Vuelve en* **M10** (credibilidad de los efectos de subgrupo) y **M12**
 (elegir el horizonte del NNT mirando las curvas).
@@ -430,7 +431,7 @@ run;`} />
     "Que la variable está invertida y hay que recodificarla antes de cualquier análisis"
   ]}
   correctIndex={1}
-  explanation="`censor` ya llega como flag en el CSV del curso — en el SAS original se construía con `SurvTime < 0`, que aquí no aplica porque todos los tiempos son positivos. Confundir evento con censura invierte cada curva de supervivencia del módulo 12."
+  explanation="`censor` ya llega como flag en el CSV del curso, en el SAS original se construía con `SurvTime < 0`, que aquí no aplica porque todos los tiempos son positivos. Confundir evento con censura invierte cada curva de supervivencia del módulo 12."
   optionNotes={[
     "Incorrecta: un `SurvTime` grande dice cuánto se observó, no cómo terminó; el desenlace lo dice `censor`. De hecho, el 999 de VALUNG es una muerte, y los censurados tienen tiempos cortos.",
     undefined,
@@ -1072,6 +1073,8 @@ consiste en controlarlos.
 - **β**: la tasa de falsos negativos. La **potencia = 1 − β** es la
   probabilidad de detectar el efecto *si existe*, depende del tamaño
   del efecto, de n y de α.
+
+<Profundiza title="Dos matices de la decisión" hint="optativo">
 - **Una cola vs. dos**: definir "extremo" es una decisión previa al
   análisis. Una cola cuenta solo los resultados en la dirección
   esperada (más potencia si la dirección se acertó, ciega al efecto
@@ -1081,6 +1084,7 @@ consiste en controlarlos.
   real es la tasa de rechazo que el test efectivamente produce. Con
   datos discretos y muestras chicas difieren; el módulo 6 lo mide con
   Fisher y Boschloo. Declarar 5 % no garantiza tener 5 %.
+</Profundiza>
 
 ### 4.3 La potencia se puede contar
 
@@ -1135,14 +1139,12 @@ propiedades del instrumento** y se pueden auditar como cualquier dato.
 
 Un p pequeño puede acompañar un efecto clínicamente trivial (con n enorme
 todo sale significativo), y un p "no significativo" puede esconder un
-efecto importante mal estimado (con n chico). Por eso seguimos a Woodward:
-**primero estimar, después contrastar**. Primero el tamaño del efecto con
-su IC; luego, si hace falta, el veredicto. Un p sin la magnitud no dice
-nada en términos epidemiológicos.
-
-Tampoco cambia la evidencia entre p = 0.049 y p = 0.051; solo cambia de qué
-lado de una línea convencional cayó. Reportar "p = 0.051" con el efecto y
-su IC dice más que "no significativo".
+efecto importante mal estimado (con n chico). Tampoco cambia la evidencia
+entre p = 0.049 y p = 0.051; solo cambia de qué lado de una línea
+convencional cayó. Por eso seguimos a Woodward: **primero estimar, después
+contrastar** — el tamaño del efecto con su IC primero, el veredicto
+después. Reportar "p = 0.051" con el efecto y su IC dice más que "no
+significativo".
 
 <Quiz
   question="Un estudio con n = 30 por grupo no rechaza H₀ (p = 0.21). ¿Cuál es la lectura correcta?"
@@ -1156,9 +1158,9 @@ su IC dice más que "no significativo".
   explanation="No rechazar no es aceptar: con n chico la potencia es baja y el efecto puede existir sin ser detectable. El p tampoco es la probabilidad de que H₀ sea cierta, es la probabilidad de los datos suponiendo H₀."
   optionNotes={[
     "Incorrecta: 'no se demostró efecto' y 'se demostró que no hay' son afirmaciones opuestas; p = 0.21 solo dice que los datos son compatibles con H₀.",
-    "Incorrecta: en el procedimiento frecuentista nunca se 'acepta' H₀ — se deja de rechazar, que es una conclusión mucho más débil.",
+    "Incorrecta: en el procedimiento frecuentista nunca se 'acepta' H₀, se deja de rechazar, que es una conclusión mucho más débil.",
     undefined,
-    "Incorrecta: es la confusión clásica P(E|D) ≠ P(D|E) del repaso — el p mide los datos bajo H₀, no a H₀ dados los datos.",
+    "Incorrecta: es la confusión clásica P(E|D) ≠ P(D|E) del repaso, el p mide los datos bajo H₀, no a H₀ dados los datos.",
   ]}
 />
 
@@ -1182,19 +1184,21 @@ compara lo observado con esa distribución.
   correctIndex={1}
   explanation="Los dos tests ordenan el espacio de tablas de forma distinta: la significancia es una propiedad del instrumento, no solo del dato. El módulo 6 explora exactamente esta decisión."
   optionNotes={[
-    "Incorrecta: ambos están bien calculados — cada uno implementa una definición distinta de 'más extremo'; esa es la lección.",
+    "Incorrecta: ambos están bien calculados, cada uno implementa una definición distinta de 'más extremo'; esa es la lección.",
     undefined,
     "Incorrecta: Boschloo es más potente en regiones específicas del espacio de tablas, no universalmente; en otras regiones pueden invertirse.",
-    "Incorrecta: los p-valores no se promedian — la discrepancia exige declarar el procedimiento, no fundir las respuestas.",
+    "Incorrecta: los p-valores no se promedian, la discrepancia exige declarar el procedimiento, no fundir las respuestas.",
   ]}
 />
 
 ### 4.6 Elegir la prueba
 
-La prueba la decide el **diseño**: una muestra o dos, independientes o
-pareadas, conteos o mediciones, con o sin estratos. El selector hace esas
-preguntas y te devuelve la prueba, su código en R y SAS y el módulo donde
-se trabaja. Debajo está el catálogo completo, por si quieres consultarlo.
+La prueba la decide el **diseño**. En la práctica seis preguntas bastan para
+clasificar casi todo lo que verás: ¿una muestra o varias? ¿independientes o
+pareadas? ¿conteos, mediciones o tiempos? ¿hay estratos? ¿qué fija el
+diseño? y ¿qué se quiere mostrar: diferencia o equivalencia? El selector
+hace esas preguntas y te devuelve la prueba, su código en R y SAS y el
+módulo donde se trabaja. El catálogo completo queda abajo, como referencia.
 
 <TestSelector title={<>Selector de prueba: responde por el diseño</>} />
 
@@ -1203,8 +1207,7 @@ se trabaja. Debajo está el catálogo completo, por si quieres consultarlo.
 1. Recorre la ruta de `caso_control_11.csv` (parejas 1:1) y la de BCG (sets 1:5). ¿Por qué terminan en pruebas distintas si las dos son casos y controles pareados?
 2. Busca la ruta que lleva al log-rank y la que lleva a la SMR. Anota qué pregunta del selector las separa.
 
-<details>
-<summary><strong>Catálogo completo de pruebas, por diseño</strong> (referencia)</summary>
+<Profundiza title="Catálogo completo de pruebas, por diseño" hint="referencia">
 
 **Una muestra, una medida**
 
@@ -1279,7 +1282,7 @@ discordantes, que decide entre la versión asintótica y la exacta.
 
 **El test que diagnostica al test**
 
-¿Cómo se elige la fila? También con tests — las *pruebas de supuestos*:
+¿Cómo se elige la fila? También con tests, las *pruebas de supuestos*:
 
 | Test | Qué examina | Advertencia |
 |---|---|---|
@@ -1291,7 +1294,7 @@ Lo de la sección 4.3 vale también aquí: **los tests de supuestos tienen su
 propia potencia y su propio tamaño**. Con n chico
 no detectan violaciones reales y dan falsa tranquilidad; con n grande
 detectan desviaciones triviales y dan falsa alarma. La decisión la toma
-el diseño y la plausibilidad, no el p de un segundo test — se usan para
+el diseño y la plausibilidad, no el p de un segundo test, se usan para
 entender los datos, no para delegarles la elección del instrumento.
 
 **Cuando el objetivo es demostrar similitud**
@@ -1309,7 +1312,7 @@ Cada fila del catálogo trae sus supuestos (independencia, escala, tamaño,
 pareamiento, estratos). Elegir mal la fila invalida la decisión aunque la
 cuenta esté bien hecha.
 
-</details>
+</Profundiza>
 
 *Vuelve en* **M5** (significancia y potencia como conceptos), **M6**
 (la calibración real de los tests en 2×2) y **M16** (los tests dentro de

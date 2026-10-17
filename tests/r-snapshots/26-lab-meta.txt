@@ -1,0 +1,4 @@
+Estimate Std. Error    t value  Pr(>|t|)
+(Intercept) -0.35011101 0.41167256 -0.8504599 0.4131986
+lat         -0.01477632 0.01135743 -1.3010269 0.2198417
+Q residual = 6.3 en 11 df

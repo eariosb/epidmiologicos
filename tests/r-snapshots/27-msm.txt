@@ -1,0 +1,2 @@
+ajustando L1: b_A0 = 0.10 (verdad 0.5+efecto via A1)
+MSM con pesos: b_A0 = 0.43 | b_A1 = 0.49
