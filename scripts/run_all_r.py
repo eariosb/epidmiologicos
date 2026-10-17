@@ -24,30 +24,26 @@ RSCRIPT = (
 )
 SNAPDIR = pathlib.Path('tests/r-snapshots')
 
-args = [a for a in sys.argv[1:]]
-MODE = 'run'
-if '--check' in args:
-    MODE = 'check'
-    args.remove('--check')
-elif '--update' in args:
-    MODE = 'update'
-    args.remove('--update')
-
-MODS = args or [p.stem for p in sorted(pathlib.Path('src/content/modules').glob('*.mdx'))]
-
 CELL = re.compile(
     r'<(?P<tag>RCell|LabExercise)\b(?P<attrs>[^>]*?)code=\{`\n?(?P<code>.*?)`\}',
     re.S)
 IDATTR = re.compile(r'\bid="([^"]+)"')
 
 
+JS_ESCAPES = {'n': '\n', 't': '\t', 'r': '\r', 'b': '\b', 'f': '\f', 'v': '\v', '0': '\0'}
+
+
 def unescape(code: str) -> str:
-    # Desescapa el template literal JS: \\ -> \, \$ -> $, \` -> `
+    # Desescapa el template literal con la misma semantica que JS en el
+    # navegador: \n -> salto de linea, \t -> tabulador, \\ -> \, \` -> `,
+    # \$ -> $; cualquier otro \x -> x. Antes \n se convertia en "n" y los
+    # snapshots no coincidian con lo que ve el estudiante.
     out = []
     i = 0
     while i < len(code):
         if code[i] == '\\' and i + 1 < len(code):
-            out.append(code[i + 1])
+            nxt = code[i + 1]
+            out.append(JS_ESCAPES.get(nxt, nxt))
             i += 2
         else:
             out.append(code[i])
@@ -66,66 +62,87 @@ def norm(text: str) -> str:
 
 def run_cell(code: str) -> subprocess.CompletedProcess:
     with tempfile.NamedTemporaryFile('w', suffix='.R', delete=False, encoding='utf-8') as f:
+        # Comillas ASCII en todo sistema: los snapshots no dependen del locale.
+        f.write('options(useFancyQuotes = FALSE)\n')
         f.write(code)
         path = f.name
     try:
         # Los datasets se leen por nombre relativo: cwd = public/data.
+        # encoding='utf-8': en Windows, text=True decodificaba con cp1252 y
+        # las tildes llegaban como 'mÃ³dulo'.
         return subprocess.run([RSCRIPT, '--vanilla', path], capture_output=True,
-                              text=True, timeout=300, cwd='public/data')
+                              text=True, encoding='utf-8', errors='replace',
+                              timeout=300, cwd='public/data')
     finally:
         os.unlink(path)
 
 
-failures = 0
-diffs = 0
-written = 0
-missing = 0
+def main() -> int:
+    args = [a for a in sys.argv[1:]]
+    MODE = 'run'
+    if '--check' in args:
+        MODE = 'check'
+        args.remove('--check')
+    elif '--update' in args:
+        MODE = 'update'
+        args.remove('--update')
 
-if MODE == 'update':
-    SNAPDIR.mkdir(parents=True, exist_ok=True)
+    MODS = args or [p.stem for p in sorted(pathlib.Path('src/content/modules').glob('*.mdx'))]
 
-for m in MODS:
-    src = pathlib.Path('src/content/modules/' + m + '.mdx').read_text(encoding='utf-8')
-    for i, mt in enumerate(CELL.finditer(src)):
-        cell_id = IDATTR.search(mt.group('attrs'))
-        name = snap_name(m, i, cell_id.group(1) if cell_id else None)
-        r = run_cell(unescape(mt.group('code')))
-        if r.returncode != 0:
-            failures += 1
-            print(f'--- {m} block {i} ({name}): FAIL')
-            print(r.stderr[:800])
-            continue
-        out = norm(r.stdout)
-        snap = SNAPDIR / name
-        if MODE == 'update':
-            snap.write_text(out + '\n', encoding='utf-8')
-            written += 1
-            print(f'--- {m} block {i} ({name}): snapshot')
-        elif MODE == 'check':
-            if not snap.exists():
-                missing += 1
-                print(f'--- {m} block {i} ({name}): SIN SNAPSHOT (--update)')
+    failures = 0
+    diffs = 0
+    written = 0
+    missing = 0
+
+    if MODE == 'update':
+        SNAPDIR.mkdir(parents=True, exist_ok=True)
+
+    for m in MODS:
+        src = pathlib.Path('src/content/modules/' + m + '.mdx').read_text(encoding='utf-8')
+        for i, mt in enumerate(CELL.finditer(src)):
+            cell_id = IDATTR.search(mt.group('attrs'))
+            name = snap_name(m, i, cell_id.group(1) if cell_id else None)
+            r = run_cell(unescape(mt.group('code')))
+            if r.returncode != 0:
+                failures += 1
+                print(f'--- {m} block {i} ({name}): FAIL')
+                print(r.stderr[:800])
                 continue
-            expected = norm(snap.read_text(encoding='utf-8'))
-            if out == expected:
-                print(f'--- {m} block {i} ({name}): OK')
+            out = norm(r.stdout)
+            snap = SNAPDIR / name
+            if MODE == 'update':
+                snap.write_text(out + '\n', encoding='utf-8')
+                written += 1
+                print(f'--- {m} block {i} ({name}): snapshot')
+            elif MODE == 'check':
+                if not snap.exists():
+                    missing += 1
+                    print(f'--- {m} block {i} ({name}): SIN SNAPSHOT (--update)')
+                    continue
+                expected = norm(snap.read_text(encoding='utf-8'))
+                if out == expected:
+                    print(f'--- {m} block {i} ({name}): OK')
+                else:
+                    diffs += 1
+                    print(f'--- {m} block {i} ({name}): DIFF')
+                    print('\n'.join(difflib.unified_diff(
+                        expected.splitlines(), out.splitlines(),
+                        'snapshot', 'actual', lineterm=''))[:1500])
             else:
-                diffs += 1
-                print(f'--- {m} block {i} ({name}): DIFF')
-                print('\n'.join(difflib.unified_diff(
-                    expected.splitlines(), out.splitlines(),
-                    'snapshot', 'actual', lineterm=''))[:1500])
-        else:
-            print(f'--- {m} block {i} ({name}): OK')
-            for line in out.splitlines()[-2:]:
-                print('    ' + line)
+                print(f'--- {m} block {i} ({name}): OK')
+                for line in out.splitlines()[-2:]:
+                    print('    ' + line)
 
-print()
-if MODE == 'check':
-    print(f'DIFFS: {diffs}   SIN SNAPSHOT: {missing}   FAILURES: {failures}')
-elif MODE == 'update':
-    print(f'SNAPSHOTS ESCRITOS: {written}   FAILURES: {failures}')
-else:
-    print(f'FAILURES: {failures}')
+    print()
+    if MODE == 'check':
+        print(f'DIFFS: {diffs}   SIN SNAPSHOT: {missing}   FAILURES: {failures}')
+    elif MODE == 'update':
+        print(f'SNAPSHOTS ESCRITOS: {written}   FAILURES: {failures}')
+    else:
+        print(f'FAILURES: {failures}')
 
-sys.exit(1 if (failures or diffs or missing) else 0)
+    return 1 if (failures or diffs or missing) else 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

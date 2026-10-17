@@ -7,10 +7,20 @@ next-env.d.ts
 *.log
 .vercel
 
-/scripts
 /_respaldo_titularidad_20261013
 /docs
+
+# python
+__pycache__/
+*.pyc
 
 test-results/
 playwright-report/
 public/data/Rplots.pdf
+/Rplots.pdf
+logs/
+
+# entorno local y secretos
+.env
+.env.*
+*.local

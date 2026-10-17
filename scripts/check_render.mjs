@@ -26,7 +26,7 @@ const components = {
   KaplanMeierSim: stub, McNemarCmhDemo: stub, DiagnosticTestExplorer: stub,
   DesignTree: stub,
   PrevalenceExplorer: stub, StandardizationExplorer: stub,
-  InteractionExplorer: stub, CohortGantt: stub, BerksonExplorer: stub,
+  InteractionExplorer: stub, InteractionNoiseLab: stub, TestSelector: stub, PValueLab: stub, CohortGantt: stub, BerksonExplorer: stub,
   RocExplorer: stub, MetaExplorer: stub, EpiCurveExplorer: stub,
   LangTabs: stub, SasBlock: stub, ToolCard: stub,
   DecisionPanel: stub, DecisionCard: stub,

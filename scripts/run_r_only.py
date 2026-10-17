@@ -1,8 +1,9 @@
 """Extrae los bloques code={`...`} de RCell y LabExercise (NO SasBlock)
 y los corre en R local. Uso: python scripts/run_r_only.py [modulo ...]"""
-import re, sys, pathlib, subprocess, tempfile
+import re, sys, os, pathlib, shutil, subprocess, tempfile
 
-RSCRIPT = r'C:\Program Files\R\R-4.5.2\bin\Rscript.exe'
+RSCRIPT = (os.environ.get('RSCRIPT') or shutil.which('Rscript')
+           or r'C:\Program Files\R\R-4.5.2\bin\Rscript.exe')
 MODS = sys.argv[1:] or [p.stem for p in pathlib.Path('src/content/modules').glob('*.mdx')]
 
 def unescape(code: str) -> str:
