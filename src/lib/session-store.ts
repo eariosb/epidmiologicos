@@ -259,11 +259,17 @@ export async function setSessionActiveScene(sceneId: string | null): Promise<voi
 export async function addVisitedSection(slug: string, title: string): Promise<void> {
   return withMutation(async () => {
     const session = await ensureSession();
+    // The first visited module stamps the session's moduleSlug — exports
+    // use it for the cover line when the session was auto-created.
+    const stamping = !session.moduleSlug;
+    if (stamping) session.moduleSlug = slug;
     // Append-only journey: revisits are real events in the class timeline.
     // Only consecutive duplicates are skipped (double-mount artifacts).
     const last = session.visitedSections[session.visitedSections.length - 1];
     if (last?.slug !== slug) {
       session.visitedSections = [...session.visitedSections, { slug, title, timestamp: Date.now() }];
+      await saveSession(session);
+    } else if (stamping) {
       await saveSession(session);
     }
   });
@@ -329,12 +335,14 @@ export async function deleteCapture(id: string): Promise<void> {
 }
 
 export async function updateCapture(id: string, patch: Partial<Capture>): Promise<Capture | null> {
-  const existing = await getCapture(id);
-  if (!existing) return null;
-  const updated = { ...existing, ...patch };
-  await set(id, stampCapture(updated), CAPTURE_STORE);
-  notifySessionChanged();
-  return updated;
+  return withMutation(async () => {
+    const existing = await getCapture(id);
+    if (!existing) return null;
+    const updated = { ...existing, ...patch };
+    await set(id, stampCapture(updated), CAPTURE_STORE);
+    notifySessionChanged();
+    return updated;
+  });
 }
 
 /** Batch-reads captures by id in one IDB call; corrupt records are
@@ -457,6 +465,7 @@ export async function deleteSession(id: string): Promise<void> {
     const activeId = await getActiveSessionId();
     if (activeId === id) {
       localStorage.removeItem(ACTIVE_SESSION_KEY);
+      setEventSession(null);
     }
     notifySessionChanged();
   });

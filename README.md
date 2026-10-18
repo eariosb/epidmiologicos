@@ -196,18 +196,26 @@ m17) lleva su propia marca.
   recuperación BM25 local, perfil pedagógico del curso inyectado al
   prompt del paquete `@cursos/blackboard`.
 - **Pizarra digital** (paquete `packages/blackboard`, Excalidraw):
-  panel acoplable, captura de elementos del módulo, modo presentación.
+  panel acoplable con barra de herramientas completa — dibujo a mano
+  alzada, formas, texto, borrador, modo presentación, modo docente/
+  estudiante, capturas por región, fórmulas, matrices, tablas, notas
+  y preguntas. Cada página de la pizarra persiste por módulo y puede
+  restaurarse después.
 - **La sesión de clase como objeto central** (`src/lib/session-store.ts`,
-  `useSession`): cada clase es un registro con ciclo de vida completo
-  en IndexedDB — se crea, registra el recorrido cronológico (módulos
-  visitados, páginas de pizarra, capturas, preguntas, chat del asistente),
-  se cierra y se puede **recorrer** con el reproductor
-  (`SessionReplay`): una línea de tiempo que navega de vuelta a cada
-  módulo y página. Integridad garantizada: mutaciones serializadas con
-  mutex, sesiones cerradas inmutables, borrado en cascada (capturas +
-  chat), tolerancia a registros corruptos, esquema versionado con
-  migraciones y sincronización entre pestañas. Exportable a PDF
-  (con páginas de la pizarra embebidas) y a Markdown.
+  `useSession`, `SessionToolbar`): el docente abre la clase con
+  **Nueva**, navega con **Módulos**, escribe en la pizarra y cierra con
+  **Finalizar** — cada clase queda como un registro con inicio, fin y
+  recorrido cronológico (módulos visitados, páginas de pizarra
+  mostradas, capturas por región, preguntas de los estudiantes, chat
+  del asistente). Desde **Sesiones** se carga cualquier clase pasada,
+  se **recorre** con el reproductor (`SessionReplay`: línea de tiempo
+  que navega de vuelta a cada módulo y restaura cada página en el
+  lienzo) y se exporta a **PDF** (acta con las páginas de la pizarra
+  embebidas, en el orden en que se mostraron) o a **Markdown**. Todo
+  local en IndexedDB: mutaciones serializadas con mutex, sesiones
+  cerradas inmutables, borrado en cascada, esquema versionado y
+  sincronización entre pestañas. Referencia completa del flujo y de
+  cada herramienta en **`docs/SESIONES-PIZARRA.md`**.
 - **Progreso del curso**: `useProgress` persiste lecciones completadas
   en `localStorage`.
 

@@ -1,4 +1,5 @@
 import { getActiveSession, listCaptures, type Session, type Capture } from './session-store';
+import { sceneLabel } from './session-timeline';
 import { getChatRecord } from './chat-store';
 
 /**
@@ -28,6 +29,15 @@ export function buildSessionMarkdown(
     lines.push('## Secciones navegadas');
     for (const s of sections) {
       lines.push(`- ${s.title} (\`${s.slug}\`) · ${new Date(s.timestamp).toLocaleTimeString('es-CO')}`);
+    }
+    lines.push('');
+  }
+
+  const sceneVisits = session?.sceneVisits ?? [];
+  if (sceneVisits.length > 0) {
+    lines.push('## Páginas de pizarra mostradas');
+    for (const v of sceneVisits) {
+      lines.push(`- ${sceneLabel(v.sceneId)} · ${new Date(v.timestamp).toLocaleTimeString('es-CO')}`);
     }
     lines.push('');
   }

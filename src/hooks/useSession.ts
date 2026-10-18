@@ -149,7 +149,8 @@ export function useSession() {
   const endSession = useCallback(() => run(endActiveSession), [run]);
 
   const newSession = useCallback(
-    (title: string) => run(() => startNewSession(title)),
+    (title: string, moduleSlug?: string) =>
+      run(() => startNewSession(title, undefined, moduleSlug)),
     [run],
   );
 

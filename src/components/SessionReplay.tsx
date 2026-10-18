@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import {
+  logEvent,
   useBlackboardContext,
   useBlackboardScene,
   type BlackboardCanvasRef,
@@ -67,7 +68,7 @@ function fmt(ts: number): string {
  * page on the canvas, captures show their thumbnail.
  */
 export function SessionReplay({ session, isActive, canvasRef, onClose }: Readonly<SessionReplayProps>) {
-  const { dispatch } = useBlackboardContext();
+  const { dispatch, storage } = useBlackboardContext();
   const { loadScene } = useBlackboardScene();
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -87,8 +88,17 @@ export function SessionReplay({ session, isActive, canvasRef, onClose }: Readonl
 
   const showOnBoard = async (sceneId: string) => {
     canvasRef?.current?.flush?.();
+    const scene = await storage.getScene(sceneId);
+    if (!scene) {
+      void logEvent('session', `replay: scene no longer exists: ${sceneId}`);
+      window.alert('Esa página de la pizarra ya no existe.');
+      return;
+    }
     await loadScene(sceneId);
     dispatch({ type: 'SELECT_SCENE', id: sceneId });
+    // The modal covers the whole viewport: close it so the restored page
+    // is actually visible — the point of "Ver en pizarra".
+    onClose();
   };
 
   const items = buildSessionTimeline(session, captures);

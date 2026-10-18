@@ -28,22 +28,37 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionToolbarProps>) {
   const { session, endSession, newSession } = useSession();
-  const { state } = useBlackboardContext();
+  const { state, storage } = useBlackboardContext();
   const [exporting, setExporting] = useState(false);
   const [calibrating, setCalibrating] = useState(false);
   const isEnded = session?.status === 'ended';
 
   /**
-   * Rasterizes every page of the current module. The live scene goes through
-   * the canvas (freshest pixels); stored scenes render headless via
-   * exportToBlob + their persisted `files`.
+   * Rasterizes the pages the class actually used: the session's
+   * sceneVisits (deduplicated, chronological) take priority — a session
+   * spanning several modules must carry all of them, not just the pages
+   * of the module open right now. Sessions recorded before sceneVisits
+   * existed fall back to every page of the current module.
+   * The live scene goes through the canvas (freshest pixels); stored
+   * scenes render headless via exportToBlob + their persisted `files`.
    */
   const collectBoardPages = async (): Promise<BoardPage[]> => {
     canvasRef?.current?.flush?.();
+    const visitedIds = [...new Set((session?.sceneVisits ?? []).map((v) => v.sceneId))];
     const slug = state.moduleContext?.slug;
-    const scenes = Object.values(state.scenes)
-      .filter((s) => (slug ? s.moduleSlug === slug : true))
-      .sort((a, b) => a.id.localeCompare(b.id));
+    let scenes;
+    if (visitedIds.length > 0) {
+      // Visited pages may live in another module's scene store — load
+      // them on demand instead of relying on the in-memory map.
+      const loaded = await Promise.all(
+        visitedIds.map((id) => state.scenes[id] ?? storage.getScene(id)),
+      );
+      scenes = loaded.filter((s): s is NonNullable<typeof s> => s != null);
+    } else {
+      scenes = Object.values(state.scenes)
+        .filter((s) => (slug ? s.moduleSlug === slug : true))
+        .sort((a, b) => a.id.localeCompare(b.id));
+    }
     const { exportToBlob } = (await import('@excalidraw/excalidraw')) as unknown as {
       exportToBlob: (opts: {
         elements: readonly unknown[];
@@ -82,14 +97,24 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
       const boardPages = await collectBoardPages();
       await exportSessionToPDF({ boardPages });
       void logEvent('pdf-export', `session exported to PDF (${boardPages.length} board pages)`);
+    } catch (err) {
+      console.error('[session] PDF export failed', err);
+      void logEvent('pdf-export', `export failed: ${err instanceof Error ? err.message : String(err)}`);
+      window.alert('No se pudo generar el PDF. Revisa el panel de diagnóstico.');
     } finally {
       setExporting(false);
     }
   };
 
   const handleExportMd = async () => {
-    await exportSessionMarkdown();
-    void logEvent('md-export', 'session exported to Markdown');
+    try {
+      await exportSessionMarkdown();
+      void logEvent('md-export', 'session exported to Markdown');
+    } catch (err) {
+      console.error('[session] Markdown export failed', err);
+      void logEvent('md-export', `export failed: ${err instanceof Error ? err.message : String(err)}`);
+      window.alert('No se pudo generar el Markdown. Revisa el panel de diagnóstico.');
+    }
   };
 
   const handleEnd = async () => {
@@ -99,8 +124,15 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
   };
 
   const handleNew = async () => {
-    const title = window.prompt('Título de la nueva sesión', 'Sesión de clase');
-    if (title) await newSession(title);
+    const warn =
+      session?.status === 'active'
+        ? 'La sesión en curso quedará cerrada. '
+        : '';
+    const title = window.prompt(
+      `${warn}Título de la nueva sesión`,
+      `Sesión ${new Date().toLocaleDateString('es-CO')}`,
+    );
+    if (title) await newSession(title, state.moduleContext?.slug);
   };
 
   return (
@@ -129,7 +161,7 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
           <Play aria-hidden className="h-3 w-3" />
           Nueva
         </button>
-        {!isEnded && (
+        {session?.status === 'active' && (
           <button
             type="button"
             onClick={handleEnd}

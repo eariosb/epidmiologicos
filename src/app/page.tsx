@@ -82,10 +82,10 @@ export default function HomePage() {
           Análisis Estadístico de Datos Epidemiológicos
         </h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ink-600">
-          Dos niveles en un solo sitio: el curso de pregrado —de la tabla
-          2×2 al meta-análisis— y el curso avanzado —de la sala de
-          máquinas de los métodos exactos a la práctica de campo con
-          registros reales.
+          Contenido basado en las notas de clase del profesor Juan Carlos Salazar Uribe
+          del Departamento de Estadística de la Facultad de Ciencias - Universidad 
+          Nacional de Colombia, Sede Medellín y el texto de Mark Woorward "EPIDEMIOLOGY
+STUDY DESIGN AND DATA ANALYSIS".
         </p>
         <blockquote className="mt-6 border-l-2 border-brand-400 pl-5 font-display text-lg italic leading-relaxed text-ink-700">
           &ldquo;Somos propensos a sobrestimar lo que entendemos del mundo y a

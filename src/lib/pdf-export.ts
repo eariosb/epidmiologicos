@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
-import { getActiveSession, listCaptures, type Question } from './session-store';
+import { getActiveSession, listCaptures, type Question, type Session } from './session-store';
+import { sceneLabel } from './session-timeline';
 import { getChatRecord, type ChatRecord } from './chat-store';
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -48,22 +49,36 @@ function addCover(doc: jsPDF, session: Awaited<ReturnType<typeof getActiveSessio
 
 function addSections(
   doc: jsPDF,
-  sections: { slug: string; title: string; timestamp: number }[],
+  session: Session | null,
   pageHeight: number,
   margin: number,
 ) {
-  if (sections.length === 0) return;
+  const sections = session?.visitedSections ?? [];
+  const sceneVisits = session?.sceneVisits ?? [];
+  if (sections.length === 0 && sceneVisits.length === 0) return;
+  // One chronological journey: module sections and board pages shown,
+  // merged by timestamp — the "dónde inició, dónde terminó" of the class.
+  const journey = [
+    ...sections.map((s) => ({
+      ts: s.timestamp,
+      line: `• ${s.title} (${s.slug})`,
+    })),
+    ...sceneVisits.map((v) => ({
+      ts: v.timestamp,
+      line: `• Pizarra: ${sceneLabel(v.sceneId)}`,
+    })),
+  ].sort((a, b) => a.ts - b.ts);
   doc.addPage();
   doc.setFontSize(16);
   doc.text('Recorrido de la clase', margin, 20);
   doc.setFontSize(10);
   let y = 30;
-  for (const section of sections) {
+  for (const item of journey) {
     if (y > pageHeight - 20) {
       doc.addPage();
       y = 20;
     }
-    doc.text(`• ${section.title} (${section.slug}) · ${new Date(section.timestamp).toLocaleTimeString()}`, margin, y);
+    doc.text(`${item.line} · ${new Date(item.ts).toLocaleTimeString('es-CO')}`, margin, y);
     y += 6;
   }
 }
@@ -220,7 +235,7 @@ export async function exportSessionToPDF(opts: PDFExportOptions = {}): Promise<v
   const margin = 15;
 
   addCover(doc, session, margin);
-  addSections(doc, session?.visitedSections ?? [], pageHeight, margin);
+  addSections(doc, session, pageHeight, margin);
   await addCaptures(doc, captures, pageWidth, pageHeight, margin);
   addQuestions(doc, session?.questions ?? [], pageHeight, margin);
   addChat(doc, chat, pageHeight, margin);
