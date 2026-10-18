@@ -93,6 +93,15 @@ export async function runAssistantTurn(
       return validated;
     }
 
+    // The assistant message carrying tool_calls MUST precede the tool
+    // results — OpenAI-compatible APIs reject orphan tool messages.
+    msgs.push({
+      id: `assistant-tools-${turn}`,
+      role: 'assistant',
+      content: res.content,
+      toolCalls: res.toolCalls,
+      createdAt: new Date().toISOString(),
+    });
     const toolMsgs = await executeToolCalls(res.toolCalls, tools, opts.onToolResult);
     msgs.push(...toolMsgs);
   }

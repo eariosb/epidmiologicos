@@ -1,13 +1,18 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useBlackboardContext } from '../lib/context';
 import { useBlackboardLLM } from '../hooks/useBlackboardLLM';
 import { copyText } from '../lib/clipboard';
+import { blobToDataUrl } from '../lib/blob';
+import type { BlackboardCanvasRef } from './BlackboardCanvas';
 import type { AssistantMode, LLMMessage } from '../types/blackboard';
 
 interface BlackboardAssistantProps {
   onExecuteR?: (code: string) => void;
+  /** When provided, submissions attach a capture of the current canvas —
+   * the same payload the toolbar quick-actions send. */
+  canvasRef?: { current: { getImage?: () => Promise<Blob | null> } | null };
 }
 
 const MODES: { id: AssistantMode; label: string }[] = [
@@ -17,17 +22,26 @@ const MODES: { id: AssistantMode; label: string }[] = [
   { id: 'plot-r', label: 'Graficar' },
 ];
 
-export function BlackboardAssistant({ onExecuteR }: BlackboardAssistantProps) {
+export function BlackboardAssistant({ onExecuteR, canvasRef }: BlackboardAssistantProps) {
   const { state } = useBlackboardContext();
   const { messages, status, ask, stop, clear } = useBlackboardLLM();
   const [input, setInput] = useState('');
   const [mode, setMode] = useState<AssistantMode>('ask');
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Keep the newest message in view while answers stream in.
+  const lastMessage = messages[messages.length - 1];
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages.length, lastMessage?.content]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() && status !== 'streaming') return;
-    await ask(mode, input.trim());
+    if (!input.trim() || status === 'streaming') return;
+    const imageBlob = await canvasRef?.current?.getImage?.();
+    const imageDataUrl = imageBlob ? await blobToDataUrl(imageBlob) : null;
+    await ask(mode, input.trim(), imageDataUrl);
     setInput('');
   };
 

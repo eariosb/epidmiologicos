@@ -344,7 +344,7 @@ export function CourseBlackboard({
                     <span className="ml-auto text-ink-400">Preguntar · Explicar · Generar R · Graficar</span>
                   </button>
                   <div className={assistantOpen ? '' : 'hidden'}>
-                    <BlackboardAssistant onExecuteR={setScratchCode} />
+                    <BlackboardAssistant onExecuteR={setScratchCode} canvasRef={canvasRef} />
                   </div>
                 </div>
               </PanelErrorBoundary>

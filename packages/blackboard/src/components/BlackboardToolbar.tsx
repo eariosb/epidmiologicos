@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Sparkles, Search, Play, ChartColumn, Calculator, Download, RotateCcw, Maximize2, X, Settings } from 'lucide-react';
 import { useBlackboardContext } from '../lib/context';
 import { useBlackboardLLM } from '../hooks/useBlackboardLLM';
+import { blobToDataUrl } from '../lib/blob';
 import type { AssistantMode } from '../types/blackboard';
 import { BlackboardCalculator } from './BlackboardCalculator';
 import { BlackboardExport } from './BlackboardExport';
@@ -166,11 +167,4 @@ function ToolbarButton({
   );
 }
 
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
+

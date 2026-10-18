@@ -18,7 +18,11 @@ export interface ValidateResult {
   citations: string[];
 }
 
-const CITATION_RE = /\[([^\]\n]{1,60})\]/g;
+// A citation looks like a corpus id: "mod:slug#anchor", "bib:...",
+// "quiz:...", "glosario:...". The colon requirement is what keeps plain
+// brackets — R indexing like x[1] or df[df$x > 0, ], options like
+// [a, b] — from being mangled as unverified references.
+const CITATION_RE = /\[([^\]\n:]{1,40}:[^\]\n]{1,80})\]/g;
 const DOI_RE = /\b10\.\d{4,9}\/\S+/g;
 const ISBN_RE = /\b97[89][-\d ]{10,17}\b/g;
 const DISPLAY_MATH_RE = /\$\$([\s\S]+?)\$\$/g;

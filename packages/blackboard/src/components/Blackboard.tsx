@@ -33,7 +33,7 @@ export function Blackboard({ theme = 'light', onExecuteR, footer }: BlackboardPr
           onChange={saveScene}
           theme={theme}
         />
-        <BlackboardAssistant onExecuteR={onExecuteR} />
+        <BlackboardAssistant onExecuteR={onExecuteR} canvasRef={canvasRef} />
         {footer}
       </div>
     </BlackboardPanel>

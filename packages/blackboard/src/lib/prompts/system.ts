@@ -1,12 +1,11 @@
 import type { RagFragment } from '../rag/types';
 import type { ModuleContext, AssistantMode } from '../../types/blackboard';
 
-export interface BoardInventory {
-  formulas: number;
-  matrices: number;
-  captures: number;
-  questions: number;
-}
+/**
+ * Counts of structured elements on the active board page, keyed by
+ * boardKind ('math', 'matrix', 'capture', 'table', 'code', 'plot', …).
+ */
+export type BoardInventory = Record<string, number>;
 
 /**
  * Course-specific material for the system prompt. The blackboard package
@@ -117,11 +116,12 @@ export function buildSystemPrompt(input: SystemPromptInput): string {
     )
     .replace('{moduleDatasets}', () => m.datasets.join(', ') || '(ninguno)')
     .replace('{visitedSections}', () => visitedSections.join(' → ') || '(inicio de sesión)')
-    .replace(
-      '{boardInventory}',
-      () =>
-        `fórmulas:${boardInventory.formulas} matrices:${boardInventory.matrices} capturas:${boardInventory.captures} preguntas:${boardInventory.questions}`,
-    )
+    .replace('{boardInventory}', () => {
+      const entries = Object.entries(boardInventory).filter(([, n]) => n > 0);
+      return entries.length > 0
+        ? entries.map(([kind, n]) => `${kind}:${n}`).join(' ')
+        : '(vacía)';
+    })
     .replace(
       '{ragFragments}',
       () =>

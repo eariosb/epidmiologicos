@@ -193,8 +193,15 @@ m17) lleva su propia marca.
   EpiNow2).
 - **Asistente IA con RAG**: corpus propio (`src/lib/rag/corpus.ts`) de
   ~170 documentos (secciones de módulos, quizzes, bibliografía, anexos),
-  recuperación BM25 local, perfil pedagógico del curso inyectado al
-  prompt del paquete `@cursos/blackboard`.
+  recuperación BM25 local con prioridad al módulo activo, perfil
+  pedagógico del curso inyectado al prompt del paquete
+  `@cursos/blackboard`. Cuatro modos — **Preguntar, Explicar, Generar R,
+  Graficar** — con captura del lienzo adjunta cuando el proveedor tiene
+  visión, herramientas de agente (`insert_math`, `insert_matrix`,
+  `run_r` sobre WebR, `cite`), citas verificadas contra el corpus
+  inyectado, validación de DOI/ISBN y de LaTeX vía KaTeX, historial de
+  conversación persistente por sesión y código R ejecutable en un
+  sandbox WebR bajo la pizarra.
 - **Pizarra digital** (paquete `packages/blackboard`, Excalidraw):
   panel acoplable con barra de herramientas completa — dibujo a mano
   alzada, formas, texto, borrador, modo presentación, modo docente/

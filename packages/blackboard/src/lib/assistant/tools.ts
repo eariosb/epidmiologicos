@@ -6,7 +6,7 @@ const JSON_SCHEMA_STRING = (description: string) => ({ type: 'string', descripti
 
 function matrixLatex(values: number[][]): string {
   const rows = values
-    .map((row) => row.map((v) => (Number.isInteger(v) ? String(v) : String(v))).join(' & '))
+    .map((row) => row.map(String).join(' & '))
     .join(' \\\\ ');
   return `\\begin{bmatrix} ${rows} \\end{bmatrix}`;
 }
@@ -102,8 +102,14 @@ export function createAssistantTools(fragments: RagFragment[]): Record<string, T
           return { error: 'run_r not available: WebR is not wired into the board' };
         }
         const result = await board.runR(source);
+        // Bound what goes back into the model context — a long stdout dump
+        // would blow up the token budget of the next turn.
+        const output =
+          result.text.length > 4000
+            ? `${result.text.slice(0, 4000)}\n… [${result.text.length - 4000} caracteres truncados]`
+            : result.text;
         return {
-          output: result.text,
+          output,
           ...(result.error ? { error: result.error } : {}),
           plots: result.plots?.length ?? 0,
         };

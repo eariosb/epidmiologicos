@@ -1,7 +1,12 @@
 import type { LLMProvider, LLMMessage, LLMChatOptions } from '../../types/blackboard';
 
 type OpenAIProviderId = 'openai' | 'deepseek';
-type OpenAIMessage = { role: string; content: unknown; tool_call_id?: string };
+type OpenAIMessage = {
+  role: string;
+  content: unknown;
+  tool_call_id?: string;
+  tool_calls?: { id: string; type: 'function'; function: { name: string; arguments: string } }[];
+};
 
 export class OpenAICompatibleProvider implements LLMProvider {
   readonly id: OpenAIProviderId;
@@ -138,7 +143,18 @@ export class OpenAICompatibleProvider implements LLMProvider {
 
     const useImages = this.vision && m.images && m.images.length > 0;
     if (!useImages) {
-      return { role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content };
+      const base: OpenAIMessage = {
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content || null,
+      };
+      if (m.role === 'assistant' && m.toolCalls && m.toolCalls.length > 0) {
+        base.tool_calls = m.toolCalls.map((c) => ({
+          id: c.id,
+          type: 'function' as const,
+          function: { name: c.name, arguments: c.arguments },
+        }));
+      }
+      return base;
     }
 
     const content: { type: string; text?: string; image_url?: { url: string } }[] = [

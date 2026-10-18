@@ -13,11 +13,21 @@ describe('validateAndSanitize — citations', () => {
   });
 
   it('replaces an invented citation with a warning marker', () => {
-    const out = validateAndSanitize('Según [Smith-2024-mdlmm], el modelo…', {
+    const out = validateAndSanitize('Según [bib:smith-2024-mdlmm], el modelo…', {
       allowedCitationIds: allowed,
     });
     expect(out.content).toContain('[referencia no verificada]');
     expect(out.citations).toHaveLength(0);
+  });
+
+  it('leaves non-citation brackets untouched (R indexing, options)', () => {
+    const out = validateAndSanitize(
+      'x[1] <- df[df$edad > 40, ]; opciones [a, b]; ver [mod:lmm:intro]',
+      { allowedCitationIds: allowed },
+    );
+    expect(out.content).toContain('x[1]');
+    expect(out.content).toContain('[a, b]');
+    expect(out.citations).toEqual(['mod:lmm:intro']);
   });
 });
 

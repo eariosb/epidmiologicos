@@ -71,7 +71,7 @@ describe('runAssistantTurn', () => {
   });
 
   it('sanitizes the final content through the validator', async () => {
-    const provider = makeProvider([{ content: 'Ver [inventada-2024].', toolCalls: [] }]);
+    const provider = makeProvider([{ content: 'Ver [bib:inventada-2024].', toolCalls: [] }]);
     const out = await runAssistantTurn([baseMessage], {
       provider,
       model: 'm',

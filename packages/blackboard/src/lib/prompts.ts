@@ -6,19 +6,23 @@ export function buildUserPrompt(
   imageDataUrl?: string | null,
 ): string {
   const base = text.trim();
-  const hasImage = Boolean(imageDataUrl);
+  // Only claim an image exists when one was actually attached AND the
+  // provider can see it — the caller strips it for text-only models.
+  const imageNote = imageDataUrl
+    ? '\n\n[Tienes disponible una captura del lienzo como imagen adjunta.]'
+    : '';
 
   switch (mode) {
     case 'ask':
-      return hasImage
-        ? `${base || 'Explica lo que aparece en la imagen.'}\n\n[Tienes disponible una captura del lienzo como imagen.]`
+      return imageDataUrl
+        ? `${base || 'Explica lo que aparece en la imagen.'}${imageNote}`
         : base || '¿Qué puedes decirme sobre este tema?';
     case 'explain-selection':
-      return `Explica la selección del lienzo${base ? `: ${base}` : '.'}\n\n[Tienes disponible una captura de la selección como imagen.]`;
+      return `Explica el contenido seleccionado o visible en el lienzo${base ? `: ${base}` : '.'}${imageNote}`;
     case 'generate-r':
-      return `Genera el código R equivalente a la fórmula o procedimiento descrito${base ? `: ${base}` : ''}.\n\n[Tienes disponible una captura del lienzo como imagen.]`;
+      return `Genera el código R equivalente a la fórmula o procedimiento descrito${base ? `: ${base}` : ''}.${imageNote}`;
     case 'plot-r':
-      return `Genera código R con curve() o ggplot2 para graficar la función o modelo indicado${base ? `: ${base}` : ''}.\n\n[Tienes disponible una captura del lienzo como imagen.]`;
+      return `Genera código R con curve() o ggplot2 para graficar la función o modelo indicado${base ? `: ${base}` : ''}.${imageNote}`;
     default:
       return base;
   }

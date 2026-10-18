@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useBlackboardContext } from '../lib/context';
 import { createLLMProvider } from '../lib/llm';
 import { buildSystemPrompt } from '../lib/prompts/system';
@@ -22,13 +22,16 @@ const FALLBACK_MODULE = {
   order: 0,
 };
 
+/** Prior turns echoed back to the provider — capped so the request stays
+ * small; images and rag metadata are stripped (token-heavy, useless to
+ * the model on replay). */
+const HISTORY_LIMIT = 8;
+
 function boardInventory(elements: readonly unknown[] | undefined) {
-  const inv = { formulas: 0, matrices: 0, captures: 0, questions: 0 };
+  const inv: Record<string, number> = {};
   for (const el of elements ?? []) {
     const kind = (el as { customData?: { boardKind?: string } }).customData?.boardKind;
-    if (kind === 'math') inv.formulas += 1;
-    else if (kind === 'matrix') inv.matrices += 1;
-    else if (kind === 'capture') inv.captures += 1;
+    if (kind) inv[kind] = (inv[kind] ?? 0) + 1;
   }
   return inv;
 }
@@ -36,8 +39,13 @@ function boardInventory(elements: readonly unknown[] | undefined) {
 export function useBlackboardLLM() {
   const { state, dispatch } = useBlackboardContext();
   const abortRef = useRef<AbortController | null>(null);
+  const idSeq = useRef(0);
 
-  const provider = createLLMProvider(state.settings);
+  const { llmProvider, llmModel, apiKeys } = state.settings;
+  const provider = useMemo(
+    () => createLLMProvider({ llmProvider, llmModel, apiKeys } as typeof state.settings),
+    [llmProvider, llmModel, apiKeys],
+  );
 
   const ask = useCallback(
     async (mode: AssistantMode, text: string, imageDataUrl?: string | null) => {
@@ -48,8 +56,17 @@ export function useBlackboardLLM() {
       dispatch({ type: 'SET_LLM_STATUS', status: 'streaming' });
 
       const module = state.moduleContext ?? FALLBACK_MODULE;
-      const fragments = getRetriever()?.(text || `${mode}`, 5) ?? [];
+      // Retrieval query: the user's text, or the module title when the
+      // request is pure canvas (mode buttons with no typed input).
+      const query = text || module.title;
+      const fragments = getRetriever()?.(query, 5) ?? [];
       const activeScene = state.activeSceneId ? state.scenes[state.activeSceneId] : null;
+
+      // Vision gating: only attach the canvas capture when the provider
+      // can actually see it — otherwise the prompt would claim an image
+      // the model never receives.
+      const attachedImage =
+        imageDataUrl && provider.supportsVision() ? imageDataUrl : null;
 
       const system = buildSystemPrompt({
         module,
@@ -58,24 +75,48 @@ export function useBlackboardLLM() {
         ragFragments: fragments,
         assistantMode: mode,
       });
-      const user = buildUserPrompt(mode, text, imageDataUrl);
+      const user = buildUserPrompt(mode, text, attachedImage);
 
       const now = Date.now();
+      const seq = ++idSeq.current;
       const fragmentIds = fragments.map((f) => f.id);
+      // Conversation history: prior user/assistant turns (sans system and
+      // tool internals) so the assistant is actually conversational.
+      const history: LLMMessage[] = state.llmMessages
+        .filter((m) => m.role === 'user' || m.role === 'assistant')
+        .filter((m) => m.content.trim().length > 0)
+        .slice(-HISTORY_LIMIT)
+        .map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          createdAt: m.createdAt,
+        }));
       const messages: LLMMessage[] = [
-        { id: `system-${now}`, role: 'system', content: system, createdAt: new Date().toISOString() },
+        { id: `system-${now}-${seq}`, role: 'system', content: system, createdAt: new Date().toISOString() },
+        ...history,
         {
-          id: `user-${now}`,
+          id: `user-${now}-${seq}`,
           role: 'user',
           content: user,
-          images: imageDataUrl ? [imageDataUrl] : undefined,
+          images: attachedImage ? [attachedImage] : undefined,
           ragFragments: fragmentIds,
           createdAt: new Date().toISOString(),
         },
       ];
-      messages.forEach((m) => dispatch({ type: 'APPEND_LLM_MESSAGE', message: m }));
+      dispatch({
+        type: 'APPEND_LLM_MESSAGE',
+        message: messages[0],
+      });
+      dispatch({
+        type: 'APPEND_LLM_MESSAGE',
+        message: messages[messages.length - 1],
+      });
+      // The request payload carries the full history; the chat record only
+      // stores the new system + user turn (plus the assistant reply below).
+      const requestMessages = messages;
 
-      const assistantId = `assistant-${now}`;
+      const assistantId = `assistant-${now}-${seq}`;
       dispatch({
         type: 'APPEND_LLM_MESSAGE',
         message: {
@@ -93,12 +134,13 @@ export function useBlackboardLLM() {
         validateLatex: getLatexValidator(),
       };
 
+      let errored = false;
       try {
         if (tools) {
           // Tool-capable path: non-streaming turn with up to 5 tool calls.
-          const result = await runAssistantTurn(messages, {
+          const result = await runAssistantTurn(requestMessages, {
             provider,
-            model: state.settings.llmModel,
+            model: llmModel,
             tools,
             validate,
             signal: controller.signal,
@@ -115,8 +157,8 @@ export function useBlackboardLLM() {
         } else {
           // Streaming path (mock provider / providers without tool support).
           let fullContent = '';
-          const stream = provider.chat(messages, {
-            model: state.settings.llmModel,
+          const stream = provider.chat(requestMessages, {
+            model: llmModel,
             signal: controller.signal,
           });
           for await (const chunk of stream) {
@@ -132,19 +174,27 @@ export function useBlackboardLLM() {
         }
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
+          errored = true;
           void logEvent('chat-error', String(err), {
-            provider: state.settings.llmProvider,
-            model: state.settings.llmModel,
+            provider: llmProvider,
+            model: llmModel,
           });
-          dispatch({ type: 'SET_LLM_STATUS', status: 'error' });
-          return;
+          // Surface the failure in the bubble — a silent empty reply reads
+          // like the assistant is broken rather than the provider.
+          dispatch({
+            type: 'UPDATE_LLM_MESSAGE',
+            id: assistantId,
+            patch: {
+              content: `⚠ No pude completar la respuesta (${err instanceof Error ? err.message : String(err)}). Revisa la configuración del proveedor en Ajustes.`,
+            },
+          });
         }
       } finally {
         abortRef.current = null;
-        dispatch({ type: 'SET_LLM_STATUS', status: 'idle' });
+        dispatch({ type: 'SET_LLM_STATUS', status: errored ? 'error' : 'idle' });
       }
     },
-    [dispatch, provider, state],
+    [dispatch, provider, llmModel, llmProvider, state],
   );
 
   const stop = useCallback(() => {
@@ -154,7 +204,12 @@ export function useBlackboardLLM() {
   }, [dispatch]);
 
   const clear = useCallback(() => {
+    // Abort first: otherwise an in-flight stream keeps appending chunks to
+    // the just-cleared list and the conversation "comes back".
+    abortRef.current?.abort();
+    abortRef.current = null;
     dispatch({ type: 'CLEAR_LLM_MESSAGES' });
+    dispatch({ type: 'SET_LLM_STATUS', status: 'idle' });
   }, [dispatch]);
 
   return {

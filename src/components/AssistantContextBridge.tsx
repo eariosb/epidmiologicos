@@ -5,10 +5,26 @@ import katex from 'katex';
 import { useBlackboardContext, type BlackboardCanvasRef } from '@cursos/blackboard';
 import { Bm25Index, retrieveContext, setRetriever, type RagDoc } from '@cursos/blackboard/rag';
 import { setLatexValidator, setBoardOps } from '@cursos/blackboard/assistant';
-import { getActiveSession } from '@/lib/session-store';
+import { getActiveSession, onSessionChanged } from '@/lib/session-store';
 import { logEvent } from '@cursos/blackboard';
 import { latexToDataUrl } from '@/lib/latex-image';
 import { runRCode } from '@/lib/webr';
+
+// The corpus is course-wide: fetch once per page load, then rebuild only
+// the cheap retriever closure when the active module changes.
+let cachedIndex: Bm25Index | null = null;
+
+async function loadCorpusIndex(): Promise<Bm25Index | null> {
+  if (cachedIndex) return cachedIndex;
+  const r = await fetch('/api/rag-corpus');
+  const data: { docs: RagDoc[] } = r.ok ? await r.json() : { docs: [] };
+  if (data.docs.length === 0) return null;
+  const index = new Bm25Index();
+  index.add(data.docs);
+  cachedIndex = index;
+  void logEvent('corpus-loaded', `RAG corpus: ${data.docs.length} docs`);
+  return index;
+}
 
 /**
  * Client-side wiring for the contextual assistant:
@@ -24,7 +40,8 @@ export function AssistantContextBridge({
   moduleSlug?: string;
   canvasRef?: React.RefObject<BlackboardCanvasRef | null>;
 }) {
-  const { dispatch } = useBlackboardContext();
+  const { state, dispatch } = useBlackboardContext();
+  const slug = moduleSlug ?? state.moduleContext?.slug ?? '';
 
   useEffect(() => {
     setLatexValidator((src) => {
@@ -46,29 +63,33 @@ export function AssistantContextBridge({
       },
     });
 
+    return () => {
+      setLatexValidator(null);
+      setBoardOps(null);
+    };
+  }, [canvasRef]);
+
+  // Retriever: index is built once; only the module-aware closure is
+  // swapped when navigating between modules.
+  useEffect(() => {
     let cancelled = false;
-    fetch('/api/rag-corpus')
-      .then((r) => (r.ok ? r.json() : { docs: [] }))
-      .then((data: { docs: RagDoc[] }) => {
-        if (cancelled || data.docs.length === 0) return;
-        const index = new Bm25Index();
-        index.add(data.docs);
-        setRetriever((query, k) => retrieveContext(query, moduleSlug ?? '', index, k));
-        void logEvent('corpus-loaded', `RAG corpus: ${data.docs.length} docs`);
+    loadCorpusIndex()
+      .then((index) => {
+        if (cancelled || !index) return;
+        setRetriever((query, k) => retrieveContext(query, slug, index, k));
       })
       .catch((err) => {
         console.error('[rag] corpus load failed', err);
         void logEvent('corpus-error', String(err));
       });
-
     return () => {
       cancelled = true;
       setRetriever(null);
-      setLatexValidator(null);
-      setBoardOps(null);
     };
-  }, [dispatch, moduleSlug, canvasRef]);
+  }, [slug]);
 
+  // Session mirror: subscribe to session-store notifications instead of
+  // polling — visited sections update exactly when the session mutates.
   useEffect(() => {
     let active = true;
     const syncSections = async () => {
@@ -81,10 +102,10 @@ export function AssistantContextBridge({
       }
     };
     void syncSections();
-    const interval = setInterval(syncSections, 15_000);
+    const unsubscribe = onSessionChanged(() => void syncSections());
     return () => {
       active = false;
-      clearInterval(interval);
+      unsubscribe();
     };
   }, [dispatch]);
 

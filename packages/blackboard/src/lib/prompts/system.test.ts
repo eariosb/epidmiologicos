@@ -20,7 +20,7 @@ const input = {
     order: 3,
   },
   visitedSections: ['lmm#introduccion', 'lmm#estimacion'],
-  boardInventory: { formulas: 2, matrices: 1, captures: 3, questions: 1 },
+  boardInventory: { math: 2, matrix: 1, capture: 3 },
   ragFragments: [
     {
       id: 'mod:lmm:definicion',
@@ -46,7 +46,7 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toContain('Modelos lineales mixtos');
     expect(prompt).toContain('Formular LMM');
     expect(prompt).toContain('lmm#introduccion → lmm#estimacion');
-    expect(prompt).toContain('fórmulas:2 matrices:1 capturas:3 preguntas:1');
+    expect(prompt).toContain('math:2 matrix:1 capture:3');
     expect(prompt).toContain('[mod:lmm:definicion]');
     expect(prompt).toContain('[bib:pinheiro-bates-2000]');
     expect(prompt).toContain('formato de 5 secciones');

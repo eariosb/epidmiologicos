@@ -87,6 +87,8 @@ export type LLMMessage = {
   ragFragments?: string[];
   /** OpenAI-style tool_call id when role === 'tool'. */
   toolCallId?: string;
+  /** Tool calls requested by the assistant (role === 'assistant'). */
+  toolCalls?: { id: string; name: string; arguments: string }[];
   createdAt: string;
 };
 
