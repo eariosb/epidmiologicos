@@ -5,7 +5,6 @@ import { useBlackboardContext } from '../lib/context';
 import { useBlackboardLLM } from '../hooks/useBlackboardLLM';
 import { copyText } from '../lib/clipboard';
 import { blobToDataUrl } from '../lib/blob';
-import type { BlackboardCanvasRef } from './BlackboardCanvas';
 import type { AssistantMode, LLMMessage } from '../types/blackboard';
 
 interface BlackboardAssistantProps {

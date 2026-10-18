@@ -6,7 +6,6 @@ import { BlackboardToolbar } from './BlackboardToolbar';
 import { BlackboardCanvas } from './BlackboardCanvas';
 import { BlackboardAssistant } from './BlackboardAssistant';
 import { useBlackboardScene } from '../hooks/useBlackboardScene';
-import { useBlackboardContext } from '../lib/context';
 import type { BlackboardCanvasRef } from './BlackboardCanvas';
 
 interface BlackboardProps {
@@ -17,7 +16,6 @@ interface BlackboardProps {
 
 export function Blackboard({ theme = 'light', onExecuteR, footer }: Readonly<BlackboardProps>) {
   const canvasRef = useRef<BlackboardCanvasRef>(null);
-  const { state } = useBlackboardContext();
   const { activeScene, saveScene } = useBlackboardScene();
 
   const sceneId = activeScene?.id ?? 'default';
