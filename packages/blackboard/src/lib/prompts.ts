@@ -11,6 +11,7 @@ export function buildUserPrompt(
   const imageNote = imageDataUrl
     ? '\n\n[Tienes disponible una captura del lienzo como imagen adjunta.]'
     : '';
+  const detail = base ? `: ${base}` : '';
 
   switch (mode) {
     case 'ask':
@@ -18,11 +19,11 @@ export function buildUserPrompt(
         ? `${base || 'Explica lo que aparece en la imagen.'}${imageNote}`
         : base || '¿Qué puedes decirme sobre este tema?';
     case 'explain-selection':
-      return `Explica el contenido seleccionado o visible en el lienzo${base ? `: ${base}` : '.'}${imageNote}`;
+      return `Explica el contenido seleccionado o visible en el lienzo${detail || '.'}${imageNote}`;
     case 'generate-r':
-      return `Genera el código R equivalente a la fórmula o procedimiento descrito${base ? `: ${base}` : ''}.${imageNote}`;
+      return `Genera el código R equivalente a la fórmula o procedimiento descrito${detail}.${imageNote}`;
     case 'plot-r':
-      return `Genera código R con curve() o ggplot2 para graficar la función o modelo indicado${base ? `: ${base}` : ''}.${imageNote}`;
+      return `Genera código R con curve() o ggplot2 para graficar la función o modelo indicado${detail}.${imageNote}`;
     default:
       return base;
   }

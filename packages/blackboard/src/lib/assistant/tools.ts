@@ -7,8 +7,8 @@ const JSON_SCHEMA_STRING = (description: string) => ({ type: 'string', descripti
 function matrixLatex(values: number[][]): string {
   const rows = values
     .map((row) => row.map(String).join(' & '))
-    .join(' \\\\ ');
-  return `\\begin{bmatrix} ${rows} \\end{bmatrix}`;
+    .join(String.raw` \\ `);
+  return String.raw`\begin{bmatrix} ${rows} \end{bmatrix}`;
 }
 
 function noOps<T>(name: string): Promise<T> {
@@ -128,7 +128,7 @@ export function createAssistantTools(fragments: RagFragment[]): Record<string, T
         },
         required: ['id'],
       },
-      async run(input: unknown): Promise<unknown> {
+      run(input: unknown) {
         const { id } = input as { id: string };
         const frag = byId.get(id);
         if (!frag) {

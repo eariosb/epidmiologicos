@@ -30,7 +30,7 @@ export function BlackboardAssistant({ onExecuteR, canvasRef }: BlackboardAssista
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Keep the newest message in view while answers stream in.
-  const lastMessage = messages[messages.length - 1];
+  const lastMessage = messages.at(-1);
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;

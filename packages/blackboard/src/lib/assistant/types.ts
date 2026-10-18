@@ -25,5 +25,5 @@ export interface ToolDef<I = unknown, O = unknown> {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
-  run(input: I): Promise<O>;
+  run(input: I): O | Promise<O>;
 }

@@ -15,7 +15,7 @@ interface BlackboardProps {
   footer?: ReactNode;
 }
 
-export function Blackboard({ theme = 'light', onExecuteR, footer }: BlackboardProps) {
+export function Blackboard({ theme = 'light', onExecuteR, footer }: Readonly<BlackboardProps>) {
   const canvasRef = useRef<BlackboardCanvasRef>(null);
   const { state } = useBlackboardContext();
   const { activeScene, saveScene } = useBlackboardScene();

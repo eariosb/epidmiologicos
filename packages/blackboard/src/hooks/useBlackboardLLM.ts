@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef } from 'react';
 import { useBlackboardContext } from '../lib/context';
-import { createLLMProvider } from '../lib/llm';
+import { createLLMProvider, type LLMProvider } from '../lib/llm';
 import { buildSystemPrompt } from '../lib/prompts/system';
 import { buildUserPrompt } from '../lib/prompts';
 import { getRetriever } from '../lib/rag/runtime';
@@ -34,6 +34,54 @@ function boardInventory(elements: readonly unknown[] | undefined) {
     if (kind) inv[kind] = (inv[kind] ?? 0) + 1;
   }
   return inv;
+}
+
+interface RequestResult {
+  content: string;
+  citations: string[];
+}
+
+/** Runs one assistant request: tool-capable non-streaming turn when the
+ * provider and board ops support it, plain streaming otherwise. */
+async function runRequest(opts: {
+  provider: LLMProvider;
+  model: string;
+  messages: LLMMessage[];
+  fragmentIds: string[];
+  ragFragments: Parameters<typeof createAssistantTools>[0];
+  signal: AbortSignal;
+  onChunk: (chunk: string) => void;
+}): Promise<RequestResult> {
+  const { provider, model, messages, fragmentIds, ragFragments, signal, onChunk } = opts;
+  const board = getBoardOps();
+  const tools = provider.chatOnce && board ? createAssistantTools(ragFragments) : undefined;
+  const validate = {
+    allowedCitationIds: new Set(fragmentIds),
+    validateLatex: getLatexValidator(),
+  };
+
+  if (tools) {
+    return runAssistantTurn(messages, {
+      provider,
+      model,
+      tools,
+      validate,
+      signal,
+      onToolResult: (name, result) =>
+        void logEvent('tool-result', name, {
+          result: JSON.stringify(result).slice(0, 400),
+        }),
+    });
+  }
+
+  // Streaming path (mock provider / providers without tool support).
+  let fullContent = '';
+  const stream = provider.chat(messages, { model, signal });
+  for await (const chunk of stream) {
+    fullContent += chunk;
+    onChunk(chunk);
+  }
+  return validateAndSanitize(fullContent, validate);
 }
 
 export function useBlackboardLLM() {
@@ -92,29 +140,25 @@ export function useBlackboardLLM() {
           content: m.content,
           createdAt: m.createdAt,
         }));
-      const messages: LLMMessage[] = [
-        { id: `system-${now}-${seq}`, role: 'system', content: system, createdAt: new Date().toISOString() },
-        ...history,
-        {
-          id: `user-${now}-${seq}`,
-          role: 'user',
-          content: user,
-          images: attachedImage ? [attachedImage] : undefined,
-          ragFragments: fragmentIds,
-          createdAt: new Date().toISOString(),
-        },
-      ];
-      dispatch({
-        type: 'APPEND_LLM_MESSAGE',
-        message: messages[0],
-      });
-      dispatch({
-        type: 'APPEND_LLM_MESSAGE',
-        message: messages[messages.length - 1],
-      });
-      // The request payload carries the full history; the chat record only
-      // stores the new system + user turn (plus the assistant reply below).
-      const requestMessages = messages;
+      const systemMessage: LLMMessage = {
+        id: `system-${now}-${seq}`,
+        role: 'system',
+        content: system,
+        createdAt: new Date().toISOString(),
+      };
+      const userMessage: LLMMessage = {
+        id: `user-${now}-${seq}`,
+        role: 'user',
+        content: user,
+        images: attachedImage ? [attachedImage] : undefined,
+        ragFragments: fragmentIds,
+        createdAt: new Date().toISOString(),
+      };
+      // The chat record stores the new system + user turn; the request
+      // payload additionally carries the recent history.
+      const requestMessages = [systemMessage, ...history, userMessage];
+      dispatch({ type: 'APPEND_LLM_MESSAGE', message: systemMessage });
+      dispatch({ type: 'APPEND_LLM_MESSAGE', message: userMessage });
 
       const assistantId = `assistant-${now}-${seq}`;
       dispatch({
@@ -127,51 +171,22 @@ export function useBlackboardLLM() {
         },
       });
 
-      const board = getBoardOps();
-      const tools = provider.chatOnce && board ? createAssistantTools(fragments) : undefined;
-      const validate = {
-        allowedCitationIds: new Set(fragmentIds),
-        validateLatex: getLatexValidator(),
-      };
-
       let errored = false;
       try {
-        if (tools) {
-          // Tool-capable path: non-streaming turn with up to 5 tool calls.
-          const result = await runAssistantTurn(requestMessages, {
-            provider,
-            model: llmModel,
-            tools,
-            validate,
-            signal: controller.signal,
-            onToolResult: (name, result) =>
-              void logEvent('tool-result', name, {
-                result: JSON.stringify(result).slice(0, 400),
-              }),
-          });
-          dispatch({
-            type: 'UPDATE_LLM_MESSAGE',
-            id: assistantId,
-            patch: { content: result.content, citations: result.citations },
-          });
-        } else {
-          // Streaming path (mock provider / providers without tool support).
-          let fullContent = '';
-          const stream = provider.chat(requestMessages, {
-            model: llmModel,
-            signal: controller.signal,
-          });
-          for await (const chunk of stream) {
-            fullContent += chunk;
-            dispatch({ type: 'STREAM_LLM_CHUNK', id: assistantId, chunk });
-          }
-          const validated = validateAndSanitize(fullContent, validate);
-          dispatch({
-            type: 'UPDATE_LLM_MESSAGE',
-            id: assistantId,
-            patch: { content: validated.content, citations: validated.citations },
-          });
-        }
+        const result = await runRequest({
+          provider,
+          model: llmModel,
+          messages: requestMessages,
+          fragmentIds,
+          ragFragments: fragments,
+          signal: controller.signal,
+          onChunk: (chunk) => dispatch({ type: 'STREAM_LLM_CHUNK', id: assistantId, chunk }),
+        });
+        dispatch({
+          type: 'UPDATE_LLM_MESSAGE',
+          id: assistantId,
+          patch: { content: result.content, citations: result.citations },
+        });
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           errored = true;
