@@ -19,9 +19,8 @@ const files = fs.readdirSync(dir).filter((f) => f.endsWith('.mdx')).sort();
 // Stubs para todos los componentes custom usados en los MDX.
 const stub = () => null;
 const components = {
-  Callout: stub, CodeBlock: stub, Quiz: stub, Flashcard: stub, Flashcards: stub,
+  Callout: stub, Quiz: stub, Flashcard: stub,
   DataTable: stub, ProcessSteps: stub, RCell: stub, LabExercise: stub,
-  FormulaPalette: stub, BlackboardAnchor: stub, BlackboardEmbed: stub,
   TwoByTwoExplorer: stub, ConfusionExplorer: stub, PvalueVsEffect: stub,
   KaplanMeierSim: stub, McNemarCmhDemo: stub, DiagnosticTestExplorer: stub,
   DesignTree: stub,
@@ -39,7 +38,7 @@ const components = {
   ExactTestExplorer: stub, ExactPowerExplorer: stub, CorrectionExplorer: stub,
   CIMethodsExplorer: stub, PrecisionSampleSizeExplorer: stub,
   SampleSizeExplorer: stub,
-  AuditCard: stub, MultinomCIExplorer: stub, Tau2Audit: stub,
+  MultinomCIExplorer: stub, Tau2Audit: stub,
   BootstrapStress: stub,
   // Term se renderiza de verdad: label + tooltip, para validar el texto.
   Term: ({ k, tip, children }) =>

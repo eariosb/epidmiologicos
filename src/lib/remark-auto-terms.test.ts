@@ -112,4 +112,24 @@ describe('remarkAutoTerms', () => {
     // β y γ quedan para marcado manual por sentido; z_α no se parte.
     expect(termKeys(t)).toEqual(['α', 'τ²']);
   });
+  it('enlaza conceptos por su forma técnica, también con mayúscula inicial', () => {
+    const t = tree(
+      para(text('Tiempo inmortal y un colisionador: el tiempo inmortal no se repite.')),
+    );
+    remarkAutoTerms()(t);
+    expect(termKeys(t)).toEqual(['tiempo_inmortal', 'colisionador']);
+  });
+
+  it('no confunde a Neyman (el estadístico) con el sesgo de Neyman', () => {
+    const t = tree(para(text('Fisher y Neyman discutieron; el sesgo de Neyman es otra cosa.')));
+    remarkAutoTerms()(t);
+    expect(termKeys(t)).toEqual(['sesgo_neyman']);
+  });
+
+  it('no corta un símbolo con acento combinante (τ̂²)', () => {
+    const t = tree(para(text('Con τ̂² = 0 el modelo aleatorio coincide; τ mide la dispersión.')));
+    remarkAutoTerms()(t);
+    expect(termKeys(t)).toEqual(['τ']);
+    expect(JSON.stringify(t)).toContain('τ̂²');
+  });
 });

@@ -21,7 +21,7 @@ import {
  * returns.
  */
 
-/** The interactive 801-point nuisance grid used by the explorers. */
+/** Malla interactiva de 801 puntos del parámetro de estorbo (exploradores y worker). */
 export function uiGrid(): Float64Array {
   const g = new Float64Array(801);
   for (let i = 0; i < 801; i++) g[i] = 0.000625 + 0.00125 * i;

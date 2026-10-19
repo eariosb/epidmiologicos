@@ -99,7 +99,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
               components={mdxComponents}
               options={{
                 // Contenido local y confiable: permitimos expresiones JSX en
-                // los MDX (props de CodeBlock, Quiz, DataTable, etc.).
+                // los MDX (props de RCell, Quiz, DataTable, etc.).
                 blockJS: false,
                 mdxOptions: {
                   remarkPlugins: [remarkMath, remarkGfm, remarkModuleRefs, remarkAutoTerms],

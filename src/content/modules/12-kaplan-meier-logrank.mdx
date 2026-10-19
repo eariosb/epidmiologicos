@@ -307,20 +307,25 @@ r_ctrl <- 1 - s$surv[1]         # 1.00: los 21 del placebo recayeron
 r_trat <- 1 - s$surv[2]         # 0.55
 arr  <- r_ctrl - r_trat         # = S_6MP(23) - S_placebo(23) = 0.45
 
-# IC del ARR estilo Newcombe: combina el IC Greenwood de S_6MP(23)
-# [lower, upper del summary] con un IC de Wilson para S_placebo (0/21).
+# IC del ARR por el metodo de Newcombe (suma de cuadrados): combina el
+# IC de S_6MP(23) que da survfit con un IC de Wilson para S_placebo(23),
+# que vale 0 de 21 y no tiene IC de Greenwood.
 wilson <- function(x, n, z = 1.96) {
   ce <- (x + z^2/2)/(n + z^2); hw <- z/(n + z^2)*sqrt(x*(n-x)/n + z^2/4)
   c(max(0, ce - hw), min(1, ce + hw))
 }
-ic_sp <- wilson(0, 21)                       # S_placebo: [0, 0.15]
-ic_st <- c(s$lower[2], s$upper[2])           # S_6MP Greenwood
+s_t <- s$surv[2]; ic_t <- c(s$lower[2], s$upper[2])   # S_6MP(23)
+s_p <- s$surv[1]; ic_p <- wilson(0, 21)               # S_placebo(23): [0, 0.15]
+lo <- arr - sqrt((s_t - ic_t[1])^2 + (ic_p[2] - s_p)^2)
+hi <- arr + sqrt((ic_t[2] - s_t)^2 + (s_p - ic_p[1])^2)
 cat(sprintf("riesgo recaida 23sem: placebo = %.2f  6-MP = %.2f\\n",
             r_ctrl, r_trat))
-cat(sprintf("ARR = %.2f [%.2f, %.2f]  ->  NNT(23 sem) = %.1f\\n",
-            arr, ic_st[1] - ic_sp[2], ic_st[2] - ic_sp[1], 1/arr))
-# Esperado: ARR = 0.45 [~0.09, ~0.81] -> NNT ~ 2.2. El IC es ancho:
-# la decision es robusta pero la magnitud exacta no.
+cat(sprintf("ARR = %.2f [%.2f, %.2f]  ->  NNT(23 sem) = %.1f [%.1f, %.1f]\\n",
+            arr, lo, hi, 1/arr, 1/hi, 1/lo))
+# Esperado: ARR = 0.45 [0.20, 0.81] -> NNT ~ 2.2 (1.2 a 5.1). El IC es
+# ancho: la decision es robusta, la magnitud exacta no. Restar los
+# extremos de los dos IC ([0.09, 0.81]) daria un intervalo mas ancho de
+# lo necesario: los dos errores no se suman en el peor caso a la vez.
 print(survdiff(Surv(tiempo, status) ~ grupo, data = leu))
 cat("\\nEl NNT horizonte-fijo usa S(t): es el puente KM -> decision.\\n")`}
 />
@@ -337,7 +342,7 @@ run;
 <DecisionPanel
   panelId="6mp"
   arr={0.45}
-  arrLo={0.09}
+  arrLo={0.20}
   arrHi={0.81}
   eventLabel="recaída evitada"
   title={<>6-MP de mantenimiento: NNT ≈ 2 contra una enfermedad fatal</>}

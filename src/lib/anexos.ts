@@ -7,8 +7,8 @@ import { z } from 'zod';
  * es obligatorio para TODAS las entradas y `tercero` exige `licencia`.
  */
 
-export const ANEXO_TIPOS = ['pdf', 'script', 'documento', 'figura', 'datos'] as const;
-export const ANEXO_PERMISOS = ['autor-curso', 'material-docente', 'tercero'] as const;
+const ANEXO_TIPOS = ['pdf', 'script', 'documento', 'figura', 'datos'] as const;
+const ANEXO_PERMISOS = ['autor-curso', 'material-docente', 'tercero'] as const;
 
 const anexoSchema = z
   .object({

@@ -58,10 +58,11 @@ estimación a 1. Se calcula también sobre el límite del IC más cercano a
 <RCell
   id="22/evalue"
   title="E-value: calculadora y tabla de reporte"
-  code={`# E-value para RR (y su version para OR con enfermedad no rara:
-# se convierte a RR aproximado por sqrt(OR)).
+  code={`# E-value para un RR. Con un OR de desenlace frecuente (> 15%) se usa
+# primero la aproximacion RR ~ sqrt(OR) (VanderWeele y Ding, 2017).
 evalue <- function(est) est + sqrt(est * (est - 1))
 e_rr  <- function(rr) if (rr >= 1) evalue(rr) else evalue(1/rr)
+e_or_comun <- function(or) e_rr(sqrt(or))
 
 # Caso: RR = 3.9, IC95% (1.8, 8.7): asociacion 'fuerte' pero imprecisa.
 rr <- 3.9; lo <- 1.8; hi <- 8.7
@@ -69,11 +70,14 @@ cat(sprintf("RR = %.1f  ->  E-value = %.2f\\n", rr, e_rr(rr)))
 # El E-value del IC se toma del limite mas cercano a 1:
 cat(sprintf("IC (%.1f, %.1f) -> E-value del IC = %.2f\\n",
             lo, hi, if (lo > 1) e_rr(lo) else if (hi < 1) e_rr(1/hi) else 1))
+# Si 3.9 fuera un OR con desenlace frecuente, el E-value bajaria:
+cat(sprintf("OR = %.1f (desenlace frecuente) -> E-value = %.2f\\n",
+            rr, e_or_comun(rr)))
 # Lectura: para anular el punto estimado haria falta un confusor con
-# RR >= 2.7 en ambos caminos; para anular el IC basta uno con RR >= 1.7.
-# Frase de reporte: 'un confusor no medido tendria que asociarse a la
-# exposicion y al desenlace con RR de al menos 2.7 (punto) o 1.7 (IC),
-# mas alla de los covariables ajustados.'`}
+# RR >= 7.3 en ambos caminos; para mover el IC hasta 1 basta uno con
+# RR >= 3.0. Frase de reporte: 'un confusor no medido tendria que
+# asociarse a la exposicion y al desenlace con un RR de al menos 7.3
+# (punto) o 3.0 (IC), mas alla de las covariables ajustadas.'`}
 />
 
 ## Lo que el E-value no responde
@@ -124,11 +128,20 @@ pe_ca <- pmax(0.001, (ca_e/100 - (1 - Sp)) / (Se + Sp - 1))
 pe_co <- pmax(0.001, (co_e/100 - (1 - Sp)) / (Se + Sp - 1))
 OR_cor <- (pe_ca/(1-pe_ca)) / (pe_co/(1-pe_co))
 
-cat(sprintf("OR observado = %.2f\\n", OR_obs))
-cat(sprintf("OR corregido: mediana %.2f, IC simulado 95%% (%.2f, %.2f)\\n",
-            median(OR_cor), quantile(OR_cor,.025), quantile(OR_cor,.975)))
-# La correccion ensancha el intervalo: esa amplitud es el precio de
-# declarar la incertidumbre de la medicion, no de fingirla.`}
+# Error aleatorio: el de la tabla observada (Woolf), sumado en escala log.
+se_obs <- sqrt(1/ca_e + 1/(100 - ca_e) + 1/co_e + 1/(100 - co_e))
+OR_tot <- OR_cor * exp(rnorm(B, 0, se_obs))
+
+cat(sprintf("OR observado = %.2f, IC95%% convencional (%.2f, %.2f)\\n", OR_obs,
+            OR_obs * exp(-1.96 * se_obs), OR_obs * exp(1.96 * se_obs)))
+cat(sprintf("corregido, solo sesgo:   mediana %.2f, intervalo 95%% (%.2f, %.2f)\\n",
+            median(OR_cor), quantile(OR_cor, .025), quantile(OR_cor, .975)))
+cat(sprintf("corregido, sesgo + azar: mediana %.2f, intervalo 95%% (%.2f, %.2f)\\n",
+            median(OR_tot), quantile(OR_tot, .025), quantile(OR_tot, .975)))
+# La correccion mueve el centro (la mala clasificacion no diferencial
+# atenuaba el OR) y el intervalo total es mas ancho que el convencional:
+# ese ancho extra es el precio de declarar la incertidumbre de la
+# medicion en lugar de suponerla nula.`}
 />
 
 ## Bounding: la respuesta sin supuestos
@@ -206,7 +219,7 @@ conocidos <- c(edad = 1.4, sexo = 1.1, tabaquismo = 1.8)
 print(conocidos)
 
 # 3) Bounding con monotonia (supuesto: el confusor no protege un
-#    extremo y daana el otro simultaneamente): baja RR al borde
+#    extremo y dana el otro simultaneamente): baja RR al borde
 #    plausible y reporta donde se rompe.
 cat(sprintf("El punto resiste hasta confusores de RR ~ %.2f;\\n",
             evalue(rr)))

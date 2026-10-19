@@ -4,9 +4,8 @@ import type { ComponentType, ReactNode } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MDXComponents = Record<string, ComponentType<any>>;
 import { Callout } from '@/components/Callout';
-import { CodeBlock } from '@/components/CodeBlock';
 import { Quiz } from '@/components/Quiz';
-import { Flashcard, Flashcards } from '@/components/Flashcard';
+import { Flashcard } from '@/components/Flashcard';
 import { DataTable } from '@/components/DataTable';
 import { ProcessSteps } from '@/components/ProcessSteps';
 import { RCell } from '@/components/RCell';
@@ -38,7 +37,6 @@ import {
   PrecisionSampleSizeExplorer,
 } from '@/components/ExactSims';
 import {
-  AuditCard,
   MultinomCIExplorer,
   Tau2Audit,
   BootstrapStress,
@@ -50,7 +48,6 @@ import { DecisionCard } from '@/components/DecisionCard';
 import { TestSelector, PValueLab } from '@/components/TestSims';
 import { SimReset } from '@/components/SimReset';
 import { ToolCard } from '@/components/ToolCard';
-import { FormulaPalette } from '@/components/FormulaPalette';
 import { Term } from '@/components/Term';
 import { MRef } from '@/components/MRef';
 import { BradfordHill, EpiTable } from '@/components/CourseBlocks';
@@ -60,7 +57,6 @@ import { MissingDataLab, EValueCalculator, BiasAnalysis2x2, CityLab } from '@/co
 import { Claim } from '@/components/Claim';
 import { Anexo } from '@/components/Anexo';
 import { Profundiza, SalaDeMaquinas } from '@/components/Deep';
-import { BlackboardAnchor, BlackboardEmbed } from '@cursos/blackboard';
 
 /**
  * Mapeo de componentes disponibles dentro de los MDX de los módulos +
@@ -120,10 +116,8 @@ const withReset = (C: ComponentType<any>) =>
 
 export const mdxComponents: MDXComponents = {
   Callout,
-  CodeBlock,
   Quiz,
   Flashcard,
-  Flashcards,
   DataTable,
   ProcessSteps,
   RCell,
@@ -152,7 +146,6 @@ export const mdxComponents: MDXComponents = {
   SampleSizeExplorer: withReset(SampleSizeExplorer),
   CIMethodsExplorer: withReset(CIMethodsExplorer),
   PrecisionSampleSizeExplorer: withReset(PrecisionSampleSizeExplorer),
-  AuditCard,
   MultinomCIExplorer: withReset(MultinomCIExplorer),
   Tau2Audit: withReset(Tau2Audit),
   BootstrapStress: withReset(BootstrapStress),
@@ -161,7 +154,6 @@ export const mdxComponents: MDXComponents = {
   SasBlock,
   DecisionPanel: withReset(DecisionPanel),
   DecisionCard,
-  FormulaPalette,
   Term,
   MRef,
   EpiTable,
@@ -178,8 +170,6 @@ export const mdxComponents: MDXComponents = {
   Anexo,
   Profundiza,
   SalaDeMaquinas,
-  BlackboardAnchor,
-  BlackboardEmbed,
   table: MdxTable,
   thead: MdxThead,
   th: MdxTh,

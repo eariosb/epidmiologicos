@@ -66,19 +66,8 @@ export function dhyper(x: number, n1: number, n2: number, m: number): number {
   return Math.exp(lchoose(n1, x) + lchoose(n2, m - x) - lchoose(n1 + n2, m));
 }
 
-/** Hypergeometric CDF P(X1 <= x | margins). */
-export function phyper(x: number, n1: number, n2: number, m: number): number {
-  const lo = Math.max(0, m - n2);
-  const hi = Math.min(n1, m);
-  if (x < lo) return 0;
-  if (x >= hi) return 1;
-  let s = 0;
-  for (let k = lo; k <= x; k++) s += dhyper(k, n1, n2, m);
-  return Math.min(1, s);
-}
-
 /** Regularized incomplete beta I_x(a,b) — continued fraction (NR betacf). */
-export function pbeta(x: number, a: number, b: number): number {
+function pbeta(x: number, a: number, b: number): number {
   if (x <= 0) return 0;
   if (x >= 1) return 1;
   const betacf = (x: number, a: number, b: number): number => {
@@ -114,17 +103,6 @@ export function pbeta(x: number, a: number, b: number): number {
   return x < (a + 1) / (a + b + 2) ? (bt * betacf(x, a, b)) / a : 1 - (bt * betacf(1 - x, b, a)) / b;
 }
 
-/** Beta density. */
-export function dbeta(x: number, a: number, b: number): number {
-  if (x <= 0 || x >= 1) {
-    if ((x === 0 && a < 1) || (x === 1 && b < 1)) return Infinity;
-    return 0;
-  }
-  return Math.exp(
-    (a - 1) * Math.log(x) + (b - 1) * Math.log(1 - x) - (lgamma(a) + lgamma(b) - lgamma(a + b))
-  );
-}
-
 /** Beta quantile by bisection (adequate for CI bounds, not for tail extremes). */
 export function qbeta(p: number, a: number, b: number): number {
   if (p <= 0) return 0;
@@ -138,33 +116,29 @@ export function qbeta(p: number, a: number, b: number): number {
   return (lo + hi) / 2;
 }
 
-/** Digamma function: recurrence to x >= 8 then asymptotic series. */
-export function digamma(x: number): number {
-  let r = 0;
-  while (x < 8) {
-    r -= 1 / x;
-    x += 1;
-  }
-  const inv = 1 / x, inv2 = inv * inv;
-  return r + Math.log(x) - 0.5 * inv - inv2 * (1 / 12 - inv2 * (1 / 120 - inv2 * (1 / 252)));
+/**
+ * Complementary error function, Numerical Recipes `erfcc` (Chebyshev
+ * fit). Fractional error below 1.2e-7 everywhere, so tail probabilities
+ * keep their relative precision (the Abramowitz–Stegun 7.1.26 form used
+ * before only had absolute error 1.5e-7, useless for p < 1e-6).
+ */
+export function erfc(x: number): number {
+  const z = Math.abs(x);
+  const t = 1 / (1 + 0.5 * z);
+  const r =
+    t *
+    Math.exp(
+      -z * z - 1.26551223 +
+        t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 +
+        t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 +
+        t * 0.17087277))))))))
+    );
+  return x >= 0 ? r : 2 - r;
 }
 
 /** Standard normal CDF. */
 export function normCdf(z: number): number {
-  return 0.5 * (1 + erf(z / Math.SQRT2));
-}
-
-function erf(x: number): number {
-  // Abramowitz–Stegun 7.1.26, |eps| < 1.5e-7
-  const s = Math.sign(x);
-  const t = 1 / (1 + 0.3275911 * Math.abs(x));
-  const y =
-    1 -
-    t *
-      (0.254829592 +
-        t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429)))) *
-      Math.exp(-x * x);
-  return s * y;
+  return 0.5 * erfc(-z / Math.SQRT2);
 }
 
 /* ------------------------------------------------------------------ */
@@ -453,12 +427,6 @@ export function logOrCorrected(x1: number, n1: number, x2: number, n2: number, c
   return Math.log(((x1 + c) * (n2 - x2 + c)) / ((n1 - x1 + c) * (x2 + c)));
 }
 
-/** Jeffreys-posterior mean of theta = log OR (digamma form). */
-export function logOrJeffreys(x1: number, n1: number, x2: number, n2: number): number {
-  const a = x1, b = n1 - x1, c = x2, d = n2 - x2;
-  return digamma(a + 0.5) - digamma(b + 0.5) - (digamma(c + 0.5) - digamma(d + 0.5));
-}
-
 export interface EstimatorStats {
   bias: number;
   variance: number;
@@ -601,8 +569,8 @@ export function cornfieldCI(x1: number, n1: number, x2: number, n2: number, alph
   return { lo: Math.log(ciLo), hi: Number.isFinite(ciHi) ? Math.log(ciHi) : Infinity };
 }
 
-/** Wilson score interval for a single proportion. */
-export function wilsonCI(x: number, n: number, alpha = 0.05): CI {
+/** Wilson score interval for a single proportion (used by Newcombe). */
+function wilsonCI(x: number, n: number, alpha = 0.05): CI {
   const z = normQuantile(1 - alpha / 2);
   const p = x / n;
   const den = 1 + (z * z) / n;
@@ -712,8 +680,3 @@ export function nForPower(p1: number, p2: number, alpha = 0.05, power = 0.8): nu
   return Math.ceil(nForPowerRaw(p1, p2, alpha, power));
 }
 
-/** n per group so that a two-sided 95% CI for a single proportion has half-width delta. */
-export function nForPrecision(p: number, delta: number, alpha = 0.05): number {
-  const z = normQuantile(1 - alpha / 2);
-  return Math.ceil((z * z * p * (1 - p)) / (delta * delta));
-}

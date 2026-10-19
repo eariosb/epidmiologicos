@@ -3,7 +3,6 @@
 import { useMemo, useState, useRef, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import katex from 'katex';
-import clsx from 'clsx';
 import { latexToDataUrl } from '@/lib/latex-image';
 import { copyText } from '@/lib/clipboard';
 import type { BlackboardCanvasRef } from '@cursos/blackboard';

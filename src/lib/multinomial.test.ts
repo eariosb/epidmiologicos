@@ -3,12 +3,12 @@ import {
   coverageAudit,
   entropy,
   goodman,
-  mulberry32,
   quesenberryHurst,
   rmultinom,
   sisonGlaz,
   tclMarginal,
 } from '@/lib/multinomial';
+import { mulberry32 } from '@/lib/rng';
 
 const UNIFORM4 = [0.25, 0.25, 0.25, 0.25];
 const SKEWED4 = [0.85, 0.08, 0.045, 0.025];

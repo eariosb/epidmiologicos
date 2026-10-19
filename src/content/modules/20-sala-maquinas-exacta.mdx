@@ -147,9 +147,10 @@ $$
 
 El test resultante sigue siendo exacto, la multa cubre la cola dejada
 fuera, y puede ganar potencia cuando el intervalo excluye la región
-donde vive el supremo. En tablas pequeñas el intervalo es ancho y
-Berger–Boos suele coincidir con Boschloo: la ganancia aparece cuando
-$n$ ya permite acotar bien $p$.
+donde vive el supremo. La ganancia depende de dónde cae el supremo
+respecto al intervalo: en la tabla de Perondi el p de Berger–Boos es
+0.031 frente a 0.038 de Boschloo, porque el IC de $p$ (centrado en
+8/68) deja fuera el pico de $P_p$ en $p = 0.5$.
 
 <Profundiza title="La condición técnica que hace válida la multa" hint="optativo">
 La corrección funciona porque el evento "el $p$ verdadero está fuera de
@@ -268,8 +269,10 @@ mi_p <- sum(pr[pr <= p0 + 1e-12])
 
 # 3) Contra el paquete:
 su_p <- fisher.test(tab)$p.value
-cat(sprintf("tuyo = %.6f | fisher.test = %.6f | diff = %.2e\\n",
-            mi_p, su_p, abs(mi_p - su_p)))
+cat(sprintf("tuyo = %.6f | fisher.test = %.6f | |diferencia| < 1e-10: %s\\n",
+            mi_p, su_p, abs(mi_p - su_p) < 1e-10))
+# La diferencia exacta (0 o ~1e-17) depende del sistema y del orden de
+# las sumas; lo que importa es que quede por debajo de 1e-10.
 # Si difieren en mas de ~1e-10: revisa la definicion de 'extremo'
 # (minlike vs. two-sided de prob <= observada) y la tolerancia del
 # empate en punto flotante.`}
@@ -294,7 +297,7 @@ palabras sobre dónde puede fallar la implementación.
 ## Lecturas
 
 - **Berger & Boos (1994)**: la maximización sobre el intervalo del
-  parámetro de estorbo; la cota γ que mantiene la exactitud.
+  parámetro de estorbo; la cota <Term k="γ-BB">γ</Term> que mantiene la exactitud.
 - **Mehrotra, Chan & Berger (2003)**: la comparación sistemática de
   ordenamientos incondicionales; la referencia técnica del módulo.
 - **Boschloo (1970)**: el ordenamiento original por el p de Fisher.

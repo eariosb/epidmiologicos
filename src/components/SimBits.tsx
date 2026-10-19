@@ -5,7 +5,7 @@ export function SimLegend({
   items,
   className = '',
 }: {
-  items: { color: string; label: ReactNode; mark?: 'line' | 'dot' | 'bar'; dash?: boolean }[];
+  items: { color: string; label: ReactNode; mark?: 'line' | 'dot' | 'bar' | 'tick'; dash?: boolean }[];
   className?: string;
 }) {
   return (
@@ -17,6 +17,8 @@ export function SimLegend({
           <svg width="18" height="9" aria-hidden="true" className="shrink-0">
             {it.mark === 'dot' ? (
               <circle cx={9} cy={4.5} r={3.2} fill={it.color} />
+            ) : it.mark === 'tick' ? (
+              <line x1={6} y1={8} x2={12} y2={1} stroke={it.color} strokeWidth={1.8} />
             ) : it.mark === 'bar' ? (
               <rect x={2} y={1} width={14} height={7} rx={1.5} fill={it.color} />
             ) : (

@@ -46,12 +46,7 @@ export interface ModuleEntry {
 
 // Las constantes de bloques viven en course-blocks.ts (puro, sin node:*,
 // importable desde componentes cliente). Se re-exportan por compatibilidad.
-export {
-  COURSE_BLOCKS,
-  COURSE_II_BLOCKS,
-  blocksForCourse,
-  blockForOrder,
-} from './course-blocks';
+export { COURSE_BLOCKS, blockForOrder } from './course-blocks';
 
 let cachedEntries: ModuleEntry[] | null = null;
 

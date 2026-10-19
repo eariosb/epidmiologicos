@@ -5,7 +5,7 @@ objective: "Ejecutar el flujo completo del trabajo real: auditar una base contam
 order: 29
 datasets: ["valung_corrupto.csv"]
 duration: 150
-prerequisites: ["Curso I completo; módulos 20-28 del Curso II"]
+prerequisites: ["Curso I completo; módulos II-1 a II-9 del Curso II"]
 course: "II"
 level: "avanzado"
 profilesDeep: ["vigilancia", "clinico", "politica"]
@@ -98,9 +98,8 @@ v$SurvTime_clean[v$SurvTime_clean <= 0 | v$SurvTime_clean == 9999] <- NA
 v$Kps[v$Kps < 0 | v$Kps > 100] <- NA
 v$Age[v$Age < 18 | v$Age > 100] <- NA
 v$Therapy <- tolower(v$Therapy)
-v$Cell <- gsub('squamous', 'squamous', tolower(v$Cell))
-v$Cell[v$Cell == 'squamous' | v$Cell == 'squamous'] <- 'squamous'
-v$Cell <- gsub('^small.*', 'small', v$Cell)
+v$Cell <- tolower(v$Cell)                       # SQUAMOUS, Squamous -> squamous
+v$Cell <- gsub('^small.*', 'small', v$Cell)     # 'small cell' -> small
 
 # Duplicados exactos primero; en conflicto despues (queda la de menor NA):
 v <- v[!duplicated(v), ]
@@ -120,7 +119,7 @@ delata solo. Las señales de campo son plausibilidad cruzada (un
 "evento" con Karnofsky de 90 y 3 días de seguimiento es sospechoso) y,
 sobre todo, **comparar la curva KM con la del estudio original o con la
 literatura**: una supervivencia que sube con el tiempo delata la
-inversión global; inverciones parciales se detectan por inconsistencias
+inversión global; inversiones parciales se detectan por inconsistencias
 internas y se reportan como hallazgo de calidad de dato, no se
 corrigen en silencio.
 </Callout>
@@ -143,9 +142,9 @@ Fellegi–Sunter: un apellido raro que coincide pesa más que "García").
   id="29/vinculacion"
   title="Vinculación probabilística en miniatura"
   code={`# Dos fuentes sinteticas de la misma poblacion:
-set.seed(60); n <- 200
+set.seed(60)
 siv <- data.frame(
-  nom = c('GARCIA LOPEZ JUAN','PEREZ ANA','RODRIGUEZ MARIA','GOMEZ LUIS')[1:4],
+  nom = c('GARCIA LOPEZ JUAN','PEREZ ANA','RODRIGUEZ MARIA','GOMEZ LUIS'),
   fn  = as.Date(c('1980-03-15','1975-11-02','1990-07-21','1988-01-30')),
   mun = '11001', doc = paste0('80', sample(100000:999999, 4)))
 # RIPS: los mismos 4 con ruido de digitacion:
@@ -181,7 +180,7 @@ mucho. Lo operativo que el curso subraya: **la tasa de enlace es un
 resultado, no un trámite**: si el 30 % de los casos de SIVIGILA no
 aparece en mortalidad, ese 30 % tiene estructura (murió fuera, se
 notificó mal, el documento falló) y puede sesgar cualquier análisis
-posterior exactamente como un faltante MNAR del módulo 21. El reporte
+posterior exactamente como un faltante MNAR del módulo II-2. El reporte
 incluye tasa de enlace por fuente y por grupo, y la comparación de
 vinculados vs. no vinculados.
 </Profundiza>
@@ -206,10 +205,17 @@ v <- v[!duplicated(v$ID), ]
 v$trt <- ifelse(tolower(v$Therapy) == 'test', 1, 0)
 
 library(survival)
-fit <- coxph(Surv(Surv, censor) ~ trt + Kps, data = v)
+# censor = 1 marca censura (modulo 0): el evento es 1 - censor.
+fit <- coxph(Surv(Surv, 1 - censor) ~ trt + Kps, data = v)
 print(round(summary(fit)$coefficients, 3))
-# Pregunta de auditoria: el HR cambia respecto a valung.csv limpio?
-# Cuanto del cambio es censura invertida y cuanto es deduplicacion?`}
+
+# Referencia: el mismo modelo sobre el valung.csv original.
+ref <- read.csv('valung.csv')
+ref$trt <- as.integer(ref$Therapy == 'test')
+fit0 <- coxph(Surv(SurvTime, 1 - censor) ~ trt + Kps, data = ref)
+print(round(rbind(auditada = exp(coef(fit)), original = exp(coef(fit0))), 3))
+# Pregunta de auditoria: cuanto de la diferencia viene de la censura
+# invertida que sigue en la base, y cuanto de las filas perdidas?`}
 />
 
 ## El producto final: ficha + análisis + párrafo
@@ -223,7 +229,7 @@ que el trabajo real los pide:
 2. **El análisis auditado**: el modelo sobre la base limpia, con la
    comparación contra el resultado sobre la base cruda: cuánto del
    efecto era ruido de captura.
-3. **El párrafo del ministerio** (módulo 28): la página con la
+3. **El párrafo del ministerio** (módulo II-9): la página con la
    recomendación, los escenarios y la condición, que ahora incluye una
    frase sobre la calidad del dato: "la conclusión se sostiene tras la
    limpieza del 12 % de registros afectados".
@@ -237,7 +243,7 @@ que el trabajo real los pide:
     "Se asume que los no vinculados son aleatorios y se continúa"
   ]}
   correctIndex={1}
-  explanation="El no vinculado es un faltante con estructura: si falla más en ciertos grupos (zona, edad, tipo de evento), el análisis sobre vinculados hereda ese sesgo. La tasa de enlace y su comparación son resultados del estudio; asumir aleatoriedad sin verificarla es repetir el error de complete-case del módulo 21."
+  explanation="El no vinculado es un faltante con estructura: si falla más en ciertos grupos (zona, edad, tipo de evento), el análisis sobre vinculados hereda ese sesgo. La tasa de enlace y su comparación son resultados del estudio; asumir aleatoriedad sin verificarla es repetir el error de complete-case del módulo II-2."
 />
 
 <LabExercise
@@ -254,7 +260,7 @@ v <- read.csv('valung_corrupto.csv', na.strings = c('', 'NA', 'N/A', '.'))
 # 3) Analisis sobre limpia vs. cruda:
 # ... coxph en ambas, compara HR y su IC ...
 
-# 4) La pagina del ministerio (modulo 28):
+# 4) La pagina del ministerio (modulo II-9):
 # magnitud en casos evitados + escenarios + condicion +
 # certeza + la frase sobre calidad del dato.`}
   tasks={[

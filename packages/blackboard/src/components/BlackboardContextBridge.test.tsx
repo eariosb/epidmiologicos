@@ -60,7 +60,7 @@ describe('BlackboardContextBridge', () => {
     let latest: BlackboardState | null = null;
     let dispatchRef: ((a: never) => void) | null = null;
     function Selector() {
-      const { state, dispatch } = useBlackboardContext();
+      const { dispatch } = useBlackboardContext();
       dispatchRef = dispatch as never;
       return <Probe onState={(s) => (latest = s)} />;
     }

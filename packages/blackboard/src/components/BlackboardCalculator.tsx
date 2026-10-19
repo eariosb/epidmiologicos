@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Copy, Delete, X } from 'lucide-react';
+import { Check, Copy, Delete, X } from 'lucide-react';
 import { copyText } from '../lib/clipboard';
 
 interface BlackboardCalculatorProps {
@@ -360,10 +360,15 @@ export function BlackboardCalculator({ onClose }: Readonly<BlackboardCalculatorP
             <button
               type="button"
               onClick={copyResult}
-              title="Copiar resultado"
+              title={copied ? 'Copiado' : 'Copiar resultado'}
+              aria-label={copied ? 'Resultado copiado' : 'Copiar resultado'}
               className="rounded p-1 text-ink-400 hover:bg-ink-100 hover:text-ink-700"
             >
-              <Copy aria-hidden className="h-3 w-3" />
+              {copied ? (
+                <Check aria-hidden className="h-3 w-3 text-success-600" />
+              ) : (
+                <Copy aria-hidden className="h-3 w-3" />
+              )}
             </button>
           )}
         </div>

@@ -15,7 +15,7 @@
  * en un cálculo de potencia. Se conserva solo para comparar.
  */
 
-import { dbinom, lchoose, lgamma, normCdf, normQuantile, qbeta } from '@/lib/exact2x2';
+import { dbinom, lchoose, lgamma, normQuantile, qbeta } from '@/lib/exact2x2';
 
 export interface CI {
   lo: number;
@@ -52,7 +52,7 @@ export function agrestiCoullCI(x: number, n: number, conf = 0.95): CI {
   return { lo: Math.max(0, pt - hw), hi: Math.min(1, pt + hw) };
 }
 
-/** Jeffreys de colas iguales con la corrección de borde de Brown–Cai–DasGupta. */
+/** Jeffreys de colas iguales; límite 0 si x = 0 y 1 si x = n (convención de Brown, Cai y DasGupta, 2001). */
 export function jeffreysCI(x: number, n: number, conf = 0.95): CI {
   const a = (1 - conf) / 2;
   return {
@@ -112,7 +112,7 @@ export const CI_METHODS = {
 export type CIMethodKey = keyof typeof CI_METHODS;
 
 /** Límites para cada x = 0..n; base de todas las cantidades exactas. */
-export function boundsForAllX(
+function boundsForAllX(
   n: number,
   method: CIMethodKey,
   conf = 0.95
@@ -238,26 +238,6 @@ export function nOriginalFormula(p: number, L0: number, alpha = 0.05, beta = 0.1
 }
 
 /**
- * Aproximación del delta method sobre phat(1-phat) para Wald:
- *   L <= L0  <=>  phat(1-phat) <= n L0² / (4z²)
- *   phat(1-phat) ≈ N(pq, (1-2p)² pq / n)
- */
-export function nGuaranteeApprox(p: number, L0: number, conf = 0.95, beta = 0.1): number {
-  const z = zOf(conf);
-  const zb = normQuantile(1 - beta);
-  const pq = p * (1 - p);
-  const g = (n: number) =>
-    (n * L0 * L0) / (4 * z * z) - pq - zb * Math.abs(1 - 2 * p) * Math.sqrt(pq / n);
-  let lo = 1, hi = 1e8;
-  for (let i = 0; i < 200; i++) {
-    const m = Math.sqrt(lo * hi);
-    if (g(m) < 0) lo = m;
-    else hi = m;
-  }
-  return Math.ceil((lo + hi) / 2);
-}
-
-/**
  * n mínimo con P(L <= L0) >= 1 - beta, EXACTO por enumeración.
  * P(L <= L0) no es monótona en n (dientes de sierra); se devuelve el menor
  * n a partir del cual la garantía se sostiene en toda la ventana evaluada.
@@ -298,11 +278,16 @@ export function nGuaranteeExact(
 /* Gamma incompleta y chi-cuadrado (caso exponencial)                  */
 /* ---------------------------------------------------------------- */
 
-/** P(a, x): gama incompleta regularizada inferior (Numerical Recipes). */
-export function pgamma(x: number, shape: number): number {
-  if (x <= 0) return 0;
+/**
+ * Gama incompleta regularizada (Numerical Recipes): devuelve P(a, x) y
+ * Q(a, x) = 1 − P(a, x), cada una calculada por su propio desarrollo
+ * (serie si x < a + 1, fracción continua si no) para no perder
+ * precisión relativa en la cola.
+ */
+function gammaPQ(x: number, shape: number): { P: number; Q: number } {
+  if (x <= 0) return { P: 0, Q: 1 };
+  const logPre = -x + shape * Math.log(x) - lgamma(shape);
   if (x < shape + 1) {
-    // serie
     let ap = shape;
     let sum = 1 / shape;
     let del = sum;
@@ -312,9 +297,9 @@ export function pgamma(x: number, shape: number): number {
       sum += del;
       if (Math.abs(del) < Math.abs(sum) * 3e-15) break;
     }
-    return sum * Math.exp(-x + shape * Math.log(x) - lgamma(shape));
+    const P = Math.min(1, sum * Math.exp(logPre));
+    return { P, Q: 1 - P };
   }
-  // fracción continua para Q(a, x)
   const FPMIN = 1e-300;
   let b = x + 1 - shape;
   let c = 1 / FPMIN;
@@ -332,7 +317,19 @@ export function pgamma(x: number, shape: number): number {
     h *= del;
     if (Math.abs(del - 1) < 3e-15) break;
   }
-  return 1 - Math.exp(-x + shape * Math.log(x) - lgamma(shape)) * h;
+  const Q = Math.min(1, Math.exp(logPre) * h);
+  return { P: 1 - Q, Q };
+}
+
+/** P(a, x): gama incompleta regularizada inferior. */
+export function pgamma(x: number, shape: number): number {
+  return gammaPQ(x, shape).P;
+}
+
+/** P(χ²_df ≥ x): cola superior exacta de la chi-cuadrado. */
+export function pchisqUpper(x: number, df: number): number {
+  if (!(x > 0)) return 1;
+  return gammaPQ(x / 2, df / 2).Q;
 }
 
 /** Cuantil chi-cuadrado: χ²_df = Gamma(df/2, tasa 1/2); Wilson–Hilferty + bisección. */

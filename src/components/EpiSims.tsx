@@ -4,6 +4,9 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { MathText } from '@/lib/math-text';
 import { tokens } from '@/lib/tokens';
 import { SimGuide, SimLegend } from '@/components/SimBits';
+import { normCdf } from '@/lib/exact2x2';
+import { pchisqUpper } from '@/lib/precision';
+import { mulberry32, rbinom, rbinomExact, rpois } from '@/lib/rng';
 
 const BTN_MAIN =
   'rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white hover:bg-brand-700';
@@ -90,7 +93,7 @@ export function TwoByTwoExplorer({
     n > 0 && n1 > 0 && n0 > 0 && m1 > 0 && n - m1 > 0
       ? (n * Math.pow(A * D - B * C, 2)) / (n1 * n0 * m1 * (n - m1))
       : NaN;
-  const pChi = Number.isFinite(chi2) ? chi2P1(chi2) : NaN;
+  const pChi = Number.isFinite(chi2) ? pchisqUpper(chi2, 1) : NaN;
 
   const W = 340;
   const H = 140;
@@ -226,26 +229,6 @@ function Measure({ label, tex, value, sub }: { label: string; tex: string; value
       </div>
     </div>
   );
-}
-
-/* χ²(1) survival function via the regularized incomplete gamma. */
-function chi2P1(x: number): number {
-  // P(χ²_1 ≥ x) = 2·(1 − Φ(√x))
-  const z = Math.sqrt(Math.max(0, x));
-  return Math.min(1, Math.max(0, 2 * (1 - normCdf(z))));
-}
-/* χ²(df) survival: aproximación Wilson–Hilferty (suficiente para docencia). */
-function chi2Sf(x: number, df: number): number {
-  if (x <= 0) return 1;
-  const z = (Math.pow(x / df, 1 / 3) - (1 - 2 / (9 * df))) / Math.sqrt(2 / (9 * df));
-  return Math.min(1, Math.max(0, 1 - normCdf(z)));
-}
-function normCdf(z: number): number {
-  const t = 1 / (1 + 0.2316419 * Math.abs(z));
-  const poly =
-    t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
-  const p = 1 - (Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI)) * poly;
-  return z >= 0 ? p : 1 - p;
 }
 
 /* ================================================================== */
@@ -466,15 +449,15 @@ export function PvalueVsEffect({ title }: { title?: ReactNode }) {
     const p1 = (odds0 * Math.exp(logOR)) / (1 + odds0 * Math.exp(logOR));
     const bins = new Array(20).fill(0);
     let sig = 0;
-    const rng = mulberry(20240 + seed);
+    const rng = mulberry32(20240 + seed);
     for (let r = 0; r < R; r++) {
-      const a = binom(rng, nPer, p1);
-      const c = binom(rng, nPer, p0);
+      const a = rbinomExact(rng, nPer, p1);
+      const c = rbinomExact(rng, nPer, p0);
       const b = nPer - a;
       const d = nPer - c;
       const chi = (2 * nPer * Math.pow(a * d - b * c, 2)) /
         ((a + b) * (c + d) * (a + c) * (b + d));
-      const p = chi2P1(chi);
+      const p = pchisqUpper(chi, 1);
       bins[Math.min(19, Math.floor(p / 0.05))]++;
       if (p < 0.05) sig++;
     }
@@ -535,8 +518,8 @@ export function PvalueVsEffect({ title }: { title?: ReactNode }) {
         Con OR = 1 el histograma es uniforme: el 5% cae bajo la línea por azar
         (error tipo I). Con OR = 3 y n = 40 solo ~60% de las réplicas detecta el
         efecto aunque sea grande: efecto real sin "significancia" por falta de
-        datos. Con OR ≈ 1.25 y n = 1500, ~72% de las réplicas sale
-        "significativa" con un efecto pequeño (unos 4 puntos sobre un riesgo de
+        datos. Con OR = 1.22 y n = 1500, cerca del 60% de las réplicas sale
+        "significativa" con un efecto pequeño (unos 3 puntos sobre un riesgo de
         20 %), que puede importar o no clínicamente. El valor p mezcla tamaño
         del efecto y tamaño muestral; por eso se reporta primero el efecto con
         su IC.
@@ -547,21 +530,6 @@ export function PvalueVsEffect({ title }: { title?: ReactNode }) {
       </p>
     </div>
   );
-}
-
-function mulberry(seed: number) {
-  let t = seed;
-  return () => {
-    t += 0x6d2b79f5;
-    let r = Math.imul(t ^ (t >>> 15), t | 1);
-    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function binom(rng: () => number, n: number, p: number): number {
-  let k = 0;
-  for (let i = 0; i < n; i++) if (rng() < p) k++;
-  return k;
 }
 
 /* ================================================================== */
@@ -674,7 +642,7 @@ export function KaplanMeierSim({ title }: { title?: ReactNode }) {
       <SimLegend items={[
         { color: UNEXP_COLOR, label: 'Ŝ(t) grupo 6-MP' },
         { color: EXP_COLOR, label: 'Ŝ(t) grupo placebo' },
-        { color: UNEXP_COLOR, label: 'censura (paciente sin recaída al final)', mark: 'dot' },
+        { color: UNEXP_COLOR, label: 'censura (paciente sin recaída al final)', mark: 'tick' },
         { color: GOLD, label: 'tiempo actual del paso a paso', dash: true },
       ]} className="mt-2" />
       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -722,7 +690,7 @@ export function McNemarCmhDemo({ title }: { title?: ReactNode }) {
   const dConc = 20; // ninguno expuesto
 
   const mcn = Math.pow(b - c, 2) / (b + c);
-  const pMcN = chi2P1(mcn);
+  const pMcN = pchisqUpper(mcn, 1);
   // McNemar exacto: b ~ Binomial(b + c, 1/2) bajo H0, bilateral.
   const pExact = (() => {
     const n = b + c, k = Math.min(b, c);
@@ -788,7 +756,7 @@ export function McNemarCmhDemo({ title }: { title?: ReactNode }) {
             <div>χ² McNemar = (b−c)²/(b+c) = <strong>{fmt(mcn, 2)}</strong></div>
             <div>χ² CMH (1:1) = <strong>{fmt(mcn, 2)}</strong>: idéntico</div>
             <div>OR<sub>MH</sub> = b/c = <strong>{fmt(orMH, 2)}</strong> ({fmt(orLo, 2)}–{fmt(orHi, 2)})</div>
-            <div>p (χ²) = {fmt(pMcN, 4)} · p exacto = {fmt(pExact, 4)}</div>
+            <div>p (χ² sin corrección) = {fmt(pMcN, 4)} · p exacto = {fmt(pExact, 4)}</div>
           </div>
         </div>
       </div>
@@ -1089,12 +1057,16 @@ export function PrevalenceExplorer({ title }: { title?: ReactNode }) {
     if (!running) return;
     const id = setInterval(() => {
       const s = ref.current.slice();
+      // s[i] = meses que lleva enferma la persona i (0 = susceptible).
+      // Contar meses enteros evita que la suma de 1/12 en coma flotante
+      // alargue la enfermedad un mes de más.
+      const meses = Math.round(dur * 12);
       for (let i = 0; i < N; i++) {
         if (s[i] > 0) {
-          s[i] += 1 / 12;                      // un mes por tick
-          if (s[i] >= dur) s[i] = 0;           // recupera tras D años
+          s[i] += 1;                           // un mes por tick
+          if (s[i] > meses) s[i] = 0;          // recupera tras D años
         } else if (Math.random() < incid / 12) {
-          s[i] = 1 / 12;                       // nuevo caso
+          s[i] = 1;                            // nuevo caso
         }
       }
       ref.current = s;
@@ -1266,9 +1238,11 @@ export function StandardizationExplorer({ title }: { title?: ReactNode }) {
         observados/esperados.
       </SimGuide>
       <p className={NOTE}>
-        Réplica del ejemplo de privación socioeconómica en Glasgow (Woodward,
-        Ej. 4.6): crudo y ajustado pueden cambiar de orden cuando las
-        poblaciones difieren en edad.
+        Esquema inspirado en el ejemplo de privación socioeconómica en Glasgow
+        (Woodward, Ej. 4.6): crudo y ajustado pueden cambiar de orden cuando
+        las poblaciones difieren en edad. Como aquí el riesgo de A es un
+        múltiplo constante del de B, la razón directa y el SMR coinciden con
+        ese múltiplo.
       </p>
     </div>
   );
@@ -1445,16 +1419,6 @@ export function InteractionExplorer({ title }: { title?: ReactNode }) {
 /* 9b. InteractionNoiseLab: percibir la interacción en medio del ruido */
 /* ================================================================== */
 
-/** Binomial: exacta por ensayos si n·p es chico; aproximación normal si es grande. */
-function binomDraw(rng: () => number, n: number, p: number): number {
-  if (n * p > 40 && n * (1 - p) > 40) {
-    const u = Math.max(rng(), 1e-12), v = rng();
-    const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-    return Math.min(n, Math.max(0, Math.round(n * p + Math.sqrt(n * p * (1 - p)) * z)));
-  }
-  return binom(rng, n, p);
-}
-
 const NOISE_TRUTH: { name: string; r: [number, number, number, number] }[] = [
   { name: 'Paralelismo (RR 2 y 2)', r: [0.10, 0.20, 0.10, 0.20] },
   { name: 'Sinergismo (RR 2 y 4)', r: [0.10, 0.20, 0.10, 0.40] },
@@ -1465,7 +1429,7 @@ const NOISE_TRUTH: { name: string; r: [number, number, number, number] }[] = [
 interface Estudio { rr0: number; lo0: number; hi0: number; p0: number; rr1: number; lo1: number; hi1: number; p1: number; rint: number; pint: number }
 
 function simulaEstudio(rng: () => number, n: number, r: number[]): Estudio {
-  const x = r.map((p) => binomDraw(rng, n, p));
+  const x = r.map((p) => rbinom(rng, n, p));
   const lr = (a: number, b: number) => {
     const aa = a === 0 ? 0.5 : a, bb = b === 0 ? 0.5 : b;
     return { l: Math.log(aa / bb), v: 1 / aa - 1 / n + 1 / bb - 1 / n };
@@ -1490,9 +1454,9 @@ export function InteractionNoiseLab({ title }: { title?: ReactNode }) {
   const n = NS[nIdx];
   const r = NOISE_TRUTH[truth].r;
 
-  const uno = useMemo(() => simulaEstudio(mulberry(seed * 7919 + truth * 31 + nIdx), n, r), [seed, truth, nIdx, n, r]);
+  const uno = useMemo(() => simulaEstudio(mulberry32(seed * 7919 + truth * 31 + nIdx), n, r), [seed, truth, nIdx, n, r]);
   const resumen = useMemo(() => {
-    const rng = mulberry(4242 + truth * 101 + nIdx * 7);
+    const rng = mulberry32(4242 + truth * 101 + nIdx * 7);
     const B = 1000;
     let detecta = 0, falacia = 0;
     for (let b = 0; b < B; b++) {
@@ -1576,14 +1540,14 @@ export function InteractionNoiseLab({ title }: { title?: ReactNode }) {
       <SimGuide>
         Empieza con paralelismo y n = 100: pulsa «Otro estudio» varias veces y mira cuántas
         veces un estrato sale «significativo» y el otro no, aunque el efecto es idéntico. Luego
-        pasa a sinergismo: con n = 100 la interacción real casi nunca se detecta; súbelo hasta
-        que la potencia pase de 80%. La prueba de interacción compara dos estimaciones ruidosas
+        pasa a sinergismo: con n = 100 la interacción real se detecta en menos de un tercio de
+        los estudios; súbelo hasta que la potencia pase de 80% (hace falta n ≈ 400). La prueba de interacción compara dos estimaciones ruidosas
         entre sí: necesita mucha más información que estimar un efecto.
       </SimGuide>
       <p className={NOTE}>
         Cada estudio: cuatro celdas binomiales de n personas, RR por estrato con IC log (Katz) y
         prueba de interacción multiplicativa z = (log RR₁ − log RR₀)/EE. Las proporciones de
-        1000 estudios tienen un error Monte Carlo de hasta ±1.6 puntos. La celda de búsqueda en
+        1000 estudios tienen un error estándar Monte Carlo de hasta 1.6 puntos. La celda de búsqueda en
         K subgrupos supone pruebas independientes.
       </p>
     </div>
@@ -1667,11 +1631,11 @@ export function CohortGantt({ title }: { title?: ReactNode }) {
       </div>
       <SimLegend items={[
         { color: EXP_COLOR, label: 'seguimiento que termina en evento (punto)' },
-        { color: UNEXP_COLOR, label: 'seguimiento que termina en censura (marca)' },
+        { color: UNEXP_COLOR, label: 'seguimiento que termina en censura (marca)', mark: 'tick' },
         { color: GOLD, label: 'cierre administrativo / censura por cierre', dash: true },
       ]} className="mt-2" />
       <SimGuide>
-        Las entradas son escalonadas (cohorte móvil, clase 13): cada persona
+        Las entradas son escalonadas (cohorte móvil, módulo 11): cada persona
         aporta meses distintos. Mueve el cierre a la izquierda: los eventos
         posteriores se convierten en censuras y el persona-tiempo se achica.
         La tasa usa ese denominador honesto, no el número de sujetos.
@@ -1871,19 +1835,22 @@ export function RocExplorer({ title }: { title?: ReactNode }) {
 /* 13. MetaExplorer: forest plot, fijo vs. aleatorio, I²               */
 /* ================================================================== */
 
-interface Study { name: string; rr: number; lo: number; hi: number }
+/** Conteos de un ensayo: a muertes de n1 con lidocaína, c de n2 control. */
+interface Study { name: string; a: number; n1: number; c: number; n2: number }
 
-// Datos reales: Hine et al. (1989), via dat.hine1989 de metafor y
-// Normand (1999, Table I). n1i/n2i = pacientes lido/control, ai/ci = muertes.
-// Normand analiza RD; aqui se muestran RR computados de los conteos.
+// Datos reales: Hine et al. (1989), Tabla I de Normand (1999), también en
+// dat.hine1989 de metafor. Normand analiza la RD; aquí se muestran los RR
+// calculados de los conteos, con varianza log-RR = 1/a − 1/n1 + 1/c − 1/n2.
 const LIDOCAINE: Study[] = [
-  { name: 'Chopra 1971', rr: 2.21, lo: 0.21, hi: 23.44 },
-  { name: 'Mogensen 1970', rr: 1.00, lo: 0.27, hi: 3.75 },
-  { name: 'Pitt 1971', rr: 1.54, lo: 0.45, hi: 5.31 },
-  { name: 'Darby 1972', rr: 1.36, lo: 0.45, hi: 4.14 },
-  { name: 'Bennett 1970', rr: 2.25, lo: 0.60, hi: 8.46 },
-  { name: "O'Brien 1973", rr: 2.61, lo: 0.85, hi: 8.00 },
+  { name: 'Chopra 1971', a: 2, n1: 39, c: 1, n2: 43 },
+  { name: 'Mogensen 1970', a: 4, n1: 44, c: 4, n2: 44 },
+  { name: 'Pitt 1971', a: 6, n1: 107, c: 4, n2: 110 },
+  { name: 'Darby 1972', a: 7, n1: 103, c: 5, n2: 100 },
+  { name: 'Bennett 1970', a: 7, n1: 110, c: 3, n2: 106 },
+  { name: "O'Brien 1973", a: 11, n1: 154, c: 4, n2: 146 },
 ];
+const logRR = (s: Study) => Math.log((s.a / s.n1) / (s.c / s.n2));
+const varLogRR = (s: Study) => 1 / s.a - 1 / s.n1 + 1 / s.c - 1 / s.n2;
 
 // Desplazamientos fijos por estudio: el slider de heterogeneidad dispersa
 // los efectos verdaderos en direcciones deterministas (Σ ≈ 0).
@@ -1900,8 +1867,8 @@ export function MetaExplorer({ title }: { title?: ReactNode }) {
   const [hetero, setHetero] = useState(0);
 
   const pooled = useMemo(() => {
-    const y = LIDOCAINE.map((s, i) => Math.log(s.rr) + hetero * HET_OFF[i]);
-    const v = LIDOCAINE.map((s) => Math.pow((Math.log(s.hi) - Math.log(s.lo)) / 3.92, 2));
+    const y = LIDOCAINE.map((s, i) => logRR(s) + hetero * HET_OFF[i]);
+    const v = LIDOCAINE.map(varLogRR);
     const w = v.map((x) => 1 / x);
     const k = LIDOCAINE.length;
     const yF = w.reduce((s, wi, i) => s + wi * y[i], 0) / w.reduce((a, b) => a + b, 0);
@@ -1919,8 +1886,9 @@ export function MetaExplorer({ title }: { title?: ReactNode }) {
       lo: Math.exp((random ? yR : yF) - 1.96 * Math.sqrt(vPool)),
       hi: Math.exp((random ? yR : yF) + 1.96 * Math.sqrt(vPool)),
       Q, i2, tau2,
-      pQ: chi2Sf(Q, k - 1),
+      pQ: pchisqUpper(Q, k - 1),
       y,
+      v,
       w: (random ? wR : w).map((x) => x / (random ? wrSum : w.reduce((a, b) => a + b, 0))),
     };
   }, [random, hetero]);
@@ -1934,7 +1902,7 @@ export function MetaExplorer({ title }: { title?: ReactNode }) {
 
   return (
     <div className={FIG}>
-      <div className={CAPTION}>{title ?? 'Meta-análisis de lidocaína en IAM (Hine 1989 / Normand 1999): el conjunto contradice a cada estudio'}</div>
+      <div className={CAPTION}>{title ?? 'Meta-análisis de lidocaína en IAM (Hine 1989 / Normand 1999): el conjunto dice lo que ningún estudio podía'}</div>
       <div className="mb-2 flex gap-2 text-[11px]">
         <button type="button" className={!random ? BTN_MAIN : BTN_GHOST} onClick={() => setRandom(false)}>Efecto fijo</button>
         <button type="button" className={random ? BTN_MAIN : BTN_GHOST} onClick={() => setRandom(true)}>Efectos aleatorios</button>
@@ -1963,7 +1931,7 @@ export function MetaExplorer({ title }: { title?: ReactNode }) {
         {LIDOCAINE.map((s, i) => {
           const y0 = 22 + i * rowH;
           const rr = Math.exp(pooled.y[i]);
-          const shift = Math.exp(pooled.y[i]) / s.rr;
+          const half = 1.96 * Math.sqrt(pooled.v[i]);
           const sz = 4 + 10 * Math.sqrt(pooled.w[i]);
           return (
             <g key={s.name}>
@@ -1971,7 +1939,7 @@ export function MetaExplorer({ title }: { title?: ReactNode }) {
               <text x={W - 4} y={y0 + 3} textAnchor="end" fontSize={8} fill={GRAY}>
                 {(pooled.w[i] * 100).toFixed(0)}%
               </text>
-              <line x1={lx(Math.max(lo, s.lo * shift))} x2={lx(Math.min(hi, s.hi * shift))} y1={y0} y2={y0} stroke={UNEXP_COLOR} strokeWidth={1.6} />
+              <line x1={lx(Math.max(lo, Math.exp(pooled.y[i] - half)))} x2={lx(Math.min(hi, Math.exp(pooled.y[i] + half)))} y1={y0} y2={y0} stroke={UNEXP_COLOR} strokeWidth={1.6} />
               <rect x={lx(rr) - sz / 2} y={y0 - sz / 2} width={sz} height={sz}
                 fill={UNEXP_COLOR} transform={`rotate(45 ${lx(rr)} ${y0})`} />
             </g>
@@ -2004,9 +1972,9 @@ export function MetaExplorer({ title }: { title?: ReactNode }) {
         Con heterogeneidad en 0 los datos reales dan I² = 0% y los dos modelos
         coinciden. Sube el slider: los efectos se dispersan, Q crece, I² y τ²
         despegan, y el aleatorio reparte peso a los estudios pequeños y
-        ensancha su rombo. Ningún estudio solo es concluyente, pero la
-        síntesis sí: la lidocaína profiláctica no reduce mortalidad pese a su
-        beneficio antiarrítmico.
+        ensancha su rombo. Ningún estudio solo es concluyente; la síntesis
+        apunta a más muertes con lidocaína (RR combinado ≈ 1.7, IC 1.0–2.9)
+        pese a su beneficio antiarrítmico.
       </SimGuide>
       <p className={NOTE}>
         Datos reales de Hine et al. (1989), Tabla I de Normand (1999,
@@ -2023,36 +1991,6 @@ export function MetaExplorer({ title }: { title?: ReactNode }) {
 /* Determinístico (Euler semanal) + Poisson con semilla propia:      */
 /* barato, se calcula en el hilo principal.                          */
 /* ---------------------------------------------------------------- */
-
-function mulberry32(seed: number) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function poissonSample(lambda: number, rand: () => number) {
-  if (lambda <= 0) return 0;
-  if (lambda > 40) {
-    // Normal approximation for large means; deterministic via rand().
-    const u = Math.max(rand(), 1e-9);
-    const v = Math.max(rand(), 1e-9);
-    const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-    return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * z));
-  }
-  const L = Math.exp(-lambda);
-  let k = 0;
-  let p = 1;
-  do {
-    k += 1;
-    p *= rand();
-  } while (p > L);
-  return k - 1;
-}
 
 interface SirWeek {
   week: number;
@@ -2114,12 +2052,12 @@ export function EpiCurveExplorer({ title }: { title?: ReactNode }) {
     const sir = sirIncidence(beta, gamma, WEEKS);
     const trueInc = sir.map((s2) => s2.incidence);
     const rand = mulberry32(seed * 7919 + 13);
-    const cases = trueInc.map((mu) => (noise ? poissonSample(mu, rand) : Math.round(mu)));
+    const cases = trueInc.map((mu) => (noise ? rpois(rand, mu) : Math.round(mu)));
     const C = cutoff - 1; // índice 0-based de la semana de corte
     const seen = new Array(WEEKS).fill(0);
     cases.forEach((count, w) => {
       for (let c = 0; c < count; c++) {
-        const d = delayMean > 0 ? poissonSample(delayMean, rand) : 0;
+        const d = delayMean > 0 ? rpois(rand, delayMean) : 0;
         if (w + d <= C) seen[w] += 1;
       }
     });

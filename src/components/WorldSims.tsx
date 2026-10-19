@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { tokens } from '@/lib/tokens';
 import { SimGuide } from '@/components/SimBits';
+import { mulberry32 } from '@/lib/rng';
 
 const FIG = 'my-6 rounded border border-ink-200 bg-white p-4 shadow-sm';
 const CAPTION = 'mb-2 text-sm font-semibold text-ink-800';
@@ -43,16 +44,6 @@ function useCsvRows(file: string) {
     };
   }, [file]);
   return { rows, error };
-}
-
-function mulberry32(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 const fmt = (x: number, d = 2) => (Number.isFinite(x) ? x.toFixed(d) : '—');
@@ -331,7 +322,7 @@ export function EValueCalculator({ title }: { title?: ReactNode }) {
 
       <SimGuide>
         <ul><li>Prueba RR = 2: el confusor necesita dos asociaciones de 3.41 — más fuerte que la mayoría de confusores clínicos.</li>
-        <li>Con RR = 1.2 el E-value cae a ~1.68: efectos modestos se explican con confusión plausible.</li>
+        <li>Con RR = 1.2 el E-value cae a ~1.69: efectos modestos se explican con confusión plausible.</li>
         <li>El E-value del límite es la versión honesta: cuenta lo robusto que queda el hallazgo tras la incertidumbre.</li></ul>
       </SimGuide>
     </div>
@@ -618,18 +609,18 @@ export function CityLab({ title }: { title?: ReactNode }) {
 
       <p className={NOTE}>
         {design === 'cohorte' &&
-          'La cohorte recupera el RR — pero el crudo sale inflado (≈3.85), no 3.00: C confunde. Estratificar o ajustar por C acerca al 3.00. La enfermedad es rara aquí, así que el OR ≈ el RR.'}
+          'La cohorte recupera el RR, pero el crudo sale inflado (≈3.85), no 3.00: C confunde. Estratificar o ajustar por C acerca al 3.00. Ojo con el OR: con un riesgo de 19 % en los expuestos la enfermedad no es rara y el OR crudo (≈4.5) ya se separa del RR.'}
         {design === 'transversal' &&
           'El transversal ve la misma asociación cruda que la cohorte — mismo denominador, misma confusión — pero sin tiempo: no distingue incidencia de prevalencia.'}
         {design === 'cc-poblacion' &&
           'Con controles de la población fuente el OR ≈ el OR crudo de la ciudad — confundido por C, pero honesto en su marco. La comparación justa exige controles del mismo universo que produjo los casos.'}
         {design === 'cc-hospital' &&
-          'Controles hospitalarios: H depende de la exposición, así que los "sanos" del hospital están sobrerrepresentados en expuestos (P(E|control) ≈ 0.75 vs 0.22 en la fuente). El OR se invierte — la exposición parece proteger. Sesgo de Berkson: condicionar sobre el colisionador.'}
+          'Controles hospitalarios: H depende de la exposición, así que los "sanos" del hospital están sobrerrepresentados en expuestos (P(E|control) ≈ 0.75 frente a 0.21 en la fuente). El OR se invierte — la exposición parece proteger. Sesgo de Berkson: condicionar sobre el colisionador.'}
       </p>
 
       <SimGuide>
         <ul><li>Empieza por "controles hospitalarios": el OR sale por debajo de 1 — la exposición protectora es el artefacto del colisionador.</li>
-        <li>Cambia a controles de la población fuente: el OR vuelve a ≈4 — recuperaste la asociación, con la confusión incluida.</li>
+        <li>Cambia a controles de la población fuente: el OR vuelve a ≈4.5, el OR crudo de la ciudad: recuperaste la asociación, con la confusión incluida.</li>
         <li>En cohorte, compara el RR crudo con los RR por estrato de C (arriba, en la tarjeta "Crudo"): cada estrato ronda 3.00.</li></ul>
       </SimGuide>
     </div>

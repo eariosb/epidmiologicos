@@ -16,7 +16,21 @@ const WORKER_ENABLED = process.env.NEXT_PUBLIC_EXACT_WORKER !== '0';
 let worker: Worker | null = null;
 let workerFailed = false;
 let seq = 0;
-const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
+interface Slot {
+  resolve: (v: unknown) => void;
+  reject: (e: Error) => void;
+  /** Misma tarea en el hilo principal, por si el worker muere a mitad. */
+  runSync: () => unknown;
+}
+const pending = new Map<number, Slot>();
+
+function settleSync(slot: Slot) {
+  try {
+    slot.resolve(slot.runSync());
+  } catch (err) {
+    slot.reject(err instanceof Error ? err : new Error(String(err)));
+  }
+}
 
 function getWorker(): Worker | null {
   if (!WORKER_ENABLED || workerFailed || typeof window === 'undefined' || typeof Worker === 'undefined')
@@ -33,11 +47,15 @@ function getWorker(): Worker | null {
         else slot.resolve(ok);
       };
       worker.onerror = () => {
+        // El worker murió (carga fallida, memoria): se desactiva y las
+        // tareas en vuelo se terminan en el hilo principal en lugar de
+        // dejar a los exploradores en "Calculando…" para siempre.
         workerFailed = true;
-        for (const { reject } of pending.values()) reject(new Error('worker failure'));
+        const slots = [...pending.values()];
         pending.clear();
         worker?.terminate();
         worker = null;
+        slots.forEach(settleSync);
       };
     } catch {
       workerFailed = true;
@@ -61,18 +79,14 @@ export function runExact<N extends ExactTaskName>(
   }
   const id = ++seq;
   return new Promise((resolve, reject) => {
-    pending.set(id, { resolve: resolve as (v: unknown) => void, reject });
+    const slot: Slot = { resolve: resolve as (v: unknown) => void, reject, runSync };
+    pending.set(id, slot);
     try {
       w.postMessage({ id, name, args });
-    } catch (err) {
+    } catch {
+      // postMessage falla con argumentos no clonables: hilo principal.
       pending.delete(id);
-      // postMessage can throw on uncloneable args; fall back to sync.
-      try {
-        resolve(runSync());
-      } catch (syncErr) {
-        reject(syncErr instanceof Error ? syncErr : new Error(String(syncErr)));
-      }
-      void err;
+      settleSync(slot);
     }
   });
 }

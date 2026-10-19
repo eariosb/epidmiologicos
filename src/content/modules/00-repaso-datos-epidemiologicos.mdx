@@ -1,9 +1,9 @@
 ---
 title: "Leer los datos antes de analizarlos"
 slug: "00-repaso-datos-epidemiologicos"
-objective: " Entender qué hay en un
-archivo epidemiológico. Qué cuenta una fila, qué quiere decir un código,
-como abordar la escaces o perdida de información y qué comparación permite el diseño."
+objective: "Entender qué hay en un archivo epidemiológico: qué cuenta una fila,
+qué quiere decir un código, cómo abordar la información escasa o perdida y qué
+comparación permite el diseño."
 order: 0
 datasets: ["valung.csv", "recid.csv", "bcg_matching.csv", "caso_control_11.csv", "ddimer.csv", "leucemia.txt"]
 duration: 120
@@ -14,7 +14,7 @@ attr: "Módulo introductorio de repaso: desarrollo propio."
 
 import { Callout } from '@/components/Callout'
 import { Quiz } from '@/components/Quiz'
-import { Flashcard, Flashcards } from '@/components/Flashcard'
+import { Flashcard } from '@/components/Flashcard'
 import { RCell } from '@/components/RCell'
 import { SasBlock } from '@/components/SasBlock'
 import { LabExercise } from '@/components/LabExercise'
@@ -24,7 +24,7 @@ import { TestSelector, PValueLab } from '@/components/TestSims'
 import { DataQualityPanel } from '@/components/QualitySims'
 
 <Callout type="tip" title="Antes de abrir el primer archivo">
-Probabilidad, estimación, inferencia y regresión son la la parte estructural del recorrido académico en estadística. 
+Probabilidad, estimación, inferencia y regresión son la parte estructural del recorrido académico en estadística. 
 Ahora serán útiles para explorar y entender qué cuenta cada dato y su información asociada,
 qué dice el diccionario, cuándo un número raro es señal, qué es un faltante real y qué no,
 aprender a interpretar con criterio.
@@ -310,7 +310,8 @@ controles, lo esperable si la vacuna protege.
 
 Lo que no puedes hacer es leer la tabla **por columnas** para obtener
 P(caso | vacunado). Ese número dependería de cuántos controles decidió
-reclutar el investigador: con 10 controles por caso saldría casi la mitad. Esta
+reclutar el investigador: con 10 controles por caso saldría casi la mitad
+de lo que sale con 5. Esta
 regla, estimar la exposición dado el desenlace y combinarla con el OR, es
 la base de los módulos 14 y 15.
 
@@ -943,8 +944,8 @@ incompletas por el <Term k="retraso_notificacion">retraso de
 notificación</Term>. Leer esa cola como un descenso real es el error más
 común de los boletines.
 
-La Figura 14 parte de un modelo SIR (susceptibles que se infectan a tasa β
-y se recuperan a tasa γ) y le añade ruido Poisson y retraso; mueve la fecha
+La Figura 14 parte de un modelo SIR (susceptibles que se infectan a tasa <Term k="β-SIR">β</Term>
+y se recuperan a tasa <Term k="γ-SIR">γ</Term>) y le añade ruido Poisson y retraso; mueve la fecha
 de corte para ver cómo cambia la cola.
 
 La Figura 15 fija ese corte en la semana 24, cuando la epidemia aún crece

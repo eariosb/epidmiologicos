@@ -13,7 +13,6 @@ import {
   useBlackboardScene,
   BlackboardContextBridge,
   type BlackboardCanvasRef,
-  type BlackboardScene,
 } from '@cursos/blackboard';
 import { BlackboardCanvas } from '../../packages/blackboard/src/components/BlackboardCanvas';
 import { PageNav } from './PageNav';

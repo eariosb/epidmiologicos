@@ -1,1 +1,3 @@
-verdadera = 54.2 | MCAR = 54.2 | MAR = 54.1 | MNAR = 53.6
+verdadera = 54.2
+casos completos: MCAR = 54.3 | MAR = 52.9 | MNAR = 52.1
+con la edad:     MCAR = 54.3 | MAR = 54.2 | MNAR = 52.6

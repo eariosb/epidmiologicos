@@ -8,10 +8,6 @@ export function CaptureManager() {
   const [open, setOpen] = useState(false);
   const { addCapture } = useSession();
 
-  const handleStart = useCallback(() => {
-    setOpen(true);
-  }, []);
-
   const handleCancel = useCallback(() => {
     setOpen(false);
   }, []);

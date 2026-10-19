@@ -73,7 +73,7 @@ totales de grupo y el total de eventos observado, y bajo H₀ la celda
 sigue una hipergeométrica. Es el cálculo correcto si el diseño realmente
 fija ambos márgenes (un experimento con totales asignados) o si se adopta
 la lectura de Fisher: los márgenes son ancillaries que no informan sobre
-θ, y condicionar es la vía rigurosa.
+<Term k="θ-tabla">θ</Term>, y condicionar es la vía rigurosa.
 
 Pero la mayoría de los diseños epidemiológicos fija un solo margen. En un
 ensayo o una cohorte se fijan $n_1$ y $n_2$; el total de eventos es
@@ -110,13 +110,13 @@ Storer–Kim (1990): es más liberal y no garantiza exactitud estricta.)
 | mid-p | Fisher menos la mitad de la masa empatada | ambos márgenes fijos | casi-exacto, menos conservador |
 | z agrupada (supremo) | \|z\| con varianza común | dos binomiales | exacto, nominal |
 | Boschloo | valor p de Fisher | dos binomiales | exacto, uniformemente más potente que Fisher |
-| Berger–Boos | Boschloo sobre IC del parámetro | dos binomiales | exacto (γ); en tablas pequeñas suele coincidir con Boschloo |
+| Berger–Boos | Boschloo sobre IC del parámetro | dos binomiales | exacto (γ); puede ser menor que Boschloo si el IC deja fuera el pico de $P_p$ (Perondi: 0.031 frente a 0.038) |
 
 El test incondicional necesita responder "¿cuál es la probabilidad de
 una tabla al menos tan extrema?" cuando H₀ no especifica $p$. La solución
 de Barnard y de Boschloo es tomar el supremo sobre $p \in (0,1)$; la de
 Berger–Boos restringe el supremo a un intervalo de confianza de $p$ y le
-suma γ (típicamente 0.001). La controversia no es computacional: es si
+suma <Term k="γ-BB">γ</Term> (típicamente 0.001). La controversia no es computacional: es si
 ese supremo responde la pregunta del diseño. Si el diseño fijara ambos
 márgenes —raro fuera del experimento de la dama del té; un ensayo fija
 solo los tamaños de grupo— el supremo no existiría como problema; en un

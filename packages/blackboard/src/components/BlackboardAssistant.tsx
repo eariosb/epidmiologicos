@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useBlackboardContext } from '../lib/context';
 import { useBlackboardLLM } from '../hooks/useBlackboardLLM';
 import { copyText } from '../lib/clipboard';
 import { blobToDataUrl } from '../lib/blob';
@@ -22,7 +21,6 @@ const MODES: { id: AssistantMode; label: string }[] = [
 ];
 
 export function BlackboardAssistant({ onExecuteR, canvasRef }: BlackboardAssistantProps) {
-  const { state } = useBlackboardContext();
   const { messages, status, ask, stop, clear } = useBlackboardLLM();
   const [input, setInput] = useState('');
   const [mode, setMode] = useState<AssistantMode>('ask');

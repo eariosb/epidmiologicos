@@ -22,8 +22,12 @@ interface DecisionPanelProps {
 }
 
 /**
- * Panel de decisión con umbral NNT de Sinclair (J Clin Epidemiol 2001):
- * tratar cuando NNT < NNT_T, con NNT_T = V·(1 − AER·RV) / Ct.
+ * Panel de decisión con umbral NNT de Sinclair et al. (J Clin Epidemiol
+ * 2001): tratar cuando NNT < NNT_T, con
+ *   NNT_T = V / (Ct + AER·RV·V)
+ * es decir, el valor de un evento evitado dividido por lo que cuesta cada
+ * paciente tratado (dinero más daño valorado). Sin costos, NNT_T = 1/(AER·RV),
+ * la forma del resumen del artículo.
  *   V   = valor de evitar un evento (en $)
  *   Ct  = costo de tratar a un paciente
  *   AER = tasa de eventos adversos atribuibles al tratamiento
@@ -45,9 +49,9 @@ export function DecisionPanel({
   const [aer, setAer] = useState(0.02);     // tasa de eventos adversos
   const [rv, setRv] = useState(0.2);        // peso relativo del AE
 
-  const harmWeight = aer * rv;
-  const nntT =
-    ct > 0 && harmWeight < 1 ? (v * (1 - harmWeight)) / ct : NaN;
+  // Costo por paciente tratado, en dinero: tratamiento + daño valorado.
+  const costPerTreated = ct + aer * rv * v;
+  const nntT = costPerTreated > 0 ? v / costPerTreated : Infinity;
 
   const harmful = arrHi !== undefined && arrHi <= 0;
   const ciCrossesZero =
@@ -159,16 +163,17 @@ export function DecisionPanel({
           {Number.isFinite(nntWorst) && Number.isFinite(nntBest) && (
             <> · IC [{fmt(nntBest, 0)}–{fmt(nntWorst, 0)}]</>
           )}
-          {' · '}umbral NNT_T = <strong>{Number.isFinite(nntT) ? fmt(nntT, 0) : 'imposible (daños ≥ beneficio)'}</strong>
+          {' · '}umbral NNT_T = <strong>{Number.isFinite(nntT) ? fmt(nntT, 0) : '∞ (tratar no cuesta nada)'}</strong>
         </span>
       </div>
       <p className="mt-1.5 text-xs text-ink-600">{why}</p>
 
       {note && <p className={NOTE}>{note}</p>}
       <p className={NOTE}>
-        NNT_T = V·(1 − AER·RV)/Ct, el umbral de Sinclair: los daños del
-        tratamiento (AER·RV) se descuentan del valor del evento evitado antes
-        de dividir por el costo. La zona gris es una respuesta legítima: cuando
+        NNT_T = V / (Ct + AER·RV·V), el umbral de Sinclair: el valor de un
+        evento evitado dividido por lo que cuesta cada paciente tratado, en
+        dinero (Ct) y en daño valorado (AER·RV·V). Tratar conviene si se
+        necesitan menos pacientes que eso para evitar un evento. La zona gris es una respuesta legítima: cuando
         el IC cruza el umbral, la respuesta correcta es más información, no
         una moneda al aire (value of information, módulo 17).
       </p>

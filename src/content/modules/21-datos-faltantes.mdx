@@ -54,20 +54,29 @@ edad <- rnorm(n, 60, 12)
 dep  <- 30 + 0.4*edad + rnorm(n, 0, 8)     # depresion ~ edad + ruido
 verdadera <- mean(dep)                      # ~54
 
-# MCAR: faltar es azar puro (10%).
-m_mcar <- runif(n) < 0.10
+# MCAR: faltar es azar puro (30%, como los otros dos).
+m_mcar <- runif(n) < 0.30
 # MAR: faltar depende de lo OBSERVADO (edad), no de dep.
-m_mar <- runif(n) < plogis(-2 + 0.03*(edad - 60))
+m_mar <- runif(n) < plogis(-1 + 0.1*(edad - 60))
 # MNAR: faltar depende del propio valor faltante.
-m_mnar <- runif(n) < plogis(-2 + 0.06*(dep - 54))
+m_mnar <- runif(n) < plogis(-1 + 0.1*(dep - 54))
 
 cc <- function(m) mean(dep[!m])            # media de los completos
-cat(sprintf("verdadera = %.1f | MCAR = %.1f | MAR = %.1f | MNAR = %.1f\\n",
-            verdadera, cc(m_mcar), cc(m_mar), cc(m_mnar)))
-# Interpretacion: MCAR es insesgada; MAR es insesgada PERO los
-# completos sobre-representan jovenes (la media no es la de la
-# poblacion; las comparaciones dentro de estrato si lo son); MNAR
-# esta sesgada y ningun ajuste con observados la repara.`}
+# Correccion que usa lo observado: predecir dep con la edad (ajustada en
+# los completos) y promediar la prediccion en TODA la muestra.
+reg <- function(m) {
+  fit <- lm(dep ~ edad, subset = !m)
+  mean(ifelse(m, predict(fit, data.frame(edad = edad)), dep))
+}
+cat(sprintf("verdadera = %.1f\\n", verdadera))
+cat(sprintf("casos completos: MCAR = %.1f | MAR = %.1f | MNAR = %.1f\\n",
+            cc(m_mcar), cc(m_mar), cc(m_mnar)))
+cat(sprintf("con la edad:     MCAR = %.1f | MAR = %.1f | MNAR = %.1f\\n",
+            reg(m_mcar), reg(m_mar), reg(m_mnar)))
+# Lectura: bajo MCAR los completos no se sesgan. Bajo MAR si se sesgan
+# (faltan mas los mayores, que tienen mas depresion), pero la edad
+# observada repara el sesgo. Bajo MNAR faltan los de dep alta aun dentro
+# de cada edad: ni los completos ni la regresion recuperan la verdad.`}
 />
 
 ## Diagnóstico de patrones
@@ -171,7 +180,7 @@ documentada.
 
 Cuando el argumento apunta a MNAR (faltar por lo que falta), ninguna
 imputación estándar salva el estimando. Lo que queda es acotar la
-respuesta: el **δ-adjustment** imputa los faltantes desplazados un δ
+respuesta: el **δ-adjustment** imputa los faltantes desplazados un <Term k="δ-MNAR">δ</Term>
 respecto del modelo MAR, y repite el análisis para una grilla de δ.
 El reporte deja de ser un número y pasa a ser una curva: "la asociación
 se mantiene mientras los faltantes no superen en promedio δ₀ al modelo

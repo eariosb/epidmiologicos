@@ -17,20 +17,23 @@ interface TaskDef {
 const TASKS: Record<string, TaskDef> = {
   tasas: {
     title: 'Comparar dos tasas',
-    task: 'Razón de tasas (IRR) entre dos grupos con denominadores distintos.',
-    r: `tasa_S <- 3151/40923 * 1000   # Southwark & Vauxhall
-tasa_L <-  644/461045 * 1000   # Lambeth
-tasa_S / tasa_L                # IRR ≈ 55`,
-    sas: `data a; input co $ muerte n; datalines;
-  SV 3151 40923  L 644 461045;
+    task: 'Razón de tasas entre dos grupos con denominadores distintos (Snow, tabla IX: muertes por 10 000 casas).',
+    r: `tasa_S <- 1263/40046 * 10000   # Southwark & Vauxhall: 315
+tasa_L <-   98/26107 * 10000   # Lambeth: 38
+tasa_S / tasa_L                # razón de tasas = 8.4
+poisson.test(c(1263, 98), c(40046, 26107))$conf.int   # IC exacto`,
+    sas: `data a; input co $ muertes casas; datalines;
+SV 1263 40046
+L 98 26107
+;
 proc sql;
-  select 1000*muerte/n as tasa from a;
+  select co, 10000*muertes/casas as tasa from a;
 quit;`,
     py: `import pandas as pd
-d = pd.DataFrame({'mu': [3151, 644], 'n': [40923, 461045]})
-tasa = 1000 * d.mu / d.n
-print(tasa, tasa[0]/tasa[1])`,
-    trap: 'En R/Python la tasa es por 1.000; en SAS conviene guardarla explícita o perderás la unidad al comparar.',
+d = pd.DataFrame({'mu': [1263, 98], 'casas': [40046, 26107]})
+tasa = 10000 * d.mu / d.casas
+print(tasa, tasa[0] / tasa[1])`,
+    trap: 'El denominador de Snow son casas, no personas: la razón compara riesgos por vivienda. Declara siempre la unidad (por 10 000 casas) o la comparación pierde sentido.',
   },
   tabla2x2: {
     title: 'Tabla 2×2',
@@ -74,18 +77,18 @@ t.riskratio, t.oddsratio, t.risk_difference`,
     trap: 'El "Col1 Risk" de PROC FREQ depende del orden de filas/columnas: verifica qué celda es a.',
   },
   nnt: {
-    title: 'NNT y fracciones atribuibles',
-    task: 'ARR, NNT y fracción atribuible poblacional desde una tabla 2×2.',
+    title: 'NNT y reducción relativa del riesgo',
+    task: 'ARR, NNT y reducción relativa del riesgo (fracción prevenida) desde una tabla 2×2: a, b tratados; c, d controles.',
     r: `a<-5; b<-95; c<-10; d<-90
-rd <- c/(c+d) - a/(a+b)  # ARR
-nnt <- 1/rd; fae <- rd/(c/(c+d))`,
+arr <- c/(c+d) - a/(a+b)   # reducción absoluta del riesgo
+nnt <- 1/arr; rrr <- arr/(c/(c+d))   # rrr = 1 - RR`,
     sas: `data n; a=5; b=95; c=10; d=90;
-  rd = c/(c+d) - a/(a+b); nnt = 1/rd;
-  fae = rd/(c/(c+d)); run;
+  arr = c/(c+d) - a/(a+b); nnt = 1/arr;
+  rrr = arr/(c/(c+d)); run;
 proc print; run;`,
-    py: `rd = c/(c+d) - a/(a+b)
-nnt = 1/rd; fae = rd/(c/(c+d))`,
-    trap: 'RD positivo aquí = beneficio; si tu tabla invierte el orden de filas, el signo cambia y un NNH pasa a "NNT".',
+    py: `arr = c/(c+d) - a/(a+b)
+nnt = 1/arr; rrr = arr/(c/(c+d))`,
+    trap: 'ARR positiva aquí = beneficio; si tu tabla invierte el orden de filas, el signo cambia y un NNH pasa a "NNT".',
   },
   simular: {
     title: 'Simular confusión',
@@ -143,13 +146,15 @@ t.oddsratio_pooled   # == OR_MH`,
   lifetable: {
     title: 'Tabla de vida',
     task: 'Supervivencia actuarial por intervalos con censura.',
-    r: `library(survival)
-s <- survfit(Surv(t_in, t_out, evento) ~ 1, data=d)
-summary(s, times = c(1,2,5,9))`,
+    r: `# n en riesgo al inicio, eventos d y censuras c por intervalo:
+n_eff <- n - c/2                 # censuras a mitad de intervalo
+S <- cumprod(1 - d/n_eff)
+# o KMsurv::lifetab(tis, ninit, nlost, nevent)`,
     sas: `proc lifetest data=d method=lt intervals=(0 to 9 by 1);
   time anios*evento(0); run;`,
-    py: `from lifelines import KaplanMeierFitter
-kmf.fit_interval_censoring(lo, hi)`,
+    py: `from lifelines.utils import survival_table_from_events
+tab = survival_table_from_events(t, evento)   # riesgo, eventos, censuras
+# actuarial: q = d / (n - c/2), S = prod(1 - q)`,
     trap: 'METHOD=LT trata la censura como a mitad del intervalo; KM (METHOD=KM) la ubica en su momento exacto.',
   },
   km: {
@@ -162,7 +167,7 @@ survdiff(Surv(t, evento) ~ grupo, data=d)`,
   time t*evento(0); strata grupo; run;`,
     py: `from lifelines.statistics import logrank_test
 logrank_test(t1, t2, e1, e2)`,
-    trap: 'survdiff es log-rank por defecto; para Wilcoxon (Gehan) pide rho=1; en SAS es un test aparte en la salida.',
+    trap: 'survdiff es log-rank por defecto; rho = 1 da la versión de Peto y Peto del test de Wilcoxon. En SAS ambos salen en la misma tabla de PROC LIFETEST.',
   },
   ptcox: {
     title: 'Personas-tiempo y Cox',
@@ -217,12 +222,17 @@ proc genmod; model n = x / dist=poisson; run;`,
     task: 'Estimador combinado, heterogeneidad e I².',
     r: `library(metafor)
 rma(yi = te, sei = se, method="REML")`,
-    sas: `proc mixed data=estudios method=reml;
-  model te = / cl; weight w; random estudio;
-  ods output CovParms=tau2; run;`,
+    sas: `/* SAS no trae meta-análisis nativo: PROC MIXED con la
+   varianza de cada estudio fijada (PARMS ... / HOLD=) */
+proc mixed data=estudios method=reml;
+  class estudio;
+  model te = / solution cl;
+  random intercept / subject=estudio;
+  repeated / group=estudio;
+  parms / parmsdata=varianzas hold=2 to 14; run;`,
     py: `from statsmodels.stats.meta_analysis import combine_effects
 combine_effects(te, se, method_re="iterated")`,
-    trap: 'Fijo vs aleatorios no es un detalle: el pooled de efectos fijos es sesgado ante heterogeneidad real.',
+    trap: 'Fijo vs. aleatorios no es un detalle: con heterogeneidad real el IC de efecto fijo es demasiado estrecho y su estimando es otro (un promedio de estudios distintos ponderado por su tamaño).',
   },
   eda: {
     title: 'Exploración de una base epidemiológica',

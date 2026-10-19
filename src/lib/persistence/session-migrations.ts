@@ -31,7 +31,7 @@ const sessionV2toV3 = (prev: Record<string, unknown>): Record<string, unknown> =
   sceneVisits: Array.isArray(prev.sceneVisits) ? prev.sceneVisits : [],
 });
 
-export const sessionMigrations: MigrationChain = {
+const sessionMigrations: MigrationChain = {
   target: SCHEMA_VERSIONS.session,
   steps: { 2: sessionV1toV2, 3: sessionV2toV3 },
 };
@@ -46,14 +46,14 @@ const captureV1toV2 = (prev: Record<string, unknown>): Record<string, unknown> =
   tags: Array.isArray(prev.tags) ? prev.tags : [],
 });
 
-export const captureMigrations: MigrationChain = {
+const captureMigrations: MigrationChain = {
   target: SCHEMA_VERSIONS.capture,
   steps: { 2: captureV1toV2 },
 };
 
 /* --------------------------------- validators -------------------------------- */
 
-export function assertSession(v: unknown): asserts v is Session {
+function assertSession(v: unknown): asserts v is Session {
   const bad = (field: string) => new Error(`invalid session: bad ${field}`);
   if (!isRecord(v)) throw bad('record');
   if (typeof v.id !== 'string' || v.id.length === 0) throw bad('id');
@@ -67,7 +67,7 @@ export function assertSession(v: unknown): asserts v is Session {
   if (v.version !== SCHEMA_VERSIONS.session) throw bad('version');
 }
 
-export function assertCapture(v: unknown): asserts v is Capture {
+function assertCapture(v: unknown): asserts v is Capture {
   const bad = (field: string) => new Error(`invalid capture: bad ${field}`);
   if (!isRecord(v)) throw bad('record');
   if (typeof v.id !== 'string' || v.id.length === 0) throw bad('id');

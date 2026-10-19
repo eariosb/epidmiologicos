@@ -1,1 +1,1 @@
-tuyo = 0.054400 | fisher.test = 0.054400 | diff = 0.00e+00
+tuyo = 0.054400 | fisher.test = 0.054400 | |diferencia| < 1e-10: TRUE

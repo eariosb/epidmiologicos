@@ -135,7 +135,7 @@ m17) lleva su propia marca.
 - **Módulos MDX** con KaTeX (`remark-math` + `rehype-katex`), quizzes,
   flashcards y ejercicios de laboratorio.
 - **Glosario en vivo con tooltips** (`<Term>` + `src/lib/glossary.ts`):
-  **204 entradas** —siglas, símbolos y conceptos, en 14 secciones
+  **258 entradas** —siglas, símbolos y conceptos, en 13 secciones
   temáticas— en un diccionario único que alimenta dos superficies.
   En el texto, `<Term k="RR">` dibuja un subrayado punteado discreto y,
   al hover/focus, un tooltip con la expansión en español y el original
@@ -143,12 +143,15 @@ m17) lleva su propia marca.
   `/glosario#clave` para la entrada completa. `tip="..."` sirve
   recorderis libres para personas, resultados y métodos. Es CSS puro,
   sin estado ni JS: funciona en SSR, con teclado y en lectores de
-  pantalla (vía `sr-only` y `role="note"`). ~160 términos enlazados en
-  los módulos; la página **`/glosario`** renderiza el compendio completo
-  de la misma fuente —una entrada nueva queda disponible en ambos.
-  Curaduría asistida: `scripts/wrap_terms.py` envuelve las siglas en
-  prosa (omitiendo código, matemática y frontmatter) y `audit_terms.py`
-  / `term_gaps.py` auditan la cobertura.
+  pantalla (vía `sr-only` y `role="note"`). El plugin
+  `src/lib/remark-auto-terms.ts` enlaza solo la primera aparición de cada
+  sigla, símbolo de sentido único (α, τ², Φ, p₁…) y forma técnica de un
+  concepto («tiempo inmortal», «colisionador»: `GLOSSARY_FORMS`) en cada
+  módulo; los símbolos con varios sentidos (β, γ, δ, θ) se marcan a mano
+  con la clave del sentido (`<Term k="β-SIR">β</Term>`). La página
+  **`/glosario`** renderiza el compendio completo de la misma fuente.
+  `pnpm check:glossary` lista las siglas de la prosa sin entrada y falla
+  si queda alguna.
 - **Arquitectura de capas** (`src/components/Deep.tsx`): `<Profundiza>` y
   `<SalaDeMaquinas>` como plegables nativos con contratos distintos;
   frontmatter extendido (`course`, `level`, `attr`, `profiles`,
@@ -192,7 +195,8 @@ m17) lleva su propia marca.
   Belmont, Helsinki, Ley 1581, DAGitty, Epi Handbook, ColOpenData,
   EpiNow2).
 - **Asistente IA con RAG**: corpus propio (`src/lib/rag/corpus.ts`) de
-  ~170 documentos (secciones de módulos, quizzes, bibliografía, anexos),
+  349 fragmentos (214 secciones de módulos, 40 preguntas, 31 fichas
+  bibliográficas, 64 fragmentos de anexos),
   recuperación BM25 local con prioridad al módulo activo, perfil
   pedagógico del curso inyectado al prompt del paquete
   `@cursos/blackboard`. Cuatro modos — **Preguntar, Explicar, Generar R,
@@ -233,7 +237,7 @@ src/
   app/                    App Router: /, /anexos, /bibliografia, /glosario,
                           /rutas, /cursos/[slug], api/
   components/             Simuladores, RCell, Callout, Quiz, mdx-components…
-  content/modules/        repaso (00) + 19 módulos MDX + claims.json generado
+  content/modules/        30 módulos MDX (Curso I y II) + claims.json generado
   hooks/                  useExactTask, useProgress, useWebR, useBroadcast…
   lib/                    exact2x2, precision, multinomial, exactTasks,
                           exactRunner, tokens, claims, anexos, lecturas,
@@ -243,9 +247,8 @@ packages/blackboard/      Pizarra digital + asistente LLM (workspace)
 public/anexos/            Ensayo técnico, scripts R, figuras del anexo
 public/data/              Datasets del curso (VALUNG, RECID, BCG, DDIMER,
                           valung_corrupto para la práctica de campo II-10…)
-scripts/                  QA (run_all_r, check_mdx, check_render, build-claims)
-                          y curaduría del glosario (wrap_terms, audit_terms,
-                          term_gaps)
+scripts/                  QA (run_all_r, check_mdx, check_render,
+                          glossary_coverage, build-claims, precompute_r)
 tests/visual/             Snapshots Playwright (escritorio + móvil)
 docs/QA.md                Línea base y compuertas de calidad
 ```
@@ -302,7 +305,7 @@ pnpm start            # sirve el build
 | Comando | Qué verifica |
 |---|---|
 | `pnpm typecheck` | `tsc --noEmit` sin errores |
-| `pnpm test` | 250 tests Vitest (exact2x2, precision, multinomial, tasks, claims, RAG, hooks, componentes) |
+| `pnpm test` | 262 tests Vitest (exact2x2, precision, multinomial, tasks, claims, RAG, hooks, componentes) |
 | `pnpm check:mdx` | Los 30 archivos MDX (Curso I + Curso II) compilan con next-mdx-remote |
 | `pnpm check:r` | Las salidas de las 112 celdas R coinciden con los snapshots de `tests/r-snapshots` |
 | `pnpm check:cells` | Lint de las celdas R (escapes, ids, hashes del manifiesto) |
@@ -311,7 +314,8 @@ pnpm start            # sirve el build
 Otras utilidades: `python scripts/run_all_r.py --update` regenera los
 snapshots de R; `pnpm exec playwright test --update-snapshots` regenera
 las capturas visuales (solo tras un cambio visual declarado);
-`node scripts/check_render.mjs` prueba renderizado de componentes MDX.
+`pnpm check:render` prueba el renderizado de los componentes MDX y
+`pnpm check:glossary` la cobertura del glosario.
 
 Nota de entorno (Windows): no ejecutar `next dev` y `next start` sobre el
 mismo `.next` ni dos `next start` a la vez — corrompen los manifiestos
@@ -378,5 +382,3 @@ una celda los referencia por nombre.
   diseño propio sobre la literatura metodológica citada en cada módulo.
 - **Textos de terceros** (Woodward y demás bibliografía): se citan; no se
   alojan ni se redistribuyen.
-# curso_epidemiologicos
-# curso_epidemiologicos

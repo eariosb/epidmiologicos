@@ -5,7 +5,7 @@ objective: "Cuantificar y reportar la heterogeneidad (τ², I², intervalo de pr
 order: 26
 datasets: []
 duration: 110
-prerequisites: ["Curso I completo, especialmente el módulo 10"]
+prerequisites: ["Curso I completo, especialmente el módulo 17"]
 course: "II"
 level: "avanzado"
 profilesDeep: ["politica", "clinico"]
@@ -18,7 +18,7 @@ import { RCell } from '@/components/RCell'
 import { LabExercise } from '@/components/LabExercise'
 
 <Callout type="tip" title="La pregunta que el promedio no responde">
-El meta-análisis del módulo 10 enseñó el procedimiento: pesar, combinar,
+El meta-análisis del módulo 17 enseñó el procedimiento: pesar, combinar,
 reportar. La pregunta avanzada es otra: si los estudios difieren más de
 lo que el azar explica, el promedio ponderado es la respuesta a una
 pregunta que nadie hizo: ¿para *quién* es el efecto medio? La
@@ -44,14 +44,20 @@ es la omisión más común:
 
 <RCell
   id="26/heterogeneidad"
-  title="Q, tau² e I² sobre la tabla BCG del módulo 10"
-  code={`# 13 estudios de vacuna BCG (latitud como covariable despues).
+  title="Q, tau² e I² sobre los 13 ensayos de la vacuna BCG"
+  code={`# Colditz et al. (1994): 13 ensayos de la vacuna BCG contra la
+# tuberculosis (dat.bcg de metafor). La latitud del sitio se usa
+# despues como covariable.
+# Conteos por ensayo: casos de TB y sanos en vacunados (t) y control (c).
 ens <- data.frame(
-  lat = c(44,55,42,52,13,44,27,42,33,33,18,33,33),
-  logRR = c(-0.94,-1.67,-1.05,-1.44,-1.24,-0.47,-0.85,-1.02,-1.34,
-            -1.02,-0.22,-0.45,-0.02),
-  var   = c(0.357,0.208,0.113,0.145,0.018,0.223,0.072,0.149,0.179,
-            0.051,0.012,0.039,0.020))
+  lat  = c(44, 55, 42, 52, 13, 44, 19, 13, 27, 42, 18, 33, 33),
+  tpos = c(4, 6, 3, 62, 33, 180, 8, 505, 29, 17, 186, 5, 27),
+  tneg = c(119, 300, 228, 13536, 5036, 1361, 2537, 87886, 7470, 1699, 50448, 2493, 16886),
+  cpos = c(11, 29, 11, 248, 47, 372, 10, 499, 45, 65, 141, 3, 29),
+  cneg = c(128, 274, 209, 12619, 5761, 1079, 619, 87892, 7232, 1600, 27197, 2338, 17825))
+nt <- ens$tpos + ens$tneg; nc <- ens$cpos + ens$cneg
+ens$logRR <- log((ens$tpos / nt) / (ens$cpos / nc))
+ens$var   <- 1/ens$tpos - 1/nt + 1/ens$cpos - 1/nc
 k <- nrow(ens); w <- 1/ens$var
 mu_fe <- sum(w*ens$logRR)/sum(w)
 Q <- sum(w*(ens$logRR - mu_fe)^2)
@@ -59,16 +65,18 @@ Q <- sum(w*(ens$logRR - mu_fe)^2)
 C <- sum(w) - sum(w^2)/sum(w)
 tau2 <- max(0, (Q - (k-1))/C)
 I2 <- max(0, (Q - (k-1))/Q)
-cat(sprintf('Q = %.1f (df = %d, p = %.4f)\\n', Q, k-1, pchisq(Q, k-1, lower.tail=FALSE)))
+cat(sprintf('Q = %.1f (df = %d, p = %.1e)\\n', Q, k-1, pchisq(Q, k-1, lower.tail=FALSE)))
 cat(sprintf('tau2 = %.3f | I2 = %.0f%%\\n', tau2, 100*I2))
 # Efecto aleatorio: repesado con tau2.
 w_re <- 1/(ens$var + tau2)
 mu_re <- sum(w_re*ens$logRR)/sum(w_re)
 cat(sprintf('RR combinado: FE %.2f | RE %.2f\\n',
             exp(mu_fe), exp(mu_re)))
-cat(sprintf('IC95%% RE: (%.2f, %.2f)\\n',
+cat(sprintf('IC95%% RE: (%.2f, %.2f) | log RR = %.3f, EE = %.3f\\n',
             exp(mu_re - 1.96*sqrt(1/sum(w_re))),
-            exp(mu_re + 1.96*sqrt(1/sum(w_re)))))`}
+            exp(mu_re + 1.96*sqrt(1/sum(w_re))), mu_re, sqrt(1/sum(w_re))))
+# Esperado: Q = 152.2, tau2 = 0.309, I2 = 92%, RR aleatorio 0.49 (0.34-0.70);
+# las mismas cifras que metafor::rma(yi, vi, method = "DL").`}
 />
 
 ## El intervalo de predicción: la respuesta a "¿y el próximo estudio?"
@@ -90,20 +98,20 @@ $\tau^2 > 0$, está reportando la mitad del resultado.
 <RCell
   id="26/prediccion"
   title="Intervalo de predicción vs. IC del promedio"
-  code={`# Con tau2 = 0.31 del ejemplo BCG (aprox):
-mu <- -0.74; se_mu <- 0.10; tau <- sqrt(0.31); df <- 11
-ic  <- mu + c(-1,1) * qt(.975, df) * se_mu
-ip  <- mu + c(-1,1) * qt(.975, df) * sqrt(tau^2 + se_mu^2)
+  code={`# Resultados del modelo aleatorio sobre BCG (celda anterior):
+mu <- -0.714; se_mu <- 0.179; tau <- sqrt(0.309); df <- 13 - 2
+ic  <- mu + c(-1,1) * qnorm(.975) * se_mu                  # como en la celda anterior
+ip  <- mu + c(-1,1) * qt(.975, df) * sqrt(tau^2 + se_mu^2) # t con k - 2 gl (Riley et al., 2011)
 cat(sprintf('IC95%% del promedio: RR (%.2f, %.2f)\\n', exp(ic[1]), exp(ic[2])))
 cat(sprintf('IP95%% de prediccion: RR (%.2f, %.2f)\\n', exp(ip[1]), exp(ip[2])))
 # La media dice 'protege'; la prediccion dice 'podria no proteger
-# en un contexto plausible'. Las dos frases son ciertas; la segunda
+# en un contexto plausible' (el IP cruza RR = 1). Las dos frases son ciertas; la segunda
 # es la que el decisor necesita.`}
 />
 
 ## Sesgo de publicación: diagnóstico, no conjetura
 
-El embudo del módulo 10 era visual; la versión formal lo convierte en
+El embudo del módulo 17 era visual; la versión formal lo convierte en
 prueba. La lógica del **test de Egger**: si el embudo es simétrico, el
 efecto de cada estudio no debe correlacionarse con su precisión; regresar
 el efecto estandarizado contra la precisión debe dar intercepto cero.
@@ -114,7 +122,7 @@ El **trim-and-fill** va un paso más: recorta la asimetría estimada,
 rellena los estudios "faltantes" por simetría, y reestima el efecto. No
 recupera los estudios perdidos: mide *cuánto cambiaría* la conclusión
 si existieran. Es un análisis de sensibilidad con la estructura del
-módulo 22: la pregunta es cuánto sesgo basta para cambiar el veredicto.
+módulo II-3: la pregunta es cuánto sesgo basta para cambiar el veredicto.
 
 <RCell
   id="26/egger"
@@ -133,8 +141,9 @@ cat(sprintf('intercepto de Egger = %.2f (p = %.3f)\\n',
 # Trim-and-fill conceptual: cuantos estudios faltarian del lado
 # contrario para simetrizar el embudo.
 mu <- weighted.mean(ef, 1/se^2)
-lado <- sum(ef < mu); cat(sprintf('efecto medio %.2f | estudios a la
-  izquierda del promedio: %d de %d\\n', mu, lado, length(ef)))
+lado <- sum(ef < mu)
+cat(sprintf('efecto medio %.2f | estudios a la izquierda del promedio: %d de %d\\n',
+            mu, lado, length(ef)))
 # La asimetria visible (muchos efectos grandes a un lado, pocos chicos
 # al otro) se lee en el embudo antes de cualquier test.`}
 />
@@ -154,15 +163,15 @@ $$
 La advertencia obligada es **ecológica**: la covariable es del estudio,
 no del paciente. "Los estudios en latitudes altas muestran más efecto"
 no implica "el efecto es mayor en personas de latitudes altas": la
-agregación puede fabricar o invertir el gradiente, el mismo sesgo del
-módulo 14 en forma meta-analítica.
+agregación puede fabricar o invertir el gradiente: la falacia ecológica
+del módulo 2 en forma meta-analítica.
 
 <Callout type="warning" title="La meta-regresión también es observacional">
 Las covariables de estudio no están asignadas al azar: correlacionan
 entre sí (los estudios antiguos son también los de peor calidad y de
 otra población). Una meta-regresión con $k$ estudios y varias
 covariables es una regresión con $k$ observaciones; la regla de
-eventos-por-variable del módulo 11 aplica con más fuerza: una
+eventos-por-variable del módulo 16 aplica con más fuerza: una
 covariable por vez, y como hipótesis, no como hallazgo.
 </Callout>
 
@@ -170,7 +179,7 @@ covariable por vez, y como hipótesis, no como hallazgo.
 Tres extensiones dominan la práctica actual y vale nombrarlas aunque el
 software exceda al curso: **meta-análisis en red** (evidencia indirecta
 cuando A y B nunca se compararon directo: exige transitividad, el
-análogo de intercambiabilidad del módulo 16), **meta-análisis de datos
+análogo de la intercambiabilidad del módulo II-8), **meta-análisis de datos
 individuales** (IPD: la resolución que evita el sesgo ecológico de la
 meta-regresión, a cambio de acceso a las bases), y **meta-análisis
 bayesiano** (la heterogeneidad como distribución a posteriori, natural
@@ -194,29 +203,45 @@ promedia.
 <LabExercise
   id="26/lab-meta"
   title="Laboratorio: el meta-análisis BCG auditado"
-  code={`# Reutiliza la tabla BCG y agrega la meta-regresion por latitud.
+  code={`# Reutiliza la tabla BCG (Colditz et al., 1994) y agrega la
+# meta-regresion por latitud.
+# Conteos por ensayo: casos de TB y sanos en vacunados (t) y control (c).
 ens <- data.frame(
-  lat = c(44,55,42,52,13,44,27,42,33,33,18,33,33),
-  logRR = c(-0.94,-1.67,-1.05,-1.44,-1.24,-0.47,-0.85,-1.02,-1.34,
-            -1.02,-0.22,-0.45,-0.02),
-  var   = c(0.357,0.208,0.113,0.145,0.018,0.223,0.072,0.149,0.179,
-            0.051,0.012,0.039,0.020))
-tau2 <- 0.31  # del calculo DL
-w <- 1/(ens$var + tau2)
-# Meta-regresion ponderada:
-mr <- lm(logRR ~ lat, data = ens, weights = w)
-print(coef(summary(mr)))
-# tau2 residual: cuanta heterogeneidad quedo sin explicar.
-resid2 <- sum(w * (ens$logRR - fitted(mr))^2)
-cat(sprintf('Q residual = %.1f en %d df\\n', resid2, nrow(ens)-2))
-# Interpreta: la latitud explica X% del tau2 - el resto sigue siendo
-# estructura no observada (edad, cepa, epoca, calidad).`}
+  lat  = c(44, 55, 42, 52, 13, 44, 19, 13, 27, 42, 18, 33, 33),
+  tpos = c(4, 6, 3, 62, 33, 180, 8, 505, 29, 17, 186, 5, 27),
+  tneg = c(119, 300, 228, 13536, 5036, 1361, 2537, 87886, 7470, 1699, 50448, 2493, 16886),
+  cpos = c(11, 29, 11, 248, 47, 372, 10, 499, 45, 65, 141, 3, 29),
+  cneg = c(128, 274, 209, 12619, 5761, 1079, 619, 87892, 7232, 1600, 27197, 2338, 17825))
+nt <- ens$tpos + ens$tneg; nc <- ens$cpos + ens$cneg
+ens$logRR <- log((ens$tpos / nt) / (ens$cpos / nc))
+ens$var   <- 1/ens$tpos - 1/nt + 1/ens$cpos - 1/nc
+X <- cbind(1, ens$lat); k <- nrow(ens)
+# Paso 1: Q residual con pesos de efecto fijo -> tau2 residual (momentos).
+w0 <- 1/ens$var
+b0 <- solve(t(X) %*% (w0 * X), t(X) %*% (w0 * ens$logRR))
+Q_res <- sum(w0 * (ens$logRR - X %*% b0)^2)
+P <- diag(w0) - (w0 * X) %*% solve(t(X) %*% (w0 * X)) %*% t(w0 * X)
+tau2_res <- max(0, (Q_res - (k - 2)) / sum(diag(P)))
+# Paso 2: meta-regresion con pesos 1/(v + tau2_res). Los EE salen de
+# (X'WX)^-1 sin reescalar: lm() con 'weights' los multiplicaria por la
+# varianza residual y fingiria otra precision.
+w  <- 1/(ens$var + tau2_res)
+V  <- solve(t(X) %*% (w * X))
+b  <- V %*% t(X) %*% (w * ens$logRR)
+ee <- sqrt(diag(V))
+print(round(cbind(coef = drop(b), EE = ee, z = drop(b)/ee,
+                  p = 2*pnorm(-abs(drop(b)/ee))), 4))
+cat(sprintf('Q residual = %.1f en %d gl | tau2 residual = %.3f\\n',
+            Q_res, k - 2, tau2_res))
+# Interpreta: compara tau2_res con el tau2 total (0.309): la latitud
+# explica (1 - tau2_res/0.309) de la heterogeneidad; el resto sigue
+# siendo estructura no observada (cepa, epoca, poblacion, calidad).`}
   tasks={[
     "Calcula el intervalo de predicción del modelo completo y el del ajustado por latitud: ¿cuánto se estrecha?",
     "Ejecuta el test de Egger sobre BCG y reporta si hay evidencia de asimetría",
     "Escribe en tres líneas por qué el coeficiente de latitud no puede leerse como 'la vacuna funciona mejor en personas del norte'",
   ]}
-  hint="La varianza del coeficiente de la meta-regresión debe usar los pesos con tau2 incluido; con pesos de efectos fijos la precisión es ficticia; el mismo fenómeno del módulo 10."
+  hint="La varianza del coeficiente de la meta-regresión debe usar los pesos con tau2 incluido; con pesos de efectos fijos la precisión es ficticia; el mismo fenómeno del módulo 17."
 />
 
 ## Producto del módulo

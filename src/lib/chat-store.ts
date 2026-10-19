@@ -18,7 +18,7 @@ const chatMigrations: MigrationChain = {
   steps: {},
 };
 
-export function migrateChat(raw: unknown): ChatRecord | null {
+function migrateChat(raw: unknown): ChatRecord | null {
   if (typeof raw !== 'object' || raw === null) return null;
   try {
     return migrateRecord<ChatRecord>(raw, chatMigrations).record;

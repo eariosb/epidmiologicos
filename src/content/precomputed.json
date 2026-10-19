@@ -244,8 +244,8 @@
   "plots": []
  },
  "12/decision-6mp": {
-  "hash": "2103fd09",
-  "console": "Call: survfit(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n                grupo=0\n        time       n.risk      n.event     survival      std.err lower 95% CI\n          23            1           21            0          NaN           NA\nupper 95% CI\n          NA\n\n                grupo=1\n        time       n.risk      n.event     survival      std.err lower 95% CI\n      23.000        6.000        9.000        0.448        0.135        0.249\nupper 95% CI\n       0.807\n\nriesgo recaida 23sem: placebo = 1.00  6-MP = 0.55\nARR = 0.45 [0.09, 0.81]  ->  NNT(23 sem) = 2.2\nCall:\nsurvdiff(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n         N Observed Expected (O-E)^2/E (O-E)^2/V\ngrupo=0 21       21     10.7      9.77      16.8\ngrupo=1 21        9     19.3      5.46      16.8\n\n Chisq= 16.8  on 1 degrees of freedom, p= 4e-05\n\nEl NNT horizonte-fijo usa S(t): es el puente KM -> decision.",
+  "hash": "47ef714e",
+  "console": "Call: survfit(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n                grupo=0\n        time       n.risk      n.event     survival      std.err lower 95% CI\n          23            1           21            0          NaN           NA\nupper 95% CI\n          NA\n\n                grupo=1\n        time       n.risk      n.event     survival      std.err lower 95% CI\n      23.000        6.000        9.000        0.448        0.135        0.249\nupper 95% CI\n       0.807\n\nriesgo recaida 23sem: placebo = 1.00  6-MP = 0.55\nARR = 0.45 [0.20, 0.81]  ->  NNT(23 sem) = 2.2 [1.2, 5.1]\nCall:\nsurvdiff(formula = Surv(tiempo, status) ~ grupo, data = leu)\n\n         N Observed Expected (O-E)^2/E (O-E)^2/V\ngrupo=0 21       21     10.7      9.77      16.8\ngrupo=1 21        9     19.3      5.46      16.8\n\n Chisq= 16.8  on 1 degrees of freedom, p= 4e-05\n\nEl NNT horizonte-fijo usa S(t): es el puente KM -> decision.",
   "plots": []
  },
  "12/km-leucemia": {
@@ -331,8 +331,8 @@
   "plots": []
  },
  "20/lab-maquina": {
-  "hash": "ad0dc278",
-  "console": "tuyo = 0.054400 | fisher.test = 0.054400 | diff = 0.00e+00",
+  "hash": "e5202079",
+  "console": "tuyo = 0.054400 | fisher.test = 0.054400 | |diferencia| < 1e-10: TRUE",
   "plots": []
  },
  "20/supremo-malla": {
@@ -351,8 +351,8 @@
   "plots": []
  },
  "21/mecanismos": {
-  "hash": "e6d1c53c",
-  "console": "verdadera = 54.2 | MCAR = 54.2 | MAR = 54.1 | MNAR = 53.6",
+  "hash": "9145b17c",
+  "console": "verdadera = 54.2\ncasos completos: MCAR = 54.3 | MAR = 52.9 | MNAR = 52.1\ncon la edad:     MCAR = 54.3 | MAR = 54.2 | MNAR = 52.6",
   "plots": []
  },
  "21/mi-rubin": {
@@ -361,18 +361,18 @@
   "plots": []
  },
  "22/evalue": {
-  "hash": "92281d69",
-  "console": "RR = 3.9  ->  E-value = 7.26\nIC (1.8, 8.7) -> E-value del IC = 3.00",
+  "hash": "a435cd83",
+  "console": "RR = 3.9  ->  E-value = 7.26\nIC (1.8, 8.7) -> E-value del IC = 3.00\nOR = 3.9 (desenlace frecuente) -> E-value = 3.36",
   "plots": []
  },
  "22/lab-nomedido": {
-  "hash": "0fbeec52",
+  "hash": "92790b13",
   "console": "E-value punto = 4.44 | IC = 2.58\n      edad       sexo tabaquismo\n       1.4        1.1        1.8\nEl punto resiste hasta confusores de RR ~ 4.44;\nel IC solo resiste hasta RR ~ 2.58 en ambos caminos.",
   "plots": []
  },
  "22/sesgo-prob": {
-  "hash": "ec01ef15",
-  "console": "OR observado = 2.25\nOR corregido: mediana 3.33, IC simulado 95% (2.84, 4.58)",
+  "hash": "75841835",
+  "console": "OR observado = 2.25, IC95% convencional (1.28, 3.96)\ncorregido, solo sesgo:   mediana 3.33, intervalo 95% (2.84, 4.58)\ncorregido, sesgo + azar: mediana 3.40, intervalo 95% (1.85, 6.39)",
   "plots": []
  },
  "23/colisionador": {
@@ -406,43 +406,43 @@
   "plots": []
  },
  "25/atributos": {
-  "hash": "5e9eb558",
+  "hash": "aeab1c65",
   "console": "retraso total: mediana 6 d | p90 13 d\npor fase (medianas): consulta 2, ficha 1, consolidacion 3",
   "plots": []
  },
  "25/lab-nowcast": {
-  "hash": "4031c0cf",
-  "console": "dia 47: verdad 73 | crudo 70 | nowcast 73\ndia 48: verdad 74 | crudo 69 | nowcast 73\ndia 49: verdad 75 | crudo 69 | nowcast 74\ndia 50: verdad 75 | crudo 71 | nowcast 80\ndia 51: verdad 76 | crudo 65 | nowcast 77\ndia 52: verdad 77 | crudo 60 | nowcast 77\ndia 53: verdad 78 | crudo 58 | nowcast 82\ndia 54: verdad 78 | crudo 38 | nowcast 64\ndia 55: verdad 79 | crudo 32 | nowcast 71\ndia 56: verdad 80 | crudo 18 | nowcast 69",
+  "hash": "792240ee",
+  "console": "dia 47: verdad 73 | crudo 70 | nowcast 75\ndia 48: verdad 74 | crudo 62 | nowcast 68\ndia 49: verdad 75 | crudo 61 | nowcast 69\ndia 50: verdad 75 | crudo 62 | nowcast 72\ndia 51: verdad 76 | crudo 52 | nowcast 63\ndia 52: verdad 77 | crudo 64 | nowcast 84\ndia 53: verdad 78 | crudo 66 | nowcast 96\ndia 54: verdad 78 | crudo 56 | nowcast 96\ndia 55: verdad 79 | crudo 27 | nowcast 59\ndia 56: verdad 80 | crudo 16 | nowcast 61",
   "plots": []
  },
  "25/nowcast": {
-  "hash": "72e435d0",
-  "console": "dia 20: verdad  88 | crudo  87 (99%) | nowcast  95 (108%)\ndia 30: verdad 116 | crudo 112 (97%) | nowcast 122 (106%)\ndia 35: verdad 133 | crudo  98 (74%) | nowcast 107 (81%)\ndia 38: verdad 145 | crudo  74 (51%) | nowcast  81 (56%)\ndia 40: verdad 153 | crudo  36 (24%) | nowcast  39 (26%)",
+  "hash": "03b7fa1d",
+  "console": "dia 20: verdad  88 | crudo  88 | nowcast  89 | con F sesgada  88\ndia 30: verdad 116 | crudo 108 | nowcast 117 | con F sesgada 113\ndia 35: verdad 133 | crudo 104 | nowcast 140 | con F sesgada 130\ndia 38: verdad 145 | crudo  73 | nowcast 156 | con F sesgada 132\ndia 40: verdad 153 | crudo  31 | nowcast 155 | con F sesgada 128",
   "plots": []
  },
  "25/retraso": {
-  "hash": "a8a47e7a",
+  "hash": "1693e18a",
   "console": "dia 40: verdad 153, reportados 31 (20%)\ndia 35: verdad 133, reportados 104 (78%)\ndia 20: verdad 88, reportados 88 (100%)",
   "plots": []
  },
  "26/egger": {
-  "hash": "6d82ce44",
-  "console": "intercepto de Egger = -11.70 (p = 0.000)\nefecto medio -0.37 | estudios a la\n  izquierda del promedio: 7 de 12",
+  "hash": "1a572501",
+  "console": "intercepto de Egger = -11.70 (p = 0.000)\nefecto medio -0.37 | estudios a la izquierda del promedio: 7 de 12",
   "plots": []
  },
  "26/heterogeneidad": {
-  "hash": "978179f7",
-  "console": "Q = 73.2 (df = 12, p = 0.0000)\ntau2 = 0.256 | I2 = 84%\nRR combinado: FE 0.54 | RE 0.43\nIC95% RE: (0.31, 0.59)",
+  "hash": "a2ae9ed4",
+  "console": "Q = 152.2 (df = 12, p = 2.0e-26)\ntau2 = 0.309 | I2 = 92%\nRR combinado: FE 0.65 | RE 0.49\nIC95% RE: (0.34, 0.70) | log RR = -0.714, EE = 0.179",
   "plots": []
  },
  "26/lab-meta": {
-  "hash": "dc50a4cc",
-  "console": "               Estimate Std. Error    t value  Pr(>|t|)\n(Intercept) -0.35011101 0.41167256 -0.8504599 0.4131986\nlat         -0.01477632 0.01135743 -1.3010269 0.2198417\nQ residual = 6.3 en 11 df",
+  "hash": "7d2d480d",
+  "console": "        coef     EE       z      p\n[1,]  0.2595 0.2323  1.1172 0.2639\n[2,] -0.0292 0.0067 -4.3411 0.0000\nQ residual = 30.7 en 11 gl | tau2 residual = 0.063",
   "plots": []
  },
  "26/prediccion": {
-  "hash": "38d76635",
-  "console": "IC95% del promedio: RR (0.38, 0.59)\nIP95% de prediccion: RR (0.14, 1.66)",
+  "hash": "ee78fbb4",
+  "console": "IC95% del promedio: RR (0.34, 0.70)\nIP95% de prediccion: RR (0.14, 1.77)",
   "plots": []
  },
  "27/dr": {
@@ -451,7 +451,7 @@
   "plots": []
  },
  "27/gformula": {
-  "hash": "81fa8ffb",
+  "hash": "c9eedfc0",
   "console": "estimando marginal: RD = 0.129 | RR = 1.60\nriesgo si todos expuestos = 0.345 | si nadie = 0.216\nOR condicional (coef) = 2.15 | OR marginal = 1.91",
   "plots": []
  },
@@ -461,13 +461,13 @@
   "plots": []
  },
  "27/msm": {
-  "hash": "86d2cac2",
-  "console": "ajustando L1: b_A0 = 0.10 (verdad 0.5+efecto via A1)\nMSM con pesos: b_A0 = 0.43 | b_A1 = 0.49",
+  "hash": "cb513c6b",
+  "console": "sin L1:       b_A0 = 0.45 | b_A1 = 1.03 (A1 confundido)\najustando L1: b_A0 = 0.14 | b_A1 = 0.49 (A0 sesgado)\nMSM con pesos: b_A0 = 0.49 | b_A1 = 0.49 | siempre vs nunca = 0.99",
   "plots": []
  },
  "28/evpi": {
-  "hash": "5498f366",
-  "console": "E[beneficio neto adoptar] = 98.5 vidas-equiv\nperdida esperada de equivocarse (EVPI) = 0.0",
+  "hash": "f60bf00b",
+  "console": "costo  30: E[B neto] =  98.5 -> adoptar | P(equivocarse) = 0% | EVPI = 0.0\ncosto 110: E[B neto] =  18.5 -> adoptar | P(equivocarse) = 26% | EVPI = 5.1",
   "plots": []
  },
  "28/lab-parrafo": {
@@ -481,7 +481,7 @@
   "plots": []
  },
  "28/umbral": {
-  "hash": "7a77c164",
+  "hash": "94dcae1e",
   "console": "RR medio = 0.74 | P(RR < 0.90) = 99.3%\nP(reduccion > 15%) = 95.7%\nP(reduccion > 20%) = 83.2%",
   "plots": []
  },
@@ -491,22 +491,22 @@
   "plots": []
  },
  "29/lab-campo": {
-  "hash": "856186ed",
+  "hash": "948d2b63",
   "console": "",
   "plots": []
  },
  "29/limpieza": {
-  "hash": "85e104a4",
+  "hash": "e1dd0df3",
   "console": "base limpia: 137 filas | SurvTime faltantes: 10 | median 82 d\nKps median 60 | Age median 62",
   "plots": []
  },
  "29/modelo": {
-  "hash": "2764cf82",
-  "console": "     coef exp(coef) se(coef)     z Pr(>|z|)\ntrt 0.606     1.833    0.647 0.936    0.349\nKps 0.024     1.024    0.023 1.045    0.296",
+  "hash": "19c9bd9d",
+  "console": "      coef exp(coef) se(coef)      z Pr(>|z|)\ntrt  0.034     1.035    0.200  0.172    0.863\nKps -0.035     0.965    0.005 -6.434    0.000\n           trt   Kps\nauditada 1.035 0.965\noriginal 1.194 0.967",
   "plots": []
  },
  "29/vinculacion": {
-  "hash": "fb6feb7a",
+  "hash": "8bd75c23",
   "console": "SIV GARCIA LOPEZ JUAN -> mejor RIPS 1 (score 7)\nSIV PEREZ ANA -> mejor RIPS 2 (score 2)\nSIV RODRIGUEZ MARIA -> mejor RIPS 3 (score 4)\nSIV GOMEZ LUIS -> mejor RIPS 4 (score 7)",
   "plots": []
  },

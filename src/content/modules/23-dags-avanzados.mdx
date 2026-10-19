@@ -78,18 +78,21 @@ pero es un colisionador entre dos no medidas. Ajustarla abre el camino
 $U_1 \to Z \leftarrow U_2$ y *agrega* sesgo sobre un análisis crudo que
 era correcto.
 
-La **butterfly bias** es la variante con un solo no medido: ajustar el
-colisionador amplifica el sesgo del confusor oculto en lugar de
-removerlo. La moraleja común es la regla que el módulo 7 ya anticipaba
+La **butterfly bias** es la variante en que $Z$ es a la vez confusor
+($Z \to E$, $Z \to D$) y colisionador entre dos no medidas: ajustarla
+cierra un camino y abre otro, de modo que ninguna de las dos opciones es
+insesgada; Ding y Miratrix (2015) muestran que, en la mayoría de los
+escenarios, ajustar sesga menos que no ajustar. La moraleja común es la regla que el módulo 7 ya anticipaba
 con otro acento: no se ajusta "todo lo disponible"; se ajusta lo que el
 DAG declara necesario, y cada inclusión debe responder a un camino que
 cierra, no a una covariable que sobra.
 
 <Callout type="warning" title="Pre-exposición no es sinónimo de confusor">
 El reflejo heredado ("ajusta por todo lo medido antes de la exposición")
-convierte el M-bias en práctica estándar. Las variables instrumentales
-discretas, los colisionadores y los mediadores pueden estar todos
-pre-exposición; ninguno debe ajustarse. La Tabla 1 del módulo 7 muestra
+convierte el M-bias en práctica estándar. Los instrumentos y los
+colisionadores pueden medirse antes de la exposición y ninguno debe
+ajustarse: ajustar un instrumento no quita confusión y amplifica la que
+deja un confusor no medido. La Tabla 1 del módulo 7 muestra
 asociaciones, pero la decisión de ajuste la da el grafo, no la tabla.
 </Callout>
 

@@ -1,2 +1,3 @@
-OR observado = 2.25
-OR corregido: mediana 3.33, IC simulado 95% (2.84, 4.58)
+OR observado = 2.25, IC95% convencional (1.28, 3.96)
+corregido, solo sesgo:   mediana 3.33, intervalo 95% (2.84, 4.58)
+corregido, sesgo + azar: mediana 3.40, intervalo 95% (1.85, 6.39)

@@ -32,7 +32,6 @@
   },
   "peerDependencies": {
     "@excalidraw/excalidraw": "^0.17 || ^0.18",
-    "next": "^14 || ^15",
     "react": "^18 || ^19",
     "react-dom": "^18 || ^19"
   },
@@ -44,7 +43,6 @@
     "@excalidraw/excalidraw": "^0.18.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.7.2",

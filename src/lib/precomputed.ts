@@ -10,7 +10,7 @@ export interface PrecomputedOutput {
 const PRE = manifest as Record<string, PrecomputedOutput>;
 
 /** FNV-1a de 32 bits sobre el texto en UTF-8; idéntico al de precompute_r.py. */
-export function fnv1a(text: string): string {
+function fnv1a(text: string): string {
   let h = 0x811c9dc5;
   for (const b of new TextEncoder().encode(text)) {
     h ^= b;

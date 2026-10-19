@@ -1,6 +1,6 @@
 import { MockProvider } from './mock';
 import { OpenAICompatibleProvider } from './openai';
-import type { LLMProvider, LLMProviderType, BlackboardSettings } from '../../types/blackboard';
+import type { LLMProvider, BlackboardSettings } from '../../types/blackboard';
 
 export type { LLMProvider, LLMProviderType, LLMMessage, LLMChatOptions } from '../../types/blackboard';
 
@@ -26,14 +26,3 @@ export function createLLMProvider(settings: BlackboardSettings): LLMProvider {
   }
 }
 
-export async function listModelsForProvider(provider: LLMProviderType): Promise<string[]> {
-  switch (provider) {
-    case 'none':
-      return new MockProvider().listModels();
-    case 'openai':
-    case 'deepseek':
-      return createLLMProvider({ llmProvider: provider, apiKeys: { [provider]: '' }, llmModel: '', graphProvider: 'webr', theme: 'auto', panelWidth: 480, panelShortcut: 'mod+shift+b' } as BlackboardSettings).listModels();
-    default:
-      return [];
-  }
-}

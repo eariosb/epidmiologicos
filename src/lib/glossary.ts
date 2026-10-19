@@ -30,11 +30,14 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       NNH: 'Número necesario para dañar (number needed to harm): 1/|RD| cuando la exposición aumenta el riesgo; el NNT del daño.',
       HR: 'Razón de riesgos instantáneos (hazard ratio): el multiplicador del hazard que estima el modelo de Cox; e^β con una covariable binaria.',
       SMR: 'Razón de mortalidad estandarizada (standardized mortality ratio): muertes observadas / esperadas bajo tasas de referencia; la estandarización indirecta de una cohorte.',
-      SRM: 'Synonym anglosajón de SMR: standardized mortality/morbidity ratio.',
+      SRM: 'Razón de morbilidad estandarizada (standardized morbidity ratio): el SMR con casos en lugar de muertes.',
       IRR: 'Razón de tasas de incidencia (incidence rate ratio): razón de tasas por persona-tiempo; la medida del módulo 13 cuando el seguimiento es variable.',
       RERI: 'Exceso relativo de riesgo por interacción (relative excess risk due to interaction): RR₁₁ − RR₁₀ − RR₀₁ + 1; mide la interacción en la escala aditiva, la relevante para salud pública.',
       AP: 'Proporción atribuible a la interacción (attributable proportion): RERI/RR₁₁; la fracción del riesgo de los doblemente expuestos que se debe a la combinación de exposiciones.',
       LR: 'Razón de verosimilitud (likelihood ratio): cuánto multiplica un resultado la probabilidad de la hipótesis. LR+ = Se/(1−Sp) y LR− = (1−Se)/Sp en pruebas diagnósticas.',
+      SMD: 'Diferencia estandarizada (standardized mean difference): diferencia de medias o proporciones entre grupos dividida por la DE combinada; |SMD| < 0.1 es la regla usual de balance en una Tabla 1 (Austin, 2009).',
+      ATE: 'Efecto promedio del tratamiento (average treatment effect): el contraste si toda la población fuera tratada frente a si nadie lo fuera.',
+      ATT: 'Efecto promedio en los tratados (average treatment effect on the treated): el mismo contraste restringido a quienes recibieron la exposición; es lo que estima el matching típico.',
     },
   },
   {
@@ -46,6 +49,9 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       VPN: 'Valor predictivo negativo (negative predictive value): P(sano | test negativo); sube cuando la prevalencia es baja.',
       ROC: 'Curva ROC (receiver operating characteristic): sensibilidad vs. 1−especificidad sobre todos los umbrales; el AUC resume la discriminación.',
       AUC: 'Área bajo la curva ROC: probabilidad de que un caso aleatorio supere en score a un control; 0.5 es azar, 1 es perfecto.',
+      'Δ-ROC':
+        'Δ en el modelo binormal: distancia entre las medias del score de enfermos y sanos, en desviaciones estándar; fija el AUC = Φ(Δ/√2).',
+      κ: 'Kappa de Cohen: acuerdo observado entre dos clasificadores corregido por el acuerdo esperado por azar; depende de la prevalencia.',
     },
   },
   {
@@ -70,7 +76,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       sobrepareamiento:
         'Sobrepareamiento (overmatching): parear por una variable que no es confusora (correlato de la exposición o mediador); fabrica concordancias sin información y pierde eficiencia, o bloquea parte del efecto.',
       razon_prevalencias:
-        'Razón de prevalencias (prevalence ratio): P(E) / P(no E) en un corte transversal; con desenlace frecuente es más honesta que el OR de prevalencia, que siempre exagera.',
+        'Razón de prevalencias (prevalence ratio): prevalencia del desenlace en expuestos dividida por la de no expuestos, P(D | E) / P(D | no E), en un corte transversal; con desenlace frecuente es más honesta que el OR de prevalencia, que siempre queda más lejos de 1.',
       tiempo_inmortal:
         'Tiempo inmortal: periodo de seguimiento en que el sujeto no podía tener el desenlace por definición del diseño (p. ej., el tiempo que tardó en recibir el tratamiento); atribuirlo al grupo expuesto lo beneficia artificialmente. Nace de un tiempo cero mal definido (Suissa).',
       censura:
@@ -86,12 +92,10 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       colisionador:
         'Colisionador: variable causada por dos otras (E → H ← D). Estratificar o muestrear condicionado a ella abre un camino no causal entre sus causas y sesga la asociación.',
       Berkson:
-        'Sesgo de Berkson (1946): la selección de controles hospitalarios distorsiona la asociación; las enfermedades compiten por la hospitalización.',
-      sesgo_berkson:
         'Sesgo de Berkson (1946): tomar casos y controles entre hospitalizados (o asistentes a un servicio) cuando el ingreso depende tanto del desenlace como de la exposición; condicionar sobre el colisionador fabrica o invierte asociaciones.',
-      Neyman:
+      sesgo_neyman:
         'Sesgo de Neyman o de prevalencia-incidencia: los casos prevalentes sobre-representan enfermedad de curso largo; el sobreviviente no es típico.',
-      Recall:
+      sesgo_recuerdo:
         'Sesgo de recuerdo (recall bias): los casos recuerdan la exposición con más detalle que los controles; diferencial por diseño retrospectivo.',
       mala_clasificacion:
         'Mala clasificación (misclassification): exposición o desenlace medidos con error. No diferencial (igual en los grupos) suele atenuar hacia 1; diferencial (peor recuerdo en casos) puede inflar o invertir el OR.',
@@ -105,6 +109,15 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'Confusión: sesgo que distorsiona la asociación cuando una tercera variable se asocia con la exposición y con el desenlace; se elimina estratificando, estandarizando o modelando.',
       colapsabilidad:
         'Colapsabilidad: propiedad de una medida cuyo valor crudo es un promedio ponderado de los de estrato en ausencia de confusión. El RR y la RD la tienen; el OR y el HR no.',
+      IV: 'Variable instrumental (instrumental variable): asociada a la exposición, sin causas comunes con el desenlace y sin camino al desenlace salvo por la exposición; identifica el efecto aun con confusión no medida.',
+      LATE: 'Efecto local promedio (local average treatment effect): lo que estima una variable instrumental, el efecto en quienes cambian su exposición cuando cambia el instrumento (compliers).',
+      MSM: 'Modelo marginal estructural (marginal structural model): modela el desenlace potencial bajo cada régimen de exposición y se ajusta con pesos IPTW; resuelve el confusor que a la vez es efecto de la exposición previa.',
+      IPCW: 'Ponderación por el inverso de la probabilidad de censura (inverse probability of censoring weighting): repondera a quienes siguen en observación para representar también a los censurados.',
+      DR: 'Estimador doblemente robusto (doubly robust), p. ej. AIPW: combina el modelo del desenlace y el del propensity score; es consistente si al menos uno de los dos está bien especificado.',
+      SWIG: 'Grafo de intervención de un solo mundo (single-world intervention graph, Richardson y Robins 2013): el DAG con el nodo de exposición partido en valor observado e intervenido; une grafos y resultados potenciales.',
+      ICH: 'International Council for Harmonisation: su guía E9(R1) (2019) define el estimando de un ensayo en cinco atributos (población, tratamiento, desenlace, eventos intercurrentes y resumen).',
+      sesgo_seleccion:
+        'Sesgo de selección: distorsión que aparece cuando entrar o permanecer en el estudio depende de la exposición y del desenlace; estructuralmente, condicionar sobre un colisionador.',
     },
   },
   {
@@ -125,7 +138,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
   {
     titulo: 'Métodos de estratificación y contraste',
     entradas: {
-      MH: 'Mantel–Haenszel (1959): el estimador y test estratificado que resume tablas 2×2×K pesando por el inverso de la varianza; controla un confusor categórico.',
+      MH: 'Mantel–Haenszel (1959): el estimador y test estratificado que resume tablas 2×2×K con pesos bₖcₖ/nₖ (no por inverso de la varianza); controla un confusor categórico y funciona con estratos pequeños.',
       estandarizacion:
         'Estandarización: ajuste que pondera las medidas de cada estrato con una población estándar común; con OR difiere del MH por la no colapsabilidad.',
       CMH: 'Cochran–Mantel–Haenszel: la familia de tests que incluye al MH clásico; en pareamiento 1:1 equivale exactamente a McNemar.',
@@ -141,6 +154,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'Regresión logística condicional: la generalización del análisis pareado a covariables continuas; el OR se estima dentro de cada estrato de matching.',
       TOST: 'Two one-sided tests (Schuirmann 1987): la prueba de equivalencia — declara como nula una diferencia relevante |θ| ≥ Δ y la rechaza con dos tests unilaterales; es el instrumento cuando lo que se quiere demostrar es similitud (no inferioridad, bioequivalencia).',
       Byar: 'Aproximación de Byar al IC exacto de una tasa o SMR: cuantiles de la chi-cuadrado sobre el conteo observado; casi idéntica al Poisson exacto para conteos no muy pequeños.',
+      BDT: 'Breslow–Day con la corrección de Tarone: la versión del test de homogeneidad de OR que reporta PROC FREQ con la opción BDT.',
     },
   },
   {
@@ -148,6 +162,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
     entradas: {
       IC: 'Intervalo de confianza (CI, confidence interval): el rango compatible con los datos; precede al valor p en la jerarquía de interpretación.',
       EE: 'Error estándar (standard error, SE): la desviación estándar del estimador; mide precisión, no dispersión.',
+      DE: 'Desviación estándar (SD): la dispersión de los datos alrededor de su media; no confundir con el EE, que mide la precisión de un estimador.',
       p: 'Valor p (p-value): probabilidad de un resultado al menos tan extremo que el observado, bajo H₀; depende tanto del tamaño del efecto como de n — un efecto trivial puede ser «significativo» con n enorme y uno grande puede no serlo con n chico; Woodward: estimar antes que contrastar.',
       H0: 'Hipótesis nula: la ausencia de asociación o efecto que el test pone a prueba.',
       error_tipo_i:
@@ -181,6 +196,13 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'L₀: longitud máxima tolerada del IC en el diseño por precisión; la garantía exige que la longitud observada no la supere con probabilidad 1 − β.',
       'β-coef':
         'β: coeficiente de regresión; en la logística e^β es el OR ajustado, en Cox e^β es el HR.',
+      'δ-precisión':
+        'δ en el tamaño muestral por precisión: semiamplitud deseada del IC de una proporción; n = z²·p(1−p)/δ².',
+      'ε-precisión':
+        'ε: precisión relativa, la semiamplitud del IC expresada como fracción del valor estimado (p. ej. ±20 % de la prevalencia).',
+      Φ: 'Φ: función de distribución acumulada de la normal estándar; Φ(1.96) = 0.975.',
+      OLS: 'Mínimos cuadrados ordinarios (ordinary least squares): el ajuste lineal por defecto; con confusión no medida su coeficiente queda sesgado.',
+      EM: 'Algoritmo EM (expectation–maximization): maximiza la verosimilitud con datos incompletos o latentes alternando un paso de esperanza y uno de maximización.',
     },
   },
   {
@@ -227,6 +249,15 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'γ en Berger–Boos: el nivel del IC del parámetro de estorbo; el supremo se toma solo dentro de ese IC y se suma γ al valor p (típicamente 0.001).',
       'π-multinomial':
         'π: vector de probabilidades de una multinomial (p. ej. la fracción de cada serotipo); se infiere completo, no componente por componente.',
+      'p₁':
+        'p₁, p₂: probabilidades de evento de los grupos 1 y 2 en el modelo de dos binomiales; la nula de la tabla 2×2 es p₁ = p₂.',
+      'p₀':
+        'p₀: proporción anticipada con la que se dimensiona un estudio por precisión; el punto de apoyo del cálculo de n.',
+      'n₁':
+        'n₁, n₂: tamaños de los grupos 1 y 2 de la tabla 2×2, fijados por el diseño en el modelo de dos binomiales.',
+      'X₁':
+        'X₁, X₂: número de eventos en cada grupo como variable aleatoria, X₁ ~ Bin(n₁, p₁); x₁, x₂ son los valores observados.',
+      QH: 'Quesenberry–Hurst (1964): IC simultáneos para las k proporciones de una multinomial, con la forma cuadrática de Wilson y el cuantil de una χ² con k − 1 gl.',
     },
   },
   {
@@ -243,6 +274,11 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       ML: 'Machine learning: aprendizaje automático; en el módulo 17 como herramienta de vigilancia, no como oráculo.',
       'τ²':
         'τ²: varianza entre estudios de los efectos verdaderos en el modelo de efectos aleatorios; τ² = 0 reduce el modelo al de efecto fijo.',
+      τ: 'τ: desviación estándar entre estudios de los efectos verdaderos (raíz de τ²), en la escala del efecto; τ̂ es su estimación.',
+      IP: 'Intervalo de predicción: dónde caería el efecto de un estudio nuevo; añade τ² a la varianza del promedio y se calcula con t de k − 2 gl.',
+      IPD: 'Meta-análisis de datos individuales (individual participant data): combina las bases de cada estudio en lugar de sus resúmenes; evita el sesgo ecológico de la meta-regresión.',
+      EVPI: 'Valor esperado de la información perfecta (expected value of perfect information): pérdida esperada de decidir con la incertidumbre actual; techo de lo que vale investigar más.',
+      EVSI: 'Valor esperado de la información muestral (expected value of sample information): lo que vale un estudio concreto de tamaño n; siempre menor o igual que el EVPI.',
       'θ-meta':
         'θ: el efecto verdadero que estima un estudio; en efecto fijo es común a todos, en efectos aleatorios cada estudio tiene su θ_k.',
       'μ-meta':
@@ -273,6 +309,9 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       MNAR: 'Missing not at random: los faltantes dependen del propio valor perdido (el enfermo grave no responde); el sesgo no se corrige sin supuestos externos.',
       imputacion_multiple:
         'Imputación múltiple (Rubin): m bases imputadas, el mismo análisis en cada una, combinación con las reglas de Rubin; propaga la incertidumbre de imputar. Bajo MAR, con el desenlace en el modelo de imputación.',
+      MI: 'Imputación múltiple (multiple imputation): sigla inglesa de la imputación múltiple de Rubin.',
+      'δ-MNAR':
+        'δ en el análisis de sensibilidad MNAR (δ-adjustment): desplazamiento que se suma a los valores imputados bajo MAR para ver cuánto debe alejarse el faltante para cambiar la conclusión.',
       preferencia_digito:
         'Preferencia de dígito (digit preference): acumulación de mediciones en valores redondos (…0, …5) que revela redondeo o medición grosera en la fuente.',
       MAD: 'Desviación absoluta mediana (median absolute deviation): mediana de |x − mediana|; medida de dispersión robusta que los atípicos no inflan.',
@@ -294,6 +333,9 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'γ en el modelo SIR: tasa de recuperación; 1/γ es la duración media de la infecciosidad.',
       nowcasting:
         'Nowcasting: estimar los casos ya ocurridos pero aún no notificados, corrigiendo la cola de la curva por la distribución del retraso de notificación.',
+      UPGD: 'Unidad primaria generadora de datos: la institución (IPS, laboratorio) que notifica los casos a SIVIGILA; su oportunidad decide buena parte del retraso.',
+      IRA: 'Infección respiratoria aguda: evento de vigilancia síndromica en Colombia.',
+      DENV: 'Virus del dengue; DENV-1 a DENV-4 son sus cuatro serotipos.',
     },
   },
   {
@@ -312,7 +354,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       ETS: 'Enfermedad de transmisión sexual.',
       SIDA: 'Síndrome de inmunodeficiencia adquirida (AIDS).',
       VIH: 'Virus de inmunodeficiencia humana (HIV).',
-      BCG: 'Bacilo de Calmette-Guérin: la vacuna contra la tuberculosis; el caso de matching 1:1 del curso compara niños vacunados vs. no vacunados.',
+      BCG: 'Bacilo de Calmette-Guérin: la vacuna contra la tuberculosis. En el curso, bcg_matching.csv tiene 111 conjuntos 1:5 (un caso de tuberculosis y cinco controles) con la vacunación como exposición, y los 13 ensayos de Colditz (1994) son el ejemplo de meta-análisis.',
       R0: 'Número reproductivo básico: casos secundarios medios por caso en población susceptible; R₀ > 1 implica crecimiento epidémico.',
       RECORD:
         'RECORD (2015): extensión de STROBE para estudios con datos recolectados de rutina (registros, historias clínicas, bases administrativas).',
@@ -368,6 +410,16 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'Instrument for assessing the Credibility of Effect Modification ANalyses (Schandelmaier et al. 2020): criterios para juzgar la credibilidad de un efecto de subgrupo.',
       EBCTCG:
         'Early Breast Cancer Trialists\' Collaborative Group: el consorcio de Oxford que meta-analiza los ensayos de cáncer de mama temprano con datos individuales.',
+      RE: 'Receptor de estrógeno: RE+ marca los tumores de mama que responden a la terapia hormonal (tamoxifeno).',
+      ISIS: 'International Study of Infarct Survival: la serie de megaensayos de infarto (ISIS-2: aspirina y estreptoquinasa) que hizo célebre el análisis de subgrupos por signo zodiacal.',
+      COVID: 'COVID-19: la enfermedad por el coronavirus SARS-CoV-2.',
+      BMJ: 'British Medical Journal: revista médica general.',
+      CMAJ: 'Canadian Medical Association Journal: revista médica general.',
+      JAMIA: 'Journal of the American Medical Informatics Association: revista de informática médica.',
+      PLoS: 'Public Library of Science: editorial de revistas de acceso abierto (PLOS ONE, PLOS Medicine).',
+      RCE: 'Revista Colombiana de Estadística (UNAL).',
+      HED: 'Human Epidemic Database: base global de eventos epidémicos publicados.',
+      MIGHTE: 'Machine Intelligence Group for the betterment of Health and the Environment (Northeastern University): laboratorio de epidemiología digital.',
     },
   },
   {
@@ -394,6 +446,16 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'Entorno de desarrollo integrado (integrated development environment), p. ej. RStudio o SAS Studio.',
       API:
         'Interfaz de programación de aplicaciones (application programming interface): el punto de acceso programático a un servicio de datos.',
+      ID: 'Identificador único de registro: la columna que permite detectar duplicados y vincular fuentes.',
+      NA: 'Not available: el valor faltante de R; cuidado con los códigos que lo imitan (999, -1, vacío).',
+      PROC: 'Procedimiento de SAS (PROC FREQ, PROC LOGISTIC, PROC PHREG…): cada análisis de SAS es un PROC con sus opciones.',
+      SQL: 'Structured Query Language: el lenguaje de consulta de bases de datos relacionales.',
+      PyPI: 'Python Package Index: el repositorio oficial de paquetes de Python.',
+      DOI: 'Digital Object Identifier: identificador permanente de un artículo o conjunto de datos.',
+      REST: 'Estilo de API web en que cada recurso tiene una URL y se consulta con peticiones HTTP.',
+      PDF: 'Portable Document Format: formato de documento de página fija.',
+      README: 'Archivo de presentación de un repositorio: qué hace, cómo instalarlo y cómo citarlo.',
+      FIMD: 'Flexible Imputation of Missing Data (van Buuren): el libro de referencia de la imputación múltiple, con el paquete mice.',
       VA:
         'Veterans Administration (EE. UU.): de su ensayo de cáncer de pulmón proviene el dataset VALUNG.',
     },
@@ -405,11 +467,11 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       Tuskegee:
         'Estudio de Tuskegee (1932–1972): 399 aparceros afroamericanos con sífilis no tratados aun tras la penicilina; el caso que produjo el Informe Belmont y el consentimiento informado moderno.',
       'Bradford Hill':
-        'Austin Bradford Hill (1965): los siete principios de causalidad (fuerza, temporalidad, plausibilidad, replicación, reversibilidad, dosis-respuesta y ausencia de alternativa); criterios de acumulación, no un checklist.',
+        'Austin Bradford Hill (1965): nueve aspectos para juzgar si una asociación es causal, que Woodward reorganiza en siete principios (fuerza, temporalidad, plausibilidad, replicación, reversibilidad, dosis-respuesta y ausencia de alternativa); criterios de acumulación, no un checklist.',
       'Doll-Hill':
         'Richard Doll y Austin Bradford Hill: el estudio de cohortes de médicos británicos (1951–1964) que estableció tabaquismo → cáncer de pulmón; el arquetipo de cohorte prospectiva.',
       'Mantel–Haenszel':
-        'Estimador estratificado de Mantel y Haenszel (1959): resume tablas 2×2×K con pesos inversos a la varianza; el estándar para controlar un confusor categórico.',
+        'Estimador estratificado de Mantel y Haenszel (1959): resume tablas 2×2×K con pesos bₖcₖ/nₖ; el estándar para controlar un confusor categórico, estable aun con estratos pequeños.',
       'izbicki-uq':
         'Rafael Izbicki, "Machine Learning Beyond Point Predictions": cuantificación de incertidumbre y predicción conforme; cobertura garantizada sin supuestos distribucionales.',
       Tukey:
@@ -434,6 +496,91 @@ export const GLOSSARY_ALIASES: Record<string, string> = {
   LLMs: 'LLM',
   DONs: 'DON',
   CSM: 'csm',
+  SE: 'EE',
+  IDs: 'ID',
+  SMDs: 'SMD',
+  SWIGs: 'SWIG',
+  'p₂': 'p₁',
+  'n₂': 'n₁',
+  'X₂': 'X₁',
+  'x₁': 'X₁',
+  'x₂': 'X₁',
+};
+
+/**
+ * Formas en la prosa de los conceptos (claves en minúsculas) que se
+ * enlazan solas. Solo expresiones técnicas sin otro sentido en el curso:
+ * palabras comunes como «potencia» o «cobertura» quedan fuera y se marcan
+ * a mano con <Term>. remark-auto-terms acepta además la forma con
+ * mayúscula inicial.
+ */
+export const GLOSSARY_FORMS: Record<string, string> = {
+  'unidad de análisis': 'unidad_analisis',
+  'faltante estructural': 'faltante_estructural',
+  'faltantes estructurales': 'faltante_estructural',
+  'imputación múltiple': 'imputacion_multiple',
+  'preferencia de dígito': 'preferencia_digito',
+  sobredispersión: 'sobredispersion',
+  'curva epidémica': 'curva_epidemica',
+  'retraso de notificación': 'retraso_notificacion',
+  'retraso de reporte': 'retraso_notificacion',
+  'eventos por variable': 'eventos_por_variable',
+  nowcasting: 'nowcasting',
+  nowcast: 'nowcasting',
+  'emulación del ensayo objetivo': 'ensayo_objetivo',
+  'ensayo objetivo': 'ensayo_objetivo',
+  'usuarios nuevos': 'usuarios_nuevos',
+  'caso-cohorte': 'caso_cohorte',
+  'muestreo por densidad': 'muestreo_densidad',
+  sobrepareamiento: 'sobrepareamiento',
+  'razón de prevalencias': 'razon_prevalencias',
+  'tiempo inmortal': 'tiempo_inmortal',
+  'censura informativa': 'censura_informativa',
+  colisionador: 'colisionador',
+  colisionadores: 'colisionador',
+  'sesgo de Neyman': 'sesgo_neyman',
+  'sesgo de recuerdo': 'sesgo_recuerdo',
+  'sesgo de selección': 'sesgo_seleccion',
+  'mala clasificación': 'mala_clasificacion',
+  'condiciones de Cornfield': 'cornfield',
+  'E-value': 'evalue',
+  'no colapsabilidad': 'colapsabilidad',
+  colapsabilidad: 'colapsabilidad',
+  'modificación de efecto': 'interaccion',
+  paralelismo: 'paralelismo',
+  sinergismo: 'sinergismo',
+  antagonismo: 'antagonismo',
+  unilateralismo: 'unilateralismo',
+  estandarización: 'estandarizacion',
+  'error tipo I': 'error_tipo_i',
+  'error tipo II': 'error_tipo_ii',
+  'prueba exacta de Fisher': 'fisher',
+  'test exacto de Fisher': 'fisher',
+  'prueba de Fisher': 'fisher',
+  Boschloo: 'boschloo',
+  'Berger–Boos': 'berger-boos',
+  'Berger y Boos': 'berger-boos',
+  assurance: 'assurance',
+  'corrección de Haldane': 'correccion-aditiva',
+  'corrección aditiva': 'correccion-aditiva',
+  'cero muestral': 'cero-muestral',
+  'ceros muestrales': 'cero-muestral',
+  'cero estructural': 'cero-estructural',
+  'ceros estructurales': 'cero-estructural',
+  'potencia observada': 'potencia-observada',
+  'cobertura real': 'cobertura',
+  'intervalo de Wilson': 'ic-wilson',
+  'IC de Wilson': 'ic-wilson',
+  'intervalo de Jeffreys': 'ic-jeffreys',
+  'IC de Jeffreys': 'ic-jeffreys',
+  'Clopper–Pearson': 'ic-clopper',
+  'intervalo de verosimilitud': 'ic-verosimilitud',
+  'intervalo de Wald': 'ic-wald',
+  'IC de Wald': 'ic-wald',
+  'garantía de precisión': 'garantia-precision',
+  'meta-análisis': 'metaanalisis',
+  metaanálisis: 'metaanalisis',
+  pareamiento: 'pareamiento',
 };
 
 /** Mapa plano clave → definición, derivado de las secciones. */

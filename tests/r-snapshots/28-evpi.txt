@@ -1,2 +1,2 @@
-E[beneficio neto adoptar] = 98.5 vidas-equiv
-perdida esperada de equivocarse (EVPI) = 0.0
+costo  30: E[B neto] =  98.5 -> adoptar | P(equivocarse) = 0% | EVPI = 0.0
+costo 110: E[B neto] =  18.5 -> adoptar | P(equivocarse) = 26% | EVPI = 5.1

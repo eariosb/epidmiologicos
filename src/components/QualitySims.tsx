@@ -371,21 +371,24 @@ const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[
       let structural = 0;
       let unexpected = 0;
       rows.forEach((r) => {
-        const w = num(r.week);
+        // Seguimiento observado: semanas 1..w (week = 53 equivale a 52).
+        // Estructural = emp1..emp_w llenos y emp_{w+1}..emp52 vacíos.
+        const w = Math.min(num(r.week), 52);
         const firstNa = empCols.findIndex((c) => r[c] === '');
-        if (firstNa === -1) return;
-        const beforeFollowUp = firstNa + 1 < Math.min(w, 52);
-        if (r.arrest === '1' && firstNa + 1 === Math.min(w, 52)) structural++;
-        else if (beforeFollowUp || r.arrest !== '1') unexpected++;
+        if (firstNa === -1) return; // sin vacíos: nada que clasificar
+        const colaVacia = empCols.slice(firstNa).every((c) => r[c] === '');
+        if (r.arrest === '1' && firstNa === w && colaVacia) structural++;
+        else unexpected++;
       });
       const weeks = new Set(rows.filter((r) => r.arrest === '0').map((r) => r.week));
       const prio = rows.map((r) => num(r.prio)).filter(Number.isFinite);
       const mp = prio.reduce((a, b) => a + b, 0) / prio.length;
       const vp = prio.reduce((a, b) => a + (b - mp) ** 2, 0) / (prio.length - 1);
       const naCells = rows.reduce(
-        (n, r) => n + Object.values(r).filter((v) => v === '').length,
+        (n, r) => n + empCols.filter((c) => r[c] === '').length,
         0
       );
+      const nNoArrest = rows.filter((r) => r.arrest === '0').length;
       return [
         {
           dimension: 'Completitud',
@@ -405,7 +408,7 @@ const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[
         },
         {
           dimension: 'Conformidad',
-          label: `week ∈ {${[...weeks].join(', ')}} en los 318 no arrestados`,
+          label: `week ∈ {${[...weeks].join(', ')}} en los ${nNoArrest} no arrestados`,
           detail: 'week = 53 es convención del archivo ("siguió las 52 semanas"), no una semana que existió.',
           severity: 'warn',
           expected: 'documentado',

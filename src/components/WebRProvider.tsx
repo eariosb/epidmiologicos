@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { getWebR } from '@/lib/webr';
 
 export type WebRStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -34,8 +34,13 @@ export function WebRProvider({ children }: { children: ReactNode }) {
     startedRef.current = true;
     setStatus('loading');
     getWebR()
-      .then(() => setStatus('ready'))
+      .then(() => {
+        setStatus('ready');
+        setError(null);
+      })
       .catch((err: unknown) => {
+        // Permite reintentar: el próximo ensureStarted vuelve a arrancar.
+        startedRef.current = false;
         setStatus('error');
         setError(err instanceof Error ? err.message : String(err));
       });

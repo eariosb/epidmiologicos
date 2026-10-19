@@ -3,6 +3,8 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import { tokens } from '@/lib/tokens';
 import { SimGuide, SimLegend } from '@/components/SimBits';
+import { normCdf } from '@/lib/exact2x2';
+import { mulberry32, rnorm } from '@/lib/rng';
 
 const FIG = 'my-6 rounded border border-ink-200 bg-white p-4 shadow-sm';
 const CAPTION = 'mb-2 text-sm font-semibold text-ink-800';
@@ -11,7 +13,6 @@ const SLIDER = 'w-full accent-brand-600';
 const CHIP =
   'rounded border px-2.5 py-1 text-left text-xs transition-colors';
 const CHIP_OFF = 'border-ink-200 text-ink-700 hover:bg-ink-50';
-const CHIP_ON = 'border-brand-500 bg-brand-50 text-brand-700';
 const rnd = (v: number) => Math.round(v * 100) / 100;
 
 /* ================================================================== */
@@ -147,7 +148,7 @@ const NODOS: Record<string, Nodo> = {
 
 const RESULTADOS: Record<string, Resultado> = {
   chi2: { test: 'χ² de Pearson (sin corrección), o z de dos proporciones', porque: 'Con esperados holgados la aproximación normal es buena; z² es el mismo χ².', r: 'chisq.test(tab, correct = FALSE)', sas: 'PROC FREQ; TABLES e*d / CHISQ RELRISK;', modulo: 'M4', ojo: 'Reporta primero RR, RD u OR con su IC: la prueba no dice cuánto.' },
-  exacto2x2: { test: 'Fisher exacto, o Boschloo (incondicional, más potente)', porque: 'Con celdas chicas la aproximación falla; Fisher es conservador, Boschloo recupera potencia sin perder el tamaño.', r: 'fisher.test(tab); Exact::exact.test(tab, method = "boschloo")', sas: 'PROC FREQ; TABLES e*d; EXACT FISHER BARNARD;', modulo: 'M6', ojo: 'Declara cuál usas antes de mirar: pueden dar veredictos distintos (Perondi).' },
+  exacto2x2: { test: 'Fisher exacto, o Boschloo (incondicional, más potente)', porque: 'Con celdas chicas la aproximación falla; Fisher es conservador, Boschloo recupera potencia sin perder el tamaño.', r: 'fisher.test(tab); Exact::exact.test(tab, method = "boschloo")', sas: 'PROC FREQ; TABLES e*d; EXACT FISHER BARNARD;   /* SAS no trae Boschloo: Barnard es su incondicional */', modulo: 'M6', ojo: 'Declara cuál usas antes de mirar: pueden dar veredictos distintos (Perondi).' },
   chi2rc: { test: 'χ² de Pearson para tablas R×C', porque: 'Generaliza la 2×2 a varias categorías con esperados holgados.', r: 'chisq.test(tab)', sas: 'PROC FREQ; TABLES g*d / CHISQ;', modulo: 'M0 (catálogo)' },
   ffh: { test: 'Fisher–Freeman–Halton (Fisher para R×C)', porque: 'Extiende la prueba exacta condicional a tablas grandes con celdas chicas.', r: 'fisher.test(tab)   # o simulate.p.value = TRUE si es grande', sas: 'PROC FREQ; TABLES g*d; EXACT FISHER;', modulo: 'M6' },
   mcnemar: { test: 'McNemar (exacto si los pares discordantes son < 25)', porque: 'En datos pareados solo informan los pares discordantes.', r: 'mcnemar.test(tab); binom.test(b, b + c)', sas: 'PROC FREQ; TABLES x*y / AGREE; EXACT MCNEM;', modulo: 'M15', ojo: 'El OR pareado es b/c; con varios controles por caso, regresión logística condicional (clogit).' },
@@ -250,25 +251,6 @@ export function TestSelector({ title }: { title?: ReactNode }) {
 /* PValueLab: qué es (y qué no es) un valor p                          */
 /* ================================================================== */
 
-function mulberry32(seed: number) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** Φ(z) (Abramowitz y Stegun 7.1.26). */
-function normCdf(z: number): number {
-  const t = 1 / (1 + (0.3275911 * Math.abs(z)) / Math.SQRT2);
-  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t
-    * Math.exp(-(z * z) / 2);
-  return z >= 0 ? 0.5 * (1 + y) : 0.5 * (1 - y);
-}
-
 export function PValueLab({ title }: { title?: ReactNode }) {
   const [d, setD] = useState(0.5);
   const [n, setN] = useState(30);
@@ -284,10 +266,7 @@ export function PValueLab({ title }: { title?: ReactNode }) {
   const sim = useMemo(() => {
     const pi0m = d === 0 ? 1 : pi0;
     const rng = mulberry32(seed * 7919 + 17);
-    const gauss = () => {
-      const u = Math.max(rng(), 1e-12);
-      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng());
-    };
+    const gauss = () => rnorm(rng);
     const binsNull = new Array(NB).fill(0);
     const binsAlt = new Array(NB).fill(0);
     let sigNull = 0, sigAlt = 0, bordeNull = 0, borde = 0;

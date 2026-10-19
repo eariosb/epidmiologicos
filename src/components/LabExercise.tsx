@@ -1,6 +1,5 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { RCell } from './RCell';
 import { MathText } from '@/lib/math-text';
@@ -11,7 +10,7 @@ import type { LabExerciseProps } from '@/types/course';
  * WebR cell (RCell) with a statement, an analysis checklist ("Tu turno"),
  * and collapsible hint / guide-answer sections. Intended for small simulated
  * datasets and cheap epidemiological analyses — the expensive real-course models stay
- * precomputed in CodeBlocks.
+ * precomputed in RCells.
  */
 export function LabExercise({
   id,

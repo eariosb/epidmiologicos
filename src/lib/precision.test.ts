@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   agrestiCoullCI,
-  boundsForAllX,
   clopperPearsonCI,
   dbetabinom,
   exactCoverage,

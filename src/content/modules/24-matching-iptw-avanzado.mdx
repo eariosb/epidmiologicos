@@ -58,7 +58,7 @@ instante?** Si no, el estudio le regaló tiempo a un brazo.
 
 ## Matching en producción
 
-El pareamiento por propensity score del módulo 16 tenía la lección
+El propensity score del módulo 16 tenía la lección
 conceptual; en producción la decisión tiene cuatro perillas, y cada una
 mueve el balance y la muestra:
 
@@ -112,7 +112,7 @@ cat(sprintf("discordantes b=%d c=%d | OR pareado = %.2f\\n", b, cc, b/cc))`}
 El IPTW del módulo 16 funcionaba porque el mundo era amable. En
 producción, tres problemas aparecen siempre:
 
-- **Pesos extremos**: un sujeto con $P(E)=0.99$ recibe peso 100 y manda
+- **Pesos extremos**: un sujeto no expuesto con $P(E \mid C)=0.99$ recibe peso 100 y manda
   en el estimador. La respuesta práctica: pesos **estabilizados**
   ($P(E)/P(E\mid C)$) y truncamiento en percentiles (1%/99% o 5%/95%),
   declarado.
@@ -163,8 +163,8 @@ Hernán &amp; Robins es **clonar** cada paciente en los dos brazos
 elegibles en tiempo cero, **censurar** cada clon en el instante en que
 su conducta real diverge del brazo asignado, y **pesar** los supervivientes
 del clon por el inverso de la probabilidad de seguir conforme al brazo
-(IPCW, los pesos de censura inversa del módulo 13 en versión
-inversa). Es la versión operativa del "cada persona-tiempo podía estar
+(IPCW: el inverso de la probabilidad de no ser censurado, la lógica del
+IPTW aplicada a la censura). Es la versión operativa del "cada persona-tiempo podía estar
 en cualquier brazo": el clon censurado no desaparece, cede su peso a
 sus gemelos conformes.
 
@@ -236,7 +236,7 @@ fit <- coxph(Surv(week, arrest) ~ fin, data = r, weights = sw, robust = TRUE)
 cat(sprintf("HR marginal (fin) = %.2f, robust SE = %.3f\\n",
             exp(coef(fit)), sqrt(fit$var[1,1])))`}
   tasks={[
-    "Reporta el SMD de las cinco covariables antes y después del peso: ¿todas bajo 0.1?",
+    "Reporta el SMD de las seis covariables del PS antes y después del peso: ¿todas bajo 0.1?",
     "Compara el HR ponderado con el HR ajustado por regresión y con el crudo: explica en tres líneas qué estima cada uno",
     "Repite sin truncamiento y reporta cuánto se mueve el HR y el máximo peso",
     "Propón un análisis de falsificación plausible para estos datos y ejecútalo",
@@ -259,7 +259,7 @@ conclusión es secundaria: lo que se evalúa es el protocolo.
 - **Hernán &amp; Robins (2016), *Am J Epidemiol***: la emulación del
   ensayo objetivo con Big Data; el artículo que define el módulo.
 - **Hernán &amp; Robins (2020), *Causal Inference: What If***: caps.
-  3 y 23: tiempo cero, clonación–censura–pesos, IPCW.
+  3 y 22: tiempo cero, clonación–censura–pesos, IPCW.
 - **Austin &amp; Stuart (2015), *Stat Med***: las mejores prácticas de
   matching por propensity; caliper, balance y reporte.
 - **Austin (2009)**: las diferencias estandarizadas como diagnóstico de

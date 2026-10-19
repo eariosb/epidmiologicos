@@ -1,5 +1,5 @@
 import { migrateRecord, MigrationError } from './migrate';
-import { readScene, writeScene, sceneMigrations } from './scene';
+import { readScene, writeScene } from './scene';
 import { SCHEMA_VERSIONS } from './version';
 import type { BlackboardScene } from '../../types/blackboard';
 

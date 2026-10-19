@@ -29,21 +29,7 @@
 
 import { normQuantile } from '@/lib/exact2x2';
 import { qchisq } from '@/lib/precision';
-
-/* ------------------------------------------------------------------ */
-/* RNG con semilla (el mismo mulberry32 de EpiSims, exportable)         */
-/* ------------------------------------------------------------------ */
-
-export function mulberry32(seed: number) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+import { mulberry32 } from '@/lib/rng';
 
 /* ------------------------------------------------------------------ */
 /* Piezas básicas                                                      */
@@ -69,7 +55,9 @@ export function rmultinom(n: number, p: number[], rng: () => number): number[] {
   for (let i = 0; i < n; i++) {
     const u = rng();
     let j = 0;
-    while (u > cum[j]) j++;
+    // j < k - 1: si la suma de p queda un ulp por debajo de 1, el último
+    // tramo absorbe el sobrante en vez de indexar fuera del vector.
+    while (j < k - 1 && u > cum[j]) j++;
     x[j]++;
   }
   return x;

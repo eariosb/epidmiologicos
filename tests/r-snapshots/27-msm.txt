@@ -1,2 +1,3 @@
-ajustando L1: b_A0 = 0.10 (verdad 0.5+efecto via A1)
-MSM con pesos: b_A0 = 0.43 | b_A1 = 0.49
+sin L1:       b_A0 = 0.45 | b_A1 = 1.03 (A1 confundido)
+ajustando L1: b_A0 = 0.14 | b_A1 = 0.49 (A0 sesgado)
+MSM con pesos: b_A0 = 0.49 | b_A1 = 0.49 | siempre vs nunca = 0.99

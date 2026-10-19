@@ -1,5 +1,5 @@
-dia 20: verdad  88 | crudo  87 (99%) | nowcast  95 (108%)
-dia 30: verdad 116 | crudo 112 (97%) | nowcast 122 (106%)
-dia 35: verdad 133 | crudo  98 (74%) | nowcast 107 (81%)
-dia 38: verdad 145 | crudo  74 (51%) | nowcast  81 (56%)
-dia 40: verdad 153 | crudo  36 (24%) | nowcast  39 (26%)
+dia 20: verdad  88 | crudo  88 | nowcast  89 | con F sesgada  88
+dia 30: verdad 116 | crudo 108 | nowcast 117 | con F sesgada 113
+dia 35: verdad 133 | crudo 104 | nowcast 140 | con F sesgada 130
+dia 38: verdad 145 | crudo  73 | nowcast 156 | con F sesgada 132
+dia 40: verdad 153 | crudo  31 | nowcast 155 | con F sesgada 128

@@ -334,7 +334,9 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
           {outOpen && result.plots.map((src, i) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              key={src}
+              // Dos gráficos idénticos darían la misma data URL: la clave es
+              // la posición (la lista se reemplaza entera en cada ejecución).
+              key={i}
               src={src}
               alt={`Gráfico generado por R (resultado ${i + 1})`}
               className="mx-auto block max-w-full bg-white p-2"

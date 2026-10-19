@@ -18,7 +18,7 @@ import type { WebR as WebRType } from 'webr';
 // Packages preloaded so the first executable cell in each lesson runs fast.
 // Only light, widely-used packages go here; domain packages install on
 // demand via `ensurePackagesAvailable()` when a cell calls library(...).
-export const PRELOAD_PACKAGES = [
+const PRELOAD_PACKAGES = [
   'MASS', // mvrnorm and friends
   'survival', // Surv, survfit (Kaplan-Meier), survdiff (log-rank), coxph, clogit
 ];
@@ -45,7 +45,12 @@ const fetchedDatasets = new Set<string>();
  * multiple times — initialisation only happens once.
  */
 export function getWebR(): Promise<WebRType> {
-  webRPromise ??= initWebR();
+  // Si el arranque falla (red, CDN), se olvida la promesa rechazada para
+  // que el siguiente "Ejecutar" lo intente de nuevo sin recargar la página.
+  webRPromise ??= initWebR().catch((err: unknown) => {
+    webRPromise = null;
+    throw err;
+  });
   return webRPromise;
 }
 
@@ -83,21 +88,20 @@ async function initWebR(): Promise<WebRType> {
 /**
  * Datasets del curso, servidos por Next.js desde `public/data/`.
  * El código R de las celdas los referencia por nombre de archivo
- * (p. ej. `read.csv("caminata.csv")`); aquí se reescriben a rutas del
- * VFS de webR tras copiarlos con un fetch same-origin.
- *
- * Este curso genera casi todos sus datos por simulación en R, así que
- * la lista empieza vacía: basta con dejar el CSV en `public/data/` y
- * agregar su nombre aquí.
+ * (p. ej. `read.csv("valung.csv")`); aquí se reescriben a rutas del
+ * VFS de webR tras copiarlos con un fetch same-origin. Un archivo nuevo
+ * se deja en `public/data/` y se agrega a esta lista (un test verifica
+ * que toda base leída por una celda esté aquí).
  */
-const LOCAL_DATASETS: string[] = [
+export const LOCAL_DATASETS: string[] = [
   'bcg_matching.csv',      // M0, M14, M15: matching 1:5, vacuna BCG
   'caso_control_11.csv',   // M15: laboratorio de parejas
   'ddimer.csv',            // M15: clogit con matching variable
   'leucemia.txt',          // M12: ensayo 6-MP (Freireich)
   'recid.csv',             // M13: primer coxph
   'shhs_vivienda.csv',     // M8: vivienda y CHD estratificado
-  'valung.csv',            // M12: laboratorio VA lung
+  'valung.csv',            // M0, M12: laboratorio VA lung
+  'valung_corrupto.csv',   // II-10: práctica de campo (base contaminada)
 ];
 
 const DATA_DIR = '/data';

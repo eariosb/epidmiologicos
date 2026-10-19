@@ -5,7 +5,7 @@ objective: "Especificar el estimando antes del estimador, distinguir efecto tota
 order: 27
 datasets: []
 duration: 115
-prerequisites: ["Curso I completo, especialmente los módulos 7, 15 y 16; módulos 23 y 24"]
+prerequisites: ["Curso I completo, especialmente los módulos 7, 15 y 16; módulos II-4 y II-5"]
 course: "II"
 level: "avanzado"
 profilesDeep: ["clinico", "politica"]
@@ -80,10 +80,8 @@ Y <- rbinom(n, 1, plogis(-1.5 + 0.8*A + 0.9*x))  # desenlace
 
 fit <- glm(Y ~ A + x, family = binomial)
 # Mundos hipoteticos: todos expuestos / todos no expuestos.
-d1 <- transform(data.frame(A = 1, x = x), p = predict(fit, newdata = data.frame(A = 1, x = x), type = 'response'))
-d0 <- data.frame(A = 0, x = x)
-p1 <- predict(fit, newdata = d1[, c('A','x')], type = 'response')
-p0 <- predict(fit, newdata = d0, type = 'response')
+p1 <- predict(fit, newdata = data.frame(A = 1, x = x), type = 'response')
+p0 <- predict(fit, newdata = data.frame(A = 0, x = x), type = 'response')
 
 rd <- mean(p1) - mean(p0); rr <- mean(p1)/mean(p0)
 cat(sprintf('estimando marginal: RD = %.3f | RR = %.2f\\n', rd, rr))
@@ -137,9 +135,11 @@ cat(sprintf('g-formula RD = %.3f | AIPW RD = %.3f\\n',
 El escenario que define a los métodos G: exposición en dos tiempos con un
 confusor *entre* ellos, $A_0 \to L_1 \to A_1 \to Y$, donde $L_1$ es a la
 vez confusor de $A_1$ y consecuencia de $A_0$ (adherencia, toxicidad,
-respuesta intermedia). Ajustar $L_1$ bloquea parte del efecto de $A_0$;
-no ajustarlo deja confundido $A_1$. **Ninguna regresión resuelve la
-trampa**; es la estructura que el DAG del módulo 23 anticipaba.
+respuesta intermedia). Ajustar $L_1$ sesga el efecto de $A_0$ (bloquea
+la parte que pasa por $L_1$ y, si una causa no medida de $L_1$ también
+afecta a $Y$, abre un camino por colisionador); no ajustarlo deja
+confundido $A_1$. **Ninguna regresión resuelve la
+trampa**; es la estructura que el DAG del módulo II-4 anticipaba.
 
 Los métodos G la resuelven cambiando el objeto: en vez de un coeficiente,
 se estima el contraste de **regímenes**: "tratar siempre" vs. "nunca
@@ -155,29 +155,35 @@ tratar" vs. "tratar solo si $L_1$ supera un umbral". Tres implementaciones:
 <RCell
   id="27/msm"
   title="MSM de dos tiempos: el confusor que también es mediador"
-  code={`set.seed(17); n <- 4000
-U  <- rnorm(n)
+  code={`set.seed(17); n <- 20000
+U  <- rnorm(n)                                 # no medido
 A0 <- rbinom(n, 1, .4)
-L1 <- 0.8*A0 + U + rnorm(n)                    # confusor Y mediador
+L1 <- 0.8*A0 + U + rnorm(n)                    # confusor de A1 y efecto de A0
 A1 <- rbinom(n, 1, plogis(-0.3 + 0.7*L1))      # A1 depende de L1
-Y  <- 0.5*A0 + 0.5*A1 + 0.9*U + rnorm(n)      # efecto total: 0.5+0.5
+Y  <- 0.5*A0 + 0.5*A1 + 0.9*U + rnorm(n)      # cada dosis suma 0.5
+# Estimando: E[Y | tratar siempre] - E[Y | nunca tratar] = 0.5 + 0.5 = 1.
 
-# La trampa: ajustar L1 para A1 borra parte del efecto de A0.
-cat(sprintf('ajustando L1: b_A0 = %.2f (verdad 0.5+efecto via A1)\\n',
-            coef(lm(Y ~ A0 + A1 + L1))['A0']))
-# MSM: pesos para A1 dado L1 (A0 ya es azar aqui).
-ps1 <- glm(A1 ~ L1, family = binomial)$fitted
-w <- ifelse(A1 == 1, 1/ps1, 1/(1-ps1))
-msm <- lm(Y ~ A0 + A1, weights = w)
-cat(sprintf('MSM con pesos: b_A0 = %.2f | b_A1 = %.2f\\n',
-            coef(msm)['A0'], coef(msm)['A1']))
-# A0 recupera su efecto total porque L1 entra en el PESO, no en el
-# ajuste - el camino mediado queda abierto, el confuso queda cerrado.`}
+# Sin ajustar L1, A1 queda confundido (L1 <- U -> Y):
+b <- coef(lm(Y ~ A0 + A1))
+cat(sprintf('sin L1:       b_A0 = %.2f | b_A1 = %.2f (A1 confundido)\\n', b['A0'], b['A1']))
+# Ajustando L1, A0 se sesga: L1 es colisionador en A0 -> L1 <- U.
+b <- coef(lm(Y ~ A0 + A1 + L1))
+cat(sprintf('ajustando L1: b_A0 = %.2f | b_A1 = %.2f (A0 sesgado)\\n', b['A0'], b['A1']))
+
+# MSM: pesos estabilizados para A1 dada su historia (A0, L1).
+den <- glm(A1 ~ A0 + L1, family = binomial)$fitted
+num <- glm(A1 ~ A0, family = binomial)$fitted
+sw  <- ifelse(A1 == 1, num/den, (1 - num)/(1 - den))
+b <- coef(lm(Y ~ A0 + A1, weights = sw))
+cat(sprintf('MSM con pesos: b_A0 = %.2f | b_A1 = %.2f | siempre vs nunca = %.2f\\n',
+            b['A0'], b['A1'], b['A0'] + b['A1']))
+# L1 entra en el peso, no en el modelo: equilibra A1 sin condicionar en
+# el colisionador. La verdad es 0.5, 0.5 y 1.`}
 />
 
 <Profundiza title="Regímenes dinámicos y el precio de la positividad" hint="optativo">
 El estimando más rico es el régimen dinámico ("tratar cuando el
-biomarcador supaera el umbral"), cuya estimación exige que en cada tiempo
+biomarcador supera el umbral"), cuya estimación exige que en cada tiempo
 y cada historia previa existan sujetos bajo cada acción posible. Con $T$
 tiempos la positividad se erosiona exponencialmente: es el costo del
 producto de pesos, y la razón por la que los MSM prácticos truncan pesos
@@ -197,7 +203,7 @@ Con cinco casillas llenas, la elección de método se vuelve mecánica:
 | Interesa el efecto en los tratados | Matching / ATT |
 | Exposición variable + confusor-mediador | MSM-IPTW o g-computación secuencial |
 | Evento intercurrente ineludible | Declarar la estrategia (policy/hypothetical/principal) antes de elegir |
-| Estimando no identificable con los datos | Análisis de sensibilidad (módulo 22), no estimación |
+| Estimando no identificable con los datos | Análisis de sensibilidad (módulo II-3), no estimación |
 
 <Quiz
   question="Un estudio de VIH ajusta por carga viral intermedia para estimar el efecto del tratamiento inicial sobre mortalidad. La carga viral es a la vez efecto del tratamiento y predictor de la adherencia posterior. ¿Qué estima el coeficiente del tratamiento?"

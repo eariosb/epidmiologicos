@@ -92,36 +92,6 @@ export function useNotes(moduleSlug?: string) {
   return { notes, loading, createNote, updateNote, deleteNote, refresh };
 }
 
-export function useAllNotes() {
-  return useNotes(undefined);
-}
-
-export function useModuleNoteCount(moduleSlug: string): number {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const allKeys = await keys(NOTES_STORE);
-        let n = 0;
-        for (const key of allKeys) {
-          const note = await get<Note>(key, NOTES_STORE);
-          if (note && note.moduleSlug === moduleSlug) n++;
-        }
-        if (!cancelled) setCount(n);
-      } catch {
-        if (!cancelled) setCount(0);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [moduleSlug]);
-
-  return count;
-}
-
 export async function exportAllNotes(): Promise<string> {
   const allKeys = await keys(NOTES_STORE);
   const allNotes: Note[] = [];

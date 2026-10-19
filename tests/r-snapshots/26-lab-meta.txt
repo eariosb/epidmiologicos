@@ -1,4 +1,4 @@
-Estimate Std. Error    t value  Pr(>|t|)
-(Intercept) -0.35011101 0.41167256 -0.8504599 0.4131986
-lat         -0.01477632 0.01135743 -1.3010269 0.2198417
-Q residual = 6.3 en 11 df
+coef     EE       z      p
+[1,]  0.2595 0.2323  1.1172 0.2639
+[2,] -0.0292 0.0067 -4.3411 0.0000
+Q residual = 30.7 en 11 gl | tau2 residual = 0.063

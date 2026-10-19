@@ -9,6 +9,7 @@ import {
   logOrCorrected,
   newcombeRD,
   nForPower,
+  normCdf,
   normQuantile,
   pZeroCell,
   powerAt,
@@ -17,6 +18,7 @@ import {
   woolfCI,
 } from '@/lib/exact2x2';
 import { runExact } from '@/lib/exactRunner';
+import { uiGrid } from '@/lib/exactTasks';
 import { tokens } from '@/lib/tokens';
 import { useExactTask } from '@/hooks/useExactTask';
 import {
@@ -41,12 +43,8 @@ const fmt = (x: number, d = 3) => (Number.isFinite(x) ? x.toFixed(d) : '—');
  *  de punto flotante entre Node (SSR) y el navegador. */
 const rr = (v: number) => Math.round(v * 100) / 100;
 
-/** Coarser nuisance grid for interactive spaces: still ~800 maximization points. */
-const GRID_UI = (() => {
-  const g = new Float64Array(801);
-  for (let i = 0; i < 801; i++) g[i] = 0.000625 + 0.00125 * i;
-  return g;
-})();
+/** Malla del parámetro de estorbo de los exploradores (la misma del worker). */
+const GRID_UI_SIZE = uiGrid().length;
 
 /* ================================================================== */
 /* Shared bits                                                          */
@@ -375,7 +373,7 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
       <p className={NOTE}>
         Cálculo exacto por enumeración de las (n₁+1)(n₂+1) tablas bajo dos binomiales
         independientes; el supremo sobre el parámetro de estorbo se evalúa en una malla
-        de {GRID_UI.length} puntos. Con n₁, n₂ ≤ 60 el cálculo es inmediato en el
+        de {GRID_UI_SIZE} puntos. Con n₁, n₂ ≤ 60 el cálculo es inmediato en el
         navegador. «Exacto» describe el cómputo, no la adecuación del modelo al diseño.
       </p>
     </div>
@@ -391,7 +389,6 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
   const [p2, setP2] = useState(0.03);
   const [alpha, setAlpha] = useState(0.05);
   const [nSel, setNSel] = useState(34);
-  const [seriesN, setSeriesN] = useState<number[] | null>(null);
   const [busy, setBusy] = useState(false);
 
   // Rejection regions at the selected n (per procedure), in the worker.
@@ -422,7 +419,7 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
 
   const computeCurves = () => {
     setBusy(true);
-    const ns = seriesN ?? Array.from({ length: 51 }, (_, i) => i + 10);
+    const ns = Array.from({ length: 51 }, (_, i) => i + 10);
     runExact('powerCurves', { ns, alpha, p1, p2 })
       .then(setCurves)
       .catch(() => setCurves(null))
@@ -583,7 +580,7 @@ export function ExactPowerExplorer({ title }: { title?: ReactNode }) {
       </SimGuide>
       <p className={NOTE}>
         Toda la curva es exacta por enumeración (sin Monte Carlo); el supremo sobre el
-        parámetro de estorbo usa una malla de {GRID_UI.length} puntos. La «potencia
+        parámetro de estorbo usa una malla de {GRID_UI_SIZE} puntos. La «potencia
         observada» post hoc no es esto: esto es un cálculo prospectivo sobre un
         escenario declarado antes de ver los datos.
       </p>
@@ -746,7 +743,7 @@ export function CorrectionExplorer({ title }: { title?: ReactNode }) {
 export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
   const [p2, setP2] = useState(0.03); // referencia
   const [p1, setP1] = useState(0.2);
-  const [alpha, setAlpha] = useState(0.05);
+  const alpha = 0.05; // la fórmula y la tabla se presentan a α = 5% bilateral
   const [targetPower, setTargetPower] = useState(0.8);
   const [loss, setLoss] = useState(0.1);
 
@@ -775,7 +772,7 @@ export function SampleSizeExplorer({ title }: { title?: ReactNode }) {
       const se1 = Math.sqrt((p1 * (1 - p1) + p2 * (1 - p2)) / n);
       const z = (d - za * se0) / se1;
       // power ≈ Φ(z) for the two-sided test when p1 > p2
-      const pow = 0.5 * (1 + erfApprox(z / Math.SQRT2));
+      const pow = normCdf(z);
       ns.push(n);
       pw.push(Math.min(1, Math.max(0, pow)));
     }
@@ -1116,7 +1113,7 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
   const [priorA, setPriorA] = useState(5);
   const [priorB, setPriorB] = useState(45);
   const [L0, setL0] = useState(0.1);
-  const [conf, setConf] = useState(0.95);
+  const conf = 0.95; // confianza del IC cuya longitud se garantiza
   const [garantia, setGarantia] = useState(0.9);
   const [method, setMethod] = useState<CIMethodKey>('wilson');
   const [nView, setNView] = useState(50);
@@ -1348,22 +1345,9 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
         se muestra solo para comparar: confunde L con la semiamplitud y trata z_β como
         si multiplicara la desviación de L. Por eso su n no es interpretable — suele
         quedar muy por encima del necesario, no por debajo. Referencias: Correa
-        (seminario), Brown–Cai–DasGupta (2001), Rothman &amp; Greenland (2018,
-        paquete presize).
+        (seminario), Brown, Cai y DasGupta (2001), Rothman y Greenland (2018) y
+        el paquete presize de R.
       </p>
     </div>
   );
-}
-
-/* local erf approximation (same family as exact2x2's) */
-function erfApprox(x: number): number {
-  const s = Math.sign(x);
-  const t = 1 / (1 + 0.3275911 * Math.abs(x));
-  const y =
-    1 -
-    t *
-      (0.254829592 +
-        t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429)))) *
-      Math.exp(-x * x);
-  return s * y;
 }

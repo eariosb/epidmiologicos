@@ -133,7 +133,7 @@ function makeId(prefix: string): string {
   return `${prefix}-${suffix}`;
 }
 
-export async function getActiveSessionId(): Promise<string | null> {
+async function getActiveSessionId(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(ACTIVE_SESSION_KEY);
 }
@@ -160,7 +160,7 @@ export async function getSession(id: string): Promise<Session | null> {
   }
 }
 
-export async function saveSession(session: Session): Promise<void> {
+async function saveSession(session: Session): Promise<void> {
   await set(
     session.id,
     stampSession({ ...session, updatedAt: Date.now() }),

@@ -13,7 +13,7 @@ upper 95% CI
        0.807
 
 riesgo recaida 23sem: placebo = 1.00  6-MP = 0.55
-ARR = 0.45 [0.09, 0.81]  ->  NNT(23 sem) = 2.2
+ARR = 0.45 [0.20, 0.81]  ->  NNT(23 sem) = 2.2 [1.2, 5.1]
 Call:
 survdiff(formula = Surv(tiempo, status) ~ grupo, data = leu)
 

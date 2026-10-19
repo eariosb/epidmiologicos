@@ -22,7 +22,7 @@ export const COURSE_II_BLOCKS = [
   { id: 'II-C', title: 'Práctica de campo', from: 29, to: 39 },
 ] as const;
 
-export function blocksForCourse(course: 'I' | 'II') {
+function blocksForCourse(course: 'I' | 'II') {
   return course === 'II' ? COURSE_II_BLOCKS : COURSE_BLOCKS;
 }
 

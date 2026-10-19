@@ -11,7 +11,10 @@
  *   queda marcada y no se vuelve a envolver.
  * - Solo claves "sigla-like" (empiezan en mayúscula/dígito o están en
  *   EXTRA_KEYS): las claves en minúsculas son palabras comunes
- *   ('potencia', 'cobertura') y autoenlazarlas sería incorrecto.
+ *   ('potencia', 'cobertura') y autoenlazarlas sería incorrecto. Los
+ *   conceptos se enlazan por sus formas técnicas (GLOSSARY_FORMS:
+ *   «tiempo inmortal», «colisionador»…), en minúscula o con mayúscula
+ *   inicial.
  * - 'Se' queda excluida: el pronombre reflexivo encabezaría falsos
  *   positivos al inicio de oración ("Se observa que…").
  * - Alias (GLOSSARY_ALIASES): H₀, I², R₀, ICs… se enlazan a su clave
@@ -23,7 +26,7 @@
  *   encabezados — mismo contrato que remark-module-refs.
  */
 
-import { GLOSSARY, GLOSSARY_ALIASES } from './glossary';
+import { GLOSSARY, GLOSSARY_ALIASES, GLOSSARY_FORMS } from './glossary';
 
 interface MdastNode {
   type: string;
@@ -55,6 +58,12 @@ const EXTRA_KEYS = new Set([
   'χ²',
   'α',
   'τ²',
+  'τ',
+  'Φ',
+  'κ',
+  'p₀',
+  'p₁',
+  'n₁',
   'mid-p',
   'log-rank',
   'berger-boos',
@@ -70,7 +79,16 @@ function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Claves autoenlazables: siglas del glosario + alias tipográficos.
+const capitalize = (f: string) => f.charAt(0).toUpperCase() + f.slice(1);
+
+/** Forma escrita → clave: alias tipográficos y formas de los conceptos. */
+const FORM_TO_KEY: Record<string, string> = { ...GLOSSARY_ALIASES };
+for (const [form, key] of Object.entries(GLOSSARY_FORMS)) {
+  FORM_TO_KEY[form] = key;
+  FORM_TO_KEY[capitalize(form)] = key;
+}
+
+// Claves autoenlazables: siglas del glosario + alias y formas.
 // Las claves con sufijo de sentido (β-SIR, θ-meta) quedan fuera: son
 // solo para marcado manual.
 const AUTO_KEYS = [
@@ -80,19 +98,19 @@ const AUTO_KEYS = [
       (/^[A-Z0-9]/.test(k) || EXTRA_KEYS.has(k)) &&
       !/^[\p{Script=Greek}][^-]*-/u.test(k),
   ),
-  ...Object.keys(GLOSSARY_ALIASES),
+  ...Object.keys(FORM_TO_KEY),
 ].sort((a, b) => b.length - a.length);
 
 /** Forma escrita → clave canónica del glosario. */
 function canonical(form: string): string {
-  return GLOSSARY_ALIASES[form] ?? form;
+  return FORM_TO_KEY[form] ?? form;
 }
 
 // Frontera de "palabra de sigla": ni letra/dígito, guion ni subíndice
 // a los lados — evita partir compuestos como "OR-MH", "I-squared" o
 // "z_α", y que "α" capture el "α²" de otra cosa.
 const TERM_RE = new RegExp(
-  `(?<![\\p{L}\\p{N}_-])(${AUTO_KEYS.map(escapeRe).join('|')})(?![\\p{L}\\p{N}_²₀-₉-])`,
+  `(?<![\\p{L}\\p{N}_-])(${AUTO_KEYS.map(escapeRe).join('|')})(?![\\p{L}\\p{M}\\p{N}_²₀-₉-])`,
   'gu',
 );
 

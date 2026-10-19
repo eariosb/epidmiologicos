@@ -2,7 +2,10 @@
 antes de que el estudiante ejecute nada.
 
 Uso:
-  python scripts/precompute_r.py [modulo ...]
+  python scripts/precompute_r.py [--stale] [modulo ...]
+
+  --stale  solo recalcula las celdas cuyo codigo cambio (hash distinto) o
+           que no estan en el manifiesto; las demas conservan sus graficos.
 
 Escribe:
   public/precomputed/<id>/plot-N.png   graficos de la celda
@@ -64,7 +67,10 @@ def run(code: str, plotdir: pathlib.Path) -> subprocess.CompletedProcess:
 
 
 def main() -> int:
-    mods = sys.argv[1:] or [p.stem for p in sorted(pathlib.Path('src/content/modules').glob('*.mdx'))]
+    args = sys.argv[1:]
+    stale_only = '--stale' in args
+    args = [a for a in args if a != '--stale']
+    mods = args or [p.stem for p in sorted(pathlib.Path('src/content/modules').glob('*.mdx'))]
     manifest = json.loads(MANIFEST.read_text(encoding='utf-8')) if MANIFEST.exists() else {}
     fails = 0
     for mod in mods:
@@ -75,6 +81,8 @@ def main() -> int:
                 continue
             cid = idm.group(1)
             code = unescape(m.group('code'))
+            if stale_only and manifest.get(cid, {}).get('hash') == fnv1a(code):
+                continue
             slug = cid.replace('/', '-')
             plotdir = OUTDIR / slug
             if plotdir.exists():

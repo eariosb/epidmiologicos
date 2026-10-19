@@ -5,7 +5,7 @@ objective: "Traducir una estimación con incertidumbre en una recomendación acc
 order: 28
 datasets: []
 duration: 100
-prerequisites: ["Curso I completo, especialmente los módulos 8, 9 y 14; módulos 22 y 26"]
+prerequisites: ["Curso I completo, especialmente los módulos 8, 9 y 14; módulos II-3 y II-7"]
 course: "II"
 level: "avanzado"
 profilesDeep: ["politica", "vigilancia"]
@@ -32,7 +32,7 @@ La pregunta del decisor no es "¿es significativo?" sino "¿qué hago?". La
 respuesta formal necesita tres ingredientes que el análisis ya produce:
 
 - **La magnitud del efecto** con su intervalo: el estimando del
-  módulo 27, no el coeficiente.
+  módulo II-8, no el coeficiente.
 - **El umbral de decisión**: el efecto mínimo que justifica la acción,
   definido por costos y consecuencias, no por α. Una intervención
   barata y segura se adopta con evidencia modesta; una costosa exige
@@ -56,7 +56,7 @@ umbral <- 0.90
 p_supera <- mean(RR < umbral)
 cat(sprintf('RR medio = %.2f | P(RR < 0.90) = %.1f%%\\n',
             mean(RR), 100*p_supera))
-# Traduccion: 'hay 93% de probabilidad de que el programa reduzca la
+# Traduccion: 'hay 99% de probabilidad de que el programa reduzca la
 # mortalidad al menos 10%' - la frase que el decisor puede sostener.
 # Variantes de umbral: 15% y 20% para mostrar la sensibilidad:
 for (u in c(0.85, 0.80)) {
@@ -92,16 +92,21 @@ barata.
 set.seed(51); S <- 100000
 RR <- exp(rnorm(S, -0.30, 0.08))
 vidas <- 10000 * 0.05 * (1 - RR)          # vidas salvadas si se adopta
-costo <- 30                               # costo del programa en 'vidas equiv'
-B_adoptar <- vidas - costo                # beneficio neto
 B_no <- 0
 
-# Decision con la info actual: adoptar si E[B] > 0
-cat(sprintf('E[beneficio neto adoptar] = %.1f vidas-equiv\\n',
-            mean(B_adoptar)))
-# Perdida esperada por la decision actual:
-perdida <- mean(pmax(B_no - B_adoptar, 0))
-cat(sprintf('perdida esperada de equivocarse (EVPI) = %.1f\\n', perdida))
+evpi <- function(costo) {                 # costo del programa en 'vidas equiv'
+  B_adoptar <- vidas - costo              # beneficio neto, por escenario
+  # Decision con la info actual: adoptar si E[B] > 0. El EVPI es la
+  # perdida esperada de esa decision frente a conocer RR de antemano.
+  decide <- if (mean(B_adoptar) > B_no) "adoptar" else "no adoptar"
+  perdida <- if (decide == "adoptar") mean(pmax(B_no - B_adoptar, 0))
+             else mean(pmax(B_adoptar - B_no, 0))
+  cat(sprintf('costo %3d: E[B neto] = %5.1f -> %s | P(equivocarse) = %.0f%% | EVPI = %.1f\\n',
+              costo, mean(B_adoptar), decide,
+              100*mean(if (decide == "adoptar") B_adoptar < 0 else B_adoptar > 0), perdida))
+}
+evpi(30)    # programa barato: ningun escenario plausible lo hace perder
+evpi(110)   # programa caro: la decision ya no es segura
 # Si un nuevo estudio cuesta mas que el EVPI, decidir ya es correcto;
 # si cuesta menos, la incertidumbre justifica esperar.`}
 />
@@ -117,7 +122,7 @@ coeficiente:
    "análisis de efectividad de una intervención".
 2. **El número que decide**: la magnitud en unidades del decisor:
    casos evitados, vidas, años de vida, millones de pesos. El NNT del
-   módulo 8 es el instrumento rey: "por cada 250 personas vacunadas a
+   módulo 5 es el instrumento rey: "por cada 250 personas vacunadas a
    domicilio, se evita una hospitalización".
 3. **La incertidumbre traducida**: no el IC sino su lectura. "En el peor
    escenario compatible con los datos, aun se evitaría una

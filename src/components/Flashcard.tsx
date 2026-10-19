@@ -62,13 +62,3 @@ export function Flashcard({ items, title }: FlashcardProps) {
     </div>
   );
 }
-
-export interface FlashcardsProps {
-  cards: FlashcardItem[];
-  title?: string;
-}
-
-/** Alias de compatibilidad: misma rejilla con prop `cards`. */
-export function Flashcards({ cards, title }: FlashcardsProps) {
-  return <Flashcard items={cards} title={title} />;
-}

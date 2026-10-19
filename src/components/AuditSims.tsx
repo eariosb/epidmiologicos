@@ -7,10 +7,10 @@ import {
   MN_METHODS,
   coverageAudit,
   entropy,
-  mulberry32,
   rmultinom,
   type MultinomMethodKey,
 } from '@/lib/multinomial';
+import { mulberry32, rbinomExact, rnorm } from '@/lib/rng';
 
 const BTN_MAIN =
   'rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white hover:bg-brand-700';
@@ -36,7 +36,7 @@ const METHOD_COLORS: Record<MultinomMethodKey, string> = {
 /* usan, para que la comparación se lea igual en todo el curso.        */
 /* ================================================================== */
 
-export interface AuditRow {
+interface AuditRow {
   label: string;
   color?: string;
   /** Nivel prometido por el procedimiento (p. ej. 0.95). */
@@ -48,7 +48,7 @@ export interface AuditRow {
   extra?: string;
 }
 
-export function AuditCard({ rows, title }: { rows: AuditRow[]; title?: ReactNode }) {
+function AuditCard({ rows, title }: { rows: AuditRow[]; title?: ReactNode }) {
   const verdict = (r: AuditRow) => {
     const tol = 2 * (r.se ?? 0);
     if (r.estimate - tol > r.nominal)
@@ -320,12 +320,6 @@ export function MultinomCIExplorer({ title }: { title?: ReactNode }) {
 /*    (M17 — meta-análisis, DerSimonian–Laird vs. Paule–Mandel)        */
 /* ================================================================== */
 
-function rnorm(rng: () => number) {
-  const u = Math.max(rng(), 1e-12);
-  const v = rng();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
-
 /** Q(τ²) = Σ w_i (y_i − ȳ_w)² con w_i = 1/(v_i + τ²); decreciente en τ². */
 function qOfTau2(y: number[], v: number[], t2: number) {
   let sw = 0, swy = 0;
@@ -572,11 +566,7 @@ export function BootstrapStress({ title }: { title?: ReactNode }) {
     setTimeout(() => {
       const rng = mulberry32(4242);
       const z = 1.96;
-      const bin = (nn: number, p: number) => {
-        let c = 0;
-        for (let i = 0; i < nn; i++) if (rng() < p) c++;
-        return c;
-      };
+      const bin = (nn: number, p: number) => rbinomExact(rng, nn, p);
       let covW = 0, covWH = 0, covB = 0, undef = 0;
       for (let r = 0; r < reps; r++) {
         const x1 = bin(nG, e1);
@@ -596,7 +586,8 @@ export function BootstrapStress({ title }: { title?: ReactNode }) {
           const seL = Math.sqrt(1 / A + 1 / Bc + 1 / Cc + 1 / D);
           if (Math.exp(lo - z * seL) <= orTrue && orTrue <= Math.exp(lo + z * seL)) covWH++;
         }
-        // Bootstrap percentil: remuestra dentro de cada grupo
+        // Bootstrap percentil: remuestra dentro de cada grupo; cada remuestra
+        // usa el log-OR con +0.5 para que exista aun con celdas en cero.
         const ors = new Float64Array(B);
         for (let j = 0; j < B; j++) {
           const bx1 = bin(nG, x1 / nG);
@@ -687,7 +678,7 @@ export function BootstrapStress({ title }: { title?: ReactNode }) {
                 nominal: 0.95,
                 estimate: res.covBoot,
                 se: Math.sqrt(res.covBoot * (1 - res.covBoot) / reps),
-                extra: `B = ${B} remuestras por réplica`,
+                extra: `B = ${B} remuestras por réplica (log-OR con +0.5)`,
               },
             ]}
           />
