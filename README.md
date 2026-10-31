@@ -305,11 +305,12 @@ pnpm start            # sirve el build
 | Comando | Qué verifica |
 |---|---|
 | `pnpm typecheck` | `tsc --noEmit` sin errores |
-| `pnpm test` | 262 tests Vitest (exact2x2, precision, multinomial, tasks, claims, RAG, hooks, componentes) |
+| `pnpm test` | 318 tests Vitest (exact2x2, precision, multinomial, tasks, claims, RAG, hooks, componentes) |
 | `pnpm check:mdx` | Los 30 archivos MDX (Curso I + Curso II) compilan con next-mdx-remote |
+| `pnpm test:layout` | Ninguna página desborda horizontalmente en escritorio ni en móvil (Playwright) |
 | `pnpm check:r` | Las salidas de las 112 celdas R coinciden con los snapshots de `tests/r-snapshots` |
 | `pnpm check:cells` | Lint de las celdas R (escapes, ids, hashes del manifiesto) |
-| `pnpm test:visual` | 132 capturas Playwright (30 páginas de módulo + home + anexos + bibliografía × escritorio/móvil, más test de desborde horizontal) |
+| `pnpm test:visual` | Capturas de página completa (herramienta de revisión, **no** compuerta): la página más larga puede variar unos píxeles al capturarse |
 
 Otras utilidades: `python scripts/run_all_r.py --update` regenera los
 snapshots de R; `pnpm exec playwright test --update-snapshots` regenera

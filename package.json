@@ -19,12 +19,13 @@
     "claims": "tsx scripts/build-claims.ts",
     "check:r": "python scripts/run_all_r.py --check",
     "check:r:update": "python scripts/run_all_r.py --update",
-    "test:visual": "playwright test",
-    "test:visual:update": "playwright test --update-snapshots",
-    "qa": "pnpm typecheck && pnpm build && pnpm test && pnpm check:mdx && pnpm check:render && pnpm check:glossary && pnpm check:cells && pnpm check:r && pnpm test:visual",
+    "test:visual": "playwright test tests/visual/modules.spec.ts",
+    "test:visual:update": "playwright test tests/visual/modules.spec.ts --update-snapshots",
+    "qa": "pnpm typecheck && pnpm build && pnpm test && pnpm check:mdx && pnpm check:render && pnpm check:glossary && pnpm check:cells && pnpm check:r && pnpm test:layout",
     "precompute": "python scripts/precompute_r.py",
     "precompute:check": "python scripts/lint_cells.py",
-    "check:cells": "python scripts/lint_cells.py"
+    "check:cells": "python scripts/lint_cells.py",
+    "test:layout": "playwright test tests/visual/overflow.spec.ts"
   },
   "dependencies": {
     "@codemirror/language": "^6.10.0",
