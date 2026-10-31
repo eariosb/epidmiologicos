@@ -1,4 +1,7 @@
+'use client';
+
 import type { ReactNode } from 'react';
+import { currentModuleSlug, track } from '@/lib/telemetry';
 
 /**
  * Acordeón colapsado con la traducción SAS del ejemplo R que precede.
@@ -7,8 +10,16 @@ import type { ReactNode } from 'react';
  * es código de referencia para correr en SAS local / SAS OnDemand.
  */
 export function SasBlock({ code, note }: { code: string; note?: ReactNode }) {
+  const blockId = code.split('\n').find((l) => l.trim().length > 0)?.trim().slice(0, 60) ?? 'sas';
   return (
-    <details className="my-3 rounded border border-slate-300 bg-slate-50">
+    <details
+      className="my-3 rounded border border-slate-300 bg-slate-50"
+      onToggle={(e) => {
+        if (e.currentTarget.open) {
+          track('sas-expand', { blockId }, currentModuleSlug());
+        }
+      }}
+    >
       <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">
         Ver equivalente en SAS
         <span className="ml-2 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-normal italic text-slate-600">

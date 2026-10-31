@@ -1,6 +1,9 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { GLOSSARY, GLOSSARY_ALIASES, glossaryAnchor } from '@/lib/glossary';
+import { currentModuleSlug, track } from '@/lib/telemetry';
 
 interface TermProps {
   /** Clave del glosario de siglas (src/lib/glossary.ts). */
@@ -19,11 +22,23 @@ interface TermProps {
  * CSS puro — sin estado, funciona en SSR y en lectores de pantalla vía
  * el sr-only y el focus.
  */
+// Un term-view por clave cada 2 s como máximo (throttle del doc 03 §3).
+const lastTracked = new Map<string, number>();
+
+function trackTerm(key: string) {
+  const now = Date.now();
+  if (now - (lastTracked.get(key) ?? 0) < 2000) return;
+  lastTracked.set(key, now);
+  track('term-view', { key }, currentModuleSlug());
+}
+
 export function Term({ k: rawK, tip, children }: TermProps) {
   const k = rawK ? (GLOSSARY_ALIASES[rawK] ?? rawK) : rawK;
   const text = tip ?? (k ? GLOSSARY[k] : undefined);
   const label = children ?? rawK;
   const href = k && k in GLOSSARY ? `/glosario#${glossaryAnchor(k)}` : null;
+  const termKey = k ?? (typeof label === 'string' ? label.slice(0, 60) : 'term');
+  const onView = () => trackTerm(termKey);
   const inner = (
     <>
       {label}
@@ -47,6 +62,8 @@ export function Term({ k: rawK, tip, children }: TermProps) {
     return (
       <Link
         href={href}
+        onMouseEnter={onView}
+        onFocus={onView}
         className={`${className} text-inherit no-underline hover:text-inherit focus-visible:text-inherit`}
       >
         {inner}
@@ -54,7 +71,7 @@ export function Term({ k: rawK, tip, children }: TermProps) {
     );
   }
   return (
-    <span tabIndex={0} className={className}>
+    <span tabIndex={0} className={className} onMouseEnter={onView} onFocus={onView}>
       {inner}
     </span>
   );

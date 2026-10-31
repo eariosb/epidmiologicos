@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
+import { contentOptIn, track } from '@/lib/telemetry';
 
 export function QuestionsPanel() {
   const { session, addQuestion, resolveQuestion, removeQuestion } = useSession();
@@ -14,6 +15,11 @@ export function QuestionsPanel() {
     const text = draft.trim();
     if (!text) return;
     await addQuestion(text);
+    track('chat-question', {
+      len: text.length,
+      source: 'panel',
+      ...(contentOptIn() ? { text } : {}),
+    });
     setDraft('');
   };
 

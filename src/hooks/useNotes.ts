@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { get, set, del, keys, createStore } from 'idb-keyval';
+import { currentModuleSlug, track } from '@/lib/telemetry';
 
 const NOTES_STORE = createStore('mlm-notes', 'notes');
 
@@ -60,6 +61,7 @@ export function useNotes(moduleSlug?: string) {
         updatedAt: now,
       };
       await set(note.id, note, NOTES_STORE);
+      track('note-save', { len: input.content.length }, input.moduleSlug ?? currentModuleSlug());
       await refresh();
       return note;
     },
@@ -76,6 +78,7 @@ export function useNotes(moduleSlug?: string) {
         updatedAt: Date.now(),
       };
       await set(id, updated, NOTES_STORE);
+      track('note-save', { len: updated.content.length }, updated.moduleSlug ?? currentModuleSlug());
       await refresh();
     },
     [refresh],

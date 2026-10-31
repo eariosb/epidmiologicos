@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { CircleHelp } from 'lucide-react';
 import clsx from 'clsx';
 import { MathText } from '@/lib/math-text';
+import { useTelemetry } from '@/components/TelemetryGate';
+import { currentModuleSlug } from '@/lib/telemetry';
 
 export interface QuizProps {
   question: string;
@@ -25,6 +27,20 @@ export interface QuizProps {
 export function Quiz({ question, options, correctIndex, explanation, optionNotes }: QuizProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const groupName = useId();
+  const attempts = useRef(0);
+  const { track } = useTelemetry();
+
+  const handleVerify = () => {
+    attempts.current += 1;
+    setSubmitted(true);
+    track('quiz-answer', {
+      q: question.slice(0, 120),
+      chosen: selected,
+      correct: selected === correctIndex,
+      attempts: attempts.current,
+    }, currentModuleSlug());
+  };
 
   const isCorrect = submitted && selected === correctIndex;
 
@@ -49,7 +65,7 @@ export function Quiz({ question, options, correctIndex, explanation, optionNotes
           >
             <input
               type="radio"
-              name={question}
+              name={groupName}
               checked={selected === i}
               onChange={() => setSelected(i)}
               className="mt-0.5 accent-brand-600"
@@ -70,7 +86,7 @@ export function Quiz({ question, options, correctIndex, explanation, optionNotes
         <button
           type="button"
           disabled={selected === null}
-          onClick={() => setSubmitted(true)}
+          onClick={handleVerify}
           className="mt-4 rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           Verificar

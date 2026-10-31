@@ -38,7 +38,15 @@ export function BlackboardAssistant({ onExecuteR, canvasRef }: BlackboardAssista
     if (!input.trim() || status === 'streaming') return;
     const imageBlob = await canvasRef?.current?.getImage?.();
     const imageDataUrl = imageBlob ? await blobToDataUrl(imageBlob) : null;
-    await ask(mode, input.trim(), imageDataUrl);
+    const text = input.trim();
+    // Puente con la telemetría de la app (ft:track); si no hay consentimiento
+    // la app lo ignora, y el texto se descarta salvo opt-in de contenido.
+    window.dispatchEvent(
+      new CustomEvent('ft:track', {
+        detail: { kind: 'chat-question', payload: { len: text.length, mode, text } },
+      }),
+    );
+    await ask(mode, text, imageDataUrl);
     setInput('');
   };
 

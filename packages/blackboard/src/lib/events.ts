@@ -79,6 +79,19 @@ export async function logEvent(
     ...(data ? { data } : {}),
     ...(currentSessionId ? { sessionId: currentSessionId } : {}),
   };
+  // Espejo hacia la telemetría de campo (si la app la tiene activa la
+  // recoge; si no, es un CustomEvent sin listeners — coste nulo).
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(
+        new CustomEvent('ft:track', {
+          detail: { kind: 'board-scene', payload: { action: kind } },
+        }),
+      );
+    } catch {
+      // noop — la telemetría nunca debe romper el log local
+    }
+  }
   if (!store) {
     memory.push(ev);
     if (memory.length > MAX_EVENTS) memory = memory.slice(-MAX_EVENTS);

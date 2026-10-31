@@ -49,6 +49,7 @@ import { TestSelector, PValueLab } from '@/components/TestSims';
 import { SimReset } from '@/components/SimReset';
 import { ToolCard } from '@/components/ToolCard';
 import { Term } from '@/components/Term';
+import { SimTracker } from '@/components/SimTracker';
 import { MRef } from '@/components/MRef';
 import { BradfordHill, EpiTable } from '@/components/CourseBlocks';
 import { ConductStudy, ConductStep } from '@/components/ConductStudy';
@@ -103,14 +104,27 @@ function MdxInlineCode({ children }: { children?: ReactNode }) {
   );
 }
 
-/** Envuelve un interactivo con el botón "Reiniciar" (remonta el estado). */
+// 'TwoByTwoExplorer' → 'two-by-two-explorer'; 'KaplanMeierSim' → 'kaplan-meier'
+function simId(name: string): string {
+  return name
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/-sim$/, '');
+}
+
+/** Envuelve un interactivo con telemetría (SimTracker) + botón "Reiniciar". */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const withReset = (C: ComponentType<any>) =>
   function Resettable(props: Record<string, unknown>) {
+    // Todos los interactivos son function declarations nombradas: C.name es estable.
+    const name = (C as { name?: string }).name ?? 'sim';
     return (
-      <SimReset>
-        <C {...props} />
-      </SimReset>
+      <SimTracker sim={simId(name)}>
+        <SimReset>
+          <C {...props} />
+        </SimReset>
+      </SimTracker>
     );
   };
 

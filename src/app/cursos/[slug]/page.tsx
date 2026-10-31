@@ -23,6 +23,7 @@ import { RemoteCursor } from '@/components/RemoteCursor';
 import { BlackboardContextBridge } from '@cursos/blackboard';
 import type { ModuleContext } from '@cursos/blackboard';
 import { EPI_ASSISTANT_PROFILE } from '@/config/assistant';
+import { ModuleSurvey } from '@/components/ModuleSurvey';
 
 export function generateStaticParams() {
   return getAllModules().map((mod) => ({ slug: mod.meta.slug }));
@@ -114,6 +115,8 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
               {entry.meta.attr}
             </p>
           )}
+
+          <ModuleSurvey slug={entry.meta.slug} />
 
           <nav aria-label="Navegación entre módulos" className="mt-12 flex justify-between gap-4 border-t border-ink-200 pt-6">
             {prev ? (

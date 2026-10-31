@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ClipboardCheck } from 'lucide-react';
+import { currentModuleSlug, track } from '@/lib/telemetry';
 
 const INPUT =
   'w-full rounded border border-ink-200 px-2.5 py-1.5 text-sm text-ink-800 focus:border-brand-400 focus:outline-none bg-white';
@@ -83,6 +84,13 @@ export function DecisionCard({ id, title, panelId, options }: DecisionCardProps)
       localStorage.setItem(key, JSON.stringify({ ...s, panel }));
       setSaved(s.savedAt!);
     } catch { /* storage no disponible */ }
+    // Solo metadatos de la decisión — nunca el texto libre del memo.
+    track('decision-memo', {
+      cardId: id,
+      decision: opts.indexOf(st.decision),
+      verdict: panel?.verdict ?? null,
+      nnt: panel ? panel.nnt : null,
+    }, currentModuleSlug());
   };
 
   const chip =

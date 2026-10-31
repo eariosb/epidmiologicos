@@ -2,6 +2,7 @@
 
 import { type ReactNode, useState } from 'react';
 import { SimGuide } from '@/components/SimBits';
+import { currentModuleSlug, track } from '@/lib/telemetry';
 
 const FIG = 'my-6 rounded border border-ink-200 bg-white p-4 shadow-sm';
 const CAPTION = 'mb-2 text-sm font-semibold text-ink-800';
@@ -28,6 +29,8 @@ interface LangTabsProps {
   trap?: ReactNode;
   guide?: ReactNode;
   note?: ReactNode;
+  /** Si se pasa, cada cambio de pestaña emite toolcard-open {task, lang}. */
+  trackTask?: string;
 }
 
 /**
@@ -46,6 +49,7 @@ export function LangTabs({
   trap,
   guide,
   note,
+  trackTask,
 }: LangTabsProps) {
   const [lang, setLang] = useState<Lang>('r');
   const code: Record<Lang, string | undefined> = {
@@ -62,7 +66,12 @@ export function LangTabs({
         {available.map((k) => (
           <button
             key={k}
-            onClick={() => setLang(k)}
+            onClick={() => {
+              setLang(k);
+              if (trackTask) {
+                track('toolcard-open', { task: trackTask, lang: k }, currentModuleSlug());
+              }
+            }}
             className={
               lang === k
                 ? 'rounded bg-brand-600 px-3 py-1 text-xs font-medium text-white'

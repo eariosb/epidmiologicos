@@ -260,6 +260,7 @@ export function ToolCard({ task }: { task: keyof typeof TASKS }) {
       sasCode={t.sas}
       pyCode={t.py}
       trap={t.trap}
+      trackTask={task}
     />
   );
 }

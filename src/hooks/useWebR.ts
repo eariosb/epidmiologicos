@@ -12,8 +12,8 @@ interface UseRCellResult {
   /** Global WebR boot status: idle | loading | ready | error */
   webRStatus: ReturnType<typeof useWebRStatus>['status'];
   webRError: string | null;
-  /** Run the given code */
-  run: (code: string) => Promise<void>;
+  /** Run the given code; resolves to the result (never rejects). */
+  run: (code: string) => Promise<RRunResult>;
 }
 
 /**
@@ -33,9 +33,12 @@ export function useRCell(): UseRCellResult {
         const res = await runRCode(code);
         setResult(res);
         setState(res.error ? 'error' : 'done');
+        return res;
       } catch (err) {
-        setResult({ text: '', error: err instanceof Error ? err.message : String(err), plots: [] });
+        const fail = { text: '', error: err instanceof Error ? err.message : String(err), plots: [] };
+        setResult(fail);
         setState('error');
+        return fail;
       }
     },
     [ensureStarted]

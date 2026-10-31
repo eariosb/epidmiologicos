@@ -8,6 +8,8 @@ import { r as rMode } from '@codemirror/legacy-modes/mode/r';
 import { toPng } from 'html-to-image';
 import { tokens } from '@/lib/tokens';
 import { useRCell } from '@/hooks/useWebR';
+import { useTelemetry } from '@/components/TelemetryGate';
+import { currentModuleSlug } from '@/lib/telemetry';
 import { ConsoleOutput } from './ConsoleOutput';
 import { saveCapture } from '@/lib/session-store';
 import { sendToBlackboard } from '@/lib/send-to-blackboard';
@@ -27,6 +29,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
   const [open, setOpen] = useState(defaultOpen);
   const [outOpen, setOutOpen] = useState(true);
   const { state, result, webRStatus, webRError, run } = useRCell();
+  const { track, contentOptIn } = useTelemetry();
   const cellRef = useRef<HTMLDivElement>(null);
   const [capturing, setCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
@@ -40,6 +43,19 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
 
   const isRunning = state === 'running';
   const isBooting = webRStatus === 'loading' && isRunning;
+
+  const handleRun = async () => {
+    setOutOpen(true);
+    const t0 = performance.now();
+    const res = await run(code);
+    track('rcell-run', {
+      cellId: id,
+      ok: !res.error,
+      durationMs: Math.round(performance.now() - t0),
+      codeLen: code.length,
+      ...(contentOptIn ? { code } : {}),
+    }, currentModuleSlug());
+  };
 
   const handleCapture = async () => {
     if (!cellRef.current) return;
@@ -192,7 +208,7 @@ export function RCell({ id, title, code: initialCode, defaultOpen = false }: Rea
       <div className="flex items-center gap-2 border-t border-ink-200 bg-white px-3 py-2">
         <button
           type="button"
-          onClick={() => { setOutOpen(true); run(code); }}
+          onClick={() => { void handleRun(); }}
           disabled={isRunning}
           className="inline-flex items-center gap-1.5 rounded bg-brand-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >

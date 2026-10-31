@@ -3,6 +3,7 @@ import { SCHEMA_VERSIONS } from '@cursos/blackboard/persistence';
 import { logEvent, setEventSession } from '@cursos/blackboard';
 import { deleteChatRecord } from './chat-store';
 import { makeThumbnail } from './thumbnail';
+import { currentModuleSlug, track } from './telemetry';
 import {
   migrateCapture,
   migrateSession,
@@ -306,6 +307,7 @@ export async function saveCapture(
     } catch (err) {
       throw friendlyStorageError(err);
     }
+    track('capture', { type: full.type }, currentModuleSlug());
     return full;
   });
 }
