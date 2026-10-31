@@ -24,6 +24,7 @@ import { BlackboardContextBridge } from '@cursos/blackboard';
 import type { ModuleContext } from '@cursos/blackboard';
 import { EPI_ASSISTANT_PROFILE } from '@/config/assistant';
 import { ModuleSurvey } from '@/components/ModuleSurvey';
+import { TermTracker } from '@/components/TermTracker';
 
 export function generateStaticParams() {
   return getAllModules().map((mod) => ({ slug: mod.meta.slug }));
@@ -94,6 +95,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
             )}
           </header>
 
+          <TermTracker>
           <div className="prose prose-ink max-w-none prose-headings:scroll-mt-20 prose-headings:text-ink-900 prose-h2:mt-10 prose-h2:border-t prose-h2:border-ink-100 prose-h2:pt-7 prose-blockquote:border-brand-300 prose-blockquote:font-display prose-blockquote:text-ink-700 prose-a:text-brand-600 prose-code:rounded prose-code:bg-code prose-code:text-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:bg-code prose-pre:text-gray-100">
             <MDXRemote
               source={source}
@@ -109,6 +111,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
               }}
             />
           </div>
+          </TermTracker>
 
           {entry.meta.attr && (
             <p className="mt-8 border-t border-ink-100 pt-3 text-xs italic text-ink-500">
