@@ -145,7 +145,10 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
           </nav>
         </article>
 
-        <div id="bb-toc" className="hidden shrink-0 xl:block">
+        {/* La vía del índice se reserva desde el servidor: si el ancho
+              aparece solo al hidratar, el artículo se estrecha y la página
+              salta ~2.700 px (CLS medido en el módulo 00). */}
+        <div id="bb-toc" className="hidden shrink-0 xl:block xl:w-56">
           <TableOfContents />
         </div>
       </div>

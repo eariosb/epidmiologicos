@@ -496,7 +496,26 @@ export function DataQualityPanel({
       </div>
 
       {error && <p className="text-xs text-danger-600">No se pudo cargar {spec.file}: {error}</p>}
-      {!findings && !error && <p className="text-xs text-ink-500">Auditando {spec.file}…</p>}
+      {!findings && !error && (
+        // Esqueleto con la altura del informe real: el CSV se lee en el
+        // cliente y, sin reserva, el panel crece ~650 px (CLS en el módulo 00).
+        <div aria-hidden className="min-h-[640px] space-y-2">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 rounded border border-ink-200 bg-white px-3 py-2"
+            >
+              <div className="mt-1 h-4 w-4 shrink-0 rounded border border-ink-200 bg-ink-50" />
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="h-3 w-2/3 rounded bg-ink-100" />
+                <div className="h-2.5 w-full rounded bg-ink-50" />
+                <div className="h-2.5 w-4/5 rounded bg-ink-50" />
+              </div>
+            </div>
+          ))}
+          <p className="text-xs text-ink-500">Auditando {spec.file}…</p>
+        </div>
+      )}
 
       {findings && (
         <ul className="space-y-2">
