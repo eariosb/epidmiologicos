@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -52,7 +53,9 @@ def run(code: str, plotdir: pathlib.Path) -> subprocess.CompletedProcess:
     pattern = (plotdir.resolve() / 'plot-%d.png').as_posix()
     wrapped = (
         'options(useFancyQuotes = FALSE)\n'
-        f'png("{pattern}", width = {WIDTH}, height = {HEIGHT}, res = {RES})\n'
+        # type = "cairo" fija PNG RGB; con la paleta por defecto de R >= 4.6
+        # los degradados de los mapas de calor muestran bandas.
+        f'png("{pattern}", width = {WIDTH}, height = {HEIGHT}, res = {RES}, type = "cairo")\n'
         + code
         + '\ninvisible(dev.off())\n'
     )
@@ -64,6 +67,21 @@ def run(code: str, plotdir: pathlib.Path) -> subprocess.CompletedProcess:
                               encoding='utf-8', errors='replace', timeout=600, cwd='public/data')
     finally:
         os.unlink(path)
+
+
+def rmtree_tolerant(path: pathlib.Path) -> None:
+    """Borra un directorio ignorando bloqueos de Windows (antivirus, OneDrive).
+
+    Si un archivo queda bloqueado se reintenta; si persiste, se deja el
+    directorio y el siguiente precompute lo reescribe."""
+    if not path.exists():
+        return
+    for _ in range(5):
+        shutil.rmtree(path, ignore_errors=True)
+        if not path.exists():
+            return
+        time.sleep(0.4)
+    print(f'AVISO: no se pudo borrar {path} (archivo bloqueado); se reutiliza')
 
 
 def main() -> int:
@@ -85,8 +103,7 @@ def main() -> int:
                 continue
             slug = cid.replace('/', '-')
             plotdir = OUTDIR / slug
-            if plotdir.exists():
-                shutil.rmtree(plotdir)
+            rmtree_tolerant(plotdir)
             res = run(code, plotdir)
             plots = sorted(plotdir.glob('plot-*.png'), key=lambda p: int(p.stem.split('-')[1]))
             plots = [p for p in plots if p.stat().st_size > 1500]   # paginas vacias
@@ -94,8 +111,8 @@ def main() -> int:
                 fails += 1
                 print(f'FALLA {cid}: {res.stderr.strip().splitlines()[-1:] }')
                 continue
-            if not plots and plotdir.exists():
-                shutil.rmtree(plotdir)
+            if not plots:
+                rmtree_tolerant(plotdir)
             manifest[cid] = {
                 'hash': fnv1a(code),
                 'console': para_mostrar(res.stdout),

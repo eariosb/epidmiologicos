@@ -25,7 +25,10 @@ RSCRIPT = (
 SNAPDIR = pathlib.Path('tests/r-snapshots')
 
 CELL = re.compile(
-    r'<(?P<tag>RCell|LabExercise)\b(?P<attrs>[^>]*?)code=\{`\n?(?P<code>.*?)`\}',
+    # attrs admite JSX (title={<>... <Term/> ...</>}): avanza sin cruzar el
+    # cierre de la etiqueta ni el inicio de otra celda.
+    r'<(?P<tag>RCell|LabExercise)\b(?P<attrs>(?:(?!<RCell|<LabExercise|code=\{`).)*?)'
+    r'code=\{`\n?(?P<code>.*?)`\}',
     re.S)
 IDATTR = re.compile(r'\bid="([^"]+)"')
 
@@ -77,7 +80,41 @@ def run_cell(code: str) -> subprocess.CompletedProcess:
         os.unlink(path)
 
 
+def check_packages() -> int:
+    """Falla temprano, con un mensaje accionable, si falta un paquete de R.
+
+    Sin esto, una instalacion de R sin `survival` produce una decena de
+    "FAIL" de celdas que parecen errores del contenido cuando el problema
+    es el entorno."""
+    # Paquetes que alguna celda carga de verdad. ColOpenData solo aparece
+    # en comentarios (no está en WebR), así que no se exige.
+    needed = ['survival', 'epiR']
+    expr = ';'.join(f'cat(if (requireNamespace("{p}", quietly = TRUE)) "" else "{p} ")'
+                    for p in needed)
+    try:
+        r = subprocess.run([RSCRIPT, '--vanilla', '-e', expr], capture_output=True,
+                           text=True, encoding='utf-8', errors='replace', timeout=180)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        print(f'No se pudo ejecutar Rscript ({RSCRIPT}): {exc}')
+        print('Instala R o define RSCRIPT=/ruta/a/Rscript.')
+        return 2
+    if r.returncode != 0:
+        print(f'Rscript no respondio ({RSCRIPT}): {(r.stderr or "").strip()[:300]}')
+        print('Revisa la instalacion de R o define RSCRIPT=/ruta/a/Rscript.')
+        return 2
+    missing = r.stdout.split()
+    if missing:
+        print('Faltan paquetes de R: ' + ', '.join(missing))
+        print('Instalalos con:  Rscript -e '
+              f'"install.packages(c({", ".join(repr(p) for p in missing)}))"')
+        return 2
+    return 0
+
+
 def main() -> int:
+    early = check_packages()
+    if early:
+        return early
     args = [a for a in sys.argv[1:]]
     MODE = 'run'
     if '--check' in args:
