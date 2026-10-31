@@ -6,6 +6,7 @@ import { tokens } from '@/lib/tokens';
 import { SimGuide, SimLegend } from '@/components/SimBits';
 import { normCdf } from '@/lib/exact2x2';
 import { pchisqUpper } from '@/lib/precision';
+import { diagnostic, kmCurve, rocBinormal, twoByTwo } from '@/lib/epi-formulas';
 import { mulberry32, rbinom, rbinomExact, rpois } from '@/lib/rng';
 
 const BTN_MAIN =
@@ -61,38 +62,17 @@ export function TwoByTwoExplorer({
   const [cells, setCells] = useState({ a, b, c, d });
   const [pe, setPe] = useState(0.4); // prevalencia de exposición en la población
   const { a: A, b: B, c: C, d: D } = cells;
+  const m = twoByTwo({ a: A, b: B, c: C, d: D });
+  const { rr, or, rd, nnt } = m;
   const n1 = A + B;
   const n0 = C + D;
-  const m1 = A + C;
-  const n = n1 + n0;
-
-  const r1 = n1 > 0 ? A / n1 : NaN;
-  const r0 = n0 > 0 ? C / n0 : NaN;
-  const rr = r0 > 0 ? r1 / r0 : NaN;
-  const or = B * C > 0 ? (A * D) / (B * C) : NaN;
-  const rd = r1 - r0;
-  const nnt = rd !== 0 ? 1 / Math.abs(rd) : NaN;
-  const pra = Number.isFinite(rr) && rr > 0 ? (rr - 1) / rr : NaN;
-  const prap =
-    Number.isFinite(rr) && rr > 0 ? (pe * (rr - 1)) / (1 + pe * (rr - 1)) : NaN;
-  // IC95% (método logarítmico de Woolf)
-  const seLnRR =
-    A > 0 && B > 0 && C > 0 && D > 0
-      ? Math.sqrt(B / (A * n1) + D / (C * n0))
-      : NaN;
-  const seLnOR =
-    A > 0 && B > 0 && C > 0 && D > 0
-      ? Math.sqrt(1 / A + 1 / B + 1 / C + 1 / D)
-      : NaN;
-  const rrLo = Number.isFinite(rr) ? Math.exp(Math.log(rr) - 1.96 * seLnRR) : NaN;
-  const rrHi = Number.isFinite(rr) ? Math.exp(Math.log(rr) + 1.96 * seLnRR) : NaN;
-  const orLo = Number.isFinite(or) ? Math.exp(Math.log(or) - 1.96 * seLnOR) : NaN;
-  const orHi = Number.isFinite(or) ? Math.exp(Math.log(or) + 1.96 * seLnOR) : NaN;
-  // χ² de Pearson
-  const chi2 =
-    n > 0 && n1 > 0 && n0 > 0 && m1 > 0 && n - m1 > 0
-      ? (n * Math.pow(A * D - B * C, 2)) / (n1 * n0 * m1 * (n - m1))
-      : NaN;
+  const r1 = m.riskExposed;
+  const r0 = m.riskUnexposed;
+  const [rrLo, rrHi] = m.ciRR;
+  const [orLo, orHi] = m.ciOR;
+  const pra = m.pafExposed;
+  const prap = m.pafPopulation(pe);
+  const chi2 = m.chi2;
   const pChi = Number.isFinite(chi2) ? pchisqUpper(chi2, 1) : NaN;
 
   const W = 340;
@@ -547,17 +527,6 @@ const LEUK_PLACEBO: [number, number][] = [
   [15, 1], [17, 1], [22, 1], [23, 1],
 ];
 
-function kmCurve(data: [number, number][]): { t: number; s: number; d: number; nrisk: number }[] {
-  const times = [...new Set(data.filter(([, st]) => st === 1).map(([t]) => t))].sort((x, y) => x - y);
-  let s = 1;
-  return times.map((t) => {
-    const nrisk = data.filter(([tt]) => tt >= t).length;
-    const d = data.filter(([tt, st]) => tt === t && st === 1).length;
-    s *= 1 - d / nrisk;
-    return { t, s, d, nrisk };
-  });
-}
-
 export function KaplanMeierSim({ title }: { title?: ReactNode }) {
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -797,12 +766,7 @@ export function DiagnosticTestExplorer({ title }: { title?: ReactNode }) {
   const [prev, setPrev] = useState(0.02);
   const N = 10000;
 
-  const vp = N * prev * se;
-  const fn = N * prev * (1 - se);
-  const fp = N * (1 - prev) * (1 - sp);
-  const vn = N * (1 - prev) * sp;
-  const ppv = vp / (vp + fp);
-  const npv = vn / (vn + fn);
+  const { vp, fn, fp, vn, ppv, npv } = diagnostic(se, sp, prev, N);
 
   const W = 340;
   const H = 130;
@@ -1759,10 +1723,10 @@ export function RocExplorer({ title }: { title?: ReactNode }) {
 
   // Dos normales: sanos N(0,1), enfermos N(separ,1)
   const t = thr * 4 - 2; // umbral en desv. estándar desde el centro sano
-  const sens = 1 - normCdf(t - separ);
-  const fpr = 1 - normCdf(t);
+  const roc = rocBinormal(separ);
+  const { sens, fpr } = roc.at(t);
   const sp = 1 - fpr;
-  const auc = normCdf(separ / Math.SQRT2);
+  const auc = roc.auc;
 
   const W = 460;
   const H = 180;
