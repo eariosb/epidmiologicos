@@ -36,6 +36,7 @@ const components = {
   CityLab: stub,
   Profundiza: stub, SalaDeMaquinas: stub,
   ExactTestExplorer: stub, ExactPowerExplorer: stub, CorrectionExplorer: stub,
+  FisherExtremesLab: stub,
   CIMethodsExplorer: stub, PrecisionSampleSizeExplorer: stub,
   SampleSizeExplorer: stub,
   MultinomCIExplorer: stub, Tau2Audit: stub,

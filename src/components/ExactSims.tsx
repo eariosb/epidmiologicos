@@ -388,13 +388,17 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
 /* 1b. FisherExtremesLab: el valor p como suma literal de tablas         */
 /* ================================================================== */
 
-type ExtremeDef = 'minlike' | 'central' | 'left' | 'right';
+/** Sidedness of the contrast: the question being asked. */
+type Sided = 'two' | 'left' | 'right';
+/** How R computes the two-sided p-value: only meaningful when sided = 'two'. */
+type TwoMethod = 'minlike' | 'central';
+type ResolvedDef = TwoMethod | 'left' | 'right';
 
-const DEF_LABEL: Record<ExtremeDef, string> = {
-  minlike: 'P(tabla) ≤ P(obs.)',
-  central: 'central · 2 × cola menor',
-  left: 'cola x₁ ≤ obs.',
-  right: 'cola x₁ ≥ obs.',
+const DEF_LABEL: Record<ResolvedDef, string> = {
+  minlike: 'bilateral · minlike',
+  central: 'bilateral · central',
+  left: 'unilateral izquierda',
+  right: 'unilateral derecha',
 };
 
 const STAGE_LABELS = [
@@ -425,6 +429,12 @@ const SIM_BINS = 25;
  * binomials), letting the student confront the conditional vs.
  * unconditional contrast head-on.
  *
+ * Two orthogonal axes, kept apart on purpose: the CONTRAST (bilateral
+ * or one-sided) is the question; the METHOD (minlike or central) is only
+ * how R computes the bilateral p-value. «central» doubles the smaller
+ * tail instead of summing a set of tables, so its region is exactly that
+ * tail, not a union of both.
+ *
  * Workflow: the user types a table into the draft inputs and presses
  * «Analizar tabla»; only then is the analysis computed and the staged
  * reveal played.
@@ -433,11 +443,14 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
   const [draft, setDraft] = useState<TableInput>({ x1: 7, n1: 34, x2: 1, n2: 34 });
   const [t, setT] = useState<TableInput>({ x1: 7, n1: 34, x2: 1, n2: 34 });
   const [stage, setStage] = useState(3);
-  const [def, setDef] = useState<ExtremeDef>('minlike');
+  const [sided, setSided] = useState<Sided>('two');
+  const [method, setMethod] = useState<TwoMethod>('minlike');
   const [view, setView] = useState<'exacta' | 'empirica'>('exacta');
   const [sel, setSel] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [seed, setSeed] = useState(0);
+
+  const def: ResolvedDef = sided === 'two' ? method : sided;
 
   const dirty =
     draft.x1 !== t.x1 || draft.n1 !== t.n1 || draft.x2 !== t.x2 || draft.n2 !== t.n2;
@@ -459,22 +472,32 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
   const iObs = t.x1 - lo;
   const pObs = iObs >= 0 && iObs < probs.length ? probs[iObs] : 0;
 
+  const leftTail = probs.reduce((acc, p, i) => acc + (xs[i] <= t.x1 ? p : 0), 0);
+  const rightTail = probs.reduce((acc, p, i) => acc + (xs[i] >= t.x1 ? p : 0), 0);
+  // «central» splits alpha into two equal tails, so its p is twice the
+  // smaller one. The highlighted set is therefore THAT tail: doubling a
+  // tail is not the same operation as summing a set of tables.
+  const smallSide: 'left' | 'right' = leftTail <= rightTail ? 'left' : 'right';
+
   const isExtreme = (x: number, p: number) => {
     if (def === 'left') return x <= t.x1;
     if (def === 'right') return x >= t.x1;
-    // «central» (exact2x2): región = unión de ambas colas; el valor p es
-    // el doble de la cola menor, no la suma de las alturas de la región.
-    if (def === 'central') return x <= t.x1 || x >= t.x1;
+    if (def === 'central') return smallSide === 'left' ? x <= t.x1 : x >= t.x1;
     return p <= pObs * (1 + 1e-9); // minlike: al menos tan improbable
   };
   const extremes = xs.map((x, i) => isExtreme(x, probs[i]));
-  const leftTail = probs.reduce((acc, p, i) => acc + (xs[i] <= t.x1 ? p : 0), 0);
-  const rightTail = probs.reduce((acc, p, i) => acc + (xs[i] >= t.x1 ? p : 0), 0);
+  const pMinlike = probs.reduce(
+    (acc, p) => acc + (p <= pObs * (1 + 1e-9) ? p : 0),
+    0,
+  );
   const pVal =
     def === 'central'
       ? centralP(leftTail, rightTail)
       : probs.reduce((acc, p, i) => acc + (extremes[i] ? p : 0), 0);
   const nExt = extremes.filter(Boolean).length;
+  // Share of the p-value carried by each listed table: with «central»
+  // the tail mass is doubled, so a bar of mass P accounts for P / (p/2).
+  const shareBase = def === 'central' ? pVal / 2 : pVal;
 
   // Empirical view: K draws under the pooled-proportion two-binomial
   // null. The |p̂1 − p̂2| histogram approximates the UNCONDITIONAL
@@ -593,25 +616,54 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
       </div>
 
       {view === 'exacta' && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-600">
-          <span className="font-medium">Extremo:</span>
-          {([
-            ['minlike', 'P(tabla) ≤ P(obs.)'],
-            ['central', 'central · 2 × cola menor'],
-            ['left', `cola x₁ ≤ ${t.x1}`],
-            ['right', `cola x₁ ≥ ${t.x1}`],
-          ] as [ExtremeDef, string][]).map(([k, label]) => (
-            <label key={k} className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="fisher-extreme-def"
-                checked={def === k}
-                onChange={() => setDef(k)}
-                className="accent-brand-600"
-              />
-              {label}
-            </label>
-          ))}
+        <div className="mt-2 space-y-1.5 text-xs text-ink-600">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="font-medium">Contraste:</span>
+            {([
+              ['two', 'Bilateral (dos colas)'],
+              ['left', `Unilateral izquierda · x₁ ≤ ${t.x1}`],
+              ['right', `Unilateral derecha · x₁ ≥ ${t.x1}`],
+            ] as [Sided, string][]).map(([k, label]) => (
+              <label key={k} className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="fisher-sided"
+                  checked={sided === k}
+                  onChange={() => setSided(k)}
+                  className="accent-brand-600"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+          <div
+            className={`flex flex-wrap items-center gap-x-4 gap-y-2 transition-opacity ${
+              sided === 'two' ? '' : 'opacity-45'
+            }`}
+          >
+            <span className="font-medium">Método bilateral:</span>
+            {([
+              ['minlike', 'minlike · suma las tablas con P ≤ P(obs.)'],
+              ['central', 'central · duplica la cola menor'],
+            ] as [TwoMethod, string][]).map(([k, label]) => (
+              <label key={k} className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="fisher-two-method"
+                  checked={method === k}
+                  disabled={sided !== 'two'}
+                  onChange={() => setMethod(k)}
+                  className="accent-brand-600"
+                />
+                {label}
+              </label>
+            ))}
+            <span className="text-[11px] text-ink-400">
+              {sided === 'two'
+                ? 'solo aplica al contraste bilateral'
+                : 'no aplica: el contraste es unilateral'}
+            </span>
+          </div>
         </div>
       )}
 
@@ -699,7 +751,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
               <span className="ml-1 text-ink-400">(fracción con |d| ≥ |d<sub>obs</sub>|)</span>
             </span>
             <span className="text-ink-500">
-              p condicional (minlike) = {pVal.toFixed(4)}
+              p condicional bilateral (minlike) = {pMinlike.toFixed(4)}
             </span>
           </div>
           <p className="mt-1.5 text-[11px] leading-snug text-ink-500">
@@ -818,6 +870,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
             Ver las tablas 2×2 que entran en el valor p
             <span className="font-normal text-ink-500">
               · {nExt} de {nBars} · {DEF_LABEL[def]}
+              {def === 'central' && ' · cola menor duplicada'}
             </span>
             <ChevronDown aria-hidden className="ml-auto h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
           </summary>
@@ -865,7 +918,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
                     <p className="mt-1 text-ink-600">
                       P = {probs[i].toFixed(4)}
                       <span className="ml-1 text-ink-400">
-                        ({((probs[i] / pVal) * 100).toFixed(0)} % del p)
+                        ({((probs[i] / shareBase) * 100).toFixed(0)} % del p)
                       </span>
                     </p>
                   </div>
@@ -874,13 +927,13 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
             </div>
             <p className={NOTE}>
               {def === 'minlike' &&
-                'Regla minlike: entra toda tabla con probabilidad ≤ la observada. Puede incluir tablas de ambos lados aunque la distribución no sea simétrica; es la convención de fisher.test.'}
+                'Bilateral, método minlike (el de fisher.test): entra toda tabla con probabilidad ≤ la observada, de uno u otro lado. Es una suma de alturas, y por eso puede incluir tablas de ambos lados aunque la distribución no sea simétrica.'}
               {def === 'central' &&
-                `Regla central: la región es la unión de ambas colas (${nExt} tablas), pero el valor p no es su suma sino 2 × la cola menor = 2 × ${Math.min(leftTail, rightTail).toFixed(4)} = ${pVal.toFixed(4)} (tope 1). Cuando una cola es dominante, «central» y «minlike» difieren: compara ambos números en la misma tabla.`}
+                `Bilateral, método central (exact2x2::fisher.test con tsmethod = "central"): reparte α en dos colas iguales, de modo que a nivel α se rechaza con dos colas de masa α/2. Por eso el p es 2 × la cola menor = 2 × ${Math.min(leftTail, rightTail).toFixed(4)} = ${pVal.toFixed(4)} (tope 1). Las ${nExt} tablas resaltadas son esa cola menor: se duplica su masa, no se suma una región. Con la tabla de Perondi ambas convenciones coinciden porque el doble de la cola menor cae sobre el mismo conjunto; con otras tablas divergen, y ninguna es "la correcta".`}
               {def === 'left' &&
-                `Cola izquierda: tablas con x₁ ≤ ${t.x1}, es decir, resultados tan o menos favorables al grupo 1 que el observado.`}
+                `Unilateral izquierda: tablas con x₁ ≤ ${t.x1}, es decir, resultados tan o menos favorables al grupo 1 que el observado. Es una sola cola, sin método bilateral que elegir.`}
               {def === 'right' &&
-                `Cola derecha: tablas con x₁ ≥ ${t.x1}. Con la tabla de Perondi (7/34 vs. 1/34) esta cola es casi todo el espacio: el valor p se acerca a 1.`}
+                `Unilateral derecha: tablas con x₁ ≥ ${t.x1}. Con la tabla de Perondi (7/34 vs. 1/34) esta cola concentra casi todo el espacio: el valor p se acerca a 1.`}
             </p>
           </div>
         </details>
@@ -891,12 +944,12 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
           <MathText
             text={
               def === 'central'
-                ? `p = 2 · min(cola) = ${pVal.toFixed(4)}`
+                ? `p = 2 · min(cola izq, cola der) = 2 · ${Math.min(leftTail, rightTail).toFixed(4)} = ${pVal.toFixed(4)}`
                 : `p = Σ P(tabla extrema) = ${pVal.toFixed(4)}`
             }
           />
           <span className="ml-2 text-xs text-brand-600">
-            ({nExt} de {nBars} tablas · «{DEF_LABEL[def]}»)
+            ({nExt} de {nBars} tablas · {DEF_LABEL[def]})
           </span>
         </p>
       )}
@@ -907,11 +960,14 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
         completo, (2) dónde cae tu tabla, (3) cuáles son al menos tan improbables y
         (4) el valor p como suma de sus alturas. Abre «Ver las tablas 2×2» para
         inspeccionar cada tabla incluida con su probabilidad y su peso dentro del p.
-        Luego cambia la definición de extremo: «minlike» suma las tablas con
-        probabilidad ≤ a la observada; «central» toma la unión de ambas colas pero
-        duplica la cola menor; las colas suman lateralmente. En una distribución
-        discreta y asimétrica las tres no coinciden, y por eso «bilateral» en Fisher
-        siempre necesita declarar la convención.
+        Después separa los dos ejes: el contraste (bilateral o unilateral) es la
+        pregunta; el método (minlike o central) es solo cómo R calcula el p
+        bilateral. Con contraste bilateral, «minlike» suma las tablas con
+        probabilidad ≤ la observada; «central» reparte α en dos colas iguales y
+        duplica la masa de la cola menor. Con contraste unilateral eliges una sola
+        cola y no hay método bilateral que valga. En una distribución discreta y
+        asimétrica esos números no coinciden, y por eso «bilateral» en Fisher
+        siempre exige declarar la convención.
       </SimGuide>
       <p className={NOTE}>
         La suma «minlike» es la convención de <code>fisher.test</code> en R (dos

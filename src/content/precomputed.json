@@ -179,8 +179,8 @@
   "plots": []
  },
  "06/tablas-extremas": {
-  "hash": "866ae780",
-  "console": "minlike = 0.0544   central = 0.0544   izq = 0.9975   der = 0.0272\nfisher.test coincide: 0.0544",
+  "hash": "4d131ceb",
+  "console": "minlike = 0.0544   central = 0.0544   izq = 0.9975   der = 0.0272\nfisher.test coincide: 0.0544\n12/50 vs 2/34: minlike = 0.0371   central = 0.0511",
   "plots": [
    "/precomputed/06-tablas-extremas/plot-1.png"
   ]

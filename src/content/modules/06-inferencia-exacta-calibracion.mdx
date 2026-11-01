@@ -102,15 +102,23 @@ tabla observada tiene probabilidad $P_0$; toda tabla tan o menos
 probable que ella es "al menos tan extrema", y el valor p es la suma de
 sus alturas en el gráfico.
 
-Hay un detalle que el gráfico deja ver y la fórmula esconde: la
-hipergeométrica discreta no es simétrica, así que "dos lados" no es un
-área obvia. La convención de `fisher.test` (*minlike*: sumar toda tabla
-con $P \leq P_0$) es una elección, no un hecho. La alternativa clásica
-es la **central**: la región abarca ambas colas, pero el valor p es
-$2 \times \min(\text{cola})$, con tope en 1 (el método de
-`exact2x2::fisher.test(tsmethod = "central")`). Cuando las colas están
-desequilibradas las dos convenciones dan números distintos, y ninguno
-es "el correcto": son respuestas a preguntas ligeramente distintas.
+Hay un detalle que el gráfico deja ver y la fórmula esconde. Conviene separar
+dos ejes que suelen confundirse. El primero es el **contraste**: bilateral
+(dos colas) o unilateral (izquierda o derecha); es la pregunta que se hace.
+El segundo es el **método** con que R calcula el valor p *bilateral*: no hay
+una sola convención. `fisher.test` usa *minlike*, que suma toda tabla con
+$P \leq P_0$. `exact2x2::fisher.test(tsmethod = "central")` usa la **central**,
+que reparte $\alpha$ en dos colas iguales y por eso duplica la masa de la cola
+menor: $p = 2 \times \min(\text{cola})$, con tope en 1. En una distribución
+discreta y asimétrica las dos cifras no coinciden, y ninguna es "la correcta":
+responden a preguntas ligeramente distintas. El contraste unilateral, en
+cambio, no admite método bilateral: es una sola cola.
+
+Con la tabla de Perondi las dos convenciones coinciden por casualidad
+(0.0544 en ambas). Con 12/50 frente a 2/34 ya no: minlike da 0.0371 y
+central 0.0511, porque el doble de la cola menor no cae sobre el mismo
+conjunto de tablas. Esa es la razón por la que un resultado "bilateral"
+en Fisher no está completo hasta que se declara el método.
 
 El laboratorio permite además abrir la lista plegable de tablas 2×2
 incluidas (cada una con su probabilidad y su peso dentro del valor p)
@@ -148,6 +156,16 @@ cat(sprintf("minlike = %.4f   central = %.4f   izq = %.4f   der = %.4f\\n",
 p_ref <- fisher.test(matrix(c(x1, n1 - x1, x2, n2 - x2), 2))$p.value
 stopifnot(abs(p_ref - p_minlike) < 1e-12)
 cat(sprintf("fisher.test coincide: %.4f\\n", p_ref))
+
+# Donde las dos convenciones divergen: 12/50 frente a 2/34
+x1b <- 12; n1b <- 50; x2b <- 2; n2b <- 34
+mb <- x1b + x2b
+xsb <- max(0, mb - n2b):min(n1b, mb)
+prb <- dhyper(xsb, n1b, n2b, mb)
+p0b <- dhyper(x1b, n1b, n2b, mb)
+Lb <- sum(prb[xsb <= x1b]); Ub <- sum(prb[xsb >= x1b])
+cat(sprintf("12/50 vs 2/34: minlike = %.4f   central = %.4f\\n",
+            sum(prb[prb <= p0b * (1 + 1e-9)]), min(1, 2 * min(Lb, Ub))))
 
 # Los cuatro pasos de la narrativa en paneles estaticos
 par(mfrow = c(2, 2), mar = c(3, 3, 2, 1), mgp = c(2, 0.7, 0))
