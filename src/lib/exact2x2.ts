@@ -70,22 +70,24 @@ export function dhyper(x: number, n1: number, n2: number, m: number): number {
 function pbeta(x: number, a: number, b: number): number {
   if (x <= 0) return 0;
   if (x >= 1) return 1;
-  const betacf = (x: number, a: number, b: number): number => {
-    const qab = a + b, qap = a + 1, qam = a - 1;
+  // `alpha`/`beta` (not a/b) so the mirrored call betacf(1 - x, b, a) below
+  // reads as the I_{1-x}(b,a) identity, not as a swapped-argument bug.
+  const betacf = (x: number, alpha: number, beta: number): number => {
+    const qab = alpha + beta, qap = alpha + 1, qam = alpha - 1;
     let c = 1, d = 1 - (qab * x) / qap;
     if (Math.abs(d) < 1e-30) d = 1e-30;
     d = 1 / d;
     let h = d;
     for (let m = 1; m <= 200; m++) {
       const m2 = 2 * m;
-      let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+      let aa = (m * (beta - m) * x) / ((qam + m2) * (alpha + m2));
       d = 1 + aa * d;
       if (Math.abs(d) < 1e-30) d = 1e-30;
       c = 1 + aa / c;
       if (Math.abs(c) < 1e-30) c = 1e-30;
       d = 1 / d;
       h *= d * c;
-      aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+      aa = (-(alpha + m) * (qab + m) * x) / ((alpha + m2) * (qap + m2));
       d = 1 + aa * d;
       if (Math.abs(d) < 1e-30) d = 1e-30;
       c = 1 + aa / c;
@@ -193,42 +195,9 @@ export function getTableSpace(
   const pFisherStrict = new Float64Array(count);
   const pMid = new Float64Array(count);
   const zAbs = new Float64Array(count);
-  const N = n1 + n2;
 
-  // Per-margin hypergeometric distribution: tables sharing m = x1+x2 share
-  // the distribution of X1 | m.
-  for (let m = 0; m <= N; m++) {
-    const lo = Math.max(0, m - n2);
-    const hi = Math.min(n1, m);
-    const sup: number[] = [];
-    const pr: number[] = [];
-    for (let s = lo; s <= hi; s++) {
-      sup.push(s);
-      pr.push(dhyper(s, n1, n2, m));
-    }
-    for (let x1 = lo; x1 <= hi; x1++) {
-      const x2 = m - x1;
-      const d0 = dhyper(x1, n1, n2, m);
-      let pMin = 0, pStrict = 0;
-      for (let i = 0; i < sup.length; i++) {
-        if (pr[i] <= d0 * (1 + REL_TOL)) pMin += pr[i];
-        if (pr[i] < d0 / (1 + REL_TOL)) pStrict += pr[i];
-      }
-      const k = idx(x1, x2, n2);
-      pFisher[k] = Math.min(1, pMin);
-      pFisherStrict[k] = pStrict;
-      pMid[k] = Math.min(1, pStrict + 0.5 * (pMin - pStrict));
-    }
-  }
-
-  for (let x1 = 0; x1 <= n1; x1++) {
-    for (let x2 = 0; x2 <= n2; x2++) {
-      const m = x1 + x2;
-      const pb = m / N;
-      const se = Math.sqrt(pb * (1 - pb) * (1 / n1 + 1 / n2));
-      zAbs[idx(x1, x2, n2)] = se > 0 ? Math.abs(x1 / n1 - x2 / n2) / se : 0;
-    }
-  }
+  fillConditionalP(n1, n2, pFisher, pFisherStrict, pMid);
+  fillZAbs(n1, n2, zAbs);
 
   const pZ = unconditionalP(zAbs, n1, n2, false, grid);
   const pBoschloo = unconditionalP(pFisher, n1, n2, true, grid);
@@ -247,6 +216,71 @@ export function getTableSpace(
 }
 
 /**
+ * Conditional p-values for every table: minlike (sum of tables no more
+ * probable than the observed one), strict (strictly less probable) and
+ * mid-p. Tables sharing m = x1 + x2 share the distribution of X1 | m.
+ */
+function fillConditionalP(
+  n1: number,
+  n2: number,
+  pFisher: Float64Array,
+  pFisherStrict: Float64Array,
+  pMid: Float64Array,
+): void {
+  const N = n1 + n2;
+  for (let m = 0; m <= N; m++) {
+    const lo = Math.max(0, m - n2);
+    const hi = Math.min(n1, m);
+    const sup: number[] = [];
+    const pr: number[] = [];
+    for (let s = lo; s <= hi; s++) {
+      sup.push(s);
+      pr.push(dhyper(s, n1, n2, m));
+    }
+    for (let x1 = lo; x1 <= hi; x1++) {
+      const d0 = dhyper(x1, n1, n2, m);
+      let pMin = 0, pStrict = 0;
+      for (let i = 0; i < sup.length; i++) {
+        if (pr[i] <= d0 * (1 + REL_TOL)) pMin += pr[i];
+        if (pr[i] < d0 / (1 + REL_TOL)) pStrict += pr[i];
+      }
+      const k = idx(x1, m - x1, n2);
+      pFisher[k] = Math.min(1, pMin);
+      pFisherStrict[k] = pStrict;
+      pMid[k] = Math.min(1, pStrict + 0.5 * (pMin - pStrict));
+    }
+  }
+}
+
+/** |z| of the pooled two-proportion test for every table. */
+function fillZAbs(n1: number, n2: number, zAbs: Float64Array): void {
+  const N = n1 + n2;
+  for (let x1 = 0; x1 <= n1; x1++) {
+    for (let x2 = 0; x2 <= n2; x2++) {
+      const pb = (x1 + x2) / N;
+      const se = Math.sqrt(pb * (1 - pb) * (1 / n1 + 1 / n2));
+      zAbs[idx(x1, x2, n2)] = se > 0 ? Math.abs(x1 / n1 - x2 / n2) / se : 0;
+    }
+  }
+}
+
+/** B1[k·G + g] = P(X1 = k | grid[g]); B2 likewise for the second group. */
+function binomialWeights(
+  n1: number,
+  n2: number,
+  grid: Float64Array,
+): { B1: Float64Array; B2: Float64Array } {
+  const G = grid.length;
+  const B1 = new Float64Array((n1 + 1) * G);
+  const B2 = new Float64Array((n2 + 1) * G);
+  for (let g = 0; g < G; g++) {
+    for (let k = 0; k <= n1; k++) B1[k * G + g] = dbinom(k, n1, grid[g]);
+    for (let k = 0; k <= n2; k++) B2[k * G + g] = dbinom(k, n2, grid[g]);
+  }
+  return { B1, B2 };
+}
+
+/**
  * Unconditional p-value of every table: p(x) = sup_{p in grid} P_p(T as or
  * more extreme than T(x)). Implements the ordered-accumulation scheme of
  * p_incondicional(): tables are processed in order of extremeness; after
@@ -262,14 +296,7 @@ function unconditionalP(
 ): Float64Array {
   const G = grid.length;
   const count = (n1 + 1) * (n2 + 1);
-  // Binomial weights per grid point for each group: B1[k][g] = P(X1 = k)
-  const B1 = new Float64Array((n1 + 1) * G);
-  const B2 = new Float64Array((n2 + 1) * G);
-  for (let g = 0; g < G; g++) {
-    const p = grid[g];
-    for (let k = 0; k <= n1; k++) B1[k * G + g] = dbinom(k, n1, p);
-    for (let k = 0; k <= n2; k++) B2[k * G + g] = dbinom(k, n2, p);
-  }
+  const { B1, B2 } = binomialWeights(n1, n2, grid);
 
   const keyOf = (k: number) => (smallerIsExtreme ? stat[k] : -stat[k]);
   const order = Array.from({ length: count }, (_, i) => i).sort(
@@ -318,48 +345,79 @@ function bergerBoos(
     (a, b) => pFisher[a] - pFisher[b]
   );
 
-  // Precompute per-margin Clopper–Pearson intervals.
+  const { cpLo, cpHi } = clopperPearsonBounds(N, gamma);
+  const { B1, B2 } = binomialWeights(n1, n2, grid);
+
+  const acum = new Float64Array(G);
+  const out = new Float64Array(count);
+  let i = 0;
+  while (i < count) {
+    const j = tieGroupEndRelative(pFisher, order, i, count);
+    accumulateTables(order, i, j, B1, B2, acum, G, n2);
+    for (let t = i; t <= j; t++) {
+      const k = order[t];
+      const { x1, x2 } = tableMargins(k, n2);
+      const m = x1 + x2;
+      out[k] = Math.min(1, maxWithinWindow(acum, grid, cpLo[m], cpHi[m]) + gamma);
+    }
+    i = j + 1;
+  }
+  return out;
+}
+
+/** Per-margin Clopper–Pearson bounds for the pooled nuisance parameter. */
+function clopperPearsonBounds(N: number, gamma: number): { cpLo: Float64Array; cpHi: Float64Array } {
   const cpLo = new Float64Array(N + 1);
   const cpHi = new Float64Array(N + 1);
   for (let m = 0; m <= N; m++) {
     cpLo[m] = m === 0 ? 0 : qbeta(gamma / 2, m, N - m + 1);
     cpHi[m] = m === N ? 1 : qbeta(1 - gamma / 2, m + 1, N - m);
   }
+  return { cpLo, cpHi };
+}
 
-  const B1 = new Float64Array((n1 + 1) * G);
-  const B2 = new Float64Array((n2 + 1) * G);
-  for (let g = 0; g < G; g++) {
-    for (let k = 0; k <= n1; k++) B1[k * G + g] = dbinom(k, n1, grid[g]);
-    for (let k = 0; k <= n2; k++) B2[k * G + g] = dbinom(k, n2, grid[g]);
-  }
+/** (x1, x2) of the flat table index k in a space with n2 columns. */
+function tableMargins(k: number, n2: number): { x1: number; x2: number } {
+  return { x1: Math.floor(k / (n2 + 1)), x2: k % (n2 + 1) };
+}
 
-  const acum = new Float64Array(G);
-  const out = new Float64Array(count);
-  let i = 0;
-  while (i < count) {
-    let j = i;
-    const lim = pFisher[order[i]] * (1 + REL_TOL);
-    while (j + 1 < count && pFisher[order[j + 1]] <= lim) j++;
-    for (let t = i; t <= j; t++) {
-      const k = order[t];
-      const x1 = Math.floor(k / (n2 + 1));
-      const x2 = k % (n2 + 1);
-      for (let g = 0; g < G; g++) acum[g] += B1[x1 * G + g] * B2[x2 * G + g];
-    }
-    for (let t = i; t <= j; t++) {
-      const k = order[t];
-      const x1 = Math.floor(k / (n2 + 1));
-      const x2 = k % (n2 + 1);
-      const m = x1 + x2;
-      let mx = 0;
-      for (let g = 0; g < G; g++) {
-        if (grid[g] >= cpLo[m] && grid[g] <= cpHi[m] && acum[g] > mx) mx = acum[g];
-      }
-      out[k] = Math.min(1, mx + gamma);
-    }
-    i = j + 1;
+/** Last index of the tie group starting at i, relative tolerance on `values`. */
+function tieGroupEndRelative(
+  values: Float64Array,
+  order: ArrayLike<number>,
+  i: number,
+  count: number,
+): number {
+  let j = i;
+  const lim = values[order[i]] * (1 + REL_TOL);
+  while (j + 1 < count && values[order[j + 1]] <= lim) j++;
+  return j;
+}
+
+/** Add the two-binomial weight of every table in [from, to] to `acum`. */
+function accumulateTables(
+  order: ArrayLike<number>,
+  from: number,
+  to: number,
+  B1: Float64Array,
+  B2: Float64Array,
+  acum: Float64Array,
+  G: number,
+  n2: number,
+): void {
+  for (let t = from; t <= to; t++) {
+    const { x1, x2 } = tableMargins(order[t], n2);
+    for (let g = 0; g < G; g++) acum[g] += B1[x1 * G + g] * B2[x2 * G + g];
   }
-  return out;
+}
+
+/** Max accumulated tail probability over grid points inside [lo, hi]. */
+function maxWithinWindow(acum: Float64Array, grid: Float64Array, lo: number, hi: number): number {
+  let mx = 0;
+  for (let g = 0; g < grid.length; g++) {
+    if (grid[g] >= lo && grid[g] <= hi && acum[g] > mx) mx = acum[g];
+  }
+  return mx;
 }
 
 /* ------------------------------------------------------------------ */
@@ -532,50 +590,69 @@ export function normQuantile(p: number): number {
 export function cornfieldCI(x1: number, n1: number, x2: number, n2: number, alpha = 0.05): CI {
   const m = x1 + x2;
   const lo = Math.max(0, m - n2), hi = Math.min(n1, m);
-  // Noncentral hypergeometric tails at odds ratio psi (log-space weights).
-  const tail = (psi: number) => {
-    const lp = Math.log(psi);
-    let mx = -Infinity;
-    const ws: number[] = [];
-    for (let s = lo; s <= hi; s++) {
-      const w = lchoose(n1, s) + lchoose(n2, m - s) + s * lp;
-      ws.push(w);
-      if (w > mx) mx = w;
-    }
-    let tot = 0, le = 0, ge = 0;
-    for (let i = 0, s = lo; s <= hi; i++, s++) {
-      const w = Math.exp(ws[i] - mx);
-      tot += w;
-      if (s <= x1) le += w;
-      if (s >= x1) ge += w;
-    }
-    return { le: le / tot, ge: ge / tot };
-  };
-
-  let ciLo = 0, ciHi = Infinity;
-  if (x1 > lo) {
-    // ge(psi) = P(X1 >= x1 | psi) is increasing in psi; lower bound solves
-    // ge(psi_lo) = alpha/2, so psi_lo < observed-consistent region.
-    let a = 1e-10, b = 1;
-    while (tail(b).ge <= alpha / 2 && b < 1e12) b *= 4;
-    for (let i = 0; i < 80; i++) {
-      const mid = Math.sqrt(a * b);
-      if (tail(mid).ge > alpha / 2) b = mid; else a = mid;
-    }
-    ciLo = Math.sqrt(a * b);
-  }
-  if (x1 < hi) {
-    // le(psi) = P(X1 <= x1 | psi) is decreasing in psi; upper bound solves
-    // le(psi_hi) = alpha/2.
-    let a = 1, b = 1e10;
-    while (tail(a).le <= alpha / 2 && a > 1e-10) a /= 4;
-    for (let i = 0; i < 80; i++) {
-      const mid = Math.sqrt(a * b);
-      if (tail(mid).le > alpha / 2) a = mid; else b = mid;
-    }
-    ciHi = Math.sqrt(a * b);
-  }
+  const tail = (psi: number) => ncHyperTails(lo, hi, m, n1, n2, x1, psi);
+  const target = alpha / 2;
+  const ciLo = x1 > lo ? cornfieldLowerBound(tail, target) : 0;
+  const ciHi = x1 < hi ? cornfieldUpperBound(tail, target) : Infinity;
   return { lo: Math.log(ciLo), hi: Number.isFinite(ciHi) ? Math.log(ciHi) : Infinity };
+}
+
+type HyperTails = (psi: number) => { le: number; ge: number };
+
+/** Noncentral hypergeometric tails at odds ratio psi (log-space weights). */
+function ncHyperTails(
+  lo: number,
+  hi: number,
+  m: number,
+  n1: number,
+  n2: number,
+  x1: number,
+  psi: number,
+): { le: number; ge: number } {
+  const lp = Math.log(psi);
+  let mx = -Infinity;
+  const ws: number[] = [];
+  for (let s = lo; s <= hi; s++) {
+    const w = lchoose(n1, s) + lchoose(n2, m - s) + s * lp;
+    ws.push(w);
+    if (w > mx) mx = w;
+  }
+  let tot = 0, le = 0, ge = 0;
+  for (let i = 0, s = lo; s <= hi; i++, s++) {
+    const w = Math.exp(ws[i] - mx);
+    tot += w;
+    if (s <= x1) le += w;
+    if (s >= x1) ge += w;
+  }
+  return { le: le / tot, ge: ge / tot };
+}
+
+/**
+ * Lower bound: ge(psi) = P(X1 >= x1 | psi) increases in psi, so solve
+ * ge(psi_lo) = alpha/2 by geometric bisection.
+ */
+function cornfieldLowerBound(tail: HyperTails, target: number): number {
+  let a = 1e-10, b = 1;
+  while (tail(b).ge <= target && b < 1e12) b *= 4;
+  for (let i = 0; i < 80; i++) {
+    const mid = Math.sqrt(a * b);
+    if (tail(mid).ge > target) b = mid; else a = mid;
+  }
+  return Math.sqrt(a * b);
+}
+
+/**
+ * Upper bound: le(psi) = P(X1 <= x1 | psi) decreases in psi, so solve
+ * le(psi_hi) = alpha/2 by geometric bisection.
+ */
+function cornfieldUpperBound(tail: HyperTails, target: number): number {
+  let a = 1, b = 1e10;
+  while (tail(a).le <= target && a > 1e-10) a /= 4;
+  for (let i = 0; i < 80; i++) {
+    const mid = Math.sqrt(a * b);
+    if (tail(mid).le > target) a = mid; else b = mid;
+  }
+  return Math.sqrt(a * b);
 }
 
 /** Wilson score interval for a single proportion (used by Newcombe). */
@@ -603,8 +680,8 @@ export function newcombeRD(x1: number, n1: number, x2: number, n2: number, alpha
   const l2 = wilsonCI(x2, n2, alpha);
   const p1 = x1 / n1, p2 = x2 / n2, d = p1 - p2;
   return {
-    lo: d - Math.sqrt((p1 - l1.lo) ** 2 + (l2.hi - p2) ** 2),
-    hi: d + Math.sqrt((l1.hi - p1) ** 2 + (p2 - l2.lo) ** 2),
+    lo: d - Math.hypot(p1 - l1.lo, l2.hi - p2),
+    hi: d + Math.hypot(l1.hi - p1, p2 - l2.lo),
   };
 }
 
