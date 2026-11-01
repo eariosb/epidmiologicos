@@ -2,7 +2,7 @@
 
 // Panel de privacidad (derechos ARCO): muestra el estado del consentimiento,
 // permite ver los propios datos (/api/mis-datos), cambiar el opt-in de
-// contenido (/api/consent) y retirarse (/api/withdraw — borrado en cascada).
+// contenido (/api/consent) y retirarse (/api/withdraw, borrado en cascada).
 // Especificación: prueba-campo/docs/04-etica-consentimiento.md §4.2.
 
 import { useEffect, useState } from 'react';

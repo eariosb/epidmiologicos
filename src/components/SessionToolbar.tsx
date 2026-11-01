@@ -35,7 +35,7 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
 
   /**
    * Rasterizes the pages the class actually used: the session's
-   * sceneVisits (deduplicated, chronological) take priority — a session
+   * sceneVisits (deduplicated, chronological) take priority: a session
    * spanning several modules must carry all of them, not just the pages
    * of the module open right now. Sessions recorded before sceneVisits
    * existed fall back to every page of the current module.
@@ -48,7 +48,7 @@ export function SessionToolbar({ canvasRef, modules, blocks }: Readonly<SessionT
     const slug = state.moduleContext?.slug;
     let scenes;
     if (visitedIds.length > 0) {
-      // Visited pages may live in another module's scene store — load
+      // Visited pages may live in another module's scene store; load
       // them on demand instead of relying on the in-memory map.
       const loaded = await Promise.all(
         visitedIds.map((id) => state.scenes[id] ?? storage.getScene(id)),

@@ -75,8 +75,8 @@ cajón.
 ## El estimador de la heterogeneidad también falla
 
 Todo lo anterior toma τ² como si se conociera. No se conoce: se estima,
-y la forma más común de estimarlo —el método de momentos de
-DerSimonian–Laird, $\hat\tau^2 = \max\{0, (Q-(k-1))/c\}$— tiene un
+y la forma más común de estimarlo (el método de momentos de
+DerSimonian–Laird, $\hat\tau^2 = \max\{0, (Q-(k-1))/c\}$) tiene un
 defecto que se ve en la propia fórmula: el estimador sin truncar puede
 dar una varianza **negativa**. Ese estimador es **inadmisible**: su parte
 positiva, `max(0, ·)`, tiene menor error cuadrático siempre. Pero la
@@ -120,13 +120,13 @@ dato**. Dos piezas:
   fenómeno; la segunda se reduce con más datos o mejor modelo. Ojo con la
   contabilidad: un IC95% para un parámetro es casi todo epistémica (el
   parámetro es fijo; lo que fluctúa es el intervalo), mientras un
-  intervalo de predicción conforme cubre el total —el error del dato
-  nuevo, que incluye ambas— de forma **marginal**, no separada.
+  intervalo de predicción conforme cubre el total (el error del dato
+  nuevo, que incluye ambas) de forma **marginal**, no separada.
 - **<Term k="CP">Predicción conforme</Term>**: construye intervalos con
   cobertura garantizada $1-\alpha$ **sin suponer la distribución**; basta
   con datos intercambiables. En vigilancia epidemiológica (nowcasting de
   dengue, <Term k="SINAN">SINAN</Term>), es la alternativa honesta al
-  score puntual — con una advertencia: las series temporales violan la
+  score puntual, con una advertencia: las series temporales violan la
   intercambiabilidad (autocorrelación, cambios de régimen), así que el
   nowcasting serio usa conforme adaptativo o por bloques, no el split
   simple de la celda.
@@ -311,7 +311,7 @@ Woodward: la evidencia previa no solo estima, también dimensiona.
 El assurance es, en el fondo, una **función de utilidad**: pesa el
 costo de quedarse corto contra lo que creemos plausible. Cuando
 además se declara el beneficio del acierto, el diseño entero se
-vuelve un problema de maximización de utilidad esperada — el umbral
+vuelve un problema de maximización de utilidad esperada: el umbral
 de Sinclair del módulo 5 era una función de pérdida escalarizada
 sin llamarla así, y el diseño óptimo bayesiano la formaliza para
 modelos no lineales (Cardona &amp; Correa, *Comunicaciones en
@@ -322,7 +322,7 @@ veredicto deja la decisión a la convención del α.
 
 ## Robustez frente a lo no medido: el E-value
 
-Toda la incertidumbre de este módulo —el IC, el conforme, la prior—
+Toda la incertidumbre de este módulo (el IC, el conforme, la prior)
 mide lo que se ve. Falta la última pregunta: ¿cuánta confusión **no
 medida** bastaría para borrar el hallazgo? El
 <Term k="evalue">E-value</Term> la responde en la escala del propio
@@ -349,8 +349,8 @@ revisor en un número que se discute.
 
 El análisis sin reporte es trabajo a medias.
 <Term k="STROBE">STROBE</Term> (von Elm 2007) lista lo que un
-estudio observacional debe contar —diseño, sesgos evaluados,
-tamaño, variables, faltantes, sensibilidad— y
+estudio observacional debe contar (diseño, sesgos evaluados,
+tamaño, variables, faltantes, sensibilidad) y
 **RECORD** (Benchimol 2015) es su extensión para datos recolectados
 de rutina: el checklist de la emulación del ensayo objetivo del
 módulo 2. El producto del módulo 0, la Tabla 1 del 7, las pruebas

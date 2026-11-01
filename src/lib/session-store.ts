@@ -52,7 +52,7 @@ export interface Session {
   status: 'active' | 'ended';
   updatedAt: number;
   visitedSections: { slug: string; title: string; timestamp: number }[];
-  /** Board pages shown during the class, in order — feeds session replay. */
+  /** Board pages shown during the class, in order; feeds session replay. */
   sceneVisits: { sceneId: string; timestamp: number }[];
   captureIds: string[];
   questions: Question[];
@@ -63,7 +63,7 @@ export const ACTIVE_SESSION_KEY = 'mlm-active-session-id';
 /**
  * Cross-tab sync marker: every session write bumps this localStorage key
  * so other tabs (a presenter view next to the module, a second screen)
- * refresh their session state through the `storage` event — which only
+ * refresh their session state through the `storage` event, which only
  * fires across tabs, never in the writing one.
  */
 export const SESSION_CHANGED_KEY = 'mlm-session-changed';
@@ -172,7 +172,7 @@ async function saveSession(session: Session): Promise<void> {
 
 /**
  * Raw creation: closes the currently active session (a new class means
- * the previous one ended — at most one session is 'active' at a time),
+ * the previous one ended; at most one session is 'active' at a time),
  * writes the new record and moves the pointer. NOT mutex-wrapped: it is
  * called from inside serialized mutations, so wrapping it here would
  * deadlock the chain.
@@ -216,7 +216,7 @@ export async function ensureSession(title = 'Sesión actual', courseId?: string,
       if (activeId) {
         const existing = await getSession(activeId);
         // An ended session is a closed record: appends (captures,
-        // questions, visits) never mutate it — they start a new one.
+        // questions, visits) never mutate it: they start a new one.
         if (existing && existing.status === 'active') return existing;
       }
       return createSessionRecord(title, courseId, moduleSlug);
@@ -260,7 +260,7 @@ export async function setSessionActiveScene(sceneId: string | null): Promise<voi
 export async function addVisitedSection(slug: string, title: string): Promise<void> {
   return withMutation(async () => {
     const session = await ensureSession();
-    // The first visited module stamps the session's moduleSlug — exports
+    // The first visited module stamps the session's moduleSlug; exports
     // use it for the cover line when the session was auto-created.
     const stamping = !session.moduleSlug;
     if (stamping) session.moduleSlug = slug;
@@ -374,7 +374,7 @@ export async function listCaptures(): Promise<Capture[]> {
   return captures;
 }
 
-/** Captures of ANY session (not just the active one) — used by replay. */
+/** Captures of ANY session (not just the active one), used by replay. */
 export async function listSessionCaptures(sessionOrId: Session | string): Promise<Capture[]> {
   const session = typeof sessionOrId === 'string' ? await getSession(sessionOrId) : sessionOrId;
   return fetchCaptures(session?.captureIds ?? []);
@@ -457,7 +457,7 @@ export async function listAllSessions(): Promise<Session[]> {
 export async function deleteSession(id: string): Promise<void> {
   return withMutation(async () => {
     // Cascade: a session must not leave orphaned captures or chat
-    // records behind — they are only reachable through the session.
+    // records behind; they are only reachable through the session.
     const session = await getSession(id);
     if (session) {
       await Promise.all(session.captureIds.map((cid) => del(cid, CAPTURE_STORE)));

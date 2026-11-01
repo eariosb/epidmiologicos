@@ -1,12 +1,12 @@
 /**
  * Plugin remark: convierte las referencias "M0"…"M19" escritas en la
- * prosa en <MRef n={3}>M3</MRef> — un enlace al módulo con tooltip
+ * prosa en <MRef n={3}>M3</MRef>: un enlace al módulo con tooltip
  * (misma UX que <Term> del glosario). Así ningún MDX se edita a mano
  * y las referencias futuras quedan enlazadas solas.
  *
  * Solo toca nodos `text`: el código de las RCell/SasBlock vive en
  * expresiones JSX (no es mdast `text`) y la matemática ya es
- * `inlineMath` cuando corre este plugin — ambos quedan intactos.
+ * `inlineMath` cuando corre este plugin; ambos quedan intactos.
  */
 
 interface MdastNode {

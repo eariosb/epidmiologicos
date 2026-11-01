@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react';
  * poll /api/vision/calibrate/status until `done`. Total time < 10 s.
  *
  * Without the vision service the wizard degrades gracefully to an error
- * state — calibration only exists when running on That_Board hardware.
+ * state: calibration only exists when running on That_Board hardware.
  */
 
 // Cross positions, as fractions of the projected area (order matches the
@@ -69,7 +69,7 @@ export function CalibrationWizard({ onClose }: Readonly<{ onClose: () => void }>
           setCaptured(data.points?.length ?? 0);
           if (data.done) setPhase('done');
         } catch {
-          // transient poll failure — keep polling
+          // transient poll failure, keep polling
         }
       })();
     }, 400);

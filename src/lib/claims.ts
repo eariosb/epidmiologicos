@@ -1,12 +1,12 @@
 /**
- * claims.ts — Cifras del texto atadas al código que las calcula.
+ * claims.ts: Cifras del texto atadas al código que las calcula.
  *
  * computeClaims() produce cada número que la prosa de los módulos 5 y 6
  * afirma, usando las mismas librerías que los simuladores. El build
  * (scripts/build-claims.ts) lo vuelca a src/content/claims.json y el
  * componente <Claim k="..." /> lo imprime en el MDX. claims.test.ts
  * recalcula todo: si alguien cambia la librería, el test obliga a
- * regenerar las cifras — nunca más un número escrito a mano que se
+ * regenerar las cifras: nunca más un número escrito a mano que se
  * desincroniza del simulador.
  */
 import {
@@ -92,7 +92,7 @@ export function computeClaims(): Record<string, number> {
   // Potencia exacta con el n real del ensayo (misma librería que m6).
   c['m5.perondi.power.fisher'] = c['m6.power.fisher'];
 
-  /* ---- M5: precisión — L aleatoria (p = 0.10, n = 50, L0 = 0.12) ---- */
+  /* ---- M5: precisión, L aleatoria (p = 0.10, n = 50, L0 = 0.12) ---- */
   {
     const p = 0.1, n = 50, L0 = 0.12;
     const d = lengthDistribution(n, p, 'wilson', 0.95);

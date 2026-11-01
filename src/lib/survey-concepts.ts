@@ -1,4 +1,4 @@
-// Concepto central de cada módulo — alimenta la micro-encuesta post-módulo
+// Concepto central de cada módulo: alimenta la micro-encuesta post-módulo
 // (doc 05, instrumento B, ítem 1: "este módulo me ayudó a entender X").
 export const MODULE_CONCEPTS: Record<string, string> = {
   '00-repaso-datos-epidemiologicos': 'los tipos de datos epidemiológicos',

@@ -35,7 +35,7 @@ export function PageNav({
   const moduleSlug = slug ?? 'global';
   // Page order = creation order (ids end with Date.now() suffixes and the
   // default page has no suffix, so locale ordering yields default first,
-  // then oldest→newest). Never sort by updatedAt — every debounced save
+  // then oldest→newest). Never sort by updatedAt: every debounced save
   // would reshuffle the list under the user's feet.
   const pages = Object.values(state.scenes)
     .filter((s) => (slug ? s.moduleSlug === slug : true))

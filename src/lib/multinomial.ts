@@ -1,5 +1,5 @@
 /**
- * multinomial.ts — Intervalos de confianza simultáneos para la multinomial
+ * multinomial.ts: Intervalos de confianza simultáneos para la multinomial
  * y auditoría Monte Carlo de su cobertura.
  *
  * Contexto docente (vigilancia de serotipos/variantes): la pregunta ya no es
@@ -12,7 +12,7 @@
  * UNAL 4(2):150-163; Sison & Glaz 1995; Goodman 1965; Quesenberry & Hurst
  * 1964):
  *
- *   - tcl:       Wald por celda con z_{1-a/2} — NI siquiera nominal
+ *   - tcl:       Wald por celda con z_{1-a/2}: NI siquiera nominal
  *                simultáneo; es el contraejemplo docente.
  *   - qh:        Quesenberry-Hurst, región chi^2 con B = chi2_{k-1,1-a}.
  *   - goodman:   misma forma cuadrática con B = chi2_{1,1-a/k} (Bonferroni);

@@ -57,7 +57,7 @@ function addSections(
   const sceneVisits = session?.sceneVisits ?? [];
   if (sections.length === 0 && sceneVisits.length === 0) return;
   // One chronological journey: module sections and board pages shown,
-  // merged by timestamp — the "dónde inició, dónde terminó" of the class.
+  // merged by timestamp: the "dónde inició, dónde terminó" of the class.
   const journey = [
     ...sections.map((s) => ({
       ts: s.timestamp,
@@ -167,7 +167,7 @@ export interface BoardPage {
   dataUrl: string;
 }
 
-/** One PDF page per board page — a session report must carry them all. */
+/** One PDF page per board page; a session report must carry them all. */
 async function addBoardPages(
   doc: jsPDF,
   boardPages: BoardPage[] | undefined,

@@ -6,7 +6,7 @@ import { Radar, Stethoscope, Landmark, ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Rutas por perfil — Datos Epidemiológicos',
+  title: 'Rutas por perfil · Datos Epidemiológicos',
   description:
     'Tres rutas de lectura sobre el mismo curso: vigilancia epidemiológica, práctica clínica y política de salud pública.',
 };
@@ -79,9 +79,9 @@ export default function RutasPage() {
           <p className="mt-3 text-ink-600">
             El orden lineal 0→19 sirve al curso completo, pero nadie es a la
             vez vigilante, clínico y analista de política. Cada ruta marca su{' '}
-            <strong>núcleo</strong> —lo que hay que leer completo— y su{' '}
-            <strong>profundización prioritaria</strong> —los plegables y
-            anexos que conviene abrir primero—. Los módulos fuera de tu ruta
+            <strong>núcleo</strong> (lo que hay que leer completo) y su{' '}
+            <strong>profundización prioritaria</strong> (los plegables y
+            anexos que conviene abrir primero). Los módulos fuera de tu ruta
             siguen disponibles; la ruta ordena, no excluye.
           </p>
         </header>

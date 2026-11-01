@@ -89,7 +89,7 @@ export function AssistantContextBridge({
   }, [slug]);
 
   // Session mirror: subscribe to session-store notifications instead of
-  // polling — visited sections update exactly when the session mutates.
+  // polling: visited sections update exactly when the session mutates.
   useEffect(() => {
     let active = true;
     const syncSections = async () => {

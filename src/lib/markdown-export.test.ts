@@ -5,7 +5,7 @@ import type { Session, Capture } from './session-store';
 const session: Session = {
   version: 2,
   id: 's1',
-  title: 'Clase 5 — LMM',
+  title: 'Clase 5 · LMM',
   courseId: 'mlm',
   moduleSlug: 'lmm',
   startedAt: 1700000000000,
@@ -44,7 +44,7 @@ describe('buildSessionMarkdown', () => {
   const md = buildSessionMarkdown(session, captures, chat);
 
   it('includes header, sections, captures, questions and chat', () => {
-    expect(md).toContain('# Clase 5 — LMM');
+    expect(md).toContain('# Clase 5 · LMM');
     expect(md).toContain('## Secciones navegadas');
     expect(md).toContain('lmm-intro');
     expect(md).toContain('## Capturas');

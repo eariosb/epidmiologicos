@@ -343,7 +343,7 @@ export function PValueLab({ title }: { title?: ReactNode }) {
 
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full" role="img"
         aria-label="Arriba: distribución del estadístico z bajo H0 y bajo un efecto real; el estudio marcado muestra su p como el área en la cola. Abajo: histograma de valores p de 4000 estudios.">
-        {/* ——— Panel A: dónde nace el valor p ——— */}
+        {/* Panel A: dónde nace el valor p */}
         <text x={PA_L} y={PA_TOP - 4} fontSize={9} fontWeight={600} fill={tokens.chart.title}>
           ¿De dónde sale un p? El z de cada estudio y el área en la cola
         </text>
@@ -353,7 +353,7 @@ export function PValueLab({ title }: { title?: ReactNode }) {
         {/* p del estudio marcado: área bajo H0 más allá de |z1| */}
         <polygon points={tail(0, Math.abs(sim.z1), ZMAX)} fill={tokens.status.danger} opacity={0.28} />
         <polygon points={tail(0, ZMIN, -Math.abs(sim.z1))} fill={tokens.status.danger} opacity={0.28} />
-        {/* α: |z| ≥ zc bajo H0 — la regla de decisión, siempre el 5% del gris */}
+        {/* α: |z| ≥ zc bajo H0, la regla de decisión, siempre el 5% del gris */}
         <polygon points={tail(0, zc, ZMAX)} fill={tokens.status.danger} opacity={0.1} />
         <polygon points={tail(0, ZMIN, -zc)} fill={tokens.status.danger} opacity={0.1} />
         <polyline points={curve(0)} fill="none" stroke={nullCol} strokeWidth={1.4} />
@@ -384,7 +384,7 @@ export function PValueLab({ title }: { title?: ReactNode }) {
         <text x={Math.min(zx(sim.z1) + 8, PA_R - 150)} y={PA_BOT + 22} fontSize={8}
           fill={tokens.status.danger}>su p = el área roja = {sim.p1.toFixed(3)}</text>
 
-        {/* ——— Panel B: a dónde van a parar los p ——— */}
+        {/* Panel B: a dónde van a parar los p */}
         <text x={L} y={TOP - 6} fontSize={9} fontWeight={600} fill={tokens.chart.title}>
           ¿Adónde van a parar? Los p de 4000 estudios
         </text>
@@ -460,7 +460,7 @@ export function PValueLab({ title }: { title?: ReactNode }) {
         Arriba se ve de dónde sale un p: el rombo es el z de un estudio y su p es el área roja
         bajo la curva gris más allá de él. La línea punteada lleva ese mismo p al eje de abajo:
         área en la cola de arriba = posición en el histograma. Las líneas rojas fijas son α, la
-        regla de decisión — no son un valor p. Pon d = 0: las dos curvas coinciden y el
+        regla de decisión: no son un valor p. Pon d = 0: las dos curvas coinciden y el
         histograma es plano; bajo H₀ el p es uniforme y cae bajo α el 5% de las veces. Sube d o
         n: la curva azul se separa, la zona azul (potencia) crece y los p se amontonan a la
         izquierda. Ahora mueve la proporción de nulas verdaderas: con 90% de nulas y potencia

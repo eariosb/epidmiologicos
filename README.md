@@ -4,8 +4,8 @@ Curso interactivo de **análisis de datos epidemiológicos** con R ejecutándose
 en el navegador (webR), para la Escuela de Estadística de la Universidad
 Nacional de Colombia, sede Medellín. Hereda arquitectura, pizarra digital,
 asistente IA con RAG y sistema de diseño del curso *Procesos Estocásticos*,
-con contenido propio guiado por **Woodward (2014)** — *Epidemiology: Study
-Design and Data Analysis* — y el material del profesor **Juan Carlos Salazar
+con contenido propio guiado por **Woodward (2014)** (*Epidemiology: Study
+Design and Data Analysis*) y el material del profesor **Juan Carlos Salazar
 Uribe** (curso ADEI).
 
 La escritura es deliberadamente **pedagógica**: cada concepto se define antes
@@ -19,15 +19,15 @@ Una idea central por módulo: cada uno tiene **un concepto, un ejemplo
 ancla, un visual interactivo y un producto** que alimenta un portafolio
 analítico. El sitio ofrece dos niveles seleccionables en la navegación:
 
-- **Curso I — Análisis Estadístico de Datos Epidemiológicos I** (repaso +
+- **Curso I · Análisis Estadístico de Datos Epidemiológicos I** (repaso +
   19 módulos en seis bloques): el curso de pregrado completo, coherente
   con el material de Salazar y la espina dorsal de Woodward.
-- **Curso II — Análisis Estadístico de Datos Epidemiológicos II**
+- **Curso II · Análisis Estadístico de Datos Epidemiológicos II**
   (módulos II-1 a II-10 en tres bloques): el curso avanzado, con la
   maquinaria profunda y la práctica de campo.
 
 Cada módulo usa la **arquitectura de capas**: el núcleo queda a la vista
-y la profundidad vive en dos plegables con contratos distintos —
+y la profundidad vive en dos plegables con contratos distintos:
 `<Profundiza>` (demostraciones, literatura, matiz metodológico) y
 `<SalaDeMaquinas>` (implementación, enumeración, trampas de software,
 advertencias de reproducibilidad). La página **`/rutas`** genera las tres
@@ -35,23 +35,23 @@ rutas por perfil (vigilancia, clínico, política) desde el frontmatter de
 los módulos; el hilo transversal de **precisión** (m5 → m6 → m9 → m13 →
 m17) lleva su propia marca.
 
-### Curso I — repaso + 19 módulos
+### Curso I · repaso + 19 módulos
 
-**Antes de empezar — Repaso (módulo 0)**
+**Antes de empezar: Repaso (módulo 0)**
 
 0. Leer los datos antes de analizarlos: unidad de análisis, diccionario,
    faltantes estructurales, atípicos, tres lecturas de una tabla,
    muestreo, distribuciones, vigilancia y **anatomía del test
    estadístico** (estadístico de prueba, distribución bajo H₀, valor p,
    α/β, potencia real y empírica, significancia vs. relevancia,
-   catálogo de tests epidemiológicos) — todo anclado en las bases
+   catálogo de tests epidemiológicos): todo anclado en las bases
    reales del curso (`valung`, `recid`, `bcg`, parejas 1:1, `ddimer`,
    leucemia), con el simulador `EpiCurveExplorer` y la auditoría
    `DataQualityPanel` (conformidad/completitud/plausibilidad, que
    califica el veredicto del estudiante). Sin renumerar: es lectura
    previa recomendada, no cuenta en el "de 19".
 
-**Bloque I — Diseño, medidas e inferencia en la tabla 2×2 (módulos 1–6)**
+**Bloque I · Diseño, medidas e inferencia en la tabla 2×2 (módulos 1–6)**
 
 1. ¿Qué es la epidemiología cuantitativa? Historia, ética y el caso fundacional (Snow, Tuskegee, Belmont) + normativa colombiana aplicada a datos (Res. 8430, Ley 1581)
 2. El mapa de los diseños y la pregunta causal (árbol interactivo, Bradford Hill, emulación del ensayo objetivo) + **Simépolis**: ciudad de 20 000 habitantes con verdad conocida (`CityLab`), muestreable con cuatro diseños para ver emerger confusión y sesgo de Berkson
@@ -60,37 +60,37 @@ m17) lleva su propia marca.
 5. Medidas de asociación II: NNT, riesgo atribuible, ICs y valores p; tamaño muestral por fórmula, calibración exacta y la longitud del IC como variable aleatoria con garantía P(L ≤ L₀)
 6. Inferencia exacta y calibración en muestras pequeñas: Fisher vs. procedimientos incondicionales (Boschloo, z agrupada, Berger–Boos, mid-p), potencia exacta, correcciones con celdas en cero y comparativa de métodos de IC para una proporción (caso Perondi)
 
-**Bloque II — Confusión e interacción (módulos 7–10)**
+**Bloque II · Confusión e interacción (módulos 7–10)**
 
 7. Confusión: definición, criterios y DAGs; la Tabla 1 como diagnóstico (diferencias estandarizadas, `Table1Builder`) y las condiciones de Cornfield
 8. Estratificación y Mantel–Haenszel
 9. Estandarización y tasas ajustadas (Glasgow, SMR)
 10. Interacción, modificación de efecto y paradoja de Simpson
 
-**Bloque III — Cohortes y supervivencia (módulos 11–13)**
+**Bloque III · Cohortes y supervivencia (módulos 11–13)**
 
 11. Diseño de cohortes y tablas de vida (Gantt de seguimiento); tiempo cero, tiempo inmortal y usuarios nuevos sobre RECID
 12. Kaplan–Meier y log-rank (leucemia, VALUNG)
 13. Persona-tiempo, SMR y aproximación a Cox (RECID); covariables dependientes del tiempo (`emp1`–`emp52` a formato largo)
 
-**Bloque IV — Casos y controles (módulos 14–15)**
+**Bloque IV · Casos y controles (módulos 14–15)**
 
 14. Diseño de casos y controles: población fuente, controles hospitalarios, sesgos y selección (Berkson, Sackett) + análisis de sesgo cuantitativo (Se/Sp, `BiasAnalysis2x2`) + **prueba de estrés con n chico**: el IC del OR auditado por simulación, Woolf vs. bootstrap (`BootstrapStress`)
 15. Matching, McNemar y clogit (BCG, DDIMER; la equivalencia McNemar ⇔ CMH); sets de tamaño variable y análisis condicional obligatorio
 
-**Bloque V — Modelación y síntesis (módulos 16–17)**
+**Bloque V · Modelación y síntesis (módulos 16–17)**
 
 16. Regresión logística y Poisson multivariante (ROC/AUC); datos faltantes MCAR/MAR/MNAR (`MissingDataLab`), regla 10 EPV y Firth
 17. Síntesis: causalidad acumulativa, meta-análisis, UQ y decisiones informadas; **auditoría del estimador de τ²** (DerSimonian–Laird vs. Paule–Mandel, `Tau2Audit`), E-value (`EValueCalculator`) y guías STROBE/RECORD
 
-**Bloque VI — Herramientas y fronteras (transversal)**
+**Bloque VI · Herramientas y fronteras (transversal)**
 
 18. Herramientas computacionales: R, SAS y Python para epidemiología (traductor de estimandos, paquetes esenciales, depuración y reproducibilidad) + **"la máquina también miente"**: la misma "prueba exacta bilateral" cambia de veredicto según la definición que implementa cada paquete (minlike vs. central) y el desempate de empates en punto flotante
 19. Fronteras abiertas: avances verificados, repositorios de datos, referentes y casos de brote en Colombia y el mundo
 
-### Curso II — 10 módulos en tres bloques
+### Curso II · 10 módulos en tres bloques
 
-**Bloque II-A — Fundamentos**
+**Bloque II-A · Fundamentos**
 
 - II-1. La sala de máquinas de la inferencia exacta: espacio de tablas,
   supremos, condicional vs. incondicional, enumeración y reproducibilidad
@@ -103,7 +103,7 @@ m17) lleva su propia marca.
 - II-5. Emulación del ensayo objetivo: protocolo en seis casillas,
   matching en producción, IPTW estabilizado, clonación–censura–pesos
 
-**Bloque II-B — Vigilancia y decisión**
+**Bloque II-B · Vigilancia y decisión**
 
 - II-6. Vigilancia epidemiológica y nowcasting: el retraso de reporte
   como variable aleatoria, corrección de la cola, atributos del sistema
@@ -115,7 +115,7 @@ m17) lleva su propia marca.
 - II-9. Incertidumbre y decisión: umbrales, valor de la información
   (EVPI) y el **párrafo del ministerio** (una página, cinco movimientos)
 
-**Bloque II-C — Práctica de campo**
+**Bloque II-C · Práctica de campo**
 
 - II-10. Integración real: **`valung_corrupto.csv`** (IDs duplicados,
   formatos mixtos, censura invertida), la ficha de limpieza auditable,
@@ -135,8 +135,8 @@ m17) lleva su propia marca.
 - **Módulos MDX** con KaTeX (`remark-math` + `rehype-katex`), quizzes,
   flashcards y ejercicios de laboratorio.
 - **Glosario en vivo con tooltips** (`<Term>` + `src/lib/glossary.ts`):
-  **258 entradas** —siglas, símbolos y conceptos, en 13 secciones
-  temáticas— en un diccionario único que alimenta dos superficies.
+  **258 entradas** (siglas, símbolos y conceptos, en 13 secciones
+  temáticas) en un diccionario único que alimenta dos superficies.
   En el texto, `<Term k="RR">` dibuja un subrayado punteado discreto y,
   al hover/focus, un tooltip con la expansión en español y el original
   en inglés; si la clave existe en el glosario, además enlaza al ancla
@@ -162,10 +162,10 @@ m17) lleva su propia marca.
   potencia y tamaño reales por enumeración, correcciones con celdas en
   cero, cobertura de ICs, ROC, DAGs interactivos, y la **capa de
   auditoría**: cobertura simultánea multinomial, estrés del IC del OR con
-  n chico y la estimación de τ² — cada auditor reporta nivel nominal vs.
+  n chico y la estimación de τ²: cada auditor reporta nivel nominal vs.
   empírico con su error Monte Carlo.
 - **Capa de práctica** (`ConductStudy`, `QualitySims`, `WorldSims`): el
-  hilo "la investigación como se hace" — conducción del estudio en 7
+  hilo "la investigación como se hace": conducción del estudio en 7
   pasos por diseño, Tabla 1 con diferencias estandarizadas
   (`Table1Builder`), auditoría de calidad del dato calificada
   (`DataQualityPanel`), datos faltantes MCAR/MAR/MNAR con verdad
@@ -180,7 +180,7 @@ m17) lleva su propia marca.
   `src/lib/precision.ts` vía `scripts/build-claims.ts` →
   `src/content/claims.json`. Si el cómputo cambia, el texto lo refleja.
   Las cifras del resto de módulos que aparecen en prosa salen de la celda
-  ejecutable adyacente — sus salidas están congeladas en
+  ejecutable adyacente; sus salidas están congeladas en
   `tests/r-snapshots/` (112 archivos) y `pnpm check:r` las audita.
 - **Anexos** (`/anexos`): manifiesto validado con Zod (`src/lib/anexos.ts`)
   con el ensayo técnico del test exacto de Fisher (MD + PDF), los scripts
@@ -188,10 +188,10 @@ m17) lleva su propia marca.
   generador de Simépolis con verdad conocida, en paridad con el código
   TypeScript de `CityLab`).
 - **Bibliografía** (`/bibliografia`): apéndice curado (`src/lib/lecturas.ts`)
-  de 100 referencias organizadas por tema —textos base, clásicos de la
+  de 100 referencias organizadas por tema (textos base, clásicos de la
   disciplina, inferencia exacta y auditoría por simulación, faltantes,
   muestras pequeñas, sesgos, síntesis de evidencia, ética y normativa
-  colombiana— con enlaces DOI y recursos abiertos (STROBE, EQUATOR,
+  colombiana) con enlaces DOI y recursos abiertos (STROBE, EQUATOR,
   Belmont, Helsinki, Ley 1581, DAGitty, Epi Handbook, ColOpenData,
   EpiNow2).
 - **Asistente IA con RAG**: corpus propio (`src/lib/rag/corpus.ts`) de
@@ -199,15 +199,15 @@ m17) lleva su propia marca.
   bibliográficas, 64 fragmentos de anexos),
   recuperación BM25 local con prioridad al módulo activo, perfil
   pedagógico del curso inyectado al prompt del paquete
-  `@cursos/blackboard`. Cuatro modos — **Preguntar, Explicar, Generar R,
-  Graficar** — con captura del lienzo adjunta cuando el proveedor tiene
+  `@cursos/blackboard`. Cuatro modos (**Preguntar, Explicar, Generar R,
+  Graficar**) con captura del lienzo adjunta cuando el proveedor tiene
   visión, herramientas de agente (`insert_math`, `insert_matrix`,
   `run_r` sobre WebR, `cite`), citas verificadas contra el corpus
   inyectado, validación de DOI/ISBN y de LaTeX vía KaTeX, historial de
   conversación persistente por sesión y código R ejecutable en un
   sandbox WebR bajo la pizarra.
 - **Pizarra digital** (paquete `packages/blackboard`, Excalidraw):
-  panel acoplable con barra de herramientas completa — dibujo a mano
+  panel acoplable con barra de herramientas completa: dibujo a mano
   alzada, formas, texto, borrador, modo presentación, modo docente/
   estudiante, capturas por región, fórmulas, matrices, tablas, notas
   y preguntas. Cada página de la pizarra persiste por módulo y puede
@@ -215,7 +215,7 @@ m17) lleva su propia marca.
 - **La sesión de clase como objeto central** (`src/lib/session-store.ts`,
   `useSession`, `SessionToolbar`): el docente abre la clase con
   **Nueva**, navega con **Módulos**, escribe en la pizarra y cierra con
-  **Finalizar** — cada clase queda como un registro con inicio, fin y
+  **Finalizar**: cada clase queda como un registro con inicio, fin y
   recorrido cronológico (módulos visitados, páginas de pizarra
   mostradas, capturas por región, preguntas de los estudiantes, chat
   del asistente). Desde **Sesiones** se carga cualquier clase pasada,
@@ -261,7 +261,7 @@ Web Worker (`src/workers/exact.worker.ts`) a través de un protocolo
 `useExactTask`, que conserva el último resultado mientras recalcula y
 descarta respuestas obsoletas. Las funciones de tarea viven en
 `src/lib/exactTasks.ts` y son **las mismas** en worker y en el plan B
-síncrono — los resultados son idénticos bit a bit. El plan B se fuerza
+síncrono: los resultados son idénticos bit a bit. El plan B se fuerza
 con la variable `NEXT_PUBLIC_EXACT_WORKER=0`.
 
 ### Tokens semánticos de diseño
@@ -319,7 +319,7 @@ las capturas visuales (solo tras un cambio visual declarado);
 `pnpm check:glossary` la cobertura del glosario.
 
 Nota de entorno (Windows): no ejecutar `next dev` y `next start` sobre el
-mismo `.next` ni dos `next start` a la vez — corrompen los manifiestos
+mismo `.next` ni dos `next start` a la vez; corrompen los manifiestos
 (páginas más cortas sin TOC, errores 400 en chunks). Un solo servidor de
 producción por build.
 
@@ -344,8 +344,8 @@ Jeffreys, Clopper–Pearson, verosimilitud), cobertura exacta, la
 distribución exacta de la longitud L por enumeración binomial, el n
 mínimo con garantía P(L ≤ L₀) ≥ 1 − β (con manejo de los dientes de
 sierra por no monotonía), assurance con prior Beta(a, b) y el caso
-exponencial exacto vía χ². La fórmula original del documento —que
-confundía L con la semiamplitud— se conserva solo como contraejemplo.
+exponencial exacto vía χ². La fórmula original del documento (que
+confundía L con la semiamplitud) se conserva solo como contraejemplo.
 La usan `CIMethodsExplorer` (módulo 6) y `PrecisionSampleSizeExplorer`
 (módulo 5).
 

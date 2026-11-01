@@ -4,7 +4,7 @@ import { BookOpen, ExternalLink } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Bibliografía — Datos Epidemiológicos',
+  title: 'Bibliografía · Datos Epidemiológicos',
   description:
     'Apéndice de bibliografía, enlaces y lecturas de interés del curso, organizado por tema.',
 };
@@ -24,9 +24,9 @@ export default function BibliografiaPage() {
           <p className="mt-3 text-ink-600">
             {total} referencias organizadas por los temas del curso: el andamiaje
             teórico (Woodward, Rothman &amp; Greenland, Hernán &amp; Robins) y las
-            lecturas que soportan la columna práctica —conducir el estudio,
+            lecturas que soportan la columna práctica (conducir el estudio,
             explorar antes de inferir, datos del mundo real e intuición
-            cuantitativa—. Cada cita indica para qué la usa el curso. Los
+            cuantitativa). Cada cita indica para qué la usa el curso. Los
             documentos técnicos, PDFs y scripts del curso están en los{' '}
             <a
               href="/anexos"

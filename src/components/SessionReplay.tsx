@@ -30,7 +30,7 @@ import {
 
 interface SessionReplayProps {
   session: Session;
-  /** Whether this session is the active one — board restore only then. */
+  /** Whether this session is the active one; board restore only then. */
   isActive: boolean;
   canvasRef?: React.RefObject<BlackboardCanvasRef | null>;
   onClose: () => void;
@@ -97,7 +97,7 @@ export function SessionReplay({ session, isActive, canvasRef, onClose }: Readonl
     await loadScene(sceneId);
     dispatch({ type: 'SELECT_SCENE', id: sceneId });
     // The modal covers the whole viewport: close it so the restored page
-    // is actually visible — the point of "Ver en pizarra".
+    // is actually visible: the point of "Ver en pizarra".
     onClose();
   };
 

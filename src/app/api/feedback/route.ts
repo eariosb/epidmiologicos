@@ -1,6 +1,6 @@
-// POST /api/feedback — guarda una respuesta de encuesta en feedback_responses.
+// POST /api/feedback: guarda una respuesta de encuesta en feedback_responses.
 // Auth: x-participant-token. Dedup por (participant, instrument, module_slug)
-// vía upsert — re-enviar reemplaza la respuesta anterior (no duplica).
+// vía upsert: re-enviar reemplaza la respuesta anterior (no duplica).
 // Especificación: prueba-campo/docs/05-instrumentos-encuesta.md.
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Dedup "última respuesta gana": el índice único usa coalesce(module_slug,'')
-  // y PostgREST no puede targetear índices de expresión — delete + insert.
+  // y PostgREST no puede targetear índices de expresión; delete + insert.
   const supa = fieldtestClient();
   let del = supa
     .from('feedback_responses')

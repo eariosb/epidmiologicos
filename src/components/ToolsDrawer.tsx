@@ -32,7 +32,7 @@ interface ToolsDrawerProps {
 }
 
 /**
- * Drawer body — the menu strip lives in CourseBlackboard so the tabs read
+ * Drawer body: the menu strip lives in CourseBlackboard so the tabs read
  * as a menu bar above the canvas; this component only renders the active
  * tool's panel.
  */

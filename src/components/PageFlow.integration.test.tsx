@@ -2,7 +2,7 @@
  * End-to-end page flow, wired exactly like CourseBlackboard:
  * Provider + ContextBridge + PageNav + BlackboardCanvas, with the Excalidraw
  * component stubbed by a faithful store-backed fake whose updateScene FIRES
- * onChange (the real component does on every commit — earlier unit mocks
+ * onChange (the real component does on every commit; earlier unit mocks
  * skipped that, hiding integration bugs).
  */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';

@@ -14,7 +14,7 @@ export interface BibEntry {
 
 /**
  * Canonical references for the epidemiological data-analysis course. These
- * are the ONLY bibliography sources the assistant may cite as [bib:*] —
+ * are the ONLY bibliography sources the assistant may cite as [bib:*];
  * anything else is sanitized to [referencia no verificada].
  *
  * Texto guía: Woodward (2014). Material de clase: notas del profesor Juan
@@ -219,7 +219,7 @@ export const BIBLIOGRAPHY: BibEntry[] = [
     year: 2024,
     venue: 'Material del curso, módulo 5',
     summary:
-      'La propuesta que sustenta el hilo de precisión: la longitud del IC es una variable aleatoria con distribución enumerable, no un δ fijo impuesto; dimensionar n exige controlar α (cobertura) y β (garantía P(L ≤ L₀)) simultáneamente. La fórmula original del documento —que sumaba z_β a z_α confundiendo L con la semiamplitud— se conserva en el código solo como contraejemplo pedagógico, corregida por enumeración exacta.',
+      'La propuesta que sustenta el hilo de precisión: la longitud del IC es una variable aleatoria con distribución enumerable, no un δ fijo impuesto; dimensionar n exige controlar α (cobertura) y β (garantía P(L ≤ L₀)) simultáneamente. La fórmula original del documento (que sumaba z_β a z_α confundiendo L con la semiamplitud) se conserva en el código solo como contraejemplo pedagógico, corregida por enumeración exacta.',
   },
   {
     id: 'altham-1969',
@@ -255,7 +255,7 @@ export const BIBLIOGRAPHY: BibEntry[] = [
     year: 1996,
     venue: 'Ejemplo de controles de vecindario y sesgo de detección',
     summary:
-      'Caso de enseñanza sobre controles de vecindario en melanoma: la exposición "acceso a dermatoscopio" actúa como confusor de detección —quien se revisa la piel encuentra más lesiones—. Ilustra cómo un confusor de vía de detección contamina la asociación.',
+      'Caso de enseñanza sobre controles de vecindario en melanoma: la exposición "acceso a dermatoscopio" actúa como confusor de detección (quien se revisa la piel encuentra más lesiones). Ilustra cómo un confusor de vía de detección contamina la asociación.',
   },
   {
     id: 'moritz-1997-hip',
@@ -264,7 +264,7 @@ export const BIBLIOGRAPHY: BibEntry[] = [
     year: 1997,
     venue: 'Ejemplo de la Tabla 6.6 de Woodward',
     summary:
-      'El experimento mental hecho estudio: comparar los OR de un estudio de fractura de cadera usando controles comunitarios versus hospitalarios —la Tabla 6.6 de Woodward muestra que la estimación cambia con la fuente de controles—. Demuestra empíricamente que el control no es un detalle operativo sino parte del estimando.',
+      'El experimento mental hecho estudio: comparar los OR de un estudio de fractura de cadera usando controles comunitarios versus hospitalarios (la Tabla 6.6 de Woodward muestra que la estimación cambia con la fuente de controles). Demuestra empíricamente que el control no es un detalle operativo sino parte del estimando.',
   },
   {
     id: 'sackett-1979-sesgos',

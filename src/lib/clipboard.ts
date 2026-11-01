@@ -1,6 +1,6 @@
 /**
  * Copies text to the clipboard, falling back to a hidden textarea +
- * execCommand when the async Clipboard API is unavailable — e.g. on
+ * execCommand when the async Clipboard API is unavailable, e.g. on
  * insecure origins (LAN IPs) where navigator.clipboard is undefined.
  * Never throws: returns false when nothing could be copied.
  */

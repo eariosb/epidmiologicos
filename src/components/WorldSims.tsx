@@ -53,9 +53,9 @@ const fmt = (x: number, d = 2) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 type Mechanism = 'MCAR' | 'MAR' | 'MNAR';
 
 const MECH_LABEL: Record<Mechanism, string> = {
-  MCAR: 'MCAR — faltar no depende de nada',
-  MAR: 'MAR — faltar depende de la edad (observada)',
-  MNAR: 'MNAR — faltar depende del propio Kps',
+  MCAR: 'MCAR: faltar no depende de nada',
+  MAR: 'MAR: faltar depende de la edad (observada)',
+  MNAR: 'MNAR: faltar depende del propio Kps',
 };
 
 /**
@@ -90,7 +90,7 @@ export function MissingDataLab({ title }: { title?: ReactNode }) {
         const z = (d.age - meanAge) / 10;
         return Math.min(0.95, Math.max(0.02, rate * 2 * (1 / (1 + Math.exp(-z)))));
       }
-      // MNAR: el propio valor decide — Kps bajo -> mas probable faltar
+      // MNAR: el propio valor decide; Kps bajo -> mas probable faltar
       const z = (80 - d.kps) / 20;
       return Math.min(0.95, Math.max(0.02, rate * 2 * (1 / (1 + Math.exp(-z)))));
     });
@@ -227,9 +227,9 @@ export function MissingDataLab({ title }: { title?: ReactNode }) {
             ({(result.actualRate * 100).toFixed(0)}% real). {mech === 'MCAR' &&
               'MCAR: los casos completos no sesgan, solo pierden precisión.'}
             {mech === 'MAR' &&
-              'MAR: la edad explica quién falta — la regresión sobre la edad recupera parte del sesgo que los casos completos dejan.'}
+              'MAR: la edad explica quién falta; la regresión sobre la edad recupera parte del sesgo que los casos completos dejan.'}
             {mech === 'MNAR' &&
-              'MNAR: quien falta tiene Kps bajo — ni la media ni la edad lo reparan; hace falta un análisis de sensibilidad.'}
+              'MNAR: quien falta tiene Kps bajo: ni la media ni la edad lo reparan, hace falta un análisis de sensibilidad.'}
           </p>
         </>
       )}
@@ -255,8 +255,8 @@ function eValue(rr: number): number {
 
 /**
  * El E-value (VanderWeele & Ding 2017): qué tan fuerte tendría que ser
- * un confusor no medido — asociado con exposición y desenlace por ese
- * factor— para explicar por completo el RR observado, y para mover el
+ * un confusor no medido (asociado con exposición y desenlace por ese
+ * factor) para explicar por completo el RR observado, y para mover el
  * límite del IC más cercano a 1 hasta 1.
  */
 export function EValueCalculator({ title }: { title?: ReactNode }) {
@@ -316,12 +316,12 @@ export function EValueCalculator({ title }: { title?: ReactNode }) {
 
       <p className={NOTE}>
         E = RR + √(RR·(RR−1)). No prueba causalidad ni ausencia de
-        confusión — cuantifica cuánta confusión no medida haría falta, en
+        confusión: cuantifica cuánta confusión no medida haría falta, en
         la misma escala del efecto.
       </p>
 
       <SimGuide>
-        <ul><li>Prueba RR = 2: el confusor necesita dos asociaciones de 3.41 — más fuerte que la mayoría de confusores clínicos.</li>
+        <ul><li>Prueba RR = 2: el confusor necesita dos asociaciones de 3.41, más fuerte que la mayoría de confusores clínicos.</li>
         <li>Con RR = 1.2 el E-value cae a ~1.69: efectos modestos se explican con confusión plausible.</li>
         <li>El E-value del límite es la versión honesta: cuenta lo robusto que queda el hallazgo tras la incertidumbre.</li></ul>
       </SimGuide>
@@ -416,7 +416,7 @@ export function BiasAnalysis2x2({ title }: { title?: ReactNode }) {
             <p className="mt-1 text-xs text-ink-600">
               Con Se = {se.toFixed(2)} y Sp = {sp.toFixed(2)} la prevalencia
               corregida sale de [0,1]: esa combinación es incompatible con
-              los datos observados — también es un hallazgo.
+              los datos observados: también es un hallazgo.
             </p>
           )}
         </div>
@@ -424,7 +424,7 @@ export function BiasAnalysis2x2({ title }: { title?: ReactNode }) {
 
       <p className={NOTE}>
         La mala clasificación <em>no diferencial</em> (misma Se/Sp en casos y
-        controles) suele atenuar el OR hacia 1 — pero no siempre: el sesgo
+        controles) suele atenuar el OR hacia 1, pero no siempre: el sesgo
         depende de dónde queda la prevalencia corregida. Si la clasificación
         difiere entre casos y controles (recuerdo), la corrección necesita
         Se/Sp por fila.
@@ -432,8 +432,8 @@ export function BiasAnalysis2x2({ title }: { title?: ReactNode }) {
 
       <SimGuide>
         <ul><li>Con Se = Sp = 1 el OR corregido = el observado: el ejercicio calibra.</li>
-        <li>Baja Se a 0.8 manteniendo Sp: el OR corregido se aleja de 1 — el observado estaba atenuado.</li>
-        <li>Lleva Se+Sp cerca de 1 (p. ej. 0.55/0.55): la corrección explota — medición casi aleatoria.</li></ul>
+        <li>Baja Se a 0.8 manteniendo Sp: el OR corregido se aleja de 1: el observado estaba atenuado.</li>
+        <li>Lleva Se+Sp cerca de 1 (p. ej. 0.55/0.55): la corrección explota: medición casi aleatoria.</li></ul>
       </SimGuide>
     </div>
   );
@@ -445,10 +445,10 @@ type Citizen = { C: number; E: number; D: number; H: number };
 type Design = 'cohorte' | 'cc-poblacion' | 'cc-hospital' | 'transversal';
 
 const DESIGN_LABEL: Record<Design, string> = {
-  cohorte: 'Cohorte — muestra aleatoria, seguir hasta el desenlace',
-  'cc-poblacion': 'Casos y controles — controles de la población fuente',
-  'cc-hospital': 'Casos y controles — controles hospitalarios',
-  transversal: 'Transversal — muestra aleatoria, medir hoy',
+  cohorte: 'Cohorte: muestra aleatoria, seguir hasta el desenlace',
+  'cc-poblacion': 'Casos y controles: controles de la población fuente',
+  'cc-hospital': 'Casos y controles: controles hospitalarios',
+  transversal: 'Transversal: muestra aleatoria, medir hoy',
 };
 
 const CITY_N = 20000;
@@ -552,7 +552,7 @@ export function CityLab({ title }: { title?: ReactNode }) {
         Ciudad cerrada de {CITY_N.toLocaleString('es')} habitantes. La
         exposición triplica el riesgo <em>dentro de cada estrato del
         confusor C</em> (verdad sembrada: <strong>RR = 3.00</strong>), pero
-        C también causa la exposición — la asociación cruda no es la
+        C también causa la exposición: la asociación cruda no es la
         causal. La hospitalización H depende de D <em>y</em> de E: es la
         trampa del colisionador. Mismos datos que{' '}
         <code>public/anexos/ciudad_simulada.R</code>.
@@ -601,7 +601,7 @@ export function CityLab({ title }: { title?: ReactNode }) {
           </p>
           <p className="mt-1 text-xs text-ink-600">
             {result.kind === 'pob'
-              ? `n = ${result.n} — ¿crudo o ajustado por C?`
+              ? `n = ${result.n}: ¿crudo o ajustado por C?`
               : `${result.nControls} controles de ${result.n} en la muestra`}
           </p>
         </div>
@@ -611,15 +611,15 @@ export function CityLab({ title }: { title?: ReactNode }) {
         {design === 'cohorte' &&
           'La cohorte recupera el RR, pero el crudo sale inflado (≈3.85), no 3.00: C confunde. Estratificar o ajustar por C acerca al 3.00. Ojo con el OR: con un riesgo de 19 % en los expuestos la enfermedad no es rara y el OR crudo (≈4.5) ya se separa del RR.'}
         {design === 'transversal' &&
-          'El transversal ve la misma asociación cruda que la cohorte — mismo denominador, misma confusión — pero sin tiempo: no distingue incidencia de prevalencia.'}
+          'El transversal ve la misma asociación cruda que la cohorte (mismo denominador, misma confusión), pero sin tiempo: no distingue incidencia de prevalencia.'}
         {design === 'cc-poblacion' &&
-          'Con controles de la población fuente el OR ≈ el OR crudo de la ciudad — confundido por C, pero honesto en su marco. La comparación justa exige controles del mismo universo que produjo los casos.'}
+          'Con controles de la población fuente el OR ≈ el OR crudo de la ciudad: confundido por C, pero honesto en su marco. La comparación justa exige controles del mismo universo que produjo los casos.'}
         {design === 'cc-hospital' &&
-          'Controles hospitalarios: H depende de la exposición, así que los "sanos" del hospital están sobrerrepresentados en expuestos (P(E|control) ≈ 0.75 frente a 0.21 en la fuente). El OR se invierte — la exposición parece proteger. Sesgo de Berkson: condicionar sobre el colisionador.'}
+          'Controles hospitalarios: H depende de la exposición, así que los "sanos" del hospital están sobrerrepresentados en expuestos (P(E|control) ≈ 0.75 frente a 0.21 en la fuente). El OR se invierte: la exposición parece proteger. Sesgo de Berkson: condicionar sobre el colisionador.'}
       </p>
 
       <SimGuide>
-        <ul><li>Empieza por "controles hospitalarios": el OR sale por debajo de 1 — la exposición protectora es el artefacto del colisionador.</li>
+        <ul><li>Empieza por "controles hospitalarios": el OR sale por debajo de 1: la exposición protectora es el artefacto del colisionador.</li>
         <li>Cambia a controles de la población fuente: el OR vuelve a ≈4.5, el OR crudo de la ciudad: recuperaste la asociación, con la confusión incluida.</li>
         <li>En cohorte, compara el RR crudo con los RR por estrato de C (arriba, en la tarjeta "Crudo"): cada estrato ronda 3.00.</li></ul>
       </SimGuide>

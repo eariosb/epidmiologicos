@@ -163,12 +163,12 @@ camino espurio si se muestrea sobre él. La ciudad de Simépolis
 (`public/anexos/ciudad_simulada.R`) siembra ambas:
 
 - 20 000 habitantes, 30% con comorbilidad **C**.
-- **E** (exposición): 15% sin C pero 45% con C — la exposición viene
+- **E** (exposición): 15% sin C pero 45% con C; la exposición viene
   confundida.
 - **D**: riesgo base 4%, ×3 por exposición, ×2 por comorbilidad. La
   verdad causal sembrada es **RR = 3.00 dentro de cada estrato de C**.
 - **H** (hospitalización): sube con la enfermedad *y* con la exposición
-  por caminos separados — E → H ← D.
+  por caminos separados: E → H ← D.
 
 <RCell
   id="02/ciudad"
@@ -196,7 +196,7 @@ cat(sprintf("P(E) en controles de poblacion: %.2f\\n", mean(E[D==0])))
 cat(sprintf("P(E) en controles hospitalarios: %.2f\\n", mean(E[D==0 & H==1])))`}
 />
 
-La asociación cruda de la ciudad sale **inflada** — C confunde — y los
+La asociación cruda de la ciudad sale **inflada** porque C confunde, y los
 controles hospitalarios llegan con el triple de exposición que los de la
 población fuente: si los elige así, el estudio inventa una protección
 donde hay daño. El laboratorio siguiente deja comprobarlo muestreando la
@@ -215,7 +215,7 @@ Simépolis enseña que el **mecanismo de muestreo** es tan decisivo como el
 mecanismo causal: el mismo mundo produce RR honesto, RR confundido u OR
 invertido según quién entra a la muestra. Lo que no enseña es que los
 sesgos siempre se detecten: con datos reales no hay tarjeta de "verdad
-sembrada" — por eso el diseño se piensa *antes* de recolectar, no después.
+sembrada": por eso el diseño se piensa *antes* de recolectar, no después.
 </Callout>
 
 ## Doll y Hill: cohorte y casos-controles
@@ -259,7 +259,7 @@ con frecuencia.
 
 Los caminos del árbol difieren en el muestreo, no en el razonamiento.
 Sea cual sea el diseño, conducirlo exige responder las mismas siete
-preguntas en orden — de la pregunta al archivo analizable:
+preguntas en orden, de la pregunta al archivo analizable:
 
 <ConductStudy design="cualquier diseño">
   <ConductStep n={1}>
@@ -274,8 +274,8 @@ preguntas en orden — de la pregunta al archivo analizable:
     denominador honesto.
   </ConductStep>
   <ConductStep n={3}>
-    Criterios de inclusión y exclusión, esquema de muestreo y — en
-    estudios longitudinales — el **tiempo cero**: el instante en que
+    Criterios de inclusión y exclusión, esquema de muestreo y, en
+    estudios longitudinales, el **tiempo cero**: el instante en que
     elegibilidad, inicio de seguimiento y exposición coinciden.
   </ConductStep>
   <ConductStep n={4}>
@@ -308,7 +308,7 @@ que ocupa el resto del curso.
 
 El árbol tiene una rama que los libros a veces omiten porque no es un
 diseño nuevo sino una *situación*: **datos secundarios**. Historias
-clínicas, <Term k="RIPS">RIPS</Term>, <Term k="SIVIGILA">SIVIGILA</Term>, registros de cáncer, bases de aseguradoras —
+clínicas, <Term k="RIPS">RIPS</Term>, <Term k="SIVIGILA">SIVIGILA</Term>, registros de cáncer, bases de aseguradoras:
 datos que existen antes de la pregunta y que nadie recolectó para
 responderla. Fuera del aula es la situación más común.
 
@@ -329,9 +329,9 @@ luego se emula cada componente con los datos disponibles:
 | Plan de análisis | Declarado antes de ver resultados |
 
 La lección que condensa esta tabla: muchos sesgos célebres de los
-estudios observacionales — el <Term k="tiempo_inmortal">tiempo
-inmortal</Term>, los <Term k="usuarios_nuevos">usuarios
-prevalentes</Term> — no son problemas *de los datos*, son problemas de
+estudios observacionales, como el <Term k="tiempo_inmortal">tiempo
+inmortal</Term> y los <Term k="usuarios_nuevos">usuarios
+prevalentes</Term>, no son problemas *de los datos*, son problemas de
 un **tiempo cero mal definido**. Un registro hospitalario bien leído con
 tiempo cero correcto puede emular una comparación honesta; el mismo
 registro leído con tiempo cero ambiguo produce el tipo de asociación
@@ -340,7 +340,7 @@ fantasma que luego no se replica.
 <Callout type="note" title="Cuándo el cuarto camino es el único">
 Hay preguntas que ningún diseño prospectivo responde a tiempo (desenlaces
 raros, latencias largas) o que no es ético asignar. Los datos secundarios
-bien emulados son entonces la mejor evidencia posible — con el reporte
+bien emulados son entonces la mejor evidencia posible, con el reporte
 RECORD como estándar de transparencia. Los módulos 11 y 13 retoman este
 camino cuando la unidad pase a ser persona-tiempo.
 </Callout>

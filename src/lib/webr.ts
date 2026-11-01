@@ -10,7 +10,7 @@
  * Haenszel, McNemar, Kaplan-Meier by hand). `survival` is a recommended
  * package available in the wasm repo and installs lazily the first time
  * a cell calls `library(survival)`. `epiR`/`vcdExtra` may not be in the
- * wasm repo — the course computes their statistics in base R instead,
+ * wasm repo; the course computes their statistics in base R instead,
  * which is also more transparent pedagogically.
  */
 import type { WebR as WebRType } from 'webr';
@@ -42,7 +42,7 @@ const fetchedDatasets = new Set<string>();
 
 /**
  * Returns a shared, lazily-initialised WebR instance. Safe to call
- * multiple times — initialisation only happens once.
+ * multiple times; initialisation only happens once.
  */
 export function getWebR(): Promise<WebRType> {
   // Si el arranque falla (red, CDN), se olvida la promesa rechazada para

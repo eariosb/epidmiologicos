@@ -1,6 +1,6 @@
 'use client';
 
-// Consentimiento informado v1 ('v1-2026-10') — texto del doc 04 §3.
+// Consentimiento informado v1 ('v1-2026-10'): texto del doc 04 §3.
 // Dos casillas (aceptar registro / opt-in de contenido) + salida sin registro.
 // Al aceptar: persiste en /api/consent (auditoría servidor) e inicia la
 // telemetría local con initTelemetry.
@@ -49,7 +49,7 @@ export function ConsentGate({ courseName, token, participantCode, onDone }: Cons
   return (
     <section className="mx-auto my-10 max-w-2xl rounded-lg border border-brand-200 bg-white p-6 shadow-sm">
       <h1 className="text-lg font-bold text-ink-900">
-        Consentimiento informado — Prueba de campo de la plataforma de cursos
+        Consentimiento informado · Prueba de campo de la plataforma de cursos
       </h1>
 
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-ink-700">
@@ -76,7 +76,7 @@ export function ConsentGate({ courseName, token, participantCode, onDone }: Cons
           no con tu nombre. Solo el docente investigador accede a los datos; los
           resultados se reportan de forma agregada. Puedes revisar tus datos,
           corregirlos o <strong>retirarte en cualquier momento</strong> desde la
-          página de privacidad o escribiendo al docente — el retiro borra todo
+          página de privacidad o escribiendo al docente; el retiro borra todo
           lo registrado. Participar o no participar{' '}
           <strong>no afecta tus calificaciones</strong>.
         </p>
@@ -100,7 +100,7 @@ export function ConsentGate({ courseName, token, participantCode, onDone }: Cons
             className="mt-0.5 accent-brand-600"
           />
           Además, acepto que se guarde el texto que escriba en la plataforma
-          (código R que modifique, preguntas al asistente) — <em>opcional</em>.
+          (código R que modifique, preguntas al asistente), <em>opcional</em>.
         </label>
       </div>
 

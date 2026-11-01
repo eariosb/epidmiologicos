@@ -10,7 +10,7 @@ interface MRefProps {
 
 /**
  * Referencia a módulo: enlace directo a `/cursos/<slug>` con el mismo
- * tooltip en hover/focus que <Term> — "Módulo 3 — Medición de la
+ * tooltip en hover/focus que <Term>, "Módulo 3 · Medición de la
  * enfermedad". Si el número no resuelve un módulo, queda como texto.
  */
 export function MRef({ n, children }: MRefProps) {
@@ -21,7 +21,7 @@ export function MRef({ n, children }: MRefProps) {
   if (!mod) return <>{children}</>;
 
   const title = mod.meta.title.replace(/^\d+\.\s*/, '');
-  const tip = order === 0 ? `Repaso — ${title}` : `Módulo ${order} — ${title}`;
+  const tip = order === 0 ? `Repaso · ${title}` : `Módulo ${order} · ${title}`;
 
   return (
     <Link

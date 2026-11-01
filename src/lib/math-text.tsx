@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
  * its literal source instead of breaking the page.
  *
  * Used by components that receive strings as props (Quiz options,
- * Flashcard backs, LabExercise tasks…) — MDX children don't need this
+ * Flashcard backs, LabExercise tasks…); MDX children don't need this
  * because rehype-katex already processes them.
  */
 export function MathText({ text }: { text: string }) {

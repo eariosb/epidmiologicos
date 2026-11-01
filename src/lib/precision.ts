@@ -1,5 +1,5 @@
 /**
- * precision.ts — La longitud del IC como variable aleatoria.
+ * precision.ts: La longitud del IC como variable aleatoria.
  *
  * Puerto TypeScript del módulo Shiny auditado (modulo_precision/R/):
  * intervalos de confianza/credibilidad para una proporción binomial,
@@ -7,7 +7,7 @@
  * cobertura exacta y tamaño muestral con garantía P(L <= L0) >= 1 - beta.
  *
  * Idea central (igual que en exact2x2): X ~ Bin(n, p) toma solo n+1 valores,
- * así que cualquier funcional de un IC —cobertura, E[L], P(L <= L0)— es una
+ * así que cualquier funcional de un IC (cobertura, E[L], P(L <= L0)) es una
  * suma finita ponderada por dbinom(). Exacta e instantánea.
  *
  * La fórmula del seminario original (z_alpha + z_beta) está marcada como

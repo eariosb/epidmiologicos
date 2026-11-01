@@ -3,7 +3,7 @@
 // Micro-encuesta post-módulo (instrumento B del doc 05): 3 Likert + 1 abierta,
 // <60 s. Se renderiza al final de cada módulo solo si la telemetría está
 // activa. Estados locales:
-//   ft-survey:<slug>       respondida — nunca más se muestra
+//   ft-survey:<slug>       respondida: nunca más se muestra
 //   ft-survey-later:<slug> pospuesta (timestamp de re-show, +3 días)
 // El dedup real lo garantiza el servidor (última respuesta gana).
 
@@ -36,7 +36,7 @@ export function ModuleSurvey({ slug }: { slug: string }) {
         moduleSlug={slug}
         items={postModuleItems(conceptFor(slug))}
         title="60 segundos: ¿cómo te fue con este módulo?"
-        intro="Tu respuesta alimenta la revisión del material — es anónima y no afecta calificaciones."
+        intro="Tu respuesta alimenta la revisión del material; es anónima y no afecta calificaciones."
         onSubmitted={() => {
           localStorage.setItem(doneKey(slug), '1');
           setVisible(false);

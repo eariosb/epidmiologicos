@@ -39,7 +39,7 @@ diferencia de riesgos: $NNT = 1/RD$, el número de pacientes que hay que
 tratar para evitar un evento. Es la traducción clínica directa del <Term k="RD">RD</Term>.
 
 <Callout type="tip" title="El mismo RR, dos mundos clínicos (Molinero, otro ejemplo)">
-Este es otro ejemplo del texto de Molinero — distinto del del módulo 4
+Este es otro ejemplo del texto de Molinero, distinto del del módulo 4
 (infarto × exposición). Compara dos escenarios. En el primero, el 4% de los pacientes abandona el
 tratamiento estándar y el 3% abandona el nuevo: el <Term k="RR">RR</Term> es 4/3 = 1.33.
 En el segundo, el abandono es 20% vs. 15%: el RR también es 20/15 = 1.33.
@@ -74,12 +74,12 @@ Un RR grande con exposición rara puede explicar pocos casos; un RR modesto
 con exposición común (tabaquismo, sedentarismo) explica muchos. El ejemplo
 de clase sobre tabaquismo materno y bajo peso al nacer lo ilustra. El
 script calcula riesgos, RR y OR, y deriva PRA, PRAP y NNH a partir de la
-prevalencia de exposición observada en la propia tabla — ahora con su
+prevalencia de exposición observada en la propia tabla, ahora con su
 incertidumbre: el principio 4 exige IC también para estas medidas. Como la
 exposición es dañina, el inverso del RD es <Term k="NNH">**NNH**</Term> (number needed to harm),
 no NNT. El PRAP tiene IC según el diseño: en cohorte se usa el de Walter
 (la función `attributable()` del curso); en casos y controles, donde no
-hay riesgos, el de Kleinbaum–Kupper sobre el OR — aquí con el factor
+hay riesgos, el de Kleinbaum–Kupper sobre el OR, aquí con el factor
 delta corregido, $d(a+c)/(ad-bc)$. Y una distinción que las fórmulas
 confunden: la de Levin, $P(E)(RR-1)/(1+P(E)(RR-1))$, es para **PRAP**;
 $(OR-1)/OR$ en casos-controles estima la fracción atribuible **en
@@ -306,7 +306,7 @@ investigador la impusiera. En realidad la longitud del IC que se
 obtendrá, L = 2δ̂, **depende del dato**: es una variable aleatoria con su
 propia distribución. Un n calculado con la fórmula clásica garantiza
 solo E[L] ≈ L₀ en promedio (L₀ = 2δ); una fracción sustancial de los
-estudios replica un intervalo más ancho que el prometido — con n = 50 y
+estudios replica un intervalo más ancho que el prometido: con n = 50 y
 p = 0.10, P(L > E[L]) ≈ <Claim k="m5.precision.pLgtMean" d={2} />, y aun
 con el n clásico (~<Claim k="m5.precision.nClassic" d={0} />) la mitad de
 los estudios supera L₀.

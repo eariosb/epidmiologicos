@@ -3,7 +3,7 @@ import { GLOSSARY_SECTIONS, GLOSSARY_SIZE, glossaryAnchor } from '@/lib/glossary
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Glosario — Datos Epidemiológicos',
+  title: 'Glosario · Datos Epidemiológicos',
   description:
     'Glosario de siglas, símbolos y conceptos del curso, generado del mismo diccionario que alimenta los tooltips de los módulos.',
 };

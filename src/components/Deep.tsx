@@ -7,9 +7,9 @@ import { BookOpen, ChevronDown, Cog } from 'lucide-react';
  * contrato didáctico distinto:
  *
  *  - `<Profundiza>`: teoría, demostraciones y literatura. Optativa pero
- *    conceptual — para quien quiere llegar al fondo.
+ *    conceptual: para quien quiere llegar al fondo.
  *  - `<SalaDeMaquinas>`: implementación, trampas de software y detalles
- *    de cómputo. Técnica — para quien ejecuta o audita.
+ *    de cómputo. Técnica: para quien ejecuta o audita.
  *
  * `<details>` nativo: funciona sin JS, es accesible por teclado y se
  * imprime abierto con `open`.

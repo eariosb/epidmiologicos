@@ -10,7 +10,7 @@ export type SurveyItem =
 
 export type SurveyResponses = Record<string, string | number>;
 
-/** Instrumento A — pre-test (pantalla de enrolamiento, tras consentir). */
+/** Instrumento A: pre-test (pantalla de enrolamiento, tras consentir). */
 export const PRETEST_ITEMS: SurveyItem[] = [
   {
     id: 'programa',
@@ -32,17 +32,17 @@ export const PRETEST_ITEMS: SurveyItem[] = [
   { id: 'preocupacion', type: 'open', label: '¿Qué te preocupa o qué crees que puede fallar?' },
 ];
 
-/** Instrumento B — micro-encuesta por módulo (<60 s). */
+/** Instrumento B: micro-encuesta por módulo (<60 s). */
 export function postModuleItems(concept: string): SurveyItem[] {
   return [
     { id: 'entendi', type: 'likert', label: `Este módulo me ayudó a entender ${concept}.` },
-    { id: 'interactivos', type: 'likert', label: 'Los ejemplos interactivos (simuladores, código ejecutable) aclararon el concepto — no fueron solo decoración.' },
+    { id: 'interactivos', type: 'likert', label: 'Los ejemplos interactivos (simuladores, código ejecutable) aclararon el concepto; no fueron solo decoración.' },
     { id: 'lenguaje', type: 'likert', label: 'El lenguaje del módulo era apropiado para mi nivel.' },
     { id: 'confuso', type: 'open', label: '¿Qué fue lo más confuso o qué cambiarías de este módulo?', rows: 2 },
   ];
 }
 
-/** Instrumento C — SUS en español + bloque específico + abiertas + NPS. */
+/** Instrumento C: SUS en español + bloque específico + abiertas + NPS. */
 export function susFinalItems(courseSpecific: SurveyItem[]): SurveyItem[] {
   return [
     { id: 'sus1', type: 'likert', label: 'Creo que me gustaría usar esta plataforma con frecuencia.' },

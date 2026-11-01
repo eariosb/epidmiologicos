@@ -117,19 +117,19 @@ run;
 
 La censura a derecha es la común, pero no la única:
 
-- **Derecha**: el evento ocurre *después* del último contacto — pérdidas,
+- **Derecha**: el evento ocurre *después* del último contacto: pérdidas,
   cierre del estudio, retiro. Es la que KM absorbe de forma nativa.
-- **Izquierda**: el evento ya ocurrió *antes* de la primera observación —
+- **Izquierda**: el evento ya ocurrió *antes* de la primera observación:
   un paciente que entra al estudio con infección de fecha desconocida.
   Solo se sabe que ocurrió antes de t.
 - **Por intervalo**: el evento ocurrió entre dos visitas, en fecha
-  desconocida — serología que cambia entre controles anuales. Requiere
+  desconocida: serología que cambia entre controles anuales. Requiere
   métodos especiales (estimador de Turnbull), no KM estándar.
 
 Y el eje ortogonal, más decisivo: **informativa vs. no informativa**.
 KM y log-rank asumen que censurar no cambia el riesgo residual del
 paciente: censura *informativa* (el paciente que se retira porque
-empeora) rompe el supuesto y ninguna técnica de las vistas lo repara —
+empeora) rompe el supuesto y ninguna técnica de las vistas lo repara,
 mismo principio que el sesgo por pérdidas del módulo 11, ahora con
 nombre estadístico.
 
@@ -184,7 +184,7 @@ no en un tiempo concreto; y al revés, un log-rank no significativo puede
 convivir con una ventaja temprana grande que se desvanece al final (las
 curvas que se cruzan son su punto ciego: anticipan la violación del
 supuesto de riesgos proporcionales del módulo 13). Si la pregunta
-clínica es puntual —"¿a 23 semanas quién va mejor?"— la respuesta es
+clínica es puntual ("¿a 23 semanas quién va mejor?"), la respuesta es
 S(t) por brazo con su IC, como hace el laboratorio de decisión de
 abajo, no el p del log-rank.
 </Callout>

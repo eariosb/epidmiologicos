@@ -11,7 +11,7 @@ export function RemoteCursor() {
   const rafRef = useRef<number>(0);
   const lastRef = useRef<{ x: number; y: number }>({ x: -1, y: -1 });
 
-  // Emit cursor position when in teacher mode (reuses the shared channel —
+  // Emit cursor position when in teacher mode (reuses the shared channel;
   // one BroadcastChannel per pointermove caused avoidable churn).
   useEffect(() => {
     if (mode !== 'teacher') return;

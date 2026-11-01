@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  *   GET  /homography         → 3x3 matrix once calibrated
  *
  * The browser can't reach the raw socket directly, so all calls come
- * through /api/vision/*. Returns 503 when the service is not running —
+ * through /api/vision/*. Returns 503 when the service is not running:
  * the course works fine without it (vision only matters on That_Board).
  */
 const VISION_URL = process.env.VISION_SERVICE_URL ?? 'http://localhost:8765';

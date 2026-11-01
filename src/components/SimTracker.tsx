@@ -1,7 +1,7 @@
 'use client';
 
 // Envuelve un simulador en un <figure data-sim> transparente al layout y
-// captura interacciones por DELEGACIÓN — sin tocar la lógica interna del sim.
+// captura interacciones por DELEGACIÓN, sin tocar la lógica interna del sim.
 //
 //   botón        → sim-interact {action: play|pause|reset|click}
 //   input range  → sim-interact {action: 'param', param, value} con debounce 800 ms

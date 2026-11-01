@@ -48,19 +48,19 @@ retira después.
 ### Cohorte fija vs. dinámica
 
 - **Fija (cerrada)**: todos entran en el tiempo cero del estudio y nadie
-  ingresa después — una cohorte ocupacional contratada el día 1, los
+  ingresa después: una cohorte ocupacional contratada el día 1, los
   médicos del British Doctors Study. El denominador natural son
   **personas**: el riesgo acumulado se puede calcular directo.
 - **Dinámica (abierta)**: los sujetos entran y salen mientras corre el
-  calendario — registros de salud, afiliados a un seguro, Framingham
+  calendario: registros de salud, afiliados a un seguro, Framingham
   con sus relevos generacionales. Los tiempos de exposición difieren
   por diseño y el denominador honesto pasa a ser
   **persona-tiempo**: el puente al módulo 13.
 
 <Callout type="warning" title="El sesgo por pérdidas no es ruido inocente">
 La censura solo es inocua si no informa. Si los que se pierden difieren
-de los que quedan — los fumadores más enfermos abandonan el estudio
-antes del evento, los expuestos migran más — las pérdidas borran
+de los que quedan: los fumadores más enfermos abandonan el estudio
+antes del evento, los expuestos migran más, y las pérdidas borran
 sistemáticamente un tipo de sujeto y el estimador se sesga aunque el
 análisis sea perfecto. Disciplina mínima del diseño: reportar la tasa
 de pérdidas **por grupo de exposición**, comparar las características
@@ -102,7 +102,7 @@ práctica:
   <ConductStep n={3}>
     <strong>El tiempo cero es la decisión que más sesgo produce.</strong>
     Deben coincidir tres cosas: el sujeto es elegible, empieza el
-    seguimiento y se define su exposición — todo el mismo día. Si el
+    seguimiento y se define su exposición, todo el mismo día. Si el
     "inicio de exposición" llega después del inicio del seguimiento, el
     grupo expuesto acumula <Term k="tiempo_inmortal">tiempo
     inmortal</Term>: periodos en que no podía morir por definición del
@@ -135,7 +135,7 @@ práctica:
 
 RECID siguió 432 exconvictos hasta 52 semanas tras su liberación y
 registró el primer re-arresto. El protocolo no viene escrito en el
-archivo — se **reconstruye** mirándolo:
+archivo: se **reconstruye** mirándolo:
 
 <RCell
   id="11/recid-protocolo"
@@ -168,10 +168,10 @@ cat("la diferencia son", sum(r$week) - sum(pmin(r$week, 52)),
 />
 
 La celda deja tres decisiones de protocolo explícitas: (a) el desenlace
-es "primer re-arresto", no "cualquier arresto" — solo el primer evento
+es "primer re-arresto", no "cualquier arresto": solo el primer evento
 cuenta; (b) la censura es administrativa a la semana 52, y `week = 53`
 en los no arrestados es una **convención del archivo** (marca "siguió
-todo el seguimiento"), no una semana 53 que existió — la diferencia
+todo el seguimiento"), no una semana 53 que existió: la diferencia
 entre los dos denominadores son exactamente las 318 semanas fantasma,
 y el protocolo tiene que decidir cuál reporta; (c) las celdas `emp`
 vacías después del arresto son faltantes estructurales: no hubo

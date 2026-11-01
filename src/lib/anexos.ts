@@ -3,7 +3,7 @@ import { z } from 'zod';
 /**
  * Manifiesto de anexos del curso. Cada entrada apunta a un archivo servido
  * desde /anexos (public/anexos). Regla dura del plan de implementación:
- * NINGÚN material de terceros se publica sin `permiso` — por eso el campo
+ * NINGÚN material de terceros se publica sin `permiso`: por eso el campo
  * es obligatorio para TODAS las entradas y `tercero` exige `licencia`.
  */
 
@@ -46,7 +46,7 @@ const RAW_ANEXOS: unknown[] = [
   },
   {
     id: 'ensayo-test-exacto-md',
-    titulo: 'El test exacto de Fisher — versión en texto',
+    titulo: 'El test exacto de Fisher · versión en texto',
     descripcion:
       'El mismo ensayo en formato Markdown, indexable por el corpus del asistente y accesible sin lector de PDF.',
     tipo: 'documento',
@@ -60,7 +60,7 @@ const RAW_ANEXOS: unknown[] = [
     id: 'auditoria-perondi',
     titulo: 'Auditoría independiente de las cifras de Perondi (2004)',
     descripcion:
-      'Recálculo desde cero en Python/SciPy —sin exact2x2 ni Exact— del Fisher bilateral, Boschloo, CSM, tamaños y potencias del caso Perondi: la verificación externa de los números del módulo 6.',
+      'Recálculo desde cero en Python/SciPy (sin exact2x2 ni Exact) del Fisher bilateral, Boschloo, CSM, tamaños y potencias del caso Perondi: la verificación externa de los números del módulo 6.',
     tipo: 'documento',
     archivo: 'auditoria-perondi.md',
     modulo: '06-inferencia-exacta-calibracion',
@@ -70,7 +70,7 @@ const RAW_ANEXOS: unknown[] = [
   },
   {
     id: 'simulacion3',
-    titulo: 'simulacion3.R — simulación de la batería de tests 2×2',
+    titulo: 'simulacion3.R · simulación de la batería de tests 2×2',
     descripcion:
       'Script R del ensayo técnico: reproduce la comparación de procedimientos (Fisher, mid-p, Boschloo, CSM, z) sobre el espacio de tablas, incluyendo la grilla de supremo sobre el parámetro de estorbo.',
     tipo: 'script',
@@ -82,7 +82,7 @@ const RAW_ANEXOS: unknown[] = [
   },
   {
     id: 'sesgo-varianza',
-    titulo: 'sesgo_varianza.R — trade-off sesgo/varianza de las correcciones',
+    titulo: 'sesgo_varianza.R · trade-off sesgo/varianza de las correcciones',
     descripcion:
       'Script R del ensayo técnico: cuantifica cómo las correcciones por cero (½, 1) mueven el OR puntual y sus ICs, y la relación sesgo-varianza de cada corrector.',
     tipo: 'script',
@@ -120,7 +120,7 @@ const RAW_ANEXOS: unknown[] = [
     id: 'fig-error-tipo1',
     titulo: 'Error tipo I real por procedimiento',
     descripcion:
-      'Figura del ensayo: tamaño real de cada test bajo H0 — el diente de sierra del condicional frente a los incondicionales.',
+      'Figura del ensayo: tamaño real de cada test bajo H0, el diente de sierra del condicional frente a los incondicionales.',
     tipo: 'figura',
     archivo: 'figuras/fig_error_tipo1.pdf',
     modulo: '06-inferencia-exacta-calibracion',
@@ -178,7 +178,7 @@ const RAW_ANEXOS: unknown[] = [
   },
   {
     id: 'notacion',
-    titulo: 'Apéndice de notación — símbolos del curso',
+    titulo: 'Apéndice de notación · símbolos del curso',
     descripcion:
       'Tabla de símbolos y convenciones usados en los módulos: la tabla 2×2 (a, b, c, d) y su convención de orientación, medidas (RR, OR, RD, ARR, NNT/NNH), pruebas diagnósticas (Se, Sp, VPP, LR±), interacción aditiva (RERI, AP, S), supervivencia (S(t), λ, censura), inferencia exacta (x₁, n₁, π) y DAGs (E, D, C, M).',
     tipo: 'documento',
@@ -189,7 +189,7 @@ const RAW_ANEXOS: unknown[] = [
   },
   {
     id: 'ciudad-simulada',
-    titulo: 'ciudad_simulada.R — la ciudad de Simépolis con verdad conocida',
+    titulo: 'ciudad_simulada.R · la ciudad de Simépolis con verdad conocida',
     descripcion:
       'Generador de la población sintética del módulo 2: 20 000 habitantes con confusor sembrado (RR causal = 3 dentro de cada estrato, RR crudo inflado) y un colisionador (hospitalización) para el ejercicio de controles hospitalarios. Es el mismo mecanismo que corre CityLab en el navegador.',
     tipo: 'script',

@@ -1,4 +1,4 @@
-// GET /api/fieldtest/overview — agregados del tablero docente.
+// GET /api/fieldtest/overview: agregados del tablero docente.
 // Auth: x-admin-token (FIELDTEST_ADMIN_TOKEN). Lee las vistas de análisis
 // del esquema fieldtest (service role) + agregados ligeros en memoria.
 // Especificación: prueba-campo/SPRINTS.md Sprint 5 tarea 1.

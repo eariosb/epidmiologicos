@@ -3,7 +3,7 @@
 // Provee telemetría al árbol de la app: al montar, lee ft-ctx de
 // localStorage y, si hay consentimiento + token, inicializa el pipeline.
 // Los componentes consumen track() vía useTelemetry(). Sin consentimiento
-// el provider es inerte — track() no-op, cero requests.
+// el provider es inerte: track() no-op, cero requests.
 
 import {
   createContext,
@@ -88,7 +88,7 @@ function FieldTestBanner() {
     >
       <span aria-hidden>🧪</span>
       <span>
-        Prueba de campo activa —{' '}
+        Prueba de campo activa ·{' '}
         <a href="/privacidad" className="font-medium text-brand-700 underline decoration-dotted">
           privacidad
         </a>

@@ -15,14 +15,14 @@ export default function HomePage() {
       kicker: 'Antes de empezar',
       titulo: 'Repaso: leer los datos antes de analizarlos',
       descripcion:
-        'La lectura previa recomendada: unidad de análisis, diccionario de datos, faltantes estructurales, atípicos y la anatomía completa del test estadístico — todo anclado en las bases reales del curso.',
+        'La lectura previa recomendada: unidad de análisis, diccionario de datos, faltantes estructurales, atípicos y la anatomía completa del test estadístico: todo anclado en las bases reales del curso.',
       href: `/cursos/${repaso.meta.slug}`,
     },
     primeroI && {
       kicker: 'Curso I · Pregrado',
       titulo: 'Análisis Estadístico de Datos Epidemiológicos I',
       descripcion:
-        'El recorrido completo: de la tabla 2×2 y las medidas de asociación a la confusión, cohortes y supervivencia, casos y controles, regresión y síntesis — más dos módulos transversales de herramientas y fronteras.',
+        'El recorrido completo: de la tabla 2×2 y las medidas de asociación a la confusión, cohortes y supervivencia, casos y controles, regresión y síntesis, más dos módulos transversales de herramientas y fronteras.',
       href: `/cursos/${primeroI.meta.slug}`,
     },
     primeroII && {

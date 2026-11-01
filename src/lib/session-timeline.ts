@@ -1,8 +1,8 @@
 import type { Capture, Question, Session } from './session-store';
 
 /**
- * Session replay timeline: every thing that happened during the class —
- * sections visited, board pages shown, captures taken, questions asked —
+ * Session replay timeline: every thing that happened during the class:
+ * sections visited, board pages shown, captures taken, questions asked;
  * merged into one chronological sequence. This is what turns "registro"
  * into "repetición".
  */

@@ -1,7 +1,7 @@
 // Server-side helpers para la prueba de campo (route handlers únicamente).
 // Especificación: prueba-campo/docs/02-esquema-supabase.md y 03-telemetria.md.
 //
-// IMPORTANTE: este archivo usa SUPABASE_SERVICE_ROLE_KEY — jamás importar
+// IMPORTANTE: este archivo usa SUPABASE_SERVICE_ROLE_KEY: jamás importar
 // desde un client component.
 
 import { createClient } from '@supabase/supabase-js';

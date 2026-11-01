@@ -1,4 +1,4 @@
-// POST /api/track — ingestión de eventos de telemetría.
+// POST /api/track: ingestión de eventos de telemetría.
 // Especificación: prueba-campo/docs/03-telemetria.md §1.
 //
 // Auth: x-participant-token (header) o ?t= (query, para sendBeacon).
@@ -14,7 +14,7 @@ const MAX_KIND_LEN = 40;
 const MAX_SLUG_LEN = 120;
 const MAX_PAYLOAD_BYTES = 4096;
 
-// Taxonomía del doc 03 §3 — cualquier kind fuera de la lista se descarta.
+// Taxonomía del doc 03 §3: cualquier kind fuera de la lista se descarta.
 const VALID_KINDS = new Set([
   'session-start', 'session-ping', 'module-visit', 'sim-interact',
   'rcell-run', 'quiz-answer', 'term-view', 'capture', 'board-scene',

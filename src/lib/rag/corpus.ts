@@ -136,7 +136,7 @@ function anexosToDocs(): RagDoc[] {
       docs.push({
         id: `anexo:${a.id}:${i}`,
         source: 'anexo',
-        text: `${a.titulo} — ${heading || 'introducción'}. ${body}`,
+        text: `${a.titulo}: ${heading || 'introducción'}. ${body}`,
         meta: { anexoId: a.id, tipo: a.tipo, modulo: a.modulo, archivo: a.archivo, heading },
       });
     });
@@ -171,7 +171,7 @@ function glossaryToDocs(): RagDoc[] {
   return GLOSSARY_SECTIONS.map((s, i) => ({
     id: `glosario:${i}`,
     source: 'anexo' as const,
-    text: `Glosario — ${s.titulo}. ${Object.entries(s.entradas)
+    text: `Glosario: ${s.titulo}. ${Object.entries(s.entradas)
       .map(([k, def]) => `${k}: ${def}`)
       .join(' ')}`,
     meta: { heading: s.titulo, archivo: 'glosario' },

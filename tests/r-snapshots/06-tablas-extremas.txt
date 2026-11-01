@@ -1,1 +1,2 @@
 minlike = 0.0544   central = 0.0544   izq = 0.9975   der = 0.0272
+fisher.test coincide: 0.0544

@@ -1,4 +1,4 @@
-// GET /api/mis-datos — derecho de ACCESO (ARCO): devuelve al participante
+// GET /api/mis-datos: derecho de ACCESO (ARCO): devuelve al participante
 // sus propios datos registrados. Auth: x-participant-token.
 // Especificación: prueba-campo/docs/04-etica-consentimiento.md §5.
 

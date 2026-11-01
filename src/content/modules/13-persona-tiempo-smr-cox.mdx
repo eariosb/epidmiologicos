@@ -124,7 +124,7 @@ detalles lo hacen didácticamente perfecto:
 
 - **Es un SMR natural**: la mortalidad de los médicos se comparó contra
   las tasas de referencia de la población masculina británica ajustada
-  por edad — el O/E del módulo 9 hecho cohorte real.
+  por edad: el O/E del módulo 9 hecho cohorte real.
 - **Documentó reversibilidad**: quienes dejaron de fumar mostraron tasas
   intermedias, menores cuanto más tiempo llevaban sin fumar. Eso es,
   *avant la lettre*, una covariable **dependiente del tiempo**: la
@@ -190,7 +190,7 @@ HR es constante en el tiempo. Con <code>cox.zph(fit)</code> se contrasta;
 un HR que cambia con t exige estratificar el tiempo o un modelo con
 interacción temporal. En este ajuste el chequeo **sí** detecta
 violaciones: <code>age</code> (p ≈ 0.015), <code>wexp</code> (p ≈ 0.040)
-y el test global (p ≈ 0.013) — los valores de la celda anterior, que
+y el test global (p ≈ 0.013), los valores de la celda anterior, que
 puedes reproducir ejecutándola. En un reporte real no basta interpretar los
 HR: habría que estratificar por edad o añadir una interacción con el
 tiempo antes de sacar conclusiones causales.
@@ -205,7 +205,7 @@ tiempo antes de sacar conclusiones causales.
     "El apoyo financiero elimina el riesgo de re-arresto"
   ]}
   correctIndex={1}
-  explanation="El hazard ratio multiplica el riesgo instantáneo: HR=0.68 reduce el hazard un 32% en cada momento, ajustando por edad, raza, experiencia, etc. El IC (0.470–0.996) apenas excluye 1: hay evidencia de efecto, pero el límite superior roza la nulidad — es una señal compatible con reducciones desde 53% hasta menos de 1%. Estimación más incertidumbre, como Woodward exige."
+  explanation="El hazard ratio multiplica el riesgo instantáneo: HR=0.68 reduce el hazard un 32% en cada momento, ajustando por edad, raza, experiencia, etc. El IC (0.470–0.996) apenas excluye 1: hay evidencia de efecto, pero el límite superior roza la nulidad: es una señal compatible con reducciones desde 53% hasta menos de 1%. Estimación más incertidumbre, como Woodward exige."
 />
 
 <Flashcard
@@ -273,7 +273,7 @@ relativa exigida.
 
 `recid.csv` mide `emp1`–`emp52`: si el sujeto tenía empleo *esa
 semana*. Tratar el empleo como una covariable de línea base
-tira la mitad de la información — el sujeto puede estar empleado
+tira la mitad de la información: el sujeto puede estar empleado
 en la semana 10 y desempleado en la 30. La forma honesta es el
 **formato largo**: una fila por persona-semana observada, con la
 exposición de *esa* semana.
@@ -321,8 +321,8 @@ exposición constante, y el modelo evalúa el riesgo con el empleo
 *vigente en ese tramo* (rezagado), no el de la entrada.
 
 <Callout type="warning" title="La covariable también tiene calendario">
-Si la exposición cambia durante el seguimiento —empleo, tratamiento,
-cumplimiento—, la versión de línea base no la representa. Las
+Si la exposición cambia durante el seguimiento (empleo, tratamiento,
+cumplimiento), la versión de línea base no la representa. Las
 preguntas del paso de exploración aplican igual: ¿la variable se
 midió en cada tramo, o se asumió constante?
 </Callout>

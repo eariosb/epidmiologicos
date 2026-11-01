@@ -1,4 +1,4 @@
-// POST /api/enroll — { code } → { token, consentVersion, code }.
+// POST /api/enroll: { code } → { token, consentVersion, code }.
 // El código (PC-4F2K…) lo reparte el docente; validarlo devuelve el
 // enroll_token opaco que luego autentica /api/track.
 // Especificación: prueba-campo/docs/04-etica-consentimiento.md §5.

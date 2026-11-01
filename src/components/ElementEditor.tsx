@@ -15,7 +15,7 @@ export interface EditTarget {
 /**
  * Re-edit overlay for technical board elements (double-click on a raster
  * carrying customData.boardKind). Commit regenerates the PNG and swaps the
- * element's raster via canvasRef.replaceImage — position is preserved.
+ * element's raster via canvasRef.replaceImage; position is preserved.
  */
 export function ElementEditor({
   target,

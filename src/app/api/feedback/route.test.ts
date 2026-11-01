@@ -75,7 +75,7 @@ describe('POST /api/feedback', () => {
     expect((await POST(req({ ...VALID, responses: big }, h))).status).toBe(400);
   });
 
-  it('200: delete + insert — última respuesta gana por (participant, instrument, slug)', async () => {
+  it('200: delete + insert: última respuesta gana por (participant, instrument, slug)', async () => {
     const supa = fakeSupa();
     mocks.fieldtestClient.mockReturnValue(supa);
     const res = await POST(req(VALID, { 'x-participant-token': 'tok' }));

@@ -1,4 +1,4 @@
-// POST /api/consent — registra la decisión de consentimiento en participants:
+// POST /api/consent: registra la decisión de consentimiento en participants:
 // { consentVersion, contentOptIn }. El consentimiento queda así auditado en
 // servidor (doc 04 §6: consent_version guardado permite re-pedir si cambia el
 // texto), no solo en el navegador. Auth: x-participant-token.

@@ -229,7 +229,7 @@ del desenlace hacia atrás. Sus siete pasos:
   <ConductStep n={2}>
     <strong>La población fuente es el corazón del diseño.</strong> Los
     casos nacen de alguna población; los controles deben muestrearse de
-    esa misma base — quienes habrían sido casos si hubieran
+    esa misma base: quienes habrían sido casos si hubieran
     enfermado.
   </ConductStep>
   <ConductStep n={3}>
@@ -247,7 +247,7 @@ del desenlace hacia atrás. Sus siete pasos:
   </ConductStep>
   <ConductStep n={5}>
     Sin pareamiento: una fila por sujeto. Pareado: la unidad es la
-    pareja o el conjunto — verificarlo en el archivo es el ejercicio de
+    pareja o el conjunto: verificarlo en el archivo es el ejercicio de
     abajo.
   </ConductStep>
   <ConductStep n={6}>
@@ -256,7 +256,7 @@ del desenlace hacia atrás. Sus siete pasos:
     "no sabe" entre casos y controles sugiere medición diferencial.
   </ConductStep>
   <ConductStep n={7}>
-    Solo el OR es estimable — y bajo <Term k="muestreo_densidad">
+    Solo el OR es estimable, y bajo <Term k="muestreo_densidad">
     muestreo por densidad de incidencia</Term> (controles elegidos
     cuando el caso aparece, entre quienes siguen en riesgo) el OR
     estima directamente la **razón de tasas** de la cohorte subyacente.
@@ -269,7 +269,7 @@ del desenlace hacia atrás. Sus siete pasos:
 
 ### Ejercicio de conducción: la estructura del archivo
 
-BCG es un caso-control pareado 1:5 sobre 111 conjuntos — verifícalo en
+BCG es un caso-control pareado 1:5 sobre 111 conjuntos: verifícalo en
 el archivo y decide qué es la unidad de análisis:
 
 <RCell
@@ -333,7 +333,7 @@ plausibles, no un único valor.
 
 <Callout type="warning" title="El orden es: suponer, corregir, reportar">
 La corrección depende de Se/Sp **asumidos**, no estimados de estos
-datos — sin una fuente externa (un subestudio de validación), el
+datos: sin una fuente externa (un subestudio de validación), el
 análisis de sesgo es condicional: "si la medición fuera así de mala,
 el OR sería tanto". Reporte el rango recorrido, no el punto
 corregido.
@@ -341,7 +341,7 @@ corregido.
 
 ## Cuando el hospital solo te da doce casos
 
-El diseño caso-control existe porque la enfermedad es rara — y esa
+El diseño caso-control existe porque la enfermedad es rara, y esa
 misma rareza fija el precio estadístico: los casos se agotan. Un
 estudio de enfermedad de Kawasaki, de fibrodisplasia o de un
 desenlace raro tras una vacuna puede terminar con 8–15 casos contra
@@ -352,7 +352,7 @@ promete? y ¿qué ocurre cuando una celda queda en cero?
 La respuesta honesta se obtiene por **auditoría Monte Carlo**:
 inventar el escenario, repetir el estudio cientos de veces y contar
 cuántos intervalos cubren el OR verdadero. El bootstrap aparece
-aquí como el remedio habitual cuando la asintótica se duda — pero
+aquí como el remedio habitual cuando la asintótica se duda, pero
 el ejercicio muestra su límite: remuestrear una tabla de n = 10
 produce réplicas que se parecen demasiado entre sí, y la cobertura
 sigue por debajo del nominal. El remedio parcial existe (la
@@ -397,7 +397,7 @@ ors <- replicate(B, {
 })
 cat("IC95% bootstrap percentil =", round(exp(quantile(ors, c(.025,.975))), 2), "\\n")
 # Pregunta para el escrito: el bootstrap arregla la varianza, pero
-# la tabla solo tiene 12 casos — de donde puede salir mas
+# la tabla solo tiene 12 casos: de donde puede salir mas
 # informacion? De mas casos, o de un estudio multicentrico.
 # Eso se decide en el protocolo, no en la consola.`}
 />

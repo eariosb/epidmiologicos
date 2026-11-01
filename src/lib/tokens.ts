@@ -2,7 +2,7 @@
  * Tokens semánticos para contextos donde las clases Tailwind no llegan:
  * series de SVG, atributos fill/stroke, objetos style en JSX.
  * Cada valor es el hex EXACTO que usaba el componente antes de la
- * migración — la fase 5 no cambia ni un píxel.
+ * migración: la fase 5 no cambia ni un píxel.
  */
 export const tokens = {
   /** Series y elementos de los gráficos SVG de los simuladores. */

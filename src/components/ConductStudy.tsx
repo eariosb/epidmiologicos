@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
  * cohorte, casos y controles, transversal y datos secundarios, que va de
  * la pregunta al archivo analizable. El componente solo da la forma
  * común (número, nombre del paso y la pregunta que responde); el
- * contenido —el producto de cada paso en ese diseño— vive en el MDX.
+ * contenido (el producto de cada paso en ese diseño) vive en el MDX.
  */
 
 const CANONICAL_STEPS = [
@@ -49,7 +49,7 @@ export function ConductStudy({
   return (
     <section className="my-8 rounded-lg border border-brand-200 bg-brand-50/40 px-5 py-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">
-        Conducir el estudio — {design}
+        Conducir el estudio · {design}
       </p>
       <p className="mt-1 mb-4 text-sm text-ink-600">
         La misma secuencia en cada diseño: lo que cambia es el muestreo,

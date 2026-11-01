@@ -1,15 +1,15 @@
-// Telemetría de prueba de campo — cola local + flush por lotes a /api/track.
+// Telemetría de prueba de campo: cola local + flush por lotes a /api/track.
 // Especificación: prueba-campo/docs/03-telemetria.md §2.
 //
 // API pública:
-//   initTelemetry(token, {contentOptIn})  — tras el consentimiento
-//   track(kind, payload?, moduleSlug?)    — fire-and-forget, nunca lanza
-//   telemetryEnabled()                    — hay consentimiento activo
-//   contentOptIn()                        — el participante aceptó guardar texto
-//   flushTelemetry()                      — fuerza envío (p. ej. al salir de un módulo)
-//   disableTelemetry()                    — retiro/opt-out local
+//   initTelemetry(token, {contentOptIn})  : tras el consentimiento
+//   track(kind, payload?, moduleSlug?)    : fire-and-forget, nunca lanza
+//   telemetryEnabled()                    : hay consentimiento activo
+//   contentOptIn()                        : el participante aceptó guardar texto
+//   flushTelemetry()                      : fuerza envío (p. ej. al salir de un módulo)
+//   disableTelemetry()                    : retiro/opt-out local
 //
-// La cola persiste en localStorage (pequeña, ≤500 eventos) — no IndexedDB,
+// La cola persiste en localStorage (pequeña, ≤500 eventos), no IndexedDB;
 // para no acoplar al session-store local. Flush cuando:
 //   a) la cola llega a FLUSH_AT eventos
 //   b) pasan FLUSH_MS desde el primer evento encolado

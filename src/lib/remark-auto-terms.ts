@@ -23,7 +23,7 @@
  *   se marcan a mano con la clave del sentido (<Term k="β-SIR">β</Term>).
  *   Solo los de sentido único en el curso (α, τ²) están en EXTRA_KEYS.
  * - Solo toca nodos `text` fuera de código, matemática, enlaces y
- *   encabezados — mismo contrato que remark-module-refs.
+ *   encabezados: mismo contrato que remark-module-refs.
  */
 
 import { GLOSSARY, GLOSSARY_ALIASES, GLOSSARY_FORMS } from './glossary';
@@ -107,7 +107,7 @@ function canonical(form: string): string {
 }
 
 // Frontera de "palabra de sigla": ni letra/dígito, guion ni subíndice
-// a los lados — evita partir compuestos como "OR-MH", "I-squared" o
+// a los lados; evita partir compuestos como "OR-MH", "I-squared" o
 // "z_α", y que "α" capture el "α²" de otra cosa.
 const TERM_RE = new RegExp(
   `(?<![\\p{L}\\p{N}_-])(${AUTO_KEYS.map(escapeRe).join('|')})(?![\\p{L}\\p{M}\\p{N}_²₀-₉-])`,

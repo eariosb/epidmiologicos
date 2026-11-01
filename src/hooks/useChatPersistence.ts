@@ -7,7 +7,7 @@ import { getChatRecord, saveChatRecord } from '@/lib/chat-store';
 
 /**
  * Persists the assistant conversation (with ragFragments + verified citations)
- * into the `bb-chat` store, debounced, keyed by the active session id —
+ * into the `bb-chat` store, debounced, keyed by the active session id;
  * and rehydrates it on mount and on every session switch, so the chat
  * always follows the class session.
  */

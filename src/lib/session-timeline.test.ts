@@ -37,9 +37,9 @@ describe('buildSessionTimeline', () => {
     const items = buildSessionTimeline(baseSession, [cap]);
     expect(items.map((i) => i.kind)).toEqual([
       'start',    // 100
-      'section',  // 200 — m1
+      'section',  // 200, m1
       'board',    // 300
-      'section',  // 400 — m2
+      'section',  // 400, m2
       'question', // 500
       'capture',  // 600
       'end',      // 900

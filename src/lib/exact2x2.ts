@@ -6,7 +6,7 @@
  * Port of the enumeration machinery used in the course's technical essay
  * (simulacion3.R / sesgo_varianza.R): Fisher, mid-p, pooled-z
  * (Suissa–Shuster), Boschloo, Berger–Boos, additive corrections for the
- * log-OR, exact bias/variance/MSE, CI coverage and exact power — all by
+ * log-OR, exact bias/variance/MSE, CI coverage and exact power: all by
  * enumeration of the (n1+1)(n2+1) tables, no Monte Carlo.
  *
  * Numerics: log-space kernels throughout (lgamma-based); the unconditional
@@ -59,14 +59,14 @@ export function dbinom(x: number, n: number, p: number): number {
 
 /**
  * Central hypergeometric pmf: P(X1 = x | X1 + X2 = m) when
- * X1 ~ Bin(n1, p), X2 ~ Bin(n2, p) — independent of p under H0.
+ * X1 ~ Bin(n1, p), X2 ~ Bin(n2, p), independent of p under H0.
  */
 export function dhyper(x: number, n1: number, n2: number, m: number): number {
   if (x < Math.max(0, m - n2) || x > Math.min(n1, m)) return 0;
   return Math.exp(lchoose(n1, x) + lchoose(n2, m - x) - lchoose(n1 + n2, m));
 }
 
-/** Regularized incomplete beta I_x(a,b) — continued fraction (NR betacf). */
+/** Regularized incomplete beta I_x(a,b), continued fraction (NR betacf). */
 function pbeta(x: number, a: number, b: number): number {
   if (x <= 0) return 0;
   if (x >= 1) return 1;

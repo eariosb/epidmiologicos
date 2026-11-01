@@ -328,7 +328,7 @@ quit;`} />
 ## El corte transversal en la práctica
 
 El diseño menos desarrollado hasta aquí merece una parada propia. Un
-corte transversal mide prevalencia — y solo eso — pero es el diseño de
+corte transversal mide prevalencia, y solo eso, pero es el diseño de
 las encuestas de salud, de la planeación de servicios y de buena parte
 de la generación de hipótesis. Sus siete pasos tienen acento propio:
 
@@ -352,7 +352,7 @@ de la generación de hipótesis. Sus siete pasos tienen acento propio:
   </ConductStep>
   <ConductStep n={4}>
     El instrumento es la encuesta o el examen puntual. Todo se mide el
-    mismo día: exposición y desenlace comparten el calendario — por eso
+    mismo día: exposición y desenlace comparten el calendario: por eso
     el transversal no ordena el tiempo.
   </ConductStep>
   <ConductStep n={5}>
@@ -377,7 +377,7 @@ de la generación de hipótesis. Sus siete pasos tienen acento propio:
 La celda siguiente muestra el mismo efecto medido dos veces: cuando la
 enfermedad es rara el OR de prevalencia ≈ la razón de prevalencias, pero
 con desenlace frecuente el OR se aleja de la razón siempre hacia el
-mismo lado — hace ver la asociación más fuerte de lo que es:
+mismo lado, lo que hace ver la asociación más fuerte de lo que es:
 
 <RCell
   id="03/pr-vs-or"
@@ -425,8 +425,8 @@ run;`} />
 <Callout type="warning" title="Los errores estándar ingenuos son incorrectos">
 Una encuesta por conglomerados no contiene n observaciones
 independientes: dos vecinos de la misma manzana se parecen entre sí. El
-error estándar calculado como si hubiera independencia queda **corto**
-—los ICs mienten por el lado optimista—. Software que ignora el diseño
+error estándar calculado como si hubiera independencia queda **corto**:
+los ICs mienten por el lado optimista. Software que ignora el diseño
 (`survey` en R, `PROC SURVEYFREQ` en SAS) es un error de análisis, no
 un atajo. El sesgo de prevalencia-incidencia completa el cuadro: en un
 corte sobreviven los casos de curso largo, así que la prevalencia
@@ -441,8 +441,8 @@ prevalencias).
 
 La prevalencia no solo se mide: decide cuánto vale un resultado
 positivo. Una prueba se describe con <Term k="Se">**sensibilidad**</Term>
-$Se = P(T^+ \mid E)$ —detecta al enfermo— y <Term k="Sp">**especificidad**</Term>
-$Sp = P(T^- \mid S)$ —descarta al sano—, ambas propiedades del
+$Se = P(T^+ \mid E)$ (detecta al enfermo) y <Term k="Sp">**especificidad**</Term>
+$Sp = P(T^- \mid S)$ (descarta al sano), ambas propiedades del
 instrumento. Pero lo que el paciente pregunta es la probabilidad en el
 otro sentido: el <Term k="VPP">**valor predictivo positivo**</Term> $VPP = P(E \mid T^+)$,
 que por el teorema de Bayes depende de la prevalencia:
@@ -450,7 +450,7 @@ que por el teorema de Bayes depende de la prevalencia:
 $$VPP = \frac{Se \cdot prev}{Se \cdot prev + (1 - Sp)(1 - prev)}$$
 
 Mueve los tres controles y mira qué manda: en enfermedad rara ni Se ni
-Sp rescatan el VPP — los falsos positivos vienen del mar de sanos.
+Sp rescatan el VPP: los falsos positivos vienen del mar de sanos.
 
 <DiagnosticTestExplorer
   title={<>Tamización en población de bajo riesgo: Se, Sp y prevalencia → VPP</>}
@@ -464,7 +464,7 @@ Sp rescatan el VPP — los falsos positivos vienen del mar de sanos.
 
 Para decisiones la medida útil es la <Term k="LR">**razón de verosimilitud**</Term>:
 $LR^+ = Se/(1 - Sp)$ cuánto multiplica el resultado positivo los odds
-de enfermedad, y $LR^- = (1 - Se)/Sp$ lo mismo para el negativo — ambas
+de enfermedad, y $LR^- = (1 - Se)/Sp$ lo mismo para el negativo, ambas
 independientes de la prevalencia (esa es su ventaja sobre el VPP):
 
 <RCell
@@ -508,21 +508,21 @@ circulando. La pregunta inferencial cambia de forma: ya no es
 aparece la primera trampa: construir un IC del 95% por serotipo
 **no** produce cuatro intervalos simultáneos al 95%. La
 probabilidad de que los cuatro cubran a la vez es, en el mejor de
-los casos, del orden de $0.95^4 \approx 0.81$ — y peor en la
+los casos, del orden de $0.95^4 \approx 0.81$, y peor en la
 práctica, porque los conteos de una multinomial no son
 independientes.
 
 La literatura ofrece métodos genuinamente simultáneos. El estudio
 de González, Correa &amp; Vélez (2015), en la *Revista de la
 Facultad de Ciencias* de la UNAL, comparó trece de ellos por
-simulación —nivel real frente a nominal, longitud, y un índice que
-combina ambos— con dos hallazgos que interesan aquí: los intervalos
+simulación (nivel real frente a nominal, longitud, y un índice que
+combina ambos) con dos hallazgos que interesan aquí: los intervalos
 basados directamente en el TCL rinden mal, y los métodos
 recomendables (los basados en la F de Leemis, la verosimilitud
 relativa y Quesenberry–Hurst) mantienen la cobertura incluso cuando
 hay celdas con poca masa. La segunda trampa es exactamente esa:
-cuando la distribución de serotipos se desequilibra —una variante
-dominante y otra rara con conteos cercanos a cero— la entropía de
+cuando la distribución de serotipos se desequilibra (una variante
+dominante y otra rara con conteos cercanos a cero), la entropía de
 π cae y con ella la cobertura real de los métodos que confían en
 la normalidad.
 
@@ -568,9 +568,9 @@ print(round(res, 3))
 />
 
 <Callout type="warning" title="La celda rara manda">
-Con una variante casi ausente el problema no es estimar su π —el
+Con una variante casi ausente el problema no es estimar su π (el
 IC exacto de Clopper–Pearson de la sección de incertidumbre ya
-muestra cómo intervalar un cero observado— sino que la cobertura
+muestra cómo intervalar un cero observado), sino que la cobertura
 *simultánea* del conjunto se degrada: un solo intervalo que falle
 rompe el vector. La auditoría del simulador lo cuantifica: a igual
 n, el desequilibrio de π (medido por la entropía $H = -\sum \pi_j

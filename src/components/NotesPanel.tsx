@@ -96,7 +96,7 @@ export function NotesPanel({ moduleSlug, moduleTitle }: NotesPanelProps) {
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded border border-ink-200 bg-white shadow-sm">
-      {/* Fixed header: title + note count + import/export — always visible
+      {/* Fixed header: title + note count + import/export, always visible
           so actions never scroll out of the drawer. */}
       <div className="flex items-center justify-between border-b border-ink-200 bg-ink-50 px-4 py-2">
         <p className="flex items-center gap-2 text-sm font-semibold text-ink-800">

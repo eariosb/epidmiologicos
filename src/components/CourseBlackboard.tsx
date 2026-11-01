@@ -70,7 +70,7 @@ function isTypingTarget(t: EventTarget | null): boolean {
  * a collapsible bottom drawer with captures, formulas, matrices, notes,
  * student questions and the model comparator.
  *
- * In presentation mode the chrome is hidden (CSS only — nothing unmounts)
+ * In presentation mode the chrome is hidden (CSS only, nothing unmounts)
  * and arrow keys drive the progressive reveal frontier.
  */
 export function CourseBlackboard({
@@ -161,7 +161,7 @@ export function CourseBlackboard({
     void setSessionActiveScene(state.activeSceneId);
   }, [state.activeSceneId]);
 
-  // Resume the board page recorded in the session — but only when it
+  // Resume the board page recorded in the session, but only when it
   // belongs to the current module (never jump to another module's page).
   // Runs on mount and again whenever the active session is switched, so
   // loading a session from the manager also restores its board page.

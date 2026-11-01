@@ -1,7 +1,7 @@
 import { PrivacyToggle } from '@/components/PrivacyToggle';
 
 export const metadata = {
-  title: 'Privacidad — Prueba de campo',
+  title: 'Privacidad · Prueba de campo',
 };
 
 export default function PrivacidadPage() {

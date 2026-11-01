@@ -42,7 +42,7 @@ const fmt = (x: number, d = 0) => (Number.isFinite(x) ? x.toFixed(d) : '—');
 /**
  * Tarjeta de decisión: memo evaluable del laboratorio de decisión.
  * Si recibe panelId, captura en vivo el estado del DecisionPanel
- * (veredicto, NNT, umbral, sliders) y lo inserta en el memo — el
+ * (veredicto, NNT, umbral, sliders) y lo inserta en el memo: el
  * estudiante escribe solo los juicios. Persiste en localStorage.
  */
 export function DecisionCard({ id, title, panelId, options }: DecisionCardProps) {
@@ -84,7 +84,7 @@ export function DecisionCard({ id, title, panelId, options }: DecisionCardProps)
       localStorage.setItem(key, JSON.stringify({ ...s, panel }));
       setSaved(s.savedAt!);
     } catch { /* storage no disponible */ }
-    // Solo metadatos de la decisión — nunca el texto libre del memo.
+    // Solo metadatos de la decisión, nunca el texto libre del memo.
     track('decision-memo', {
       cardId: id,
       decision: opts.indexOf(st.decision),
@@ -113,7 +113,7 @@ export function DecisionCard({ id, title, panelId, options }: DecisionCardProps)
       </div>
 
       <div className="space-y-3 px-4 py-3">
-        {/* Lo que los datos y el panel ya calcularon — se ve en el memo */}
+        {/* Lo que los datos y el panel ya calcularon, se ve en el memo */}
         <div className="rounded border border-ink-200 bg-ink-50 px-3 py-2 text-xs">
           <p className="mb-1 font-semibold text-ink-600">Evidencia capturada del panel</p>
           {panel ? (

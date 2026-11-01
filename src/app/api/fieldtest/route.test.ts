@@ -20,7 +20,7 @@ import { GET as exportCsv } from './export/route';
 const TOKEN = 'admin-secreto-de-prueba';
 const AUTH = { 'x-admin-token': TOKEN };
 
-// from(t).select(cols)[.eq()][.order()][.limit()] — devuelve lo configurado
+// from(t).select(cols)[.eq()][.order()][.limit()]: devuelve lo configurado
 function fakeSupa(rows: Record<string, Record<string, unknown>[]>) {
   const make = (table: string) => {
     const res = { data: rows[table] ?? [], error: null };

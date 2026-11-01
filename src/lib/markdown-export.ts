@@ -3,7 +3,7 @@ import { sceneLabel } from './session-timeline';
 import { getChatRecord } from './chat-store';
 
 /**
- * Structured Markdown export of a teaching session — the deliverable the
+ * Structured Markdown export of a teaching session: the deliverable the
  * teacher sends to students. Captures are referenced by name (binary lives
  * in IDB; embedding data URLs would bloat the .md).
  */

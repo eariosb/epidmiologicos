@@ -299,20 +299,20 @@ Un glm se ajusta con filas completas: el paciente sin `Age` desaparece
 del modelo, y con él parte de la muestra. Rubin (1976) ordenó las
 formas de faltar en tres mecanismos:
 
-- **MCAR** — faltar no depende de nada: los casos completos no sesgan,
+- **MCAR**: faltar no depende de nada: los casos completos no sesgan,
   solo pierden precisión.
-- **MAR** — faltar depende de lo *observado* (la edad explica quién
+- **MAR**: faltar depende de lo *observado* (la edad explica quién
   no reportó el Kps): los casos completos pueden sesgar; una imputación
   que use las variables observadas lo repara. Excepción útil: en una
   regresión, si faltar depende solo de las covariables del modelo y no
   del desenlace, los casos completos siguen sin sesgo.
-- **MNAR** — faltar depende del propio valor que falta (no reportan
+- **MNAR**: faltar depende del propio valor que falta (no reportan
   el Kps los que se sienten peor): ninguna imputación estándar lo
   resuelve; se reporta el análisis base *más* un análisis de
   sensibilidad bajo escenarios MNAR.
 
 El laboratorio induce los tres mecanismos sobre el Kps completo de
-VALUNG — donde la verdad se conoce — y deja comparar casos
+VALUNG (donde la verdad se conoce) y deja comparar casos
 completos, imputación por la media e imputación por regresión:
 
 <MissingDataLab />
@@ -325,7 +325,7 @@ completos, imputación por la media e imputación por regresión:
 
 La respuesta práctica, en orden:
 
-1. Describir *quién* falta y en qué variable — ya lo hace el panel de
+1. Describir *quién* falta y en qué variable: ya lo hace el panel de
    calidad del módulo 0.
 2. Decidir el mecanismo plausible **con argumentos de medición**, no
    con una prueba (el mecanismo no es testeable: MNAR y MAR pueden
@@ -333,7 +333,7 @@ La respuesta práctica, en orden:
 3. Bajo MCAR/MAR, <Term k="imputacion_multiple">imputación
    múltiple</Term> (`mice` en R) con el desenlace dentro del modelo
    de imputación.
-4. Bajo MNAR, análisis de sensibilidad — no hay técnica que lo
+4. Bajo MNAR, análisis de sensibilidad: no hay técnica que lo
    evite.
 5. Reportar el supuesto junto al estimador: "OR ajustado bajo MAR,
    con imputación múltiple (m = 20)".
@@ -342,14 +342,14 @@ La respuesta práctica, en orden:
 
 La regla práctica de Peduzzi (1996): al menos ~10
 <Term k="eventos_por_variable">eventos por variable</Term>. En
-`recid.csv` hay 114 arrestos para un modelo de 7 covariables — cómodo
+`recid.csv` hay 114 arrestos para un modelo de 7 covariables: cómodo
 (≈16 <Term k="EPV">EPV</Term>). Pero con 5 eventos y 3 covariables el estimador de
 máxima verosimilitud se sesga y el IC de Wald miente. Las salidas:
 
 - **Menos covariables, elegidas a priori** por la literatura, no por
   la máquina.
 - **Regresión de Firth**: penaliza la verosimilitud y elimina el
-  sesgo de primer orden — la herramienta estándar para separación y
+  sesgo de primer orden: la herramienta estándar para separación y
   muestras pequeñas (`logistf` en R).
 - **Métodos exactos**: la regresión logística exacta (`EXACT` en PROC
   LOGISTIC) para pocos estratos y covariables; en el 2×2, el Fisher y el
@@ -359,7 +359,7 @@ máxima verosimilitud se sesga y el IC de Wald miente. Las salidas:
 Si un glm logístico devuelve un coeficiente gigante con error
 estándar enorme, probablemente hay **separación**: alguna categoría
 predice el desenlace por completo (cero eventos en una celda). El
-dato no es raro — es la muestra diciendo que la tabla es escasa en
+dato no es raro: es la muestra diciendo que la tabla es escasa en
 esa dirección. Firth, menos niveles, o más datos.
 </Callout>
 

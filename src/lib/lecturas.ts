@@ -9,7 +9,7 @@
  *
  * `doi` se incluye solo donde la cita es estable y verificable; el resto se
  * publica como referencia textual. Volumen y páginas deben cotejarse antes
- * de una publicación impresa — igual que advierte el plan original.
+ * de una publicación impresa, igual que advierte el plan original.
  */
 
 export interface Lectura {
@@ -498,7 +498,7 @@ export const LECTURAS: SeccionLecturas[] = [
       {
         cita: 'DerSimonian R, Laird N. Meta-analysis in clinical trials. Control Clin Trials. 1986;7(3):177–188.',
         doi: '10.1016/0197-2456(86)90046-2',
-        nota: 'El estimador de momentos de τ² —y el origen de su falla de admisibilidad.',
+        nota: 'El estimador de momentos de τ², y el origen de su falla de admisibilidad.',
       },
       {
         cita: 'Paule RC, Mandel J. Consensus values and weighting factors. J Res Natl Bur Stand. 1982;87(5):377–385.',

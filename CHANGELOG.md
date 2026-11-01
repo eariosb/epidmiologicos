@@ -4,14 +4,14 @@ Todas las cifras del curso están verificadas contra los datos en
 `public/data` y/o el código de `src/lib/`. Las entradas marcan los cambios
 relevantes para quien ya haya usado la versión anterior.
 
-## [1.1.0] — 2026-11
+## [1.1.0] · 2026-11
 
 Dos cursos en un sitio, arquitectura de capas y el Curso II completo
 (plan de 12 sprints).
 
 ### Agregado
 
-- **Curso II — 10 módulos completos** (orders 20–29, `course: II`,
+- **Curso II · 10 módulos completos** (orders 20–29, `course: II`,
   `level: avanzado`): sala de máquinas exacta, datos faltantes/MI,
   confusión no medida (E-value, sesgo probabilístico, bounding), DAGs
   avanzados (colisionador, M-bias, IV), emulación del ensayo objetivo
@@ -35,7 +35,7 @@ Dos cursos en un sitio, arquitectura de capas y el Curso II completo
 - **RCell colapsable**: la salida en vivo y la precalculada ganan
   cabecera con toggle; cada ejecución reexpande automáticamente.
 - **`FisherExtremesLab`** (m06): laboratorio interactivo de «tablas más
-  extremas» — el usuario ingresa su tabla 2×2, pulsa «Analizar» y ve la
+  extremas»: el usuario ingresa su tabla 2×2, pulsa «Analizar» y ve la
   distribución hipergeométrica condicional en cuatro estadios (espacio →
   observada → extremas → suma del valor p), con definiciones de extremo
   alternables (minlike / colas) y una vista empírica por simulación
@@ -56,14 +56,14 @@ Dos cursos en un sitio, arquitectura de capas y el Curso II completo
 - **`course-blocks.ts`**: constantes de bloques extraídas de
   `modules.ts` para no arrastrar `node:fs` al cliente (fix del build).
 
-## [1.0.0] — 2026-10
+## [1.0.0] · 2026-10
 
 Primera versión completa del curso tras el plan de diez fases
 (correcciones → infraestructura → diseño → módulo 0).
 
 ### Agregado
 
-- **Módulo 0 — Repaso: leer los datos antes de analizarlos**
+- **Módulo 0 · Repaso: leer los datos antes de analizarlos**
   (`00-repaso-datos-epidemiologicos`). 13 secciones ancladas en las bases
   reales del curso (VALUNG, RECID, BCG, parejas clase 22, DDIMER,
   leucemia), sin re-numerar los módulos 1–19. Incluye el simulador nuevo
@@ -82,7 +82,7 @@ Primera versión completa del curso tras el plan de diez fases
 
 ### Corregido
 
-- **Perondi (M6)**: las etiquetas de los grupos estaban invertidas —
+- **Perondi (M6)**: las etiquetas de los grupos estaban invertidas:
   ahora 7/34 dosis estándar y 1/34 dosis alta, como en la auditoría y la
   reseña PMC6986458. El texto adopta el encuadre "escenario de referencia
   anclado en las proporciones observadas" y advierte que no es la
@@ -121,7 +121,7 @@ Primera versión completa del curso tras el plan de diez fases
   (`pnpm test:visual`, 44 capturas), 215 tests unitarios, `pnpm qa`
   como compuerta única.
 - `/api/vision` devuelve 503 en producción si `VISION_SERVICE_URL` no
-  está definida — el curso funciona sin el servicio.
+  está definida; el curso funciona sin el servicio.
 - El asistente opera con **clave de API por usuario** (configurada en la
   pizarra, nunca en el servidor): cada estudiante usa su propia clave o
   la aplicación funciona sin asistente.
@@ -140,12 +140,12 @@ Primera versión completa del curso tras el plan de diez fases
   deriva de una de sus clases) y de la corrección del IC de
   Kleinbaum–Kupper con su tabla de cobertura.
 
-## [Sin versión] — Test estadístico en el repaso + auditoría calificada
+## [Sin versión] · Test estadístico en el repaso + auditoría calificada
 
 ### Agregado
 
-- **M0 — "El test estadístico: cómo se decide con datos"**: anatomía
-  completa de la prueba de hipótesis en lenguaje de aprendiz — H₀ como
+- **M0 · "El test estadístico: cómo se decide con datos"**: anatomía
+  completa de la prueba de hipótesis en lenguaje de aprendiz: H₀ como
   modelo concreto, estadístico de prueba, distribución bajo H₀, valor p
   como viabilidad del modelo nulo (rechazar ≠ aceptar), errores tipo I
   y II, una cola vs. dos, significancia real vs. nominal, potencia y
@@ -168,107 +168,107 @@ Primera versión completa del curso tras el plan de diez fases
   más contador de aciertos. Enseña la distinción clave: «sospechoso»
   solo aplica mientras la verificación está pendiente.
 
-## [Sin versión] — Ciudad simulada (fase 10e)
+## [Sin versión] · Ciudad simulada (fase 10e)
 
 ### Agregado
 
 - **`ciudad_simulada.R`** (`public/anexos`): generador de la ciudad de
-  Simépolis — 20 000 habitantes con asignación exacta por estrato, así la
+  Simépolis: 20 000 habitantes con asignación exacta por estrato, así la
   verdad de la ciudad finita coincide con el mecanismo: RR causal = 3.00
   dentro de cada C, RR crudo = 3.85 (confusión sembrada), P(E|control
   hospitalario) = 0.75 (colisionador). Registrado en el manifiesto de
   anexos.
 - **`CityLab`** (`src/components/WorldSims.tsx`): paridad TypeScript del
-  generador — el estudiante muestrea la misma ciudad con cohorte,
+  generador; el estudiante muestrea la misma ciudad con cohorte,
   transversal, casos y controles con controles de la población fuente o
   hospitalarios, y compara el estimador contra la verdad sembrada.
-- **M2 — sección "La ciudad de Simépolis"**: mecanismo sembrado
+- **M2 · sección "La ciudad de Simépolis"**: mecanismo sembrado
   (confusor C, colisionador H), RCell que expone las verdades
   (RR crudo 3.85 vs 3.00 por estrato, P(E|controles) 0.21 vs 0.75) y el
   ejercicio de Berkson con OR invertido (≈0.43).
 - **Glosario**: sesgo_berkson, colisionador.
 
-## [Sin versión] — Datos del mundo real (fase 10d)
+## [Sin versión] · Datos del mundo real (fase 10d)
 
 ### Agregado
 
 - **`WorldSims.tsx`**: tres simuladores del análisis en condiciones
   reales:
-  - `MissingDataLab` — induce MCAR/MAR/MNAR sobre el Kps completo de
+  - `MissingDataLab`: induce MCAR/MAR/MNAR sobre el Kps completo de
     VALUNG (verdad conocida, semilla fija) y compara casos completos,
     imputación por la media e imputación por regresión sobre la edad.
-  - `EValueCalculator` — E-value del estimador y del límite del IC
+  - `EValueCalculator`: E-value del estimador y del límite del IC
     (VanderWeele & Ding 2017), interpretado en la escala del efecto.
-  - `BiasAnalysis2x2` — corrección del OR por sensibilidad y
+  - `BiasAnalysis2x2`: corrección del OR por sensibilidad y
     especificidad asumidas de la clasificación de la exposición.
-- **M1 — ética aplicada a datos**: Resolución 8430 (clasificación de
+- **M1 · ética aplicada a datos**: Resolución 8430 (clasificación de
   riesgo), Ley 1581 y Decreto 1377 (datos sensibles), datos secundarios
   sin consentimiento, ética del estudio subpotenciado + quiz.
-- **M7 — Cornfield y E-value**: las condiciones de Cornfield (1959) del
+- **M7 · Cornfield y E-value**: las condiciones de Cornfield (1959) del
   debate tabaco–cáncer y su formalización como E-value.
-- **M13 — covariable dependiente del tiempo**: RCell que reestructura
+- **M13 · covariable dependiente del tiempo**: RCell que reestructura
   `emp1`–`emp52` de RECID a formato largo y compara tasas de arresto
   por 1 000 personas-semana según el empleo vigente.
-- **M14 — análisis de sesgo cuantitativo**: corrección por Se/Sp,
+- **M14 · análisis de sesgo cuantitativo**: corrección por Se/Sp,
   diferencial vs no diferencial + `BiasAnalysis2x2`.
-- **M16 — faltantes y pocos eventos**: mecanismos de Rubin con
+- **M16 · faltantes y pocos eventos**: mecanismos de Rubin con
   `MissingDataLab`, imputación múltiple, regla de 10 EPV (Peduzzi),
   regresión de Firth y separación como diagnóstico.
-- **M17 — robustez y reporte**: `EValueCalculator` + sección
+- **M17 · robustez y reporte**: `EValueCalculator` + sección
   STROBE/RECORD.
 - **Glosario**: evalue, cornfield, mala_clasificacion,
   imputacion_multiple, eventos_por_variable, STROBE.
 
-## [Sin versión] — Explorar antes de inferir (fase 10c)
+## [Sin versión] · Explorar antes de inferir (fase 10c)
 
 ### Agregado
 
 - **`Table1Builder`** (`src/components/QualitySims.tsx`): construye la
   Tabla 1 del CSV real en el navegador (RECID o VALUNG) con diferencias
-  estandarizadas — no valores p — y umbral |d| > 0.1 marcado. El
+  estandarizadas (no valores p) y umbral |d| > 0.1 marcado. El
   agrupador se elige en vivo: `fin` (aleatorizado → balance) vs.
   `arrest` (desenlace → confusores encendidos).
 - **`DataQualityPanel`**: auditoría en vivo del archivo con el esquema
-  Kahn 2016 — conformidad, completitud, plausibilidad — con hallazgos
+  Kahn 2016 (conformidad, completitud, plausibilidad) con hallazgos
   computados (Prior ∈ {0,10}, 97.1% Kps múltiplos de 10, 12 atípicos
   reales, emp vacío solo tras el arresto, week = 53, prio
   sobredispersión 2.8×) que el estudiante marca: verificado /
   sospechoso / documentado.
 - **M0**: sección "Las tres dimensiones de la calidad del dato" que
   formaliza el esquema C1 y embebe el panel de auditoría.
-- **M7**: sección "La Tabla 1 como diagnóstico" — diferencias
+- **M7**: sección "La Tabla 1 como diagnóstico": diferencias
   estandarizadas frente a valores p, selección, información
-  diferencial — + callout de la falacia de la Tabla 2 (Westreich y
+  diferencial, más un callout de la falacia de la Tabla 2 (Westreich y
   Greenland 2013) + `Table1Builder` con la demo fin-vs-arrest.
 - Snapshots regenerados (declarados): M0 y M7 en escritorio y móvil.
 
-## [Sin versión] — Conducir el estudio (fase 10b)
+## [Sin versión] · Conducir el estudio (fase 10b)
 
 ### Agregado
 
 - **Componente `ConductStudy`/`ConductStep`** (`src/components/ConductStudy.tsx`):
-  la secuencia de siete pasos —pregunta, población fuente y marco,
+  la secuencia de siete pasos (pregunta, población fuente y marco,
   selección, medición, estructura del archivo, exploración y validación,
-  medida e inferencia— como marco común de todos los diseños. El
+  medida e inferencia) como marco común de todos los diseños. El
   componente da la forma; el contenido de cada paso vive en el MDX.
 - **M2**: sección "Conducir el estudio: siete pasos" + "El cuarto
-  camino: datos que nadie diseñó" — datos secundarios y la tabla de
+  camino: datos que nadie diseñó": datos secundarios y la tabla de
   emulación del ensayo objetivo (Hernán & Robins 2016), con tiempo
   inmortal y usuarios prevalentes como sesgos de tiempo cero.
-- **M3**: sección "El corte transversal en la práctica" — encuestas con
+- **M3**: sección "El corte transversal en la práctica": encuestas con
   estratos/conglomerados/pesos, razón de prevalencias vs. OR de
   prevalencia (RCell: RP = 2 fijo, OR de 2.02 a 3.5 según prevalencia),
   PROC SURVEYFREQ, sesgo prevalencia-incidencia y no respuesta.
-- **M11**: "Conducir el estudio: la cohorte" — tiempo cero/tiempo
+- **M11**: "Conducir el estudio: la cohorte": tiempo cero/tiempo
   inmortal, usuarios nuevos, pérdidas por grupo + ejercicio RECID:
   `week = 53` como convención del archivo, 2 655 celdas `emp` vacías
   solo en arrestados (faltantes estructurales) y la ambigüedad del
   denominador (20 127 vs 19 809 personas-semana, 318 semanas fantasma).
-- **M14**: "Conducir el estudio: casos y controles" — población fuente,
+- **M14**: "Conducir el estudio: casos y controles": población fuente,
   tipos de controles, muestreo por densidad de incidencia y
   caso-cohorte + ejercicio BCG: la proporción 1/6 de casos es diseño,
   no prevalencia; P(vacuna|control) = 0.605 sí estima algo poblacional.
-- **M15**: "Conducir el estudio: el diseño pareado" — análisis
+- **M15**: "Conducir el estudio: el diseño pareado": análisis
   condicional obligatorio, sobrepareamiento + ejercicio DDIMER: 20 sets
   de tamaño variable (1–3 casos por set), no estrictamente 1:c.
 - **8 términos nuevos** en el glosario: tiempo inmortal, ensayo
@@ -277,17 +277,17 @@ Primera versión completa del curso tras el plan de diez fases
 - Snapshots regenerados (declarados): M2, M3, M11, M14, M15 en
   escritorio y móvil. 4 snapshots R nuevos.
 
-## [Sin versión] — Apéndice de bibliografía
+## [Sin versión] · Apéndice de bibliografía
 
 ### Agregado
 
 - **`/bibliografia`**: apéndice de bibliografía, enlaces y lecturas de
   interés (`src/lib/lecturas.ts`). ~60 referencias del plan docente en 14
-  secciones temáticas —textos base, datos longitudinales, información
+  secciones temáticas (textos base, datos longitudinales, información
   faltante, cohortes con datos secundarios, casos y controles, encuestas
   transversales, calidad de datos y vigilancia, valores p, muestras
   pequeñas, sesgos, causalidad gráfica, ética y normativa colombiana,
-  fuentes de los datasets— cada una con su uso en el curso. DOI enlazado
+  fuentes de los datasets), cada una con su uso en el curso. DOI enlazado
   solo donde la cita es verificable; la página advierte que volumen y
   páginas deben cotejarse antes de publicarse en impreso.
 - Sección «Enlaces y recursos» con destinos institucionales estables:

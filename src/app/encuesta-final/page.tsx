@@ -1,7 +1,7 @@
 import { FinalSurvey } from '@/components/FinalSurvey';
 
 export const metadata = {
-  title: 'Encuesta final — Prueba de campo',
+  title: 'Encuesta final · Prueba de campo',
 };
 
 export default function EncuestaFinalPage() {

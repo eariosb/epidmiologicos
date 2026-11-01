@@ -83,7 +83,7 @@ export function MatrixBuilder({ initialSize = 4, canvasRef, initialValues, editE
   const [insertError, setInsertError] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
-  /** Numeric view for generate/preview/insert — NaN and "" cells become 0. */
+  /** Numeric view for generate/preview/insert: NaN and "" cells become 0. */
   const customValues = useMemo(
     () =>
       drafts.map((row) =>

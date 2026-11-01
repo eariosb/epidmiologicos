@@ -181,17 +181,17 @@ mismo; lo que cambia es el estimador de τ².
 ## La máquina también miente
 
 La lección de Normand tiene una versión más incómoda: el problema no
-siempre es la elección del método —a veces el mismo nombre, "prueba
+siempre es la elección del método: a veces el mismo nombre, "prueba
 exacta de Fisher bilateral", esconde **definiciones distintas según
 la implementación**. `fisher.test()` de R ordena las tablas por
 probabilidad (*minlike*), igual que SAS y SciPy; `exact2x2` usa por
 defecto el criterio *central* (la menor de las dos colas, duplicada). Con márgenes simétricos coinciden;
-cerca del umbral de decisión pueden discrepar — y el mismo objeto
+cerca del umbral de decisión pueden discrepar, y el mismo objeto
 `p.value` sale distinto de una función a otra sin que nada lo
 anuncie. En la <Anexo id="auditoria-perondi">auditoría del
 curso</Anexo> documentamos el caso inverso: un "Boschloo bilateral
 0,028" en un documento técnico que no era una definición alternativa
-sino una maximización detenida en un pico local — con n₁ = n₂,
+sino una maximización detenida en un pico local; con n₁ = n₂,
 minlike y central dan exactamente lo mismo.
 
 Y hay un segundo nivel, más fino: dentro de *minlike*, dos tablas con
@@ -236,7 +236,7 @@ cat("fisher.test():", round(fisher.test(tab)$p.value, 4), "\\n")`}
 Test, definición bilateral, manejo de empates, paquete **y versión**,
 plataforma, semilla. La frase "se usó Fisher (R 4.5, minlike,
 `fisher.test`)" es verificable; "se aplicó la prueba exacta" no lo
-es — hay al menos dos bilaterales razonables y tu tabla puede estar
+es: hay al menos dos bilaterales razonables y tu tabla puede estar
 justo en la frontera entre ellas. En la zona gris, reporta la
 sensibilidad al procedimiento alternativo (módulo 6).
 </Callout>

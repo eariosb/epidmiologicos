@@ -69,7 +69,7 @@ para estimar el efecto de $E$ sobre $D$ si cumple dos condiciones:
 
 1. **$Z$ cierra todo camino de $E$ a $D$ que empiece con flecha hacia
    $E$** ($E \leftarrow \cdots$). Esos caminos son asociación espuria
-   que hay que bloquear — por estratificación, regresión o pareamiento
+   que hay que bloquear, por estratificación, regresión o pareamiento
    sobre $Z$ (módulos 8 y 15).
 2. **Ninguna variable de $Z$ es descendiente de $E$**. Ajustar un
    descendiente corta el propio efecto o abre caminos que estaban
@@ -85,7 +85,7 @@ sets*: los conjuntos mínimos que cumplen las dos condiciones.
 
 Los dos regímenes extremos no son simétricos en consecuencia: uno
 **inventa** una asociación inexistente; el otro **esconde** una real.
-Las tablas del ejercicio de clase los muestran con números — y en ambos
+Las tablas del ejercicio de clase los muestran con números, y en ambos
 casos la señal del problema es idéntica: el OR agrupado no se parece a
 ningún OR de estrato.
 
@@ -164,7 +164,7 @@ agrupado salir más cerca de 1. El RR y la RD no tienen ese problema: son
 <Term k="colapsabilidad">colapsables</Term>. Por eso "crudo ≠ ajustado"
 solo diagnostica confusión cuando la medida es colapsable, o cuando $C$
 además está asociada con $E$. Y el aviso simétrico: confusión y no
-colapsabilidad pueden *cancelarse* —un crudo casi igual al ajustado
+colapsabilidad pueden *cancelarse*: un crudo casi igual al ajustado
 tampoco descarta confusión. La celda siguiente lo muestra sin ningún
 confusor.
 </Callout>
@@ -196,7 +196,7 @@ entre el crudo y el ajustado: la **confusión** es un sesgo (se
 <Term k="interaccion">interacción</Term> es un fenómeno real (se
 **describe**, módulo 10) y la **no colapsabilidad** es aritmética de la
 medida (se **entiende** y se **reporta**: OR marginal o condicional).
-Sesgo, fenómeno y propiedad — tres oficios distintos que el módulo 8
+Sesgo, fenómeno y propiedad: tres oficios distintos que el módulo 8
 aprende a separar con números.
 
 <LabExercise
@@ -261,15 +261,15 @@ detección**, no como trámite:
 - **Desbalance de confusores**: diferencias de edad, conducta o
   comorbilidad entre expuestos y no expuestos anticipan la confusión
   que el DAG formaliza. La herramienta es la **diferencia
-  estandarizada** — el desbalance en unidades de dispersión, |d| > 0.1
-  enciende la alarma — y *no* el valor p: en una Tabla 1 el p mide el
+  estandarizada**: el desbalance en unidades de dispersión, |d| > 0.1,
+  enciende la alarma, y *no* el valor p: en una Tabla 1 el p mide el
   tamaño muestral, no el desbalance (Austin 2009). Con n grande, un
   desbalance trivial es "significativo"; con n chico, uno peligroso no
   lo es.
 - **Selección**: en casos y controles, los controles deben parecerse a
   la población fuente en todo lo que no es la exposición.
 - **Información**: más faltantes o más "no sabe" en un grupo sugieren
-  medición diferencial — el sesgo que ningún ajuste repara.
+  medición diferencial: el sesgo que ningún ajuste repara.
 
 El constructor siguiente produce la Tabla 1 del archivo real. La
 demostración de fuerza del módulo es comparar dos agrupadores sobre la
@@ -287,10 +287,10 @@ misma base RECID:
 2. Agrupa por `arrest` y anota las variables que se encienden. Luego vuelve a agrupar por la exposición que te interese: solo las que se encienden en las dos tablas son candidatas a confundir.
 3. En VALUNG agrupa por `Therapy` y compara con lo que viste en la Figura 10 del módulo 0 (tipo celular desbalanceado).
 
-- Agrupando por `fin` — la ayuda financiera **aleatorizada** del
-  experimento — casi ninguna fila supera |d| > 0.1: la aleatorización
+- Agrupando por `fin` (la ayuda financiera **aleatorizada** del
+  experimento), casi ninguna fila supera |d| > 0.1: la aleatorización
   deja la Tabla 1 en silencio, que es exactamente su trabajo.
-- Agrupando por `arrest` — el desenlace — las filas que se encienden
+- Agrupando por `arrest`, el desenlace, las filas que se encienden
   son predictores del desenlace; para confundir, además tendrían que
   diferir entre los grupos de exposición. Son los candidatos: edad, arrestos previos, trabajo
   previo. La Tabla 1 anticipa lo que el análisis tendrá que ajustar.
@@ -298,7 +298,7 @@ misma base RECID:
 <Callout type="warning" title="La falacia de la Tabla 2">
 Otro diagnóstico que la literatura cobró caro (Westreich y Greenland,
 2013): los coeficientes de las **covariables de ajuste** en un modelo de
-regresión no son efectos interpretables — son ajustes internos del
+regresión no son efectos interpretables: son ajustes internos del
 modelo para el efecto principal. Reportarlos como si fueran
 asociaciones propias mezcla estimandos distintos en una misma tabla.
 La Tabla 2 del paper es solo para el efecto de la exposición; las
@@ -309,11 +309,11 @@ covariables van al apéndice o no van.
 
 El DAG dice qué ajustar, pero no silencia la pregunta de siempre:
 ¿y si quedó un confusor por fuera? Fisher y Neyman la usaron contra
-Doll y Hill —un "gen del fumar" podría causar tanto el hábito como el
-cáncer— y la respuesta la dio Cornfield en 1959: para que un confusor
+Doll y Hill (un "gen del fumar" podría causar tanto el hábito como el
+cáncer) y la respuesta la dio Cornfield en 1959: para que un confusor
 no medido explique **toda** la asociación, debe asociarse con la
 exposición y con el desenlace al menos tan fuertemente como el RR
-observado — las <Term k="cornfield">condiciones de Cornfield</Term>.
+observado: las <Term k="cornfield">condiciones de Cornfield</Term>.
 Un RR de 9 exige un confusor con dos asociaciones de magnitud 9:
 ningún gen propuesto se acercaba.
 
@@ -326,7 +326,7 @@ E = RR + √(RR · (RR − 1))
 
 es la fuerza mínima que el confusor tendría que tener en **ambos**
 caminos, más allá de lo ya ajustado, para llevar el estimador al
-nulo. Se calcula también para el límite del IC más cercano a 1 — la
+nulo. Se calcula también para el límite del IC más cercano a 1: la
 versión honesta, que incluye la incertidumbre. El calculador está en
 el módulo 17; aquí basta la intuición: **el E-value convierte
 "podría ser confusión" en un número comparable con los confusores

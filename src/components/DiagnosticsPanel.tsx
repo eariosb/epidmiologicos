@@ -26,7 +26,7 @@ const KIND_COLOR: Record<string, string> = {
 /**
  * Diagnostics view over the bb-events ring buffer (last 500 events).
  * Lets the teacher confirm that saves, inserts, tools and the RAG corpus
- * are behaving — or spot save-missed spikes that would justify a WAL.
+ * are behaving, or spot save-missed spikes that would justify a WAL.
  */
 export function DiagnosticsPanel() {
   const [events, setEvents] = useState<BoardEvent[]>([]);

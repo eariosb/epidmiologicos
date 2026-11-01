@@ -14,7 +14,7 @@ interface TermProps {
  * Término con tooltip en hover/focus: subrayado punteado discreto en el
  * texto y, al pasar el cursor, la expansión de la sigla o el recorderis
  * historiográfico. Cuando la clave existe en el glosario el término
- * además enlaza a /glosario#clave — el tooltip refresca y el clic lleva
+ * además enlaza a /glosario#clave; el tooltip refresca y el clic lleva
  * a la entrada completa, tejiendo el grafo interno del curso.
  *
  * Componente de servidor: el tooltip es CSS puro y no necesita estado. La

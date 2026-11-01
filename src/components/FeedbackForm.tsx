@@ -66,7 +66,7 @@ export function FeedbackForm({
   if (state === 'done') {
     return (
       <div className="my-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
-        ✓ Gracias — tu respuesta quedó registrada.
+        ✓ Gracias: tu respuesta quedó registrada.
       </div>
     );
   }
@@ -183,7 +183,7 @@ export function FeedbackForm({
           </span>
         )}
         {state === 'error' && (
-          <span className="text-xs text-danger-600" role="alert">No se pudo enviar — intenta de nuevo.</span>
+          <span className="text-xs text-danger-600" role="alert">No se pudo enviar. Intenta de nuevo.</span>
         )}
       </div>
     </section>

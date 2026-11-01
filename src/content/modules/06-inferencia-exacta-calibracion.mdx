@@ -94,7 +94,7 @@ Boschloo (o la z agrupada) usa mejor el α que pagaste.
 
 ## Las tablas más extremas, literalmente
 
-El valor p de Fisher no es el área de una cola — es una **suma**. Con los
+El valor p de Fisher no es el área de una cola: es una **suma**. Con los
 dos márgenes fijos, el número de eventos del grupo 1 solo puede tomar un
 puñado de valores: con $n_1 = n_2 = 34$ y $m = 8$ quedan exactamente
 nueve tablas posibles, cada una con su probabilidad hipergeométrica. La
@@ -107,13 +107,13 @@ hipergeométrica discreta no es simétrica, así que "dos lados" no es un
 área obvia. La convención de `fisher.test` (*minlike*: sumar toda tabla
 con $P \leq P_0$) es una elección, no un hecho. La alternativa clásica
 es la **central**: la región abarca ambas colas, pero el valor p es
-$2 \times \min(\text{cola})$, con tope en 1 — el método de
-`exact2x2::fisher.test(tsmethod = "central")`. Cuando las colas están
+$2 \times \min(\text{cola})$, con tope en 1 (el método de
+`exact2x2::fisher.test(tsmethod = "central")`). Cuando las colas están
 desequilibradas las dos convenciones dan números distintos, y ninguno
 es "el correcto": son respuestas a preguntas ligeramente distintas.
 
 El laboratorio permite además abrir la lista plegable de tablas 2×2
-incluidas — cada una con su probabilidad y su peso dentro del valor p —
+incluidas (cada una con su probabilidad y su peso dentro del valor p)
 para que "tabla extrema" deje de ser una etiqueta y pase a ser un
 objeto concreto. Y contrasta la suma condicional con una distribución
 **empírica** por simulación: el puente hacia la discusión incondicional
@@ -142,7 +142,12 @@ p_der <- sum(pr[xs >= x1])
 p_central <- min(1, 2 * min(p_izq, p_der))
 cat(sprintf("minlike = %.4f   central = %.4f   izq = %.4f   der = %.4f\\n",
             p_minlike, p_central, p_izq, p_der))
-# fisher.test(matrix(c(x1, n1 - x1, x2, n2 - x2), 2))$p.value == p_minlike
+
+# Verificación cruzada: fisher.test de R implementa exactamente esta suma
+# minlike (con tolerancia para empates). Si divergiera, la celda falla.
+p_ref <- fisher.test(matrix(c(x1, n1 - x1, x2, n2 - x2), 2))$p.value
+stopifnot(abs(p_ref - p_minlike) < 1e-12)
+cat(sprintf("fisher.test coincide: %.4f\\n", p_ref))
 
 # Los cuatro pasos de la narrativa en paneles estaticos
 par(mfrow = c(2, 2), mar = c(3, 3, 2, 1), mgp = c(2, 0.7, 0))
@@ -158,8 +163,9 @@ for (s in 1:4) {
   barplot(pr, names.arg = xs, col = cols[[s]], border = NA,
           main = titulos[s], xlab = "x1", ylim = c(0, max(pr) * 1.15))
   if (s >= 2) abline(h = p0, lty = 2)
-  if (s == 4) mtext(sprintf("p = %.4f (%d tablas)", p_minlike, sum(ext)),
-                    side = 3, line = 0.2, adj = 1, cex = 0.8)
+  if (s == 4) mtext(sprintf("minlike = %.4f  central = %.4f (%d tablas)",
+                            p_minlike, p_central, sum(ext)),
+                    side = 3, line = 0.2, adj = 1, cex = 0.75)
 }`}
 />
 
@@ -171,7 +177,7 @@ acercarse mucho más a α que Fisher. En la práctica el supremo se evalúa
 sobre una malla finita de $p$, así que el valor reportado es una cota
 inferior del supremo verdadero; en los ejemplos del módulo la diferencia
 con una malla refinada es despreciable (~10⁻⁷). (Precisión terminológica: Suissa y
-Shuster (1985) sí maximizan sobre el parámetro de estorbo — es lo que
+Shuster (1985) sí maximizan sobre el parámetro de estorbo: es lo que
 aquí se implementa y muestra. Evaluar el supremo solo en el estimador
 combinado $\hat{p} = m/N$ es una variante posterior, el E-test de
 Storer–Kim (1990): es más liberal y no garantiza exactitud estricta.)
@@ -190,8 +196,8 @@ de Barnard y de Boschloo es tomar el supremo sobre $p \in (0,1)$; la de
 Berger–Boos restringe el supremo a un intervalo de confianza de $p$ y le
 suma <Term k="γ-BB">γ</Term> (típicamente 0.001). La controversia no es computacional: es si
 ese supremo responde la pregunta del diseño. Si el diseño fijara ambos
-márgenes —raro fuera del experimento de la dama del té; un ensayo fija
-solo los tamaños de grupo— el supremo no existiría como problema; en un
+márgenes (raro fuera del experimento de la dama del té; un ensayo fija
+solo los tamaños de grupo), el supremo no existiría como problema; en un
 estudio que deja el margen de eventos libre, sí.
 </Profundiza>
 
@@ -206,7 +212,7 @@ La tabla por defecto es el caso ilustrativo de Perondi et al. (2004):
 epinefrina en paro cardíaco pediátrico, 7/34 niños sobrevivieron 24 h
 con **dosis estándar** (grupo 1) vs. 1/34 con **dosis alta** (grupo 2).
 La moraleja clínica del ensayo es incómoda: la dosis alta no solo no
-ayudaba — la evidencia apunta a que dañaba. Es solo un ejemplo;
+ayudaba; la evidencia apunta a que dañaba. Es solo un ejemplo;
 reemplázala con cualquier tabla 2×2 de tu interés.
 
 <ExactTestExplorer title={<>Espacio de tablas y regiones de rechazo (α editable)</>} />
@@ -231,8 +237,8 @@ la familia incondicional; Boschloo solo domina a Fisher.
 <SalaDeMaquinas title="El supremo tiene máximos locales">
 El valor p incondicional es un supremo sobre $p \in (0,1)$ y esa función
 no es unimodal: en la tabla de Perondi la cola de Boschloo tiene **tres
-picos** —0.0282 cerca de p ≈ 0.134 y de p ≈ 0.866, y el máximo global
-0.0385 en p = 0.5—. Una maximización que se detiene en el primer pico
+picos** (0.0282 cerca de p ≈ 0.134 y de p ≈ 0.866, y el máximo global
+0.0385 en p = 0.5). Una maximización que se detiene en el primer pico
 local reporta 0.028 en lugar de 0.0385 y cambia el veredicto. Por eso el
 curso evalúa sobre una malla densa de todo (0,1) y no sobre un
 optimizador de un solo arranque. Detalle técnico: como n₁ = n₂ aquí, las
@@ -266,10 +272,10 @@ usa en la práctica porque introduce aleatoriedad ajena a los datos.
 
 Dos resultados del panel de potencia merecen nota. Primero: si el
 protocolo de Perondi hubiera declarado querer detectar una diferencia
-entre 20% y 3% de supervivencia —un **escenario de referencia anclado en
-las proporciones observadas** (7/34 ≈ 0.21 y 1/34 ≈ 0.03), legítimo como
-pre-especificación antes de ver los datos, no como potencia real del
-ensayo—, la potencia exacta de Fisher con n = 34 por
+entre 20% y 3% de supervivencia (un **escenario de referencia anclado en
+las proporciones observadas**, 7/34 ≈ 0.21 y 1/34 ≈ 0.03, legítimo como
+pre-especificación antes de ver los datos y no como potencia real del
+ensayo), la potencia exacta de Fisher con n = 34 por
 grupo sería ~<Claim k="m6.power.fisher" d={2} /> y la de
 Boschloo ~<Claim k="m6.power.boschloo" d={2} />. El ensayo habría tenido menos
 de la mitad de la potencia convencional con el procedimiento que
@@ -287,7 +293,7 @@ Si el tamaño real de Fisher con n = 34 es ~<Claim k="m6.size.fisher" d={3} /> s
 0.05, un "no significativo" es todavía más débil de lo habitual: el test
 casi nunca alcanza a rechazar. Coscrato, Izbicki y Stern (2018)
 proponen la respuesta honesta de los **tests agnósticos**: además de
-aceptar y rechazar, permitir "la muestra no decide" — y calibran el
+aceptar y rechazar, permitir "la muestra no decide", y calibran el
 tamaño del conjunto de no-decisión, no solo el error tipo I. Es la
 formalización de lo que este módulo muestra numéricamente: entre
 "rechazo" y "no rechazo" hay un territorio grande donde la discreción
@@ -319,7 +325,7 @@ reduce el sesgo pero dispara la varianza; subirlo hace lo contrario. En
 el punto observado de Perondi el óptimo está cerca de c ≈ 0.8.
 
 <SalaDeMaquinas title="Del óptimo puntual a c = 0.5">
-El punto observado es lo que se estima —no lo que se conoce—, así que el
+El punto observado es lo que se estima, no lo que se conoce, así que el
 criterio más honesto promedia el ECM sobre la posterior de Jeffreys
 $p_i \sim \mathrm{Beta}(x_i + 1/2,\ n_i - x_i + 1/2)$. Ese promedio
 (reproducible por Monte Carlo sobre la malla de tablas) mueve el óptimo
@@ -364,8 +370,8 @@ respectivamente.
 Existe un puente elegante entre el valor p frecuentista y la lectura
 bayesiana: la probabilidad unilateral de Fisher,
 P(X₁ ≥ 7) = 0.0272, es exactamente la probabilidad posterior
-P(p₁ > p₂ | datos) cuando p₁ ~ Beta(0, 1) y p₂ ~ Beta(1, 0) —previas
-empujadas hacia las esquinas—. Con previas uniformes Beta(1, 1) la
+P(p₁ > p₂ | datos) cuando p₁ ~ Beta(0, 1) y p₂ ~ Beta(1, 0), previas
+empujadas hacia las esquinas. Con previas uniformes Beta(1, 1) la
 posterior del evento da 0.0138. El puente no valida ni invalida ninguna
 lectura: muestra que el valor p condicional puede replicarse como una
 probabilidad posterior con una previa particular, y que la respuesta
@@ -387,9 +393,9 @@ El problema de la cobertura se estudia en su forma más simple con una
 sola proporción. El intervalo de Wald (p̂ ± z·√(p̂q̂/n)) es el de todos
 los textos, y Brown, Cai y DasGupta (2001) demostraron que su cobertura
 es errática de forma "mucho más persistente de lo que se aprecia":
-subcubre severamente en ambos extremos —la cobertura de Wald es
+subcubre severamente en ambos extremos: la cobertura de Wald es
 simétrica en p ↔ 1 − p, así que falla igual en p = 0.02 que en
-p = 0.98— y cuando p̂ = 0 o p̂ = 1 la varianza estimada se anula y el
+p = 0.98, y cuando p̂ = 0 o p̂ = 1 la varianza estimada se anula y el
 intervalo colapsa a un punto. Para epidemiología, donde las prevalencias suelen ser bajas y los
 brotes pueden empezar con cero casos detectados, Wald no es un método
 de trabajo: es el contraejemplo docente.
@@ -511,9 +517,9 @@ resultado "negativo" ni el "positivo"
 habrían sido concluyentes al α nominal. Calibrar el tamaño muestral con
 el procedimiento que se usará no es un refinamiento estadístico; es
 parte del protocolo ético del estudio. Y la tesis complementaria: la
-elección del test **también debe declararse a la vista** —decidir entre
+elección del test **también debe declararse a la vista**: decidir entre
 Fisher y Boschloo después de ver cuál da el veredicto deseado convierte
-la decisión clínica en azar analítico— (<Anexo id="ensayo-test-exacto">ensayo técnico del curso</Anexo>;
+la decisión clínica en azar analítico (<Anexo id="ensayo-test-exacto">ensayo técnico del curso</Anexo>;
 las cifras se verifican en la <Anexo id="auditoria-perondi">auditoría independiente</Anexo>).
 </Callout>
 
@@ -607,8 +613,8 @@ La misma tabla transpuesta **no da el mismo valor p** en algunos
 paquetes, y ninguno avisa. `Exact::exact.test` en R supone los grupos en
 filas; `scipy.stats.barnard_exact` en Python los supone en columnas. Con
 la tabla de Perondi transpuesta, el método CSM reporta 0.0244 y
-`barnard_exact` 0.0505 —valores distintos del correcto (0.0385) sin
-ningún mensaje de error—. Lección de reproducibilidad: al replicar un
+`barnard_exact` 0.0505, valores distintos del correcto (0.0385) sin
+ningún mensaje de error. Lección de reproducibilidad: al replicar un
 análisis 2×2 en otro paquete, verificar primero la orientación con una
 tabla de resultado conocido. El espacio de tablas del simulador usa la
 convención del curso: grupos en filas, eventos en la primera columna.

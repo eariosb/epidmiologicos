@@ -46,8 +46,8 @@ de 0 a infinito. Misma ocurrencia, dos denominadores distintos:
 La escalera enseña lo esencial: cuando el evento es raro, riesgo y odds
 son prácticamente el mismo número (0.091 ≈ 0.10); cuando es frecuente, el
 odds despega hacia infinito mientras el riesgo apenas se mueve (0.95 →
-19). Todo lo que sigue en el módulo —por qué el OR se aleja de 1 más que
-el RR, por qué es el único que sobrevive al caso-control— es consecuencia
+19). Todo lo que sigue en el módulo (por qué el OR se aleja de 1 más que
+el RR, por qué es el único que sobrevive al caso-control) es consecuencia
 de esa geometría.
 
 Un dato real fija las unidades. En el *Physicians' Health Study* (1989),
@@ -63,7 +63,7 @@ $$
 
 Riesgo con aspirina: $104/11\,037 = 0.0094$; odds: $104/10\,933 = 0.0095$.
 Riesgo con placebo: $0.0171$; odds: $0.0174$. El RR de la aspirina es
-$0.0094/0.0171 = 0.55$ —el tratamiento casi parte el riesgo a la mitad— y
+$0.0094/0.0171 = 0.55$, el tratamiento casi parte el riesgo a la mitad, y
 el OR es $0.0095/0.0174 = 0.54$. Con un desenlace tan raro, las dos razones
 son indistinguibles a efectos prácticos: ahí el OR puede leerse como RR
 sin daño. El precio aparece cuando el desenlace es frecuente, y es lo
@@ -110,7 +110,7 @@ $\widehat{OR} = \dfrac{ad}{bc} = \underbrace{\dfrac{a/n_1}{c/n_0}}_{RR}
 El factor de corrección lo dice todo: si $RR > 1$ entonces $r_1 > r_0$ y
 el factor es mayor que 1, así que el OR exagera en la misma dirección;
 si $RR < 1$ el OR queda más lejos por debajo. El OR **siempre** se aleja
-más de 1 que el RR — y cuando ambos riesgos son pequeños el factor
+más de 1 que el RR, y cuando ambos riesgos son pequeños el factor
 $\approx 1$ y las medidas coinciden, como en la aspirina de arriba.
 Leído como si fuera un RR con desenlace frecuente, el OR exagera la
 asociación: no está mal, mide otra cantidad. Ese es el dilema que el
@@ -151,8 +151,8 @@ frecuencia del desenlace por 10 manteniendo los totales, el RR se queda en
 2. Busca una tabla con RR = 2 y OR mayor que 3. ¿Qué tienen en común los riesgos de esas tablas?
 
 Hay una simetría que vale la pena ver de cerca, porque es la razón de que
-el caso-control funcione. Transpone la tabla —casos y controles en las
-filas, exposición en las columnas— y pregunta por el OR de *exposición*
+el caso-control funcione. Transpone la tabla (casos y controles en las
+filas, exposición en las columnas) y pregunta por el OR de *exposición*
 entre casos y controles:
 
 $$
@@ -167,8 +167,8 @@ $$
 
 El mismo número. El producto cruzado $ad/bc$ no se entera de la
 orientación: el OR de exposición entre casos es idéntico al OR de
-enfermedad entre expuestos. El RR no tiene esa propiedad —transpuesta la
-tabla, sus denominadores pasan a ser cuotas que el investigador fijó— y
+enfermedad entre expuestos. El RR no tiene esa propiedad (transpuesta la
+tabla, sus denominadores pasan a ser cuotas que el investigador fijó) y
 por eso desaparece cuando el diseño muestrea por el desenlace.
 
 El análisis de Molinero no termina en las medidas: repite la misma
@@ -256,8 +256,8 @@ $$
 \ln \widehat{OR} \pm 1.96\sqrt{\tfrac1a + \tfrac1b + \tfrac1c + \tfrac1d}
 $$
 
-La simetría en log escala produce ICs asimétricos en la escala natural —
-más largos hacia arriba cuando OR > 1— pero no confundir asimetría con
+La simetría en log escala produce ICs asimétricos en la escala natural,
+más largos hacia arriba cuando OR > 1, pero no confundir asimetría con
 garantía: un IC puede cruzar 1 aunque exista asociación verdadera (ese
 es justamente el precio de la incertidumbre). El Pooling
 Project (Woodward, Ej. 3.10) reporta RR = 1.39 con IC95% (1.03, 1.88):
@@ -275,8 +275,8 @@ Katz y Woolf son ICs de Wald en escala log: asintóticos. La crítica de Correa
 cuando $\hat{p}$ está cerca de 0 o 1 la cobertura real cae muy por debajo
 del nominal (con $p = 0.03$ y $n = 100$, un Wald de proporciones cubre
 solo ~80% de las veces). Para el OR de Woolf el problema aparece de otra
-forma: no subcubre —en la cohorte de Molinero cubre ~97%, algo
-conservador— sino que **deja de existir**: si alguna celda es cero, el OR
+forma: no subcubre (en la cohorte de Molinero cubre ~97%, algo
+conservador), sino que **deja de existir**: si alguna celda es cero, el OR
 y su IC son infinitos o indeterminados, y con celdas pequeñas eso ocurre
 seguido. Con $n = 60$ por grupo y riesgos 10% vs. 3%, ~16% de las muestras
 producen una celda vacía.
@@ -415,10 +415,10 @@ sobre el valor p.
   correctIndex={1}
   explanation="El RR divide riesgos, es decir, proporciones de enfermos entre expuestos. En un caso-control los totales de casos y controles son cuotas del diseño (1:1), así que las proporciones por fila no son riesgos. Solo ad/bc es invariante al muestreo: por eso el OR sobrevive a todos los diseños."
   optionNotes={[
-    "Incorrecta: el caso-control no subestima sistemáticamente — el pseudo-RR dio 1.6 pero podría dar cualquier valor; el problema es que no estima un riesgo en absoluto.",
+    "Incorrecta: el caso-control no subestima sistemáticamente: el pseudo-RR dio 1.6 pero podría dar cualquier valor; el problema es que no estima un riesgo en absoluto.",
     undefined,
     "Incorrecta: Yates corrige la aproximación χ² en muestras pequeñas; no convierte una proporción de muestra en riesgo poblacional.",
-    "Incorrecta: el OR es la única *estimable* aquí, no la 'correcta' universal — en cohorte el RR es la medida natural.",
+    "Incorrecta: el OR es la única *estimable* aquí, no la 'correcta' universal; en cohorte el RR es la medida natural.",
   ]}
 />
 
@@ -441,7 +441,7 @@ cat("OR =", round(a*d/(b*c),2), "\\n")
     "¿Qué pasa con OR vs. RR si la enfermedad es común (b, d pequeños)?",
   ]}
   hint="En casos y controles, los totales de fila los fija el investigador: cualquier medida que use n1 y n0 como denominadores poblacionales es ficticia; solo ad/bc es invariante al muestreo."
-  solution="RR=(45/53)/(12/107)≈7.6, RD=45/53−12/107≈0.74 (73.7 pp de exceso), OR=(45·95)/(8·12)≈44.5 (IC95% ≈ 17–117). El desenlace es frecuente (57/160 = 36% entre expuestos), así que OR y RR divergen mucho — no porque el OR 'engañe': mide la razón de odds, una cantidad legítima que solo se aproxima al RR cuando el desenlace es raro. En caso-control solo el OR es legítimo: RR y RD desaparecen porque los totales de fila son cuotas del diseño, no denominadores poblacionales."
+  solution="RR=(45/53)/(12/107)≈7.6, RD=45/53−12/107≈0.74 (73.7 pp de exceso), OR=(45·95)/(8·12)≈44.5 (IC95% ≈ 17–117). El desenlace es frecuente (57/160 = 36% entre expuestos), así que OR y RR divergen mucho, y no porque el OR 'engañe': mide la razón de odds, una cantidad legítima que solo se aproxima al RR cuando el desenlace es raro. En caso-control solo el OR es legítimo: RR y RD desaparecen porque los totales de fila son cuotas del diseño, no denominadores poblacionales."
 />
 
 <SasBlock code={`data plag;
@@ -461,11 +461,11 @@ run;
 ## Producto del módulo
 
 <Callout type="note" title="Entrega: tabla comparativa + nota de precisión">
-**Entregable 1 — tabla de referencia** (máx. 1 página): RR, OR y RD con
+**Entregable 1: tabla de referencia** (máx. 1 página): RR, OR y RD con
 fórmula, rango, interpretación en una frase, diseños que la permiten y el
 valor que toma en cada tabla de Molinero.
 
-**Entregable 2 — nota de precisión** (máx. 1 página), tres preguntas:
+**Entregable 2: nota de precisión** (máx. 1 página), tres preguntas:
 
 1. En la cohorte de Molinero (celda de 6), ¿qué IC reportarías para el OR:
    Woolf, Fisher o Jeffreys? Justifica con la cobertura real simulada.

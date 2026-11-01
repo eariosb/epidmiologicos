@@ -15,7 +15,7 @@ export interface QuizProps {
   /**
    * Nota opcional por opción (mismo orden que `options`): se muestra bajo
    * cada opción tras enviar, para explicar también por qué falla cada
-   * distractor — no solo por qué acierta la correcta.
+   * distractor, no solo por qué acierta la correcta.
    */
   optionNotes?: (string | undefined)[];
 }

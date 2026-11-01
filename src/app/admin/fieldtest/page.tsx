@@ -1,6 +1,6 @@
 'use client';
 
-// /admin/fieldtest — tablero docente de la prueba de campo (Sprint 5).
+// /admin/fieldtest: tablero docente de la prueba de campo (Sprint 5).
 // Acceso con FIELDTEST_ADMIN_TOKEN (guardado en localStorage del docente).
 // Muestra: salud del pipeline, embudo de módulos, engagement de sims,
 // siglas consultadas, tasa de error de celdas R, preguntas al asistente,
@@ -288,7 +288,7 @@ export default function FieldTestAdminPage() {
         </Card>
       </div>
 
-      <Card title="Últimos eventos (debug — sin payload)">
+      <Card title="Últimos eventos (debug, sin payload)">
         <div className="max-h-64 overflow-auto">
           <table className="w-full">
             <thead><tr><Th>Hora</Th><Th>Curso</Th><Th>Kind</Th><Th>Módulo</Th></tr></thead>

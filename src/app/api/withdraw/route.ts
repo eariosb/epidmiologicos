@@ -1,4 +1,4 @@
-// POST /api/withdraw — ejerce el derecho de retiro (ARCO).
+// POST /api/withdraw: ejerce el derecho de retiro (ARCO).
 // El participante se autentica con su enroll_token; el servidor ejecuta
 // fieldtest.withdraw(code) que borra events/sessions/feedback en cascada
 // y desvincula la identidad. Respuesta idéntica haya o no datos (idempotente).

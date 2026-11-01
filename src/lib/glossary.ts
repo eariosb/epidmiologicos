@@ -6,7 +6,7 @@
  *
  * Fuente única de verdad: `GLOSSARY_SECTIONS` alimenta tanto el tooltip de
  * `<Term k="...">` (vía el mapa plano `GLOSSARY`) como la página /glosario
- * del final del curso — una entrada nueva queda disponible en ambos.
+ * del final del curso: una entrada nueva queda disponible en ambos.
  */
 
 export interface GlossarySection {
@@ -102,7 +102,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       cornfield:
         'Condiciones de Cornfield (1959): para que un confusor no medido explique toda una asociación, debe estar asociado con la exposición y con el desenlace al menos tan fuerte como el RR observado. Nació del debate tabaco–cáncer de Doll y Hill.',
       evalue:
-        'E-value (VanderWeele & Ding, 2017): qué tan fuerte tendría que ser un confusor no medido —asociado con exposición y desenlace— para anular por completo el RR observado. E = RR + √(RR(RR−1)).',
+        'E-value (VanderWeele & Ding, 2017): qué tan fuerte tendría que ser un confusor no medido (asociado con exposición y desenlace) para anular por completo el RR observado. E = RR + √(RR(RR−1)).',
       PS: 'Propensity score (Rosenbaum & Rubin 1983): la probabilidad de recibir la exposición dados los confusores observados, P(E=1|C); resume el vector de confusores en un número.',
       IPTW: 'Ponderación por el inverso de la probabilidad de tratamiento (inverse probability of treatment weighting): pesar cada sujeto por 1/PS crea una pseudopoblación sin confusión medida; estima el efecto marginal.',
       confusion:
@@ -126,13 +126,13 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       interaccion:
         'Interacción o modificación de efecto: el efecto de una exposición depende del nivel de otra; es un fenómeno causal que se describe, no un sesgo que se elimina.',
       paralelismo:
-        'Paralelismo: ausencia de interacción en la escala elegida —efectos iguales entre estratos; cada exposición completa sus causas suficientes por vías independientes.',
+        'Paralelismo: ausencia de interacción en la escala elegida (efectos iguales entre estratos); cada exposición completa sus causas suficientes por vías independientes.',
       sinergismo:
         'Sinergismo: el efecto conjunto supera lo esperado en la escala elegida; en la aditiva significa componentes compartidos de una misma causa suficiente.',
       antagonismo:
         'Antagonismo: el efecto conjunto queda por debajo de lo esperado; una exposición mitiga o bloquea a la otra. Si invierte el signo es antagonismo cualitativo (cruce).',
       unilateralismo:
-        'Unilateralismo: una exposición no tiene efecto por sí sola pero es necesaria para el efecto de la otra —componente necesario de una causa suficiente—; no depende de la escala.',
+        'Unilateralismo: una exposición no tiene efecto por sí sola pero es necesaria para el efecto de la otra (componente necesario de una causa suficiente); no depende de la escala.',
     },
   },
   {
@@ -152,7 +152,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       Cox: 'Modelo de Cox (1972) o de riesgos proporcionales: h(t|x) = h₀(t)·e^{βx}; regresión de supervivencia sin suponer la forma del riesgo basal.',
       clogit:
         'Regresión logística condicional: la generalización del análisis pareado a covariables continuas; el OR se estima dentro de cada estrato de matching.',
-      TOST: 'Two one-sided tests (Schuirmann 1987): la prueba de equivalencia — declara como nula una diferencia relevante |θ| ≥ Δ y la rechaza con dos tests unilaterales; es el instrumento cuando lo que se quiere demostrar es similitud (no inferioridad, bioequivalencia).',
+      TOST: 'Two one-sided tests (Schuirmann 1987): la prueba de equivalencia: declara como nula una diferencia relevante |θ| ≥ Δ y la rechaza con dos tests unilaterales; es el instrumento cuando lo que se quiere demostrar es similitud (no inferioridad, bioequivalencia).',
       Byar: 'Aproximación de Byar al IC exacto de una tasa o SMR: cuantiles de la chi-cuadrado sobre el conteo observado; casi idéntica al Poisson exacto para conteos no muy pequeños.',
       BDT: 'Breslow–Day con la corrección de Tarone: la versión del test de homogeneidad de OR que reporta PROC FREQ con la opción BDT.',
     },
@@ -163,10 +163,10 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       IC: 'Intervalo de confianza (CI, confidence interval): el rango compatible con los datos; precede al valor p en la jerarquía de interpretación.',
       EE: 'Error estándar (standard error, SE): la desviación estándar del estimador; mide precisión, no dispersión.',
       DE: 'Desviación estándar (SD): la dispersión de los datos alrededor de su media; no confundir con el EE, que mide la precisión de un estimador.',
-      p: 'Valor p (p-value): probabilidad de un resultado al menos tan extremo que el observado, bajo H₀; depende tanto del tamaño del efecto como de n — un efecto trivial puede ser «significativo» con n enorme y uno grande puede no serlo con n chico; Woodward: estimar antes que contrastar.',
+      p: 'Valor p (p-value): probabilidad de un resultado al menos tan extremo que el observado, bajo H₀; depende tanto del tamaño del efecto como de n: un efecto trivial puede ser «significativo» con n enorme y uno grande puede no serlo con n chico; Woodward: estimar antes que contrastar.',
       H0: 'Hipótesis nula: la ausencia de asociación o efecto que el test pone a prueba.',
       error_tipo_i:
-        'Error tipo I: rechazar una H₀ verdadera (falso positivo). Su tasa nominal es α; la tasa real puede diferir de la declarada — es la significancia real del test.',
+        'Error tipo I: rechazar una H₀ verdadera (falso positivo). Su tasa nominal es α; la tasa real puede diferir de la declarada; es la significancia real del test.',
       error_tipo_ii:
         'Error tipo II: no rechazar una H₀ falsa (falso negativo). Su tasa es β; la potencia = 1 − β mide la probabilidad de detectar el efecto si existe.',
       potencia:
@@ -324,7 +324,7 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'Retraso de notificación (reporting delay): tiempo entre el caso real y su registro; hace que las últimas barras de la curva epidémica siempre estén incompletas.',
       eventos_por_variable:
         'Eventos por variable (EPV, Peduzzi 1996): cuántos eventos hay por parámetro del modelo; con pocos eventos por variable la estimación se sesga y la regresión de Firth o menos covariables preespecificadas ayudan.',
-      EPV: 'Eventos por variable: sigla del criterio de Peduzzi — ver «eventos por variable».',
+      EPV: 'Eventos por variable: sigla del criterio de Peduzzi: ver «eventos por variable».',
       SIR:
         'Modelo compartimental SIR: susceptibles → infectados (tasa de contagio β) → recuperados (tasa de recuperación γ); genera la curva epidémica de referencia, con R₀ = β/γ.',
       'β-SIR':
@@ -594,7 +594,7 @@ export const GLOSSARY_SIZE = Object.keys(GLOSSARY).length;
 /**
  * Ancla estable de una entrada en /glosario: la clave con espacios como
  * guiones ('Bradford Hill' → 'Bradford-Hill'). La usa <Term> para el href
- * y la página del glosario para el id — una sola convención.
+ * y la página del glosario para el id: una sola convención.
  */
 export function glossaryAnchor(k: string): string {
   return k.trim().replace(/\s+/g, '-');

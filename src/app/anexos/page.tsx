@@ -4,7 +4,7 @@ import { FileText, FileCode, FileImage, FileSpreadsheet, File } from 'lucide-rea
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Anexos — Datos Epidemiológicos',
+  title: 'Anexos · Datos Epidemiológicos',
   description: 'Material complementario del curso: ensayo técnico, scripts, resultados y figuras.',
 };
 

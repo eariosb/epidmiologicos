@@ -5,7 +5,7 @@ import { EXACT_TASKS, type ExactTaskArgs, type ExactTaskName, type ExactTaskResu
 /**
  * Dispatcher for heavy exact computations. Uses a Web Worker when the
  * feature flag allows it and the runtime supports one; otherwise falls
- * back to the same task functions on the main thread — identical
+ * back to the same task functions on the main thread; identical
  * numerical results, different thread.
  *
  * Flag: NEXT_PUBLIC_EXACT_WORKER=0 disables the worker (deploy fallback).

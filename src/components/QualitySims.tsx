@@ -76,7 +76,7 @@ interface DatasetSpec {
 const SPECS: Record<string, DatasetSpec> = {
   recid: {
     file: 'recid.csv',
-    label: 'RECID — 432 exconvictos',
+    label: 'RECID · 432 exconvictos',
     vars: [
       { key: 'age', label: 'Edad', type: 'cont' },
       { key: 'prio', label: 'Arrestos previos', type: 'cont' },
@@ -96,7 +96,7 @@ const SPECS: Record<string, DatasetSpec> = {
   },
   valung: {
     file: 'valung.csv',
-    label: 'VALUNG — ensayo VA de cáncer de pulmón',
+    label: 'VALUNG · ensayo VA de cáncer de pulmón',
     vars: [
       { key: 'Age', label: 'Edad', type: 'cont' },
       { key: 'Kps', label: 'Karnofsky', type: 'cont' },
@@ -167,7 +167,7 @@ function summarize(rows: Row[], v: VarSpec, mask: boolean[]): T1Row[] {
 /**
  * La Tabla 1 como herramienta de detección: describe los grupos con
  * diferencias estandarizadas (no valores p). El mismo dataset con dos
- * agrupadores — `fin` aleatorizado vs. `arrest` observado— muestra
+ * agrupadores (`fin` aleatorizado vs. `arrest` observado) muestra
  * cuándo la Tabla 1 anticipa confusión.
  */
 export function Table1Builder({
@@ -275,7 +275,7 @@ export function Table1Builder({
             </tbody>
           </table>
           <p className={NOTE}>
-            {flagged} de {table.rows.length} filas con |d| &gt; 0.1 — el umbral
+            {flagged} de {table.rows.length} filas con |d| &gt; 0.1, el umbral
             usual de desbalance. En la Tabla 1 no van valores p: un p mide el
             tamaño muestral, no el desbalance (Austin 2009).
           </p>
@@ -283,7 +283,7 @@ export function Table1Builder({
       )}
 
       <SimGuide>
-        <ul><li>Agrupa por <em>fin</em> (aleatorizado): las diferencias estandarizadas deben rondar 0 — así se ve la aleatorización cumpliendo su promesa.</li>
+        <ul><li>Agrupa por <em>fin</em> (aleatorizado): las diferencias estandarizadas deben rondar 0: así se ve la aleatorización cumpliendo su promesa.</li>
         <li>Agrupa por <em>arrest</em> (el desenlace): las filas que se encienden predicen el desenlace. Para confundir, una variable tiene que hacer eso <em>y además</em> diferir entre los grupos de exposición; por eso la tabla que diagnostica confusión es la que agrupa por la exposición.</li>
         <li>En VALUNG agrupa por <em>Therapy</em> y mira qué variables quedan desequilibradas entre los dos brazos.</li></ul>
       </SimGuide>
@@ -358,7 +358,7 @@ const QUALITY: Record<string, { file: string; label: string; checks: (rows: Row[
           detail: 'El boxplot los marca, y 999 parece un código de faltante; pero 999 y 991 son muertes observadas (censor = 0) que la fuente publicada confirma: se marcan, se verifican, no se borran.',
           severity: 'warn',
           expected: 'verificado',
-          porque: 'Sí eran sospechosos — hasta verificarlos contra la fuente. Una vez confirmados, el veredicto es verificado.',
+          porque: 'Sí eran sospechosos, hasta verificarlos contra la fuente. Una vez confirmados, el veredicto es verificado.',
         },
       ];
     },
@@ -538,8 +538,8 @@ export function DataQualityPanel({
                     marks[i] === f.expected ? 'text-success-700' : 'text-warning-800'
                   }`}>
                     {marks[i] === f.expected
-                      ? `✓ veredicto correcto — ${f.porque}`
-                      : `esperado: «${f.expected}» — ${f.porque}`}
+                      ? `✓ veredicto correcto: ${f.porque}`
+                      : `esperado: «${f.expected}»: ${f.porque}`}
                   </p>
                 )}
               </div>
@@ -567,14 +567,14 @@ export function DataQualityPanel({
 
       <p className={NOTE}>
         Regla de la auditoría: un dato sospechoso se marca, se verifica y se
-        documenta — nunca se borra por un criterio estadístico. El texto de
+        documenta; nunca se borra por un criterio estadístico. El texto de
         cada hallazgo ya trae la evidencia de la verificación: el ejercicio
         es elegir el veredicto que esa evidencia sostiene.
       </p>
 
       <SimGuide>
         <ul><li>Los hallazgos se calculan del archivo real al cargar: <code>{spec.label}</code> no viene con el informe hecho.</li>
-        <li>Lee la evidencia antes de marcar: «sospechoso» solo aplica mientras la verificación está pendiente — el detalle del hallazgo suele ya resolverla.</li>
+        <li>Lee la evidencia antes de marcar: «sospechoso» solo aplica mientras la verificación está pendiente: el detalle del hallazgo suele ya resolverla.</li>
         <li>Cambia a la otra base y repite la auditoría: el veredicto correcto cambia con el diseño, no con la intuición.</li></ul>
       </SimGuide>
     </div>

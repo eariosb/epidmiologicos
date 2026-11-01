@@ -107,7 +107,7 @@ function AuditCard({ rows, title }: { rows: AuditRow[]; title?: ReactNode }) {
 
 /* ================================================================== */
 /* 1. MultinomCIExplorer: serotipos y cobertura simultánea             */
-/*    (M06 — vigilancia de variantes, González-Correa-Vélez 2015)      */
+/*    (M06: vigilancia de variantes, González-Correa-Vélez 2015)        */
 /* ================================================================== */
 
 const SEROTYPES = ['DENV-1', 'DENV-2', 'DENV-3', 'DENV-4'];
@@ -284,13 +284,13 @@ export function MultinomCIExplorer({ title }: { title?: ReactNode }) {
             <p className="rounded border border-dashed border-ink-200 p-3 text-[11px] text-ink-500">
               La auditoría repite el estudio R veces con datos nuevos del mismo
               π y cuenta en cuántas los k intervalos cubren a la vez. El TCL por
-              celda promete {(conf * 100).toFixed(0)}% — mira qué entrega.
+              celda promete {(conf * 100).toFixed(0)}%: mira qué entrega.
             </p>
           )}
           <SimGuide>
             Con desequilibrio en 0 los serotipos están parejos y hasta el TCL
             se acerca al nominal. Súbelo: aparece una variante rara (DENV-4)
-            y la cobertura simultánea del TCL se desploma — la celda con casi
+            y la cobertura simultánea del TCL se desploma: la celda con casi
             nada de información es la que rompe el conjunto. QH es honesto
             pero ancho; Goodman da casi la misma cobertura con intervalos
             más cortos.
@@ -303,7 +303,7 @@ export function MultinomCIExplorer({ title }: { title?: ReactNode }) {
         { color: tokens.status.danger, label: 'intervalo que no cubre su π', dash: true },
       ]} className="mt-2" />
       <p className={NOTE}>
-        Auditoría por Monte Carlo con EE = √(c(1−c)/R) — no es enumeración
+        Auditoría por Monte Carlo con EE = √(c(1−c)/R), no es enumeración
         como en el caso binomial. González, Correa &amp; Vélez (2015,
         <em> Rev. Fac. Ciencias</em> 4(2):150–163) compararon 13 métodos por
         nivel real y longitud: el TCL rinde mal y recomiendan los basados en
@@ -317,7 +317,7 @@ export function MultinomCIExplorer({ title }: { title?: ReactNode }) {
 
 /* ================================================================== */
 /* 2. Tau2Audit: el estimador de la heterogeneidad también falla       */
-/*    (M17 — meta-análisis, DerSimonian–Laird vs. Paule–Mandel)        */
+/*    (M17: meta-análisis, DerSimonian–Laird vs. Paule–Mandel)          */
 /* ================================================================== */
 
 /** Q(τ²) = Σ w_i (y_i − ȳ_w)² con w_i = 1/(v_i + τ²); decreciente en τ². */
@@ -477,8 +477,8 @@ export function Tau2Audit({ title }: { title?: ReactNode }) {
               <text x={44} y={24} fontSize={8} fill={tokens.chart.secondary}>Paule–Mandel (borde)</text>
             </svg>
             <SimLegend items={[
-              { color: tokens.chart.primary, label: `τ̂² DL — truncado a 0 en ${(res.truncDL * 100).toFixed(0)}% de réplicas`, mark: 'bar' },
-              { color: tokens.chart.secondary, label: `τ̂² PM — truncado en ${(res.truncPM * 100).toFixed(0)}%`, mark: 'bar' },
+              { color: tokens.chart.primary, label: `τ̂² DL: truncado a 0 en ${(res.truncDL * 100).toFixed(0)}% de réplicas`, mark: 'bar' },
+              { color: tokens.chart.secondary, label: `τ̂² PM: truncado en ${(res.truncPM * 100).toFixed(0)}%`, mark: 'bar' },
               { color: tokens.chart.tick, label: 'τ² verdadero', dash: true },
             ]} className="mt-1" />
           </div>
@@ -516,7 +516,7 @@ export function Tau2Audit({ title }: { title?: ReactNode }) {
               Con τ = 0 el efecto fijo es legítimo y todo coincide. Sube τ y
               mira dos cosas: la masa de τ̂² en el borde 0 (el estimador por
               momentos sale del espacio paramétrico y hay que truncarlo) y la
-              caída de la cobertura del IC combinado — con pocos estudios,
+              caída de la cobertura del IC combinado; con pocos estudios,
               estimar τ² cuesta más precisión de la que anuncia el IC.
             </SimGuide>
           </div>
@@ -544,8 +544,8 @@ export function Tau2Audit({ title }: { title?: ReactNode }) {
 }
 
 /* ================================================================== */
-/* 3. BootstrapStress: caso-control con n chico — ¿cuándo colapsa?     */
-/*    (M14 — enfermedad rara, Woolf vs. bootstrap percentil)            */
+/* 3. BootstrapStress: caso-control con n chico, ¿cuándo colapsa?       */
+/*    (M14: enfermedad rara, Woolf vs. bootstrap percentil)              */
 /* ================================================================== */
 
 export function BootstrapStress({ title }: { title?: ReactNode }) {
@@ -705,7 +705,7 @@ export function BootstrapStress({ title }: { title?: ReactNode }) {
       <p className={NOTE}>
         La capa externa (R réplicas del estudio) audita el procedimiento; la
         capa interna (B remuestras bootstrap) es la aproximación a la
-        distribución muestral — dos Monte Carlo distintos que no deben
+        distribución muestral: dos Monte Carlo distintos que no deben
         confundirse. Con B = 400 el EE interno del percentil es ~1–2 pp;
         la ficha reporta el EE de la capa externa.
       </p>

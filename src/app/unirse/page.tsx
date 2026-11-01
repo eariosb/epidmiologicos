@@ -1,6 +1,6 @@
 'use client';
 
-// /unirse — punto de entrada de la prueba de campo.
+// /unirse: punto de entrada de la prueba de campo.
 // El docente reparte códigos (PC-XXXX) o links /unirse?code=PC-XXXX.
 // Flujo: validar código → consentimiento → pre-test (opcional) → al curso.
 
@@ -39,12 +39,12 @@ function UnirseInner() {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        setError('Código no reconocido — revísalo con tu docente.');
+        setError('Código no reconocido: revísalo con tu docente.');
         return;
       }
       setStep({ kind: 'consent', token: data.token, code: data.code, consentVersion: data.consentVersion });
     } catch {
-      setError('No se pudo validar — revisa tu conexión.');
+      setError('No se pudo validar; revisa tu conexión.');
     } finally {
       setBusy(false);
     }
@@ -77,7 +77,7 @@ function UnirseInner() {
           onClick={() => setStep({ kind: 'ready' })}
           className="mb-8 text-xs text-ink-400 underline decoration-dotted hover:text-ink-600"
         >
-          Omitir por ahora — puedo responderla luego
+          Omitir por ahora (puedo responderla luego)
         </button>
       </div>
     );
@@ -87,7 +87,7 @@ function UnirseInner() {
     return (
       <div className="mx-auto my-16 max-w-md text-center">
         <p className="text-4xl">🧪</p>
-        <h1 className="mt-3 text-xl font-bold text-ink-900">Listo — ya puedes explorar el curso</h1>
+        <h1 className="mt-3 text-xl font-bold text-ink-900">Listo: ya puedes explorar el curso</h1>
         <p className="mt-2 text-sm text-ink-600">
           Al final de cada módulo encontrarás una encuesta de 60 segundos.
           Desde <Link href="/privacidad" className="underline">privacidad</Link> puedes

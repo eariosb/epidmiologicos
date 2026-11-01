@@ -417,7 +417,7 @@ const SIM_BINS = 25;
 /**
  * The conditional universe of a 2×2 table: fixing both margins leaves
  * at most m+1 feasible tables, and the Fisher p-value is a literal SUM
- * of bar heights — tables whose hypergeometric probability does not
+ * of bar heights: tables whose hypergeometric probability does not
  * exceed the observed one (minlike), or a one-sided tail. The staged
  * reveal mirrors the classroom narration: space → observed → extremes
  * → running total. A second view swaps the exact conditional
@@ -426,7 +426,7 @@ const SIM_BINS = 25;
  * unconditional contrast head-on.
  *
  * Workflow: the user types a table into the draft inputs and presses
- * «Analizar tabla» — only then is the analysis computed and the staged
+ * «Analizar tabla»; only then is the analysis computed and the staged
  * reveal played.
  */
 export function FisherExtremesLab({ title }: { title?: ReactNode }) {
@@ -478,7 +478,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
 
   // Empirical view: K draws under the pooled-proportion two-binomial
   // null. The |p̂1 − p̂2| histogram approximates the UNCONDITIONAL
-  // distribution of the discrepancy — the contrast with the conditional
+  // distribution of the discrepancy; the contrast with the conditional
   // sum is the module's core lesson.
   const sim = useMemo(() => {
     const rng = mulberry32(20240 + seed);
@@ -510,7 +510,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
   }, [sim]);
 
   // Staged reveal: the same choreography as the animated version, driven
-  // by a timer instead of frames — and interruptible at any step.
+  // by a timer instead of frames, and interruptible at any step.
   useEffect(() => {
     if (!playing) return;
     const id = setInterval(() => {
@@ -570,7 +570,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
         </button>
         {dirty && (
           <span className="text-[11px] text-warning-700">
-            La tabla cambió — pulsa «Analizar tabla» para recalcular.
+            La tabla cambió. Pulsa «Analizar tabla» para recalcular.
           </span>
         )}
         <span className="ml-auto flex items-center gap-1 text-xs text-ink-600">
@@ -705,7 +705,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
           <p className="mt-1.5 text-[11px] leading-snug text-ink-500">
             La vista empírica responde otra pregunta: proporción de réplicas del
             modelo de dos binomiales (con p = m/N) que producen una diferencia al
-            menos tan grande en magnitud que la observada — una lectura
+            menos tan grande en magnitud que la observada: una lectura
             <em> incondicional</em>. Compara con la suma condicional exacta: el
             condicionamiento en m deja fuera parte del espacio muestral y por eso
             los dos números no coinciden.
@@ -874,7 +874,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
             </div>
             <p className={NOTE}>
               {def === 'minlike' &&
-                'Regla minlike: entra toda tabla con probabilidad ≤ la observada. Puede incluir tablas de ambos lados aunque la distribución no sea simétrica — es la convención de fisher.test.'}
+                'Regla minlike: entra toda tabla con probabilidad ≤ la observada. Puede incluir tablas de ambos lados aunque la distribución no sea simétrica; es la convención de fisher.test.'}
               {def === 'central' &&
                 `Regla central: la región es la unión de ambas colas (${nExt} tablas), pero el valor p no es su suma sino 2 × la cola menor = 2 × ${Math.min(leftTail, rightTail).toFixed(4)} = ${pVal.toFixed(4)} (tope 1). Cuando una cola es dominante, «central» y «minlike» difieren: compara ambos números en la misma tabla.`}
               {def === 'left' &&
@@ -918,7 +918,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
         lados); «central» es la de <code>exact2x2::fisher.test(tsmethod = &quot;central&quot;)</code>,
         que duplica la cola menor. Las colas unilaterales responden a alternativas
         dirigidas. Con la tabla de Perondi (7/34 vs. 1/34) la suma minlike da
-        ≈ 0.054 — el mismo número que reporta el módulo al comparar procedimientos.
+        ≈ 0.054, el mismo número que reporta el módulo al comparar procedimientos.
       </p>
     </div>
   );
@@ -1636,7 +1636,7 @@ export function CIMethodsExplorer({ title }: { title?: ReactNode }) {
         Pon x = 0 (brote sin casos): Wald colapsa a un punto, Wilson y Jeffreys dan
         cotas superiores honestas. Sube x/n cerca de 1 y observa quién se sale de
         [0,1]. La curva de cobertura muestra que ningún método nominal 95% cubre
-        95% en todo p — pero Wilson y Jeffreys se quedan mucho más cerca que Wald.
+        95% en todo p, pero Wilson y Jeffreys se quedan mucho más cerca que Wald.
       </SimGuide>
       <p className={NOTE}>
         Cobertura y admisibilidad calculadas por enumeración exacta de los n+1
@@ -1887,7 +1887,7 @@ export function PrecisionSampleSizeExplorer({ title }: { title?: ReactNode }) {
         (dientes de sierra por la discreción); el n reportado es el menor a partir del
         cual la garantía se sostiene en toda la ventana evaluada. La «fórmula original»
         se muestra solo para comparar: confunde L con la semiamplitud y trata z_β como
-        si multiplicara la desviación de L. Por eso su n no es interpretable — suele
+        si multiplicara la desviación de L. Por eso su n no es interpretable: suele
         quedar muy por encima del necesario, no por debajo. Referencias: Correa
         (seminario), Brown, Cai y DasGupta (2001), Rothman y Greenland (2018) y
         el paquete presize de R.

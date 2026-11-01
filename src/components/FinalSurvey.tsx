@@ -1,6 +1,6 @@
 'use client';
 
-// Instrumento C — encuesta final: SUS (ES) + ítems de la propuesta +
+// Instrumento C: encuesta final, SUS (ES) + ítems de la propuesta +
 // abiertas + NPS (doc 05). Solo visible con telemetría activa.
 
 import { FeedbackForm } from '@/components/FeedbackForm';

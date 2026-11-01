@@ -6,7 +6,7 @@ import { currentModuleSlug, track } from '@/lib/telemetry';
 /**
  * Acordeón colapsado con la traducción SAS del ejemplo R que precede.
  * <details> nativo: colapsado por defecto, sin JS.
- * SAS no se ejecuta en el navegador — el badge lo deja explícito:
+ * SAS no se ejecuta en el navegador: el badge lo deja explícito:
  * es código de referencia para correr en SAS local / SAS OnDemand.
  */
 export function SasBlock({ code, note }: { code: string; note?: ReactNode }) {
