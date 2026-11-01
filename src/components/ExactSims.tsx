@@ -401,12 +401,15 @@ const DEF_LABEL: Record<ResolvedDef, string> = {
   right: 'unilateral derecha',
 };
 
-const STAGE_LABELS = [
+const STAGE_LABELS = (def: ResolvedDef) => [
   '1 · El espacio',
   '2 · La observada',
-  '3 · Las extremas',
-  '4 · La suma',
+  def === 'central' ? '3 · La cola menor' : def === 'minlike' ? '3 · Las extremas' : '3 · La cola',
+  def === 'central' ? '4 · El doble' : '4 · La suma',
 ];
+
+/** Four decimals, but tiny masses read better as a bound. */
+const fmtP = (p: number) => (p < 1e-4 ? '< 0.0001' : p.toFixed(4));
 
 const FILL = {
   neutral: tokens.chart.borderSoft,
@@ -498,6 +501,16 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
   // Share of the p-value carried by each listed table: with «central»
   // the tail mass is doubled, so a bar of mass P accounts for P / (p/2).
   const shareBase = def === 'central' ? pVal / 2 : pVal;
+  const shareLabel = (p: number) => {
+    const pct = shareBase > 0 ? (p / shareBase) * 100 : 0;
+    return pct > 0 && pct < 1 ? '<1' : pct.toFixed(0);
+  };
+  const guideSteps =
+    def === 'minlike'
+      ? '(3) cuáles son al menos tan improbables y (4) el valor p como suma de sus alturas'
+      : def === 'central'
+        ? '(3) cuál es la cola menor y (4) su masa duplicada'
+        : `(3) la cola x₁ ${def === 'left' ? '≤' : '≥'} ${t.x1} y (4) su suma`;
 
   // Empirical view: K draws under the pooled-proportion two-binomial
   // null. The |p̂1 − p̂2| histogram approximates the UNCONDITIONAL
@@ -689,7 +702,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
             aria-label="Paso siguiente"
           >▶</button>
         </div>
-        <span className="text-xs font-medium text-ink-600">{STAGE_LABELS[stage]}</span>
+        <span className="text-xs font-medium text-ink-600">{STAGE_LABELS(def)[stage]}</span>
       </div>
 
       {view === 'empirica' ? (
@@ -852,13 +865,23 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
             </tbody>
           </table>
           <p className="mt-1.5 text-[11px] leading-snug text-ink-600">
-            P = {Number.isFinite(selP) ? selP.toFixed(4) : '—'}
+            P(tabla) = {Number.isFinite(selP) ? fmtP(selP) : '—'}
             {stage >= 2 && selI >= 0 && (
               <span className={`ml-1 font-medium ${selInSum ? 'text-brand-700' : 'text-ink-400'}`}>
-                {selInSum ? '· suma al p' : '· no suma'}
+                {selInSum
+                  ? def === 'central'
+                    ? '· en la cola duplicada'
+                    : '· suma al p'
+                  : '· no entra'}
               </span>
             )}
           </p>
+          <div className="mt-1.5 border-t border-ink-200 pt-1.5 text-[11px] leading-snug">
+            <span className="text-ink-500">
+              p del contraste · {DEF_LABEL[def]}
+            </span>
+            <div className="font-semibold text-brand-800">= {pVal.toFixed(4)}</div>
+          </div>
         </div>
       </div>
       )}
@@ -916,9 +939,9 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
                       </tbody>
                     </table>
                     <p className="mt-1 text-ink-600">
-                      P = {probs[i].toFixed(4)}
+                      P(tabla) = {fmtP(probs[i])}
                       <span className="ml-1 text-ink-400">
-                        ({((probs[i] / shareBase) * 100).toFixed(0)} % del p)
+                        ({shareLabel(probs[i])} % del p)
                       </span>
                     </p>
                   </div>
@@ -957,8 +980,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
       <SimGuide>
         Fijados los márgenes solo quedan {nBars} tablas posibles: una por cada valor
         de x₁ entre {lo} y {hi}. Pulsa «Guion» y mira la narrativa: (1) el espacio
-        completo, (2) dónde cae tu tabla, (3) cuáles son al menos tan improbables y
-        (4) el valor p como suma de sus alturas. Abre «Ver las tablas 2×2» para
+        completo, (2) dónde cae tu tabla, {guideSteps}. Abre «Ver las tablas 2×2» para
         inspeccionar cada tabla incluida con su probabilidad y su peso dentro del p.
         Después separa los dos ejes: el contraste (bilateral o unilateral) es la
         pregunta; el método (minlike o central) es solo cómo R calcula el p
