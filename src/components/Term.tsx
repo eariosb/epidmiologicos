@@ -36,7 +36,7 @@ export function Term({ k: rawK, tip, children }: TermProps) {
           <span className="sr-only">({text})</span>
           <span
             role="note"
-            className="hidden pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 w-64 max-w-[80vw] -translate-x-1/2 rounded-md bg-ink-900 px-3 py-2 text-left text-xs font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:block group-hover:opacity-100 group-focus-within:block group-focus-within:opacity-100"
+            className="hidden pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 w-64 max-w-[80vw] -translate-x-1/2 rounded-md bg-ink-900 px-3 py-2 text-left text-xs font-normal normal-case leading-snug tracking-normal text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/term:block group-hover/term:opacity-100 group-focus-within/term:block group-focus-within/term:opacity-100"
           >
             {text}
             <span className="absolute left-1/2 top-full -translate-x-1/2 border-[5px] border-transparent border-t-ink-900" />
@@ -46,7 +46,7 @@ export function Term({ k: rawK, tip, children }: TermProps) {
     </>
   );
   const className =
-    'group relative inline cursor-help border-b border-dotted border-brand-600 decoration-1';
+    'group/term relative inline cursor-help border-b border-dotted border-brand-600 decoration-1';
   if (href) {
     return (
       <Link

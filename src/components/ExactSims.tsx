@@ -887,7 +887,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
       )}
 
       {view === 'exacta' && (
-        <details className="group mt-3 rounded border border-ink-200 bg-white">
+        <details className="group/lab mt-3 rounded border border-ink-200 bg-white">
           <summary className="flex cursor-pointer select-none list-none items-center gap-2 px-3 py-2 text-xs font-semibold text-ink-700 [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500">
             <Table2 aria-hidden className="h-4 w-4 shrink-0" />
             Ver las tablas 2×2 que entran en el valor p
@@ -895,7 +895,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
               · {nExt} de {nBars} · {DEF_LABEL[def]}
               {def === 'central' && ' · cola menor duplicada'}
             </span>
-            <ChevronDown aria-hidden className="ml-auto h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+            <ChevronDown aria-hidden className="ml-auto h-4 w-4 shrink-0 transition-transform group-open/lab:rotate-180" />
           </summary>
           <div className="border-t border-ink-100 px-3 py-3">
             <div className="flex flex-wrap gap-2">
