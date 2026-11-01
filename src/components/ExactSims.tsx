@@ -1,11 +1,12 @@
 'use client';
 
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { MathText } from '@/lib/math-text';
 import { SimGuide, SimLegend } from '@/components/SimBits';
 import {
   agrestiCaffoRD,
   cornfieldCI,
+  dhyper,
   logOrCorrected,
   newcombeRD,
   nForPower,
@@ -18,6 +19,7 @@ import {
   woolfCI,
 } from '@/lib/exact2x2';
 import { runExact } from '@/lib/exactRunner';
+import { mulberry32, rbinom } from '@/lib/rng';
 import { uiGrid } from '@/lib/exactTasks';
 import { tokens } from '@/lib/tokens';
 import { useExactTask } from '@/hooks/useExactTask';
@@ -375,6 +377,447 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
         independientes; el supremo sobre el parámetro de estorbo se evalúa en una malla
         de {GRID_UI_SIZE} puntos. Con n₁, n₂ ≤ 60 el cálculo es inmediato en el
         navegador. «Exacto» describe el cómputo, no la adecuación del modelo al diseño.
+      </p>
+    </div>
+  );
+}
+
+/* ================================================================== */
+/* 1b. FisherExtremesLab: el valor p como suma literal de tablas         */
+/* ================================================================== */
+
+type ExtremeDef = 'minlike' | 'left' | 'right';
+
+const STAGE_LABELS = [
+  '1 · El espacio',
+  '2 · La observada',
+  '3 · Las extremas',
+  '4 · La suma',
+];
+
+const FILL = {
+  neutral: tokens.chart.borderSoft,
+  observed: tokens.chart.primary,
+  extremePale: tokens.chart.secondary,
+  extreme: tokens.chart.secondary,
+} as const;
+
+const SIM_K = 3000;
+const SIM_BINS = 25;
+
+/**
+ * The conditional universe of a 2×2 table: fixing both margins leaves
+ * at most m+1 feasible tables, and the Fisher p-value is a literal SUM
+ * of bar heights — tables whose hypergeometric probability does not
+ * exceed the observed one (minlike), or a one-sided tail. The staged
+ * reveal mirrors the classroom narration: space → observed → extremes
+ * → running total. A second view swaps the exact conditional
+ * distribution for an EMPIRICAL one (K seeded draws under two pooled
+ * binomials), letting the student confront the conditional vs.
+ * unconditional contrast head-on.
+ *
+ * Workflow: the user types a table into the draft inputs and presses
+ * «Analizar tabla» — only then is the analysis computed and the staged
+ * reveal played.
+ */
+export function FisherExtremesLab({ title }: { title?: ReactNode }) {
+  const [draft, setDraft] = useState<TableInput>({ x1: 7, n1: 34, x2: 1, n2: 34 });
+  const [t, setT] = useState<TableInput>({ x1: 7, n1: 34, x2: 1, n2: 34 });
+  const [stage, setStage] = useState(3);
+  const [def, setDef] = useState<ExtremeDef>('minlike');
+  const [view, setView] = useState<'exacta' | 'empirica'>('exacta');
+  const [sel, setSel] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [seed, setSeed] = useState(0);
+
+  const dirty =
+    draft.x1 !== t.x1 || draft.n1 !== t.n1 || draft.x2 !== t.x2 || draft.n2 !== t.n2;
+
+  const analyze = () => {
+    setT({ ...draft, x1: Math.min(draft.x1, draft.n1), x2: Math.min(draft.x2, draft.n2) });
+    setStage(0);
+    setPlaying(true);
+  };
+
+  const m = t.x1 + t.x2;
+  const lo = Math.max(0, m - t.n2);
+  const hi = Math.min(t.n1, m);
+  const xs = useMemo(
+    () => Array.from({ length: hi - lo + 1 }, (_, i) => lo + i),
+    [lo, hi],
+  );
+  const probs = useMemo(() => xs.map((x) => dhyper(x, t.n1, t.n2, m)), [xs, t.n1, t.n2, m]);
+  const iObs = t.x1 - lo;
+  const pObs = iObs >= 0 && iObs < probs.length ? probs[iObs] : 0;
+
+  const isExtreme = (x: number, p: number) => {
+    if (def === 'left') return x <= t.x1;
+    if (def === 'right') return x >= t.x1;
+    return p <= pObs * (1 + 1e-9); // minlike: al menos tan improbable
+  };
+  const extremes = xs.map((x, i) => isExtreme(x, probs[i]));
+  const pVal = probs.reduce((acc, p, i) => acc + (extremes[i] ? p : 0), 0);
+  const nExt = extremes.filter(Boolean).length;
+
+  // Empirical view: K draws under the pooled-proportion two-binomial
+  // null. The |p̂1 − p̂2| histogram approximates the UNCONDITIONAL
+  // distribution of the discrepancy — the contrast with the conditional
+  // sum is the module's core lesson.
+  const sim = useMemo(() => {
+    const rng = mulberry32(20240 + seed);
+    const ph = m / (t.n1 + t.n2) || 0.5;
+    const d = new Float64Array(SIM_K);
+    for (let i = 0; i < SIM_K; i++) {
+      d[i] = rbinom(rng, t.n1, ph) / t.n1 - rbinom(rng, t.n2, ph) / t.n2;
+    }
+    const dObs = t.x1 / t.n1 - t.x2 / t.n2;
+    let nTail = 0;
+    for (let i = 0; i < SIM_K; i++) if (Math.abs(d[i]) >= Math.abs(dObs) - 1e-12) nTail++;
+    const pEmp = nTail / SIM_K;
+    return { d, dObs, pEmp, se: Math.sqrt((pEmp * (1 - pEmp)) / SIM_K) };
+  }, [t.n1, t.n2, m, t.x1, t.x2, seed]);
+
+  const hist = useMemo(() => {
+    const r = Math.max(
+      Math.abs(sim.dObs),
+      ...Array.from(sim.d, (v) => Math.abs(v)),
+    ) * 1.05 || 0.05;
+    const edges = Array.from({ length: SIM_BINS + 1 }, (_, i) => -r + (2 * r * i) / SIM_BINS);
+    const counts = new Array(SIM_BINS).fill(0);
+    for (const v of sim.d) {
+      let b = Math.floor(((v + r) / (2 * r)) * SIM_BINS);
+      b = Math.min(SIM_BINS - 1, Math.max(0, b));
+      counts[b]++;
+    }
+    return { edges, counts, r };
+  }, [sim]);
+
+  // Staged reveal: the same choreography as the animated version, driven
+  // by a timer instead of frames — and interruptible at any step.
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setStage((s) => {
+        if (s >= 3) {
+          setPlaying(false);
+          return s;
+        }
+        return s + 1;
+      });
+    }, 1100);
+    return () => clearInterval(id);
+  }, [playing]);
+
+  const play = () => {
+    setStage(0);
+    setPlaying(true);
+  };
+
+  const barFill = (x: number, i: number) => {
+    if (stage === 0) return FILL.neutral;
+    if (stage === 1) return x === t.x1 ? FILL.observed : FILL.neutral;
+    if (stage === 2) return extremes[i] ? FILL.extremePale : FILL.neutral;
+    return extremes[i] ? FILL.extreme : FILL.neutral;
+  };
+  const barOpacity = (x: number, i: number) =>
+    stage === 2 && extremes[i] && x !== t.x1 ? 0.4 : 1;
+
+  // Chart geometry.
+  const W = 560, H = 210, L = 44, R = 12, T = 14, B = 34;
+  const nBars = xs.length;
+  const slot = (W - L - R) / nBars;
+  const bw = Math.max(slot * 0.74, 3);
+  const maxP = Math.max(...probs, 1e-9);
+  const py = (v: number) => rr(T + (1 - v / (maxP * 1.15)) * (H - T - B));
+  const bx = (i: number) => rr(L + i * slot + (slot - bw) / 2);
+
+  const selX = sel != null && sel >= lo && sel <= hi ? sel : t.x1;
+  const selI = selX - lo;
+  const selP = selI >= 0 && selI < probs.length ? probs[selI] : NaN;
+  const selInSum = selI >= 0 && selI < probs.length ? extremes[selI] : false;
+
+  return (
+    <div className={FIG}>
+      <div className={CAPTION}>
+        {title ?? 'El valor p de Fisher, literalmente: una suma de probabilidades de tablas'}
+      </div>
+
+      <TableInputs t={draft} setT={setDraft} />
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={analyze}
+          className="rounded bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
+        >
+          Analizar tabla ▸
+        </button>
+        {dirty && (
+          <span className="text-[11px] text-warning-700">
+            La tabla cambió — pulsa «Analizar tabla» para recalcular.
+          </span>
+        )}
+        <span className="ml-auto flex items-center gap-1 text-xs text-ink-600">
+          Vista:
+          {(['exacta', 'empirica'] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              className={`rounded px-2 py-0.5 font-medium transition-colors ${
+                view === v
+                  ? 'bg-accent-100 text-accent-700'
+                  : 'text-ink-500 hover:bg-ink-100'
+              }`}
+            >
+              {v === 'exacta' ? 'Exacta (hipergeométrica)' : 'Empírica (simulación)'}
+            </button>
+          ))}
+        </span>
+      </div>
+
+      {view === 'exacta' && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-600">
+          <span className="font-medium">Extremo:</span>
+          {([
+            ['minlike', 'P(tabla) ≤ P(obs.)'],
+            ['left', `cola x₁ ≤ ${t.x1}`],
+            ['right', `cola x₁ ≥ ${t.x1}`],
+          ] as [ExtremeDef, string][]).map(([k, label]) => (
+            <label key={k} className="flex items-center gap-1">
+              <input
+                type="radio"
+                name="fisher-extreme-def"
+                checked={def === k}
+                onChange={() => setDef(k)}
+                className="accent-brand-600"
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={play}
+          className="rounded bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700"
+        >
+          ▸ Guion (4 pasos)
+        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => { setPlaying(false); setStage((s) => Math.max(0, s - 1)); }}
+            className="rounded border border-ink-200 px-2 py-1 text-xs text-ink-600 hover:bg-ink-50"
+            aria-label="Paso anterior"
+          >◀</button>
+          <button
+            type="button"
+            onClick={() => { setPlaying(false); setStage((s) => Math.min(3, s + 1)); }}
+            className="rounded border border-ink-200 px-2 py-1 text-xs text-ink-600 hover:bg-ink-50"
+            aria-label="Paso siguiente"
+          >▶</button>
+        </div>
+        <span className="text-xs font-medium text-ink-600">{STAGE_LABELS[stage]}</span>
+      </div>
+
+      {view === 'empirica' ? (
+        <div className="mt-3">
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-2xl" role="img"
+            aria-label="Distribución empírica de la diferencia de proporciones simulada bajo H0">
+            {[0, Math.max(...hist.counts) / SIM_K / 2, Math.max(...hist.counts) / SIM_K].map((v) => (
+              <g key={v}>
+                <line x1={L} x2={W - R} y1={py(v)} y2={py(v)} stroke={tokens.chart.grid} />
+                <text x={L - 5} y={py(v) + 3} textAnchor="end" fontSize={9} fill={tokens.chart.text}>
+                  {v.toFixed(3)}
+                </text>
+              </g>
+            ))}
+            {hist.counts.map((c, i) => {
+              const center = (hist.edges[i] + hist.edges[i + 1]) / 2;
+              const inTail = Math.abs(center) >= Math.abs(sim.dObs);
+              const hSlot = (W - L - R) / SIM_BINS;
+              const hbw = Math.max(hSlot * 0.86, 2);
+              return (
+                <rect
+                  key={i}
+                  x={rr(L + i * hSlot + (hSlot - hbw) / 2)}
+                  y={py(c / SIM_K)}
+                  width={rr(hbw)}
+                  height={rr(py(0) - py(c / SIM_K))}
+                  fill={inTail ? FILL.extreme : FILL.neutral}
+                />
+              );
+            })}
+            {/* observed discrepancy markers */}
+            {[-Math.abs(sim.dObs), Math.abs(sim.dObs)].map((v) => {
+              const px = rr(L + ((v + hist.r) / (2 * hist.r)) * (W - L - R));
+              return (
+                <line key={v} x1={px} x2={px} y1={py(0)} y2={T}
+                  stroke={tokens.chart.axis} strokeDasharray="4 3" strokeWidth={1.2} />
+              );
+            })}
+            <line x1={L} x2={W - R} y1={py(0)} y2={py(0)} stroke={tokens.chart.tick} />
+            <text x={rr(L + (W - L - R) / 2)} y={H - 8} textAnchor="middle"
+              fontSize={10} fill={tokens.chart.title}>
+              p̂₁ − p̂₂ bajo H₀ (p agrupada)
+            </text>
+            <text x={10} y={rr(T + (H - T - B) / 2)} fontSize={10} fill={tokens.chart.title}
+              transform={`rotate(-90 10 ${rr(T + (H - T - B) / 2)})`} textAnchor="middle">
+              densidad empírica
+            </text>
+          </svg>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+            <button
+              type="button"
+              onClick={() => setSeed((s) => s + 1)}
+              className="rounded border border-ink-200 px-2 py-1 text-ink-600 hover:bg-ink-50"
+            >
+              Re-muestrear ({SIM_K} réplicas)
+            </button>
+            <span className="text-ink-600">
+              p̂ empírico = <b>{sim.pEmp.toFixed(4)}</b> ± {(1.96 * sim.se).toFixed(4)}
+              <span className="ml-1 text-ink-400">(fracción con |d| ≥ |d<sub>obs</sub>|)</span>
+            </span>
+            <span className="text-ink-500">
+              p condicional (minlike) = {pVal.toFixed(4)}
+            </span>
+          </div>
+          <p className="mt-1.5 text-[11px] leading-snug text-ink-500">
+            La vista empírica responde otra pregunta: proporción de réplicas del
+            modelo de dos binomiales (con p = m/N) que producen una diferencia al
+            menos tan grande en magnitud que la observada — una lectura
+            <em> incondicional</em>. Compara con la suma condicional exacta: el
+            condicionamiento en m deja fuera parte del espacio muestral y por eso
+            los dos números no coinciden.
+          </p>
+        </div>
+      ) : (
+      <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_auto]">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-2xl" role="img"
+          aria-label="Distribución hipergeométrica de las tablas posibles">
+          {/* y gridlines */}
+          {[0, maxP * 0.5, maxP].map((v) => (
+            <g key={v}>
+              <line x1={L} x2={W - R} y1={py(v)} y2={py(v)} stroke={tokens.chart.grid} />
+              <text x={L - 5} y={py(v) + 3} textAnchor="end" fontSize={9} fill={tokens.chart.text}>
+                {v.toFixed(3)}
+              </text>
+            </g>
+          ))}
+          {/* bars */}
+          {xs.map((x, i) => (
+            <rect
+              key={x}
+              x={bx(i)}
+              y={py(probs[i])}
+              width={bw}
+              height={rr(py(0) - py(probs[i]))}
+              fill={barFill(x, i)}
+              fillOpacity={barOpacity(x, i)}
+              stroke={x === t.x1 && stage >= 1 ? tokens.chart.axis : 'none'}
+              strokeWidth={x === t.x1 && stage >= 1 ? 1.4 : 0}
+              onMouseEnter={() => setSel(x)}
+              onMouseLeave={() => setSel(null)}
+              style={{ cursor: 'pointer', transition: 'fill 200ms, fill-opacity 200ms' }}
+            />
+          ))}
+          {/* observed-probability reference line */}
+          {stage >= 1 && (
+            <line
+              x1={L} x2={W - R} y1={py(pObs)} y2={py(pObs)}
+              stroke={tokens.chart.axis} strokeDasharray="4 3" strokeWidth={1}
+            />
+          )}
+          {stage >= 1 && (
+            <text x={W - R - 3} y={py(pObs) - 4} textAnchor="end" fontSize={9} fill={tokens.chart.text}>
+              P(tabla observada)
+            </text>
+          )}
+          {/* axes */}
+          <line x1={L} x2={W - R} y1={py(0)} y2={py(0)} stroke={tokens.chart.tick} />
+          <line x1={L} x2={L} y1={py(0)} y2={py(maxP * 1.08)} stroke={tokens.chart.tick} />
+          {xs.map((x, i) => (
+            <text key={x} x={rr(L + i * slot + slot / 2)} y={H - B + 14}
+              textAnchor="middle" fontSize={nBars > 20 ? 7.5 : 9} fill={tokens.chart.text}>
+              {x}
+            </text>
+          ))}
+          <text x={rr(L + (W - L - R) / 2)} y={H - 8} textAnchor="middle"
+            fontSize={10} fill={tokens.chart.title}>
+            x₁ (eventos en grupo 1)
+          </text>
+          <text x={10} y={rr(T + (H - T - B) / 2)} fontSize={10} fill={tokens.chart.title}
+            transform={`rotate(-90 10 ${rr(T + (H - T - B) / 2)})`} textAnchor="middle">
+            P(tabla | márgenes)
+          </text>
+        </svg>
+
+        {/* Table card: what does this bar actually look like */}
+        <div className="min-w-44 self-start rounded border border-ink-200 bg-ink-50/60 p-2.5 text-xs">
+          <div className="mb-1 font-semibold text-ink-700">
+            Tabla con x₁ = {selX}
+            {selX === t.x1 && <span className="ml-1 text-[10px] text-brand-700">(observada)</span>}
+          </div>
+          <table className="w-full border-collapse text-center font-mono">
+            <thead>
+              <tr className="text-ink-400">
+                <td />
+                <td className="border border-ink-200 px-1.5 py-0.5 text-[10px]">evento</td>
+                <td className="border border-ink-200 px-1.5 py-0.5 text-[10px]">no</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="pr-1.5 text-left text-[10px] text-ink-400">g1</td>
+                <td className={`border border-ink-200 px-1.5 py-0.5 ${selX === t.x1 ? 'bg-brand-50 font-semibold' : ''}`}>{selX}</td>
+                <td className="border border-ink-200 px-1.5 py-0.5">{t.n1 - selX}</td>
+              </tr>
+              <tr>
+                <td className="pr-1.5 text-left text-[10px] text-ink-400">g2</td>
+                <td className="border border-ink-200 px-1.5 py-0.5">{m - selX}</td>
+                <td className="border border-ink-200 px-1.5 py-0.5">{t.n2 - (m - selX)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="mt-1.5 text-[11px] leading-snug text-ink-600">
+            P = {Number.isFinite(selP) ? selP.toFixed(4) : '—'}
+            {stage >= 2 && selI >= 0 && (
+              <span className={`ml-1 font-medium ${selInSum ? 'text-brand-700' : 'text-ink-400'}`}>
+                {selInSum ? '· suma al p' : '· no suma'}
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+      )}
+
+      {view === 'exacta' && stage === 3 && (
+        <p className="animate-fade-in mt-2 rounded bg-brand-50 px-3 py-2 text-sm text-brand-800">
+          <MathText text={`p = Σ P(tabla extrema) = ${pVal.toFixed(4)}`} />
+          <span className="ml-2 text-xs text-brand-600">
+            ({nExt} de {nBars} tablas · definición «
+            {def === 'minlike' ? 'P ≤ P(obs.)' : def === 'left' ? `x₁ ≤ ${t.x1}` : `x₁ ≥ ${t.x1}`}
+            »)
+          </span>
+        </p>
+      )}
+
+      <SimGuide>
+        Fijados los márgenes solo quedan {nBars} tablas posibles: una por cada valor
+        de x₁ entre {lo} y {hi}. Pulsa «Guion» y mira la narrativa: (1) el espacio
+        completo, (2) dónde cae tu tabla, (3) cuáles son al menos tan improbables y
+        (4) el valor p como suma de sus alturas. Luego cambia la definición de extremo:
+        «minlike» suma las tablas con probabilidad ≤ a la observada; las colas suman
+        lateralmente — en una distribución discreta y asimétrica no coinciden, y por
+        eso «bilateral» en Fisher siempre necesita declarar la convención.
+      </SimGuide>
+      <p className={NOTE}>
+        La suma «minlike» es la convención de <code>fisher.test</code> en R (dos
+        lados). Las colas unilaterales responden a alternativas dirigidas. Con la
+        tabla de Perondi (7/34 vs. 1/34) la suma minlike da ≈ 0.054 — el mismo
+        número que reporta el módulo al comparar procedimientos.
       </p>
     </div>
   );

@@ -19,6 +19,7 @@ import { LabExercise } from '@/components/LabExercise'
 import { ToolCard } from '@/components/ToolCard'
 import {
   ExactTestExplorer,
+  FisherExtremesLab,
   ExactPowerExplorer,
   CorrectionExplorer,
   CIMethodsExplorer,
@@ -90,6 +91,67 @@ de **Boschloo**: exacto como Fisher pero uniformemente más potente cuando
 el diseño fija solo los tamaños de grupo. La moraleja de campo queda así:
 Fisher es exacto y conservador; si tu diseño fijó solo los grupos,
 Boschloo (o la z agrupada) usa mejor el α que pagaste.
+
+## Las tablas más extremas, literalmente
+
+El valor p de Fisher no es el área de una cola — es una **suma**. Con los
+dos márgenes fijos, el número de eventos del grupo 1 solo puede tomar un
+puñado de valores: con $n_1 = n_2 = 34$ y $m = 8$ quedan exactamente
+nueve tablas posibles, cada una con su probabilidad hipergeométrica. La
+tabla observada tiene probabilidad $P_0$; toda tabla tan o menos
+probable que ella es "al menos tan extrema", y el valor p es la suma de
+sus alturas en el gráfico.
+
+Hay un detalle que el gráfico deja ver y la fórmula esconde: la
+hipergeométrica discreta no es simétrica, así que "dos lados" no es un
+área obvia. La convención de `fisher.test` (*minlike*: sumar toda tabla
+con $P \leq P_0$) es una elección, no un hecho; las colas unilaterales
+responden otra pregunta. El laboratorio deja alternar las definiciones
+y contrasta además la suma condicional con una distribución **empírica**
+por simulación — el puente hacia la discusión incondicional de la
+sección siguiente.
+
+<FisherExtremesLab />
+
+<RCell
+  id="06/tablas-extremas"
+  title="Las tablas más extremas en R base"
+  code={`# El valor p de Fisher como una suma literal (caso Perondi).
+# En webR no hay gganimate: la coreografia de 4 pasos se muestra
+# como cuatro paneles estaticos. La version animada vive en el
+# repositorio del curso (scripts/animacion_extremos.R).
+x1 <- 7; n1 <- 34; x2 <- 1; n2 <- 34
+m  <- x1 + x2
+xs <- max(0, m - n2):min(n1, m)           # soporte: 0..8, nueve tablas
+pr <- dhyper(xs, n1, n2, m)
+p0 <- dhyper(x1, n1, n2, m)               # P(tabla observada)
+ext <- pr <= p0 * (1 + 1e-9)              # minlike: al menos tan improbable
+
+p_minlike <- sum(pr[ext])
+p_izq <- sum(pr[xs <= x1])                # colas unilaterales
+p_der <- sum(pr[xs >= x1])
+cat(sprintf("minlike = %.4f   izq = %.4f   der = %.4f\\n",
+            p_minlike, p_izq, p_der))
+# fisher.test(matrix(c(x1, n1 - x1, x2, n2 - x2), 2))$p.value == p_minlike
+
+# Los cuatro pasos de la narrativa en paneles estaticos
+par(mfrow = c(2, 2), mar = c(3, 3, 2, 1), mgp = c(2, 0.7, 0))
+col_ext <- "#DD8452"; col_obs <- "#4C72B0"; col_off <- "#CBD5E1"
+cols <- list(
+  rep(col_off, length(xs)),
+  ifelse(xs == x1, col_obs, col_off),
+  ifelse(ext, "#F2C9AC", col_off),
+  ifelse(ext, col_ext, col_off))
+titulos <- c("1. El espacio", "2. La observada",
+             "3. Las extremas", "4. La suma")
+for (s in 1:4) {
+  barplot(pr, names.arg = xs, col = cols[[s]], border = NA,
+          main = titulos[s], xlab = "x1", ylim = c(0, max(pr) * 1.15))
+  if (s >= 2) abline(h = p0, lty = 2)
+  if (s == 4) mtext(sprintf("p = %.4f (%d tablas)", p_minlike, sum(ext)),
+                    side = 3, line = 0.2, adj = 1, cex = 0.8)
+}`}
+/>
 
 <Profundiza title="La familia incondicional, en detalle" hint="optativo">
 El procedimiento ordena las tablas por algún estadístico de discrepancia y

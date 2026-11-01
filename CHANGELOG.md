@@ -34,6 +34,15 @@ Dos cursos en un sitio, arquitectura de capas y el Curso II completo
   dialectos) para el ejercicio de limpieza del módulo II-10.
 - **RCell colapsable**: la salida en vivo y la precalculada ganan
   cabecera con toggle; cada ejecución reexpande automáticamente.
+- **`FisherExtremesLab`** (m06): laboratorio interactivo de «tablas más
+  extremas» — el usuario ingresa su tabla 2×2, pulsa «Analizar» y ve la
+  distribución hipergeométrica condicional en cuatro estadios (espacio →
+  observada → extremas → suma del valor p), con definiciones de extremo
+  alternables (minlike / colas) y una vista empírica por simulación
+  dos-binomial con semilla que expone el contraste condicional vs.
+  incondicional. Celda `06/tablas-extremas` con la versión R base en
+  cuatro paneles; `scripts/animacion_extremos.R` guarda la versión
+  `gganimate` para uso local.
 
 ### Cambiado
 

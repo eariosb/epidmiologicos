@@ -30,6 +30,7 @@ import {
 } from '@/components/EpiSims';
 import {
   ExactTestExplorer,
+  FisherExtremesLab,
   ExactPowerExplorer,
   CorrectionExplorer,
   SampleSizeExplorer,
@@ -155,6 +156,7 @@ export const mdxComponents: MDXComponents = {
   MetaExplorer: withReset(MetaExplorer),
   EpiCurveExplorer: withReset(EpiCurveExplorer),
   ExactTestExplorer: withReset(ExactTestExplorer),
+  FisherExtremesLab: withReset(FisherExtremesLab),
   ExactPowerExplorer: withReset(ExactPowerExplorer),
   CorrectionExplorer: withReset(CorrectionExplorer),
   SampleSizeExplorer: withReset(SampleSizeExplorer),

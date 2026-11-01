@@ -178,6 +178,13 @@
   "console": "        Wald Wilson AgrestiCoull Jeffreys ClopperPearson Verosimilitud\n[1,] -0.0226 0.0185       0.0080   0.0141         0.0082        0.0114\n[2,]  0.1559 0.2132       0.2237   0.1971         0.2207        0.1920\nWald es inadmisible si algun limite cae fuera de [0,1]\nCobertura minima en p: Wald = 0.14   Wilson = 0.86 (nominal .95)",
   "plots": []
  },
+ "06/tablas-extremas": {
+  "hash": "cc73b1d6",
+  "console": "minlike = 0.0544   izq = 0.9975   der = 0.0272",
+  "plots": [
+   "/precomputed/06-tablas-extremas/plot-1.png"
+  ]
+ },
  "06/tamano-y-potencia": {
   "hash": "7b337467",
   "console": "Tamano real maximo: Fisher = 0.030  Boschloo = 0.047 (alpha=0.05)\nPotencia en (0.20, 0.03): Fisher = 0.433  Boschloo = 0.549",
