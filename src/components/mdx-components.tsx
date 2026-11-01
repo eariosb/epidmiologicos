@@ -65,7 +65,7 @@ import { Profundiza, SalaDeMaquinas } from '@/components/Deep';
  * estilos de tablas Markdown (mismo patrón que el curso MLM).
  */
 
-function MdxTable({ children }: { children?: ReactNode }) {
+function MdxTable({ children }: Readonly<{ children?: ReactNode }>) {
   return (
     <div className="my-6 w-full overflow-x-auto rounded border border-ink-200">
       <table className="min-w-full divide-y divide-ink-200 text-sm">{children}</table>
@@ -73,11 +73,11 @@ function MdxTable({ children }: { children?: ReactNode }) {
   );
 }
 
-function MdxThead({ children }: { children?: ReactNode }) {
+function MdxThead({ children }: Readonly<{ children?: ReactNode }>) {
   return <thead className="bg-brand-50">{children}</thead>;
 }
 
-function MdxTh({ children }: { children?: ReactNode }) {
+function MdxTh({ children }: Readonly<{ children?: ReactNode }>) {
   return (
     <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-brand-800">
       {children}
@@ -85,11 +85,11 @@ function MdxTh({ children }: { children?: ReactNode }) {
   );
 }
 
-function MdxTd({ children }: { children?: ReactNode }) {
+function MdxTd({ children }: Readonly<{ children?: ReactNode }>) {
   return <td className="border-t border-ink-100 px-4 py-2.5 align-top text-ink-700">{children}</td>;
 }
 
-function MdxPre({ children }: { children?: ReactNode }) {
+function MdxPre({ children }: Readonly<{ children?: ReactNode }>) {
   return (
     <pre className="my-4 overflow-x-auto rounded-lg bg-code px-4 py-3 text-sm leading-relaxed text-gray-100 [&_code]:rounded-none [&_code]:bg-transparent [&_code]:px-0 [&_code]:py-0 [&_code]:text-inherit">
       {children}
@@ -97,7 +97,7 @@ function MdxPre({ children }: { children?: ReactNode }) {
   );
 }
 
-function MdxInlineCode({ children }: { children?: ReactNode }) {
+function MdxInlineCode({ children }: Readonly<{ children?: ReactNode }>) {
   return (
     <code className="rounded bg-code px-1.5 py-0.5 text-[0.85em] font-mono text-gray-100">
       {children}
@@ -108,8 +108,8 @@ function MdxInlineCode({ children }: { children?: ReactNode }) {
 // 'TwoByTwoExplorer' → 'two-by-two-explorer'; 'KaplanMeierSim' → 'kaplan-meier'
 function simId(name: string): string {
   return name
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
     .toLowerCase()
     .replace(/-sim$/, '');
 }
