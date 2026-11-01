@@ -307,19 +307,9 @@ function unconditionalP(
   const out = new Float64Array(count);
   let i = 0;
   while (i < count) {
-    let j = i;
-    const lim = keyOf(order[i]) + REL_TOL * Math.max(Math.abs(keyOf(order[i])), 1e-300);
-    while (j + 1 < count && keyOf(order[j + 1]) <= lim) j++;
-    for (let t = i; t <= j; t++) {
-      const k = order[t];
-      const x1 = Math.floor(k / (n2 + 1));
-      const x2 = k % (n2 + 1);
-      const r1 = B1.subarray(x1 * G, x1 * G + G);
-      const r2 = B2.subarray(x2 * G, x2 * G + G);
-      for (let g = 0; g < G; g++) acum[g] += r1[g] * r2[g];
-    }
-    let mx = 0;
-    for (let g = 0; g < G; g++) if (acum[g] > mx) mx = acum[g];
+    const j = tieGroupEndAbsolute(keyOf, order, i, count);
+    accumulateTablesRows(order, i, j, B1, B2, acum, G, n2);
+    const mx = maxOf(acum);
     for (let t = i; t <= j; t++) out[order[t]] = Math.min(1, mx);
     i = j + 1;
   }
@@ -394,6 +384,23 @@ function tieGroupEndRelative(
   return j;
 }
 
+/**
+ * Last index of the tie group starting at i, absolute tolerance scaled by
+ * the magnitude of the key (tail probabilities near 0 need the floor).
+ */
+function tieGroupEndAbsolute(
+  keyOf: (k: number) => number,
+  order: ArrayLike<number>,
+  i: number,
+  count: number,
+): number {
+  let j = i;
+  const k0 = keyOf(order[i]);
+  const lim = k0 + REL_TOL * Math.max(Math.abs(k0), 1e-300);
+  while (j + 1 < count && keyOf(order[j + 1]) <= lim) j++;
+  return j;
+}
+
 /** Add the two-binomial weight of every table in [from, to] to `acum`. */
 function accumulateTables(
   order: ArrayLike<number>,
@@ -418,6 +425,35 @@ function maxWithinWindow(acum: Float64Array, grid: Float64Array, lo: number, hi:
     if (grid[g] >= lo && grid[g] <= hi && acum[g] > mx) mx = acum[g];
   }
   return mx;
+}
+
+/** Max of an accumulated vector over the whole nuisance grid. */
+function maxOf(acum: Float64Array): number {
+  let mx = 0;
+  for (let g = 0; g < acum.length; g++) if (acum[g] > mx) mx = acum[g];
+  return mx;
+}
+
+/** Add the two-binomial weight of every table in [from, to] to `acum`,
+ *  reading the per-group rows as subarray views. */
+function accumulateTablesRows(
+  order: ArrayLike<number>,
+  from: number,
+  to: number,
+  B1: Float64Array,
+  B2: Float64Array,
+  acum: Float64Array,
+  G: number,
+  n2: number,
+): void {
+  for (let t = from; t <= to; t++) {
+    const k = order[t];
+    const x1 = Math.floor(k / (n2 + 1));
+    const x2 = k % (n2 + 1);
+    const r1 = B1.subarray(x1 * G, x1 * G + G);
+    const r2 = B2.subarray(x2 * G, x2 * G + G);
+    for (let g = 0; g < G; g++) acum[g] += r1[g] * r2[g];
+  }
 }
 
 /* ------------------------------------------------------------------ */
