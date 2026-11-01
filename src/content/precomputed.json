@@ -179,8 +179,8 @@
   "plots": []
  },
  "06/tablas-extremas": {
-  "hash": "cc73b1d6",
-  "console": "minlike = 0.0544   izq = 0.9975   der = 0.0272",
+  "hash": "790740e5",
+  "console": "minlike = 0.0544   central = 0.0544   izq = 0.9975   der = 0.0272",
   "plots": [
    "/precomputed/06-tablas-extremas/plot-1.png"
   ]

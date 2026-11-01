@@ -370,6 +370,15 @@ export function tableIndex(x1: number, x2: number, n2: number): number {
   return idx(x1, x2, n2);
 }
 
+/**
+ * «central» two-sided p (exact2x2::fisher.test, tsmethod = "central"):
+ * twice the smaller one-sided tail, capped at 1. Distinct from the
+ * minlike sum whenever the two tails are unbalanced.
+ */
+export function centralP(leftTail: number, rightTail: number): number {
+  return Math.min(1, 2 * Math.min(leftTail, rightTail));
+}
+
 /** Rejection region mask at level alpha for a p-value array. */
 export function rejectionMask(pvals: Float64Array, alpha: number): Uint8Array {
   const m = new Uint8Array(pvals.length);

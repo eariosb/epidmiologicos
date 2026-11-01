@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   agrestiCaffoRD,
+  centralP,
   cornfieldCI,
   coverageLogOr,
   dbinom,
@@ -153,6 +154,17 @@ describe('confidence intervals', () => {
     // Conditional exact is expensive per table; check on a few points.
     const covC = coverageLogOr(ts, (a, b) => cornfieldCI(a, N1, b, N2), 0.2, 0.03);
     expect(covC).toBeGreaterThan(0.95);
+  });
+});
+
+describe('central two-sided p', () => {
+  it('doubles the smaller tail and caps at 1', () => {
+    // Perondi: left tail 0.0341, right tail 0.9827 → central 0.0682,
+    // while the minlike sum is ≈ 0.0539. Both are legitimately "two-sided".
+    expect(centralP(0.0341, 0.9827)).toBeCloseTo(0.0682, 4);
+    expect(centralP(0.9827, 0.0341)).toBeCloseTo(0.0682, 4);
+    expect(centralP(0.5, 0.5)).toBe(1);
+    expect(centralP(0.7, 0.6)).toBe(1);
   });
 });
 

@@ -105,11 +105,19 @@ sus alturas en el gráfico.
 Hay un detalle que el gráfico deja ver y la fórmula esconde: la
 hipergeométrica discreta no es simétrica, así que "dos lados" no es un
 área obvia. La convención de `fisher.test` (*minlike*: sumar toda tabla
-con $P \leq P_0$) es una elección, no un hecho; las colas unilaterales
-responden otra pregunta. El laboratorio deja alternar las definiciones
-y contrasta además la suma condicional con una distribución **empírica**
-por simulación — el puente hacia la discusión incondicional de la
-sección siguiente.
+con $P \leq P_0$) es una elección, no un hecho. La alternativa clásica
+es la **central**: la región abarca ambas colas, pero el valor p es
+$2 \times \min(\text{cola})$, con tope en 1 — el método de
+`exact2x2::fisher.test(tsmethod = "central")`. Cuando las colas están
+desequilibradas las dos convenciones dan números distintos, y ninguno
+es "el correcto": son respuestas a preguntas ligeramente distintas.
+
+El laboratorio permite además abrir la lista plegable de tablas 2×2
+incluidas — cada una con su probabilidad y su peso dentro del valor p —
+para que "tabla extrema" deje de ser una etiqueta y pase a ser un
+objeto concreto. Y contrasta la suma condicional con una distribución
+**empírica** por simulación: el puente hacia la discusión incondicional
+de la sección siguiente.
 
 <FisherExtremesLab />
 
@@ -130,8 +138,10 @@ ext <- pr <= p0 * (1 + 1e-9)              # minlike: al menos tan improbable
 p_minlike <- sum(pr[ext])
 p_izq <- sum(pr[xs <= x1])                # colas unilaterales
 p_der <- sum(pr[xs >= x1])
-cat(sprintf("minlike = %.4f   izq = %.4f   der = %.4f\\n",
-            p_minlike, p_izq, p_der))
+# «central» (exact2x2::fisher.test, tsmethod = "central"): 2 x cola menor
+p_central <- min(1, 2 * min(p_izq, p_der))
+cat(sprintf("minlike = %.4f   central = %.4f   izq = %.4f   der = %.4f\\n",
+            p_minlike, p_central, p_izq, p_der))
 # fisher.test(matrix(c(x1, n1 - x1, x2, n2 - x2), 2))$p.value == p_minlike
 
 # Los cuatro pasos de la narrativa en paneles estaticos

@@ -1,10 +1,12 @@
 'use client';
 
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { ChevronDown, Table2 } from 'lucide-react';
 import { MathText } from '@/lib/math-text';
 import { SimGuide, SimLegend } from '@/components/SimBits';
 import {
   agrestiCaffoRD,
+  centralP,
   cornfieldCI,
   dhyper,
   logOrCorrected,
@@ -386,7 +388,14 @@ export function ExactTestExplorer({ title }: { title?: ReactNode }) {
 /* 1b. FisherExtremesLab: el valor p como suma literal de tablas         */
 /* ================================================================== */
 
-type ExtremeDef = 'minlike' | 'left' | 'right';
+type ExtremeDef = 'minlike' | 'central' | 'left' | 'right';
+
+const DEF_LABEL: Record<ExtremeDef, string> = {
+  minlike: 'P(tabla) ≤ P(obs.)',
+  central: 'central · 2 × cola menor',
+  left: 'cola x₁ ≤ obs.',
+  right: 'cola x₁ ≥ obs.',
+};
 
 const STAGE_LABELS = [
   '1 · El espacio',
@@ -453,10 +462,18 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
   const isExtreme = (x: number, p: number) => {
     if (def === 'left') return x <= t.x1;
     if (def === 'right') return x >= t.x1;
+    // «central» (exact2x2): región = unión de ambas colas; el valor p es
+    // el doble de la cola menor, no la suma de las alturas de la región.
+    if (def === 'central') return x <= t.x1 || x >= t.x1;
     return p <= pObs * (1 + 1e-9); // minlike: al menos tan improbable
   };
   const extremes = xs.map((x, i) => isExtreme(x, probs[i]));
-  const pVal = probs.reduce((acc, p, i) => acc + (extremes[i] ? p : 0), 0);
+  const leftTail = probs.reduce((acc, p, i) => acc + (xs[i] <= t.x1 ? p : 0), 0);
+  const rightTail = probs.reduce((acc, p, i) => acc + (xs[i] >= t.x1 ? p : 0), 0);
+  const pVal =
+    def === 'central'
+      ? centralP(leftTail, rightTail)
+      : probs.reduce((acc, p, i) => acc + (extremes[i] ? p : 0), 0);
   const nExt = extremes.filter(Boolean).length;
 
   // Empirical view: K draws under the pooled-proportion two-binomial
@@ -580,6 +597,7 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
           <span className="font-medium">Extremo:</span>
           {([
             ['minlike', 'P(tabla) ≤ P(obs.)'],
+            ['central', 'central · 2 × cola menor'],
             ['left', `cola x₁ ≤ ${t.x1}`],
             ['right', `cola x₁ ≥ ${t.x1}`],
           ] as [ExtremeDef, string][]).map(([k, label]) => (
@@ -793,13 +811,92 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
       </div>
       )}
 
+      {view === 'exacta' && (
+        <details className="group mt-3 rounded border border-ink-200 bg-white">
+          <summary className="flex cursor-pointer select-none list-none items-center gap-2 px-3 py-2 text-xs font-semibold text-ink-700 [&::-webkit-details-marker]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500">
+            <Table2 aria-hidden className="h-4 w-4 shrink-0" />
+            Ver las tablas 2×2 que entran en el valor p
+            <span className="font-normal text-ink-500">
+              · {nExt} de {nBars} · {DEF_LABEL[def]}
+            </span>
+            <ChevronDown aria-hidden className="ml-auto h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-ink-100 px-3 py-3">
+            <div className="flex flex-wrap gap-2">
+              {xs.map((x, i) =>
+                extremes[i] ? (
+                  <div
+                    key={x}
+                    className={`w-32 rounded border p-2 text-[11px] ${
+                      x === t.x1
+                        ? 'border-brand-400 bg-brand-50 ring-1 ring-brand-300'
+                        : 'border-ink-200 bg-ink-50/60'
+                    }`}
+                  >
+                    <div className="mb-1 flex items-baseline justify-between">
+                      <span className="font-semibold text-ink-700">x₁ = {x}</span>
+                      {x === t.x1 && (
+                        <span className="text-[9px] font-medium uppercase tracking-wide text-brand-700">
+                          obs.
+                        </span>
+                      )}
+                    </div>
+                    <table className="w-full border-collapse text-center font-mono text-[10px]">
+                      <thead>
+                        <tr className="text-ink-400">
+                          <td />
+                          <td className="border border-ink-200 px-1 py-0.5">ev.</td>
+                          <td className="border border-ink-200 px-1 py-0.5">no</td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="pr-1 text-left text-[9px] text-ink-400">g1</td>
+                          <td className="border border-ink-200 px-1 py-0.5 font-semibold">{x}</td>
+                          <td className="border border-ink-200 px-1 py-0.5">{t.n1 - x}</td>
+                        </tr>
+                        <tr>
+                          <td className="pr-1 text-left text-[9px] text-ink-400">g2</td>
+                          <td className="border border-ink-200 px-1 py-0.5">{m - x}</td>
+                          <td className="border border-ink-200 px-1 py-0.5">{t.n2 - (m - x)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p className="mt-1 text-ink-600">
+                      P = {probs[i].toFixed(4)}
+                      <span className="ml-1 text-ink-400">
+                        ({((probs[i] / pVal) * 100).toFixed(0)} % del p)
+                      </span>
+                    </p>
+                  </div>
+                ) : null,
+              )}
+            </div>
+            <p className={NOTE}>
+              {def === 'minlike' &&
+                'Regla minlike: entra toda tabla con probabilidad ≤ la observada. Puede incluir tablas de ambos lados aunque la distribución no sea simétrica — es la convención de fisher.test.'}
+              {def === 'central' &&
+                `Regla central: la región es la unión de ambas colas (${nExt} tablas), pero el valor p no es su suma sino 2 × la cola menor = 2 × ${Math.min(leftTail, rightTail).toFixed(4)} = ${pVal.toFixed(4)} (tope 1). Cuando una cola es dominante, «central» y «minlike» difieren: compara ambos números en la misma tabla.`}
+              {def === 'left' &&
+                `Cola izquierda: tablas con x₁ ≤ ${t.x1}, es decir, resultados tan o menos favorables al grupo 1 que el observado.`}
+              {def === 'right' &&
+                `Cola derecha: tablas con x₁ ≥ ${t.x1}. Con la tabla de Perondi (7/34 vs. 1/34) esta cola es casi todo el espacio: el valor p se acerca a 1.`}
+            </p>
+          </div>
+        </details>
+      )}
+
       {view === 'exacta' && stage === 3 && (
         <p className="animate-fade-in mt-2 rounded bg-brand-50 px-3 py-2 text-sm text-brand-800">
-          <MathText text={`p = Σ P(tabla extrema) = ${pVal.toFixed(4)}`} />
+          <MathText
+            text={
+              def === 'central'
+                ? `p = 2 · min(cola) = ${pVal.toFixed(4)}`
+                : `p = Σ P(tabla extrema) = ${pVal.toFixed(4)}`
+            }
+          />
           <span className="ml-2 text-xs text-brand-600">
-            ({nExt} de {nBars} tablas · definición «
-            {def === 'minlike' ? 'P ≤ P(obs.)' : def === 'left' ? `x₁ ≤ ${t.x1}` : `x₁ ≥ ${t.x1}`}
-            »)
+            ({nExt} de {nBars} tablas · «{DEF_LABEL[def]}»)
           </span>
         </p>
       )}
@@ -808,16 +905,20 @@ export function FisherExtremesLab({ title }: { title?: ReactNode }) {
         Fijados los márgenes solo quedan {nBars} tablas posibles: una por cada valor
         de x₁ entre {lo} y {hi}. Pulsa «Guion» y mira la narrativa: (1) el espacio
         completo, (2) dónde cae tu tabla, (3) cuáles son al menos tan improbables y
-        (4) el valor p como suma de sus alturas. Luego cambia la definición de extremo:
-        «minlike» suma las tablas con probabilidad ≤ a la observada; las colas suman
-        lateralmente — en una distribución discreta y asimétrica no coinciden, y por
-        eso «bilateral» en Fisher siempre necesita declarar la convención.
+        (4) el valor p como suma de sus alturas. Abre «Ver las tablas 2×2» para
+        inspeccionar cada tabla incluida con su probabilidad y su peso dentro del p.
+        Luego cambia la definición de extremo: «minlike» suma las tablas con
+        probabilidad ≤ a la observada; «central» toma la unión de ambas colas pero
+        duplica la cola menor; las colas suman lateralmente. En una distribución
+        discreta y asimétrica las tres no coinciden, y por eso «bilateral» en Fisher
+        siempre necesita declarar la convención.
       </SimGuide>
       <p className={NOTE}>
         La suma «minlike» es la convención de <code>fisher.test</code> en R (dos
-        lados). Las colas unilaterales responden a alternativas dirigidas. Con la
-        tabla de Perondi (7/34 vs. 1/34) la suma minlike da ≈ 0.054 — el mismo
-        número que reporta el módulo al comparar procedimientos.
+        lados); «central» es la de <code>exact2x2::fisher.test(tsmethod = &quot;central&quot;)</code>,
+        que duplica la cola menor. Las colas unilaterales responden a alternativas
+        dirigidas. Con la tabla de Perondi (7/34 vs. 1/34) la suma minlike da
+        ≈ 0.054 — el mismo número que reporta el módulo al comparar procedimientos.
       </p>
     </div>
   );
