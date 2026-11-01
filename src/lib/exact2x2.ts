@@ -308,7 +308,7 @@ function unconditionalP(
   let i = 0;
   while (i < count) {
     const j = tieGroupEndAbsolute(keyOf, order, i, count);
-    accumulateTablesRows(order, i, j, B1, B2, acum, G, n2);
+    accumulateTablesRows(order, i, j, B1, B2, acum, n2);
     const mx = maxOf(acum);
     for (let t = i; t <= j; t++) out[order[t]] = Math.min(1, mx);
     i = j + 1;
@@ -343,7 +343,7 @@ function bergerBoos(
   let i = 0;
   while (i < count) {
     const j = tieGroupEndRelative(pFisher, order, i, count);
-    accumulateTables(order, i, j, B1, B2, acum, G, n2);
+    accumulateTables(order, i, j, B1, B2, acum, n2);
     for (let t = i; t <= j; t++) {
       const k = order[t];
       const { x1, x2 } = tableMargins(k, n2);
@@ -409,9 +409,9 @@ function accumulateTables(
   B1: Float64Array,
   B2: Float64Array,
   acum: Float64Array,
-  G: number,
   n2: number,
 ): void {
+  const G = acum.length;
   for (let t = from; t <= to; t++) {
     const { x1, x2 } = tableMargins(order[t], n2);
     for (let g = 0; g < G; g++) acum[g] += B1[x1 * G + g] * B2[x2 * G + g];
@@ -430,7 +430,7 @@ function maxWithinWindow(acum: Float64Array, grid: Float64Array, lo: number, hi:
 /** Max of an accumulated vector over the whole nuisance grid. */
 function maxOf(acum: Float64Array): number {
   let mx = 0;
-  for (let g = 0; g < acum.length; g++) if (acum[g] > mx) mx = acum[g];
+  for (const v of acum) if (v > mx) mx = v;
   return mx;
 }
 
@@ -443,9 +443,9 @@ function accumulateTablesRows(
   B1: Float64Array,
   B2: Float64Array,
   acum: Float64Array,
-  G: number,
   n2: number,
 ): void {
+  const G = acum.length;
   for (let t = from; t <= to; t++) {
     const k = order[t];
     const x1 = Math.floor(k / (n2 + 1));
