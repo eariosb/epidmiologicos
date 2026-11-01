@@ -296,9 +296,40 @@ Playwright · pnpm workspaces.
 ```bash
 pnpm install          # instala deps (lockfile congelado en CI)
 pnpm dev              # http://localhost:3000
+pnpm dev:clean        # borra .next y arranca (tras un build o un cierre sucio)
 pnpm build            # build de producción (41 páginas generadas)
 pnpm start            # sirve el build
 ```
+
+### Arranque en desarrollo: un solo servidor
+
+Dos `next dev` sobre el mismo `.next` (o un `next build` mientras el dev
+sigue vivo) comparten la caché de webpack y la corrompen: aparecen
+`EPERM ... rename 4.pack.gz`, `SyntaxError: Unexpected end of JSON input`
+y errores 500 con respuestas de 20 a 45 s. Antes de arrancar, verifica que
+el puerto esté libre:
+
+```bash
+netstat -ano | grep LISTENING | grep :3000   # PID dueño del puerto
+taskkill //PID <pid> //T //F                 # cierra el árbol completo
+```
+
+Tiempos medidos con la caché limpia (Windows, 20 núcleos):
+
+| Momento | Antes | Ahora |
+|---|---|---|
+| Primera carga de `/` | 46 s | 41 s |
+| Primera carga de un módulo | 42 s | 31 s |
+| Navegar a otro módulo | 10 a 20 s | **1.0 a 1.6 s** |
+| Volver a un módulo ya visto | 10 a 15 s | 1.5 s |
+
+La diferencia no viene de webpack sino de `src/lib/mdx-compiled.ts`: el
+MDX se compila con remark y KaTeX en cada petición, y ahora se memoriza
+por archivo y fecha de modificación (editar el `.mdx` invalida la
+entrada). El primer arranque sigue costando la compilación de ~6.700
+módulos; Turbopack lo reduciría a un tercio, pero hoy no resuelve
+`@uiw/codemirror-extensions-basic-setup` con el layout de pnpm, así que
+el proyecto sigue en webpack.
 
 ### Compuertas de calidad (QA)
 

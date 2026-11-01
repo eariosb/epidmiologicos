@@ -1,20 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { MDXRemote } from 'next-mdx-remote/rsc';
-import remarkMath from 'remark-math';
-import remarkGfm from 'remark-gfm';
-import rehypeKatex from 'rehype-katex';
-import rehypeSlug from 'rehype-slug';
 import {
   getAllModules,
   findModule,
-  getModuleSource,
   getAdjacentModules,
   blockForOrder,
 } from '@/lib/modules';
-import { remarkModuleRefs } from '@/lib/remark-module-refs';
-import { remarkAutoTerms } from '@/lib/remark-auto-terms';
-import { mdxComponents } from '@/components/mdx-components';
+import { compileModule } from '@/lib/mdx-compiled';
 import { TableOfContents } from '@/components/TableOfContents';
 import { AppLayout } from '@/components/AppLayout';
 import { SessionTracker } from '@/components/SessionTracker';
@@ -35,7 +27,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
   const entry = findModule(slug);
   if (!entry) notFound();
 
-  const source = getModuleSource(entry.fileName);
+  const MDXContent = await compileModule(entry.fileName);
   const { prev, next } = getAdjacentModules(slug);
   const block = blockForOrder(entry.meta.order, entry.meta.course);
   const modules = getAllModules(entry.meta.course);
@@ -97,19 +89,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
 
           <TermTracker>
           <div className="prose prose-ink max-w-none prose-headings:scroll-mt-20 prose-headings:text-ink-900 prose-h2:mt-10 prose-h2:border-t prose-h2:border-ink-100 prose-h2:pt-7 prose-blockquote:border-brand-300 prose-blockquote:font-display prose-blockquote:text-ink-700 prose-a:text-brand-600 prose-code:rounded prose-code:bg-code prose-code:text-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-pre:bg-code prose-pre:text-gray-100">
-            <MDXRemote
-              source={source}
-              components={mdxComponents}
-              options={{
-                // Contenido local y confiable: permitimos expresiones JSX en
-                // los MDX (props de RCell, Quiz, DataTable, etc.).
-                blockJS: false,
-                mdxOptions: {
-                  remarkPlugins: [remarkMath, remarkGfm, remarkModuleRefs, remarkAutoTerms],
-                  rehypePlugins: [rehypeKatex, rehypeSlug],
-                },
-              }}
-            />
+            <MDXContent />
           </div>
           </TermTracker>
 
