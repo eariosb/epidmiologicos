@@ -24,3 +24,5 @@ logs/
 .env
 .env.*
 *.local
+# la plantilla sí se versiona (solo lleva marcadores)
+!.env.example
