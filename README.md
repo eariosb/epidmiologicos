@@ -431,3 +431,35 @@ una celda los referencia por nombre.
   diseño propio sobre la literatura metodológica citada en cada módulo.
 - **Textos de terceros** (Woodward y demás bibliografía): se citan; no se
   alojan ni se redistribuyen.
+
+## Despliegue
+
+### GitHub
+
+El repositorio es autocontenido: `git clone` + `pnpm install` reproduce el
+curso, las celdas de R y las compuertas de calidad. No se versiona ningún
+secreto: `.env*` está en `.gitignore` y `.env.example` solo lleva marcadores.
+
+Lo que **no** se sube al despliegue (pero sí al repositorio) está declarado en
+`.vercelignore`: `scripts/` (QA con R y Python), `tests/` (snapshots y
+capturas, ~48 MB), `docs/` y los `.md`.
+
+### Vercel
+
+1. Importar el repositorio. Framework: **Next.js**. Build: `pnpm build`.
+   Node ≥ 22 y pnpm 9.15.9 están fijados en `package.json`.
+2. **Variables de entorno**: ninguna es obligatoria. El curso funciona sin
+   Supabase; solo la prueba de campo las usa (`NEXT_PUBLIC_SUPABASE_URL`,
+   `SUPABASE_SERVICE_ROLE_KEY`, `FIELDTEST_ADMIN_TOKEN`). No configurar
+   `VISION_SERVICE_URL` en un despliegue público: el proxy de visión no tiene
+   autenticación.
+3. Las cabeceras `COOP`/`COEP` que exige webR salen de `next.config.ts`.
+4. `next.config.ts` excluye `node_modules/webr/**` del tracing de funciones
+   serverless (el navegador carga esos binarios desde el CDN de webR).
+
+### Prueba de campo (opcional)
+
+Requiere un proyecto Supabase con las migraciones de `prueba-campo/supabase`
+aplicadas y el esquema `fieldtest` expuesto. Sin eso, `/api/track` responde
+403 y el curso sigue funcionando igual.
+

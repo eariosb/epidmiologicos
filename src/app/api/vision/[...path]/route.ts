@@ -17,6 +17,9 @@ export const dynamic = 'force-dynamic';
 const VISION_URL = process.env.VISION_SERVICE_URL ?? 'http://localhost:8765';
 const TIMEOUT_MS = 3000;
 
+/** Rutas que el servicio publica; el proxy no reenvía nada fuera de esta lista. */
+const ALLOWED_PATHS = new Set(['blob', 'calibrate/start', 'calibrate/status', 'homography']);
+
 /** In production the proxy only runs when the service URL is configured. */
 const VISION_ENABLED =
   process.env.VISION_SERVICE_URL !== undefined || process.env.NODE_ENV !== 'production';
@@ -32,6 +35,11 @@ async function proxy(
     );
   }
   const path = ((await params).path ?? []).join('/');
+  // Lista blanca: sin esto el proxy reenviaría cualquier ruta al servicio
+  // configurado, y en un despliegue público eso es un salto abierto.
+  if (!ALLOWED_PATHS.has(path)) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 });
+  }
   const url = `${VISION_URL}/${path}${req.nextUrl.search}`;
   try {
     const upstream = await fetch(url, {

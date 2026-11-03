@@ -1,0 +1,28 @@
+# Lo que NO se sube al despliegue (sí queda en GitHub).
+# El build de Next solo necesita src/, public/, package.json, pnpm-lock.yaml y
+# los archivos de configuración; el resto es material de desarrollo y QA.
+
+# Scripts de QA (R, Python, MDX). Se ejecutan en local, no en el servidor.
+scripts/
+
+# Pruebas: snapshots de R y capturas de Playwright (~48 MB)
+tests/
+
+# Documentación de desarrollo
+docs/
+*.md
+
+# Artefactos locales
+test-results/
+playwright-report/
+.next/
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*
+.env.local
+tsconfig.tsbuildinfo
+next-env.d.ts
+public/data/Rplots.pdf
+Rplots.pdf
