@@ -231,6 +231,62 @@ body {
   display: none;
 }
 
+/* ------------------------------------------------------------------
+ * Menús plegables y modo lectura.
+ *
+ * El estado vive en `<html>` (`nav-hidden`, `toc-hidden`, `reading-mode`)
+ * y aquí solo se decide qué se oculta. Plegar un menú no remonta el
+ * contenido ni pierde el scroll: el artículo simplemente ocupa el ancho
+ * que deja libre el índice.
+ * ------------------------------------------------------------------ */
+html.nav-hidden #course-nav,
+html.toc-hidden #bb-toc,
+html.reading-mode #course-nav,
+html.reading-mode #bb-toc,
+html.reading-mode .bb-nav-mobile,
+html.reading-mode .bb-menu-toggle,
+html.reading-mode .bb-menu-tab,
+html.reading-mode .capture-fab,
+html.reading-mode .bb-trigger-fab,
+html.reading-mode .bb-role-pill {
+  display: none;
+}
+
+/* En modo lectura los otros FABs se ocultan, así que la píldora baja al
+   borde inferior: queda sola y en el sitio esperado. */
+html.reading-mode .bb-reading-pill {
+  bottom: 1.5rem;
+}
+
+/* Modo lectura: medida de línea cómoda y aire vertical. El ancho se
+   limita en `ch` para que la longitud de línea no dependa del tamaño de
+   la ventana; 68ch ronda los 65 caracteres reales en esta tipografía. */
+html.reading-mode #bb-main .prose {
+  max-width: 68ch;
+  margin-inline: auto;
+  font-size: 1.0625rem;
+  line-height: 1.8;
+}
+
+html.reading-mode #bb-main .prose p,
+html.reading-mode #bb-main .prose li {
+  margin-block: 0.35em;
+}
+
+html.reading-mode #bb-main .prose h2 {
+  margin-top: 2.4em;
+}
+
+html.reading-mode #bb-main .prose > :first-child {
+  margin-top: 0;
+}
+
+/* En modo lectura el encabezado del módulo acompaña la misma medida. */
+html.reading-mode #bb-main article > header {
+  max-width: 68ch;
+  margin-inline: auto;
+}
+
 /* Con la pizarra acoplada la columna de contenido se angosta a ~40vw:
    el TOC lateral robaría demasiado espacio al artículo, así que se oculta. */
 .board-docked #bb-toc {

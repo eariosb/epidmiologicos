@@ -5,6 +5,7 @@ import { Footer } from '@/components/Footer';
 import { WebRProvider } from '@/components/WebRProvider';
 import { BlackboardProvider } from '@cursos/blackboard';
 import TelemetryGate from '@/components/TelemetryGate';
+import { LAYOUT_BOOT_SCRIPT } from '@/lib/layout-prefs';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const lora = Lora({ subsets: ['latin'], variable: '--font-display', style: ['normal', 'italic'], display: 'swap' });
@@ -19,6 +20,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${inter.variable} ${lora.variable}`}>
       <body className="font-sans antialiased">
+        {/* Aplica los menús plegados antes del primer pintado. */}
+        <script dangerouslySetInnerHTML={{ __html: LAYOUT_BOOT_SCRIPT }} />
         <WebRProvider>
           <BlackboardProvider>
             <TelemetryGate>{children}</TelemetryGate>

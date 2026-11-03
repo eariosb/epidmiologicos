@@ -7,6 +7,7 @@ import { X } from 'lucide-react';
 import clsx from 'clsx';
 import { COURSE_II_BLOCKS } from '@/lib/course-blocks';
 import type { ModuleEntry } from '@/lib/modules';
+import { NavCollapseButton } from './LayoutToggles';
 
 interface BlockDef {
   id: string;
@@ -89,7 +90,7 @@ function NavContent({ modules, blocks, onNavigate }: NavigationProps & { onNavig
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 py-3">
+      <div className="flex-1 overflow-y-auto px-2 pb-20 pt-3">
         {shownBlocks.map((block) => {
           const blockModules = shown.filter(
             (m) => m.meta.order >= block.from && m.meta.order <= block.to
@@ -148,12 +149,16 @@ export function Navigation({ modules, blocks }: NavigationProps) {
   return (
     <>
       {/* Desktop */}
-      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r border-ink-200 bg-white lg:block">
+      <aside
+        id="course-nav"
+        className="sticky top-0 hidden h-screen w-72 shrink-0 border-r border-ink-200 bg-white lg:block"
+      >
+        <NavCollapseButton />
         <NavContent modules={modules} blocks={blocks} />
       </aside>
 
       {/* Mobile: botón hamburguesa + drawer */}
-      <div className="lg:hidden">
+      <div className="bb-nav-mobile lg:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}

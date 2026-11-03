@@ -7,6 +7,7 @@ import { RoleAwareBlackboardTrigger } from './RoleAwareBlackboardTrigger';
 import { CaptureTrigger } from './CaptureTrigger';
 import { CaptureManager } from './CaptureManager';
 import { BlackboardBridge } from './BlackboardBridge';
+import { LayoutControls } from './LayoutToggles';
 
 /**
  * Shell de nivel superior para las páginas de módulo: navegación lateral +
@@ -29,6 +30,7 @@ export function AppLayout({ children }: Readonly<{ children: ReactNode }>) {
       <CaptureTrigger />
       <CaptureManager />
       <BlackboardBridge />
+      <LayoutControls />
     </div>
   );
 }

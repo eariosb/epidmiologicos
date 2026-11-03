@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import clsx from 'clsx';
+import { setTocPresent } from '@/lib/layout-slots';
+import { TocCollapseButton } from './LayoutToggles';
 
 export interface TocHeading {
   id: string;
@@ -82,47 +84,58 @@ export function TableOfContents({ headings: propHeadings }: TableOfContentsProps
     [headings]
   );
 
+  // Declara su presencia para que el control global ofrezca la pestaña de
+  // restauración solo cuando hay algo que restaurar.
+  const present = visibleHeadings.length >= 2;
+  useEffect(() => {
+    setTocPresent(present);
+    return () => setTocPresent(false);
+  }, [present]);
+
   if (visibleHeadings.length < 2) return null;
 
   return (
     <nav
       aria-label="Contenido del módulo"
-      className="sticky top-8 hidden max-h-[calc(100vh-6rem)] w-56 shrink-0 overflow-y-auto xl:block"
+      className="relative sticky top-8 hidden w-56 shrink-0 xl:block"
     >
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-400">
-        En este módulo
-      </p>
-      <ul className="space-y-1 border-l border-ink-200">
-        {visibleHeadings.map((h) => (
-          <li key={h.id}>
-            <a
-              href={`#${h.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                const el = document.getElementById(h.id);
-                if (el) {
-                  el.scrollIntoView({
-                    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-                      ? 'auto'
-                      : 'smooth',
-                    block: 'start',
-                  });
-                  setActiveId(h.id);
-                }
-              }}
-              className={clsx(
-                'block border-l-2 py-1 text-sm transition-colors',
-                h.level === 2 ? 'pl-3' : 'pl-6 text-xs',
-                activeId === h.id
-                  ? 'border-brand-600 font-medium text-brand-700'
-                  : 'border-transparent text-ink-500 hover:text-ink-800'
-              )}
-            >
-              {h.text}
-            </a>
-          </li>
-        ))}
-      </ul>
+      <TocCollapseButton />
+      <div className="max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-400">
+          En este módulo
+        </p>
+        <ul className="space-y-1 border-l border-ink-200">
+          {visibleHeadings.map((h) => (
+            <li key={h.id}>
+              <a
+                href={`#${h.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById(h.id);
+                  if (el) {
+                    el.scrollIntoView({
+                      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                        ? 'auto'
+                        : 'smooth',
+                      block: 'start',
+                    });
+                    setActiveId(h.id);
+                  }
+                }}
+                className={clsx(
+                  'block border-l-2 py-1 text-sm transition-colors',
+                  h.level === 2 ? 'pl-3' : 'pl-6 text-xs',
+                  activeId === h.id
+                    ? 'border-brand-600 font-medium text-brand-700'
+                    : 'border-transparent text-ink-500 hover:text-ink-800'
+                )}
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   );
 }

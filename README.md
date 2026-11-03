@@ -284,6 +284,23 @@ asíncronos del worker exacto y feedback sutil en controles. Todo
 desactivado bajo `prefers-reduced-motion: reduce` (`globals.css`);
 ninguna información se transmite solo mediante animación.
 
+### Plegado de menús y modo lectura
+
+Los dos menús laterales se pliegan desde un botón en su propio borde y
+vuelven desde una pestaña fija en el borde de la ventana; el estado queda
+en `localStorage` (`layout-prefs`) y se aplica como clases en `<html>`
+(`nav-hidden`, `toc-hidden`, `reading-mode`), de modo que plegar no
+remonta el contenido ni pierde el scroll.
+
+El **modo lectura** (`Alt+L`) es una superposición, no una destrucción:
+oculta ambos menús, la hamburguesa móvil y los FABs, y limita el texto a
+`68ch` con `1.0625rem/1.8`. Al salir se recupera exactamente la
+configuración previa de los menús. Atajos: `Alt+N` índice, `Alt+T` tabla
+de contenido, `Alt+L` lectura. La pestaña de restauración del TOC solo
+aparece cuando la página realmente montó uno (`src/lib/layout-slots.ts`),
+y un script de arranque aplica las clases antes del primer pintado para
+evitar el parpadeo al recargar.
+
 ## Stack
 
 Next.js 15.5 (App Router) · React 19 · TypeScript · Tailwind CSS +
