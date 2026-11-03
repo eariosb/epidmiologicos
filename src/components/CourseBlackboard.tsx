@@ -364,13 +364,26 @@ export function CourseBlackboard({
               <PresentationControls canvasRef={canvasRef} vertical />
               <span className="my-0.5 h-px w-6 bg-ink-200 dark:bg-ink-600" />
               <ShortcutsHelp />
+              {/* Cerrar va arriba, no junto al conmutador de modo: los dos
+                  iconos contiguos se confundian y cambiar de rol ocultaba
+                  el disparador de la pizarra de forma persistente. */}
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'TOGGLE_PANEL' })}
+                title="Cerrar pizarra (Ctrl+Shift+B)"
+                aria-label="Cerrar pizarra"
+                className="rounded p-1.5 text-sm text-ink-400 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-700"
+              >
+                <X aria-hidden className="h-4 w-4" />
+              </button>
+              <span className="my-0.5 h-px w-6 bg-ink-200 dark:bg-ink-600" />
               <button
                 type="button"
                 onClick={() => (mode === 'teacher' ? setStudentMode() : setTeacherMode())}
                 title={mode === 'teacher' ? 'Modo docente; clic para estudiante' : 'Modo estudiante; clic para docente'}
                 aria-label="Cambiar modo docente/estudiante"
                 aria-pressed={mode === 'teacher'}
-                className={`rounded p-1.5 text-sm transition-colors ${
+                className={`mt-auto rounded p-1.5 text-sm transition-colors ${
                   mode === 'teacher'
                     ? 'bg-brand-100 text-brand-700'
                     : 'text-ink-500 hover:bg-ink-100 dark:text-ink-400 dark:hover:bg-ink-700'
@@ -381,16 +394,6 @@ export function CourseBlackboard({
                 ) : (
                   <GraduationCap aria-hidden className="h-4 w-4" />
                 )}
-              </button>
-              <span className="my-0.5 h-px w-6 bg-ink-200 dark:bg-ink-600" />
-              <button
-                type="button"
-                onClick={() => dispatch({ type: 'TOGGLE_PANEL' })}
-                title="Cerrar pizarra (Ctrl+Shift+B)"
-                aria-label="Cerrar pizarra"
-                className="rounded p-1.5 text-sm text-ink-400 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-700"
-              >
-                <X aria-hidden className="h-4 w-4" />
               </button>
             </nav>
           )}

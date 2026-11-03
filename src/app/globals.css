@@ -226,7 +226,8 @@ body {
    del panel: la captura ya vive en el riel de iconos y el cierre se hace
    con el ✕ interno — se ocultan ambos FABs. */
 .board-docked .capture-fab,
-.board-docked .bb-trigger-fab {
+.board-docked .bb-trigger-fab,
+.board-docked .bb-role-pill {
   display: none;
 }
 
