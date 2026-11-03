@@ -135,7 +135,7 @@ m17) lleva su propia marca.
 - **Módulos MDX** con KaTeX (`remark-math` + `rehype-katex`), quizzes,
   flashcards y ejercicios de laboratorio.
 - **Glosario en vivo con tooltips** (`<Term>` + `src/lib/glossary.ts`):
-  **258 entradas** (siglas, símbolos y conceptos, en 13 secciones
+  **271 entradas** (siglas, símbolos y conceptos, en 13 secciones
   temáticas) en un diccionario único que alimenta dos superficies.
   En el texto, `<Term k="RR">` dibuja un subrayado punteado discreto y,
   al hover/focus, un tooltip con la expansión en español y el original
@@ -144,14 +144,20 @@ m17) lleva su propia marca.
   recorderis libres para personas, resultados y métodos. Es CSS puro,
   sin estado ni JS: funciona en SSR, con teclado y en lectores de
   pantalla (vía `sr-only` y `role="note"`). El plugin
-  `src/lib/remark-auto-terms.ts` enlaza solo la primera aparición de cada
+  `src/lib/remark-auto-terms.ts` enlaza la primera aparición de cada
   sigla, símbolo de sentido único (α, τ², Φ, p₁…) y forma técnica de un
-  concepto («tiempo inmortal», «colisionador»: `GLOSSARY_FORMS`) en cada
-  módulo; los símbolos con varios sentidos (β, γ, δ, θ) se marcan a mano
-  con la clave del sentido (`<Term k="β-SIR">β</Term>`). La página
-  **`/glosario`** renderiza el compendio completo de la misma fuente.
+  concepto («tiempo inmortal», «colisionador»: `GLOSSARY_FORMS`) **por
+  sección (h2)**, no por módulo: en un módulo de 900 líneas el lector
+  puede llegar a un apartado donde la sigla reaparece y necesita el
+  recordatorio. Los paneles `Profundiza` y `SalaDeMaquinas` tienen ámbito
+  propio, así que un término mencionado primero ahí no consume el
+  recordatorio del texto principal. Los símbolos con varios sentidos
+  (β, γ, δ, θ) se marcan a mano con la clave del sentido
+  (`<Term k="β-SIR">β</Term>`). La página **`/glosario`** renderiza el
+  compendio completo de la misma fuente.
   `pnpm check:glossary` lista las siglas de la prosa sin entrada y falla
-  si queda alguna.
+  si queda alguna; `pnpm check:glossary --autores` reporta, sin fallar,
+  los autores citados («Molinero (2001)») que aún no tienen entrada.
 - **Arquitectura de capas** (`src/components/Deep.tsx`): `<Profundiza>` y
   `<SalaDeMaquinas>` como plegables nativos con contratos distintos;
   frontmatter extendido (`course`, `level`, `attr`, `profiles`,
@@ -462,4 +468,42 @@ capturas, ~48 MB), `docs/` y los `.md`.
 Requiere un proyecto Supabase con las migraciones de `prueba-campo/supabase`
 aplicadas y el esquema `fieldtest` expuesto. Sin eso, `/api/track` responde
 403 y el curso sigue funcionando igual.
+
+### Antes de publicar (lista de verificación)
+
+Estado verificado en el repositorio:
+
+| Comprobación | Estado |
+|---|---|
+| Secretos versionados | ninguno; `.env*` ignorado, `.env.example` solo lleva marcadores |
+| Claves en el código | no hay; el asistente usa la clave que cada usuario escribe en la pizarra (vive en su navegador, viaja directo al proveedor) |
+| Rutas personales (`C:\Users\...`) | ninguna en archivos versionados |
+| Variables de entorno obligatorias | ninguna; el build y el curso funcionan sin ellas |
+| `node_modules/webr` en serverless | excluido del tracing en `next.config.ts` |
+| Scripts de QA en el despliegue | excluidos por `.vercelignore` (siguen en GitHub) |
+| Snapshots y capturas en el despliegue | excluidos por `.vercelignore` (~48 MB) |
+| Build de producción | `pnpm build` sin variables, 41 páginas |
+| Compuertas | typecheck, 333 tests, MDX, render, celdas R, glosario, R 113/113 |
+
+Decisiones que conviene tener presentes:
+
+- **`scripts/` sí debe ir a GitHub**: es la maquinaria de QA y
+  precomputación que invocan los `pnpm` del proyecto (`check:r`,
+  `check:mdx`, `precompute`). Sin ella, quien clone el repositorio no puede
+  reproducir las verificaciones. No contiene credenciales ni rutas
+  personales, y el despliegue la excluye. Si se quiere aislar, el camino es
+  un repositorio privado de herramientas y un `pnpm` que las invoque por
+  paquete, no borrarlas del repo del curso.
+- **`docs/` está ignorado**: el paper, los planes y la documentación
+  interna no se publican. Si el paper debe ser público, hay que sacarlo de
+  `.gitignore` de forma explícita.
+- **`LICENSE` dice "todos los derechos reservados"**. Un repositorio
+  público no es lo mismo que código abierto: si se quiere permitir reuso
+  docente, hay que elegir licencia (por ejemplo CC BY-NC-SA para los
+  textos y MIT para el código).
+- **Claves del asistente**: se guardan en el almacenamiento del navegador
+  del usuario y se envían directo al proveedor. En un equipo compartido,
+  conviene borrarlas desde la configuración de la pizarra al terminar.
+- **`/api/vision` no tiene autenticación**: no configurar
+  `VISION_SERVICE_URL` en un despliegue público.
 

@@ -132,4 +132,30 @@ describe('remarkAutoTerms', () => {
     expect(termKeys(t)).toEqual(['τ']);
     expect(JSON.stringify(t)).toContain('τ̂²');
   });
+
+  it('vuelve a recordar la sigla al abrir una sección nueva (h2)', () => {
+    const t = tree(
+      para(text('La vacuna BCG se compara con placebo.')),
+      { type: 'heading', depth: 2, children: [text('Otra sección')] },
+      para(text('En BCG los sets no son independientes.')),
+      { type: 'heading', depth: 3, children: [text('Subsección')] },
+      para(text('BCG sigue igual dentro del mismo h2.')),
+    );
+    remarkAutoTerms()(t);
+    // Dos: una por sección; el h3 no reinicia y la tercera queda plana.
+    expect(termKeys(t)).toEqual(['BCG', 'BCG']);
+  });
+
+  it('el panel plegable no consume la marca del texto principal', () => {
+    const t = tree(
+      {
+        type: 'mdxJsxFlowElement',
+        name: 'Profundiza',
+        children: [para(text('El ensayo BCG de Colditz reunió 13 estudios.'))],
+      },
+      para(text('La vacuna BCG reduce la tuberculosis.')),
+    );
+    remarkAutoTerms()(t);
+    expect(termKeys(t)).toEqual(['BCG', 'BCG']);
+  });
 });

@@ -5,8 +5,12 @@
  * src/lib/glossary.ts queda enlazada sola en todos los módulos.
  *
  * Reglas:
- * - Solo la primera aparición por módulo: el tooltip refresca la memoria,
- *   no debe convertir el texto en un campo de subrayados.
+ * - Primera aparición por SECCIÓN (h2), no por módulo: en un módulo de 900
+ *   líneas el lector puede llegar a un apartado donde la sigla reaparece y
+ *   ya no tenía recordatorio. Al cambiar de sección se reinicia la marca.
+ * - Los paneles plegables (`Profundiza`, `SalaDeMaquinas`) tienen ámbito
+ *   propio: un término mencionado primero ahí no consume la marca del
+ *   texto principal, que el lector puede estar leyendo sin abrirlos.
  * - No se duplica: si el autor ya escribió <Term k="X"> a mano, esa clave
  *   queda marcada y no se vuelve a envolver.
  * - Solo claves "sigla-like" (empiezan en mayúscula/dígito o están en
@@ -74,6 +78,9 @@ const EXTRA_KEYS = new Set([
 
 // Claves de mayúscula que son también palabras válidas del español.
 const SKIP_KEYS = new Set(['Se']);
+
+// Paneles plegables: su contenido no comparte la marca del texto principal.
+const PANEL_NAMES = new Set(['Profundiza', 'SalaDeMaquinas']);
 
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -155,18 +162,15 @@ function splitTextNode(node: MdastNode, seen: Set<string>): MdastNode[] | null {
   return parts;
 }
 
-function walk(node: MdastNode, seen: Set<string>): void {
-  if (!node || SKIP_TYPES.has(node.type)) return;
-  if (
-    (node.type === 'mdxJsxTextElement' || node.type === 'mdxJsxFlowElement') &&
-    node.name === 'Term'
-  ) {
-    return;
-  }
+function walkChildren(node: MdastNode, seen: Set<string>): void {
   const children = node.children;
   if (!children) return;
   for (let i = 0; i < children.length; i++) {
     const child = children[i];
+    // Cada h2 abre una sección: la sigla vuelve a merecer su recordatorio.
+    if (child.type === 'heading' && (child.depth as number | undefined) === 2) {
+      seen.clear();
+    }
     if (child.type === 'text' && child.value && TERM_RE.test(child.value)) {
       TERM_RE.lastIndex = 0;
       const parts = splitTextNode(child, seen);
@@ -178,6 +182,27 @@ function walk(node: MdastNode, seen: Set<string>): void {
     }
     walk(child, seen);
   }
+}
+
+function walk(node: MdastNode, seen: Set<string>): void {
+  if (!node || SKIP_TYPES.has(node.type)) return;
+  if (
+    (node.type === 'mdxJsxTextElement' || node.type === 'mdxJsxFlowElement') &&
+    node.name === 'Term'
+  ) {
+    return;
+  }
+  // Un panel plegable se explora con su propia marca: si el término aparece
+  // primero ahí, el texto principal todavía puede recibir su recordatorio.
+  if (
+    (node.type === 'mdxJsxTextElement' || node.type === 'mdxJsxFlowElement') &&
+    node.name &&
+    PANEL_NAMES.has(node.name)
+  ) {
+    walkChildren(node, new Set(seen));
+    return;
+  }
+  walkChildren(node, seen);
 }
 
 export function remarkAutoTerms() {

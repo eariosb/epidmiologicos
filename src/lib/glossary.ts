@@ -133,6 +133,8 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'Antagonismo: el efecto conjunto queda por debajo de lo esperado; una exposición mitiga o bloquea a la otra. Si invierte el signo es antagonismo cualitativo (cruce).',
       unilateralismo:
         'Unilateralismo: una exposición no tiene efecto por sí sola pero es necesaria para el efecto de la otra (componente necesario de una causa suficiente); no depende de la escala.',
+      Simpson:
+        'Paradoja de Simpson: la asociación marginal se invierte o desaparece al estratificar. No es un error de cálculo sino la prueba de que el marginal y el condicional responden preguntas distintas.',
     },
   },
   {
@@ -203,6 +205,8 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       Φ: 'Φ: función de distribución acumulada de la normal estándar; Φ(1.96) = 0.975.',
       OLS: 'Mínimos cuadrados ordinarios (ordinary least squares): el ajuste lineal por defecto; con confusión no medida su coeficiente queda sesgado.',
       EM: 'Algoritmo EM (expectation–maximization): maximiza la verosimilitud con datos incompletos o latentes alternando un paso de esperanza y uno de maximización.',
+      Yates:
+        'Corrección de continuidad de Yates (1934): resta 0.5 a cada desviación del χ² para acercarlo a la distribución discreta. Conservadora y hoy discutida; el curso la usa como referencia histórica frente al χ² de Pearson.',
     },
   },
   {
@@ -258,6 +262,12 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
       'X₁':
         'X₁, X₂: número de eventos en cada grupo como variable aleatoria, X₁ ~ Bin(n₁, p₁); x₁, x₂ son los valores observados.',
       QH: 'Quesenberry–Hurst (1964): IC simultáneos para las k proporciones de una multinomial, con la forma cuadrática de Wilson y el cuantil de una χ² con k − 1 gl.',
+      Woolf:
+        'Método de Woolf (1955): IC del OR en escala log con error estándar √(1/a + 1/b + 1/c + 1/d). Asintótico; es también la base del IC de Katz para el RR.',
+      'Agresti–Caffo':
+        'Intervalo de Agresti–Caffo (2000) para la diferencia de proporciones: suma un éxito y un fracaso imaginarios por grupo, y se comporta mejor que Wald cuando hay celdas en cero.',
+      Newcombe:
+        'Método híbrido de Newcombe (1998) para el IC de la diferencia de proporciones: combina los IC de cada proporción en vez de apoyarse en el error estándar agrupado; robusto con celdas pequeñas.',
     },
   },
   {
@@ -476,6 +486,22 @@ export const GLOSSARY_SECTIONS: GlossarySection[] = [
         'Rafael Izbicki, "Machine Learning Beyond Point Predictions": cuantificación de incertidumbre y predicción conforme; cobertura garantizada sin supuestos distribucionales.',
       Tukey:
         'John W. Tukey, "The Future of Data Analysis" (1962): el análisis de datos como ciencia propia; la pregunta precede a la técnica.',
+      Perondi:
+        'Ensayo de Perondi et al. sobre epinefrina en paro cardiaco (34 frente a 34, con 7 y 1 eventos): el caso con el que el módulo 6 compara Fisher (0.0544) y Boschloo (0.0385) a α = 5 %.',
+      Freireich:
+        'Ensayo 6-MP de Freireich et al. (1963): 42 niños con leucemia aguda, la base `leucemia.txt` y el ejemplo de Kaplan–Meier y log-rank del módulo 12.',
+      Molinero:
+        'Molinero (2001): una misma asociación analizada bajo tres diseños (cohorte, caso-control y transversal), el ejemplo que ordena el módulo 4 y muestra cuándo el OR está disponible y el RR no.',
+      Karnofsky:
+        'Escala de Karnofsky (1948): estado funcional de 0 a 100 en pasos de 10; es la variable `Kps` del ensayo VA del módulo 0, y su granularidad obliga a tratarla como ordinal.',
+      Belmont:
+        'Informe Belmont (1979): respeto por las personas, beneficencia y justicia. El marco ético que el curso cita junto con Tuskegee para hablar de consentimiento informado.',
+      Rothman:
+        'Kenneth Rothman: la tradición de las causas suficientes y de la escala aditiva como la escala de la interacción biológica. Con Greenland y Lash firma *Modern Epidemiology*, referencia metodológica del curso.',
+      Greenland:
+        'Sander Greenland: sesgo, colapsabilidad y ajuste causal. Sus trabajos con Rothman sostienen la distinción entre confusión, interacción y no colapsabilidad de los módulos 7 y 10.',
+      'Monte Carlo':
+        'Método de Monte Carlo: aproximar una distribución o una integral por simulación aleatoria. El curso lo usa con semilla fija para que el resultado sea reproducible y auditable.',
     },
   },
 ];
