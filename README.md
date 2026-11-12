@@ -507,3 +507,5 @@ Decisiones que conviene tener presentes:
 - **`/api/vision` no tiene autenticación**: no configurar
   `VISION_SERVICE_URL` en un despliegue público.
 
+#   e p i d m i o l o g i c o s  
+ 
